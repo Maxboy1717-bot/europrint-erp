@@ -46,7 +46,15 @@ export default function LMSDashboard() {
   const [enrollEmpId, setEnrollEmpId] = useState("");
 
   const { data: courses = [], isLoading: isLoadingCourses, isError, error, refetch } = useQuery<Course[]>({ queryKey: ["/api/courses"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Course[] })?.data ?? []) });
-  const { data: certificates = [], isLoading: isLoadingCertificates } = useQuery<Certificate[]>({ queryKey: ["/api/certificates"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Certificate[] })?.data ?? []) });
+  // Audit 2026-08-06 (LMS): this select handled an array or a {data:[]} envelope, but
+  // /api/certificates answers {items:[], total:N} — so the list and the counter below
+  // showed 0 no matter how many certificates existed. Accept items too (same shape the
+  // employees query below already handles).
+  const { data: certificates = [], isLoading: isLoadingCertificates } = useQuery<Certificate[]>({ queryKey: ["/api/certificates"], select: (data: unknown) => {
+    if (Array.isArray(data)) return data as Certificate[];
+    const d = data as { items?: Certificate[]; data?: Certificate[] } | null;
+    return d?.items ?? d?.data ?? [];
+  } });
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
     queryKey: ["/api/hr/employees"],
     queryFn: () => apiRequest("GET", "/api/hr/employees"),

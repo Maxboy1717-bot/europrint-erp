@@ -93,7 +93,7 @@ export class LmsCoursesExtendedRepository {
   async findExpiringCertificates(days = 30): Promise<Result<object[]>> {
     const safeDays = Math.max(1, Math.min(365, Math.floor(Number(days) || 30)));
     try {
-      const r = await exec(sql`SELECT cert.*, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS employee_name, c.title_uz AS course_title FROM certificates cert JOIN employees emp ON emp.id = cert.employee_id JOIN courses c ON c.id = cert.course_id WHERE cert.expiry_date BETWEEN NOW() AND NOW() + (${safeDays} * INTERVAL '1 day') AND cert.is_active = true ORDER BY cert.expiry_date ASC`);
+      const r = await exec(sql`SELECT cert.*, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS employee_name, c.title_uz AS course_title, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS "userName", c.title_uz AS "courseName" FROM certificates cert JOIN employees emp ON emp.id = cert.employee_id JOIN courses c ON c.id = cert.course_id WHERE cert.expiry_date BETWEEN NOW() AND NOW() + (${safeDays} * INTERVAL '1 day') AND cert.is_active = true ORDER BY cert.expiry_date ASC`);
       return Ok(r);
     } catch (error) { this.logger.error(`findExpiringCertificates: ${(error as Error).message}`); return Err((error as Error).message); }
   }
@@ -105,8 +105,8 @@ export class LmsCoursesExtendedRepository {
       const offset = (page - 1) * limit;
       const [items, countRows] = await Promise.all([
         filters?.employeeId
-          ? exec(sql`SELECT cert.*, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS employee_name, c.title_uz AS course_title FROM certificates cert JOIN employees emp ON emp.id = cert.employee_id JOIN courses c ON c.id = cert.course_id WHERE cert.employee_id = ${parseInt(filters.employeeId, 10)} ORDER BY cert.issued_at DESC LIMIT ${limit} OFFSET ${offset}`)
-          : exec(sql`SELECT cert.*, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS employee_name, c.title_uz AS course_title FROM certificates cert JOIN employees emp ON emp.id = cert.employee_id JOIN courses c ON c.id = cert.course_id ORDER BY cert.issued_at DESC LIMIT ${limit} OFFSET ${offset}`),
+          ? exec(sql`SELECT cert.*, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS employee_name, c.title_uz AS course_title, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS "userName", c.title_uz AS "courseName" FROM certificates cert JOIN employees emp ON emp.id = cert.employee_id JOIN courses c ON c.id = cert.course_id WHERE cert.employee_id = ${parseInt(filters.employeeId, 10)} ORDER BY cert.issued_at DESC LIMIT ${limit} OFFSET ${offset}`)
+          : exec(sql`SELECT cert.*, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS employee_name, c.title_uz AS course_title, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS "userName", c.title_uz AS "courseName" FROM certificates cert JOIN employees emp ON emp.id = cert.employee_id JOIN courses c ON c.id = cert.course_id ORDER BY cert.issued_at DESC LIMIT ${limit} OFFSET ${offset}`),
         db.select({ cnt: count() }).from(certificates_table),
       ]);
       return Ok({ items, total: Number(countRows[0]?.cnt ?? 0) });
