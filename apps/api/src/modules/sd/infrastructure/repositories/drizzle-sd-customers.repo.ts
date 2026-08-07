@@ -25,7 +25,27 @@ export class DrizzleSdCustomersRepository {
       SELECT c.id, c.name, c.stir, c.status, c.actual_address, c.notes,
              c.credit_limit, c.payment_terms_days, c.industry, c.website,
              COUNT(DISTINCT o.id)::int AS "totalOrders",
-             COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS "totalRevenue"
+             COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS "totalRevenue",
+             -- Audit 2026-08-06 (SD/CRM): the customer card asks for open debt and lifetime
+             -- value; the query only ever returned totalRevenue, so both rendered empty.
+             -- Correlated subqueries (not another JOIN) so the invoice rows cannot multiply
+             -- the sales_orders aggregate above. Same predicates the canonical AR-aging
+             -- handler uses, so the two screens cannot disagree.
+             COALESCE((
+               SELECT SUM(fi.total_amount - COALESCE(fi.paid_amount, 0))
+               FROM finance_invoices fi
+               WHERE fi.customer_id = c.id
+                 AND fi.payment_status NOT IN ('paid', 'cancelled', 'void')
+                 AND COALESCE(fi.invoice_type, 'sales') = 'sales'
+                 AND fi.total_amount > COALESCE(fi.paid_amount, 0)
+             ), 0)::numeric(15,2) AS "openDebt",
+             COALESCE((
+               SELECT SUM(COALESCE(fi.paid_amount, 0))
+               FROM finance_invoices fi
+               WHERE fi.customer_id = c.id
+                 AND COALESCE(fi.invoice_type, 'sales') = 'sales'
+                 AND fi.payment_status <> 'cancelled'
+             ), 0)::numeric(15,2) AS "lifetimeValue"
       FROM sd_customers c LEFT JOIN sales_orders o ON o.customer_id = c.id
       WHERE c.status != 'deleted' AND c.deleted_at IS NULL
         AND (${pat}::text IS NULL OR c.name ILIKE ${pat} OR c.stir ILIKE ${pat})
@@ -38,6 +58,8 @@ export class DrizzleSdCustomersRepository {
       ...r,
       totalOrders: Number(r.totalOrders ?? 0),
       totalRevenue: Number(r.totalRevenue ?? 0),
+      openDebt: Number(r.openDebt ?? 0),
+      lifetimeValue: Number(r.lifetimeValue ?? 0),
       creditLimit: Number(r.credit_limit ?? 0),
       actualAddress: r.actual_address ?? null,
       segment: this.mapSegment(String(r.status ?? '')),
@@ -48,7 +70,23 @@ export class DrizzleSdCustomersRepository {
     const rows = await runQuery<Row>(sql`
       SELECT c.*, c.actual_address,
              COUNT(DISTINCT o.id)::int AS "totalOrders",
-             COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS "totalRevenue"
+             COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS "totalRevenue",
+             -- Same open-debt / lifetime-value pair as list(); see the comment there.
+             COALESCE((
+               SELECT SUM(fi.total_amount - COALESCE(fi.paid_amount, 0))
+               FROM finance_invoices fi
+               WHERE fi.customer_id = c.id
+                 AND fi.payment_status NOT IN ('paid', 'cancelled', 'void')
+                 AND COALESCE(fi.invoice_type, 'sales') = 'sales'
+                 AND fi.total_amount > COALESCE(fi.paid_amount, 0)
+             ), 0)::numeric(15,2) AS "openDebt",
+             COALESCE((
+               SELECT SUM(COALESCE(fi.paid_amount, 0))
+               FROM finance_invoices fi
+               WHERE fi.customer_id = c.id
+                 AND COALESCE(fi.invoice_type, 'sales') = 'sales'
+                 AND fi.payment_status <> 'cancelled'
+             ), 0)::numeric(15,2) AS "lifetimeValue"
       FROM sd_customers c
       LEFT JOIN sales_orders o ON o.customer_id = c.id
       WHERE c.id = ${cid} AND c.status != 'deleted' AND c.deleted_at IS NULL
@@ -58,6 +96,8 @@ export class DrizzleSdCustomersRepository {
       ...r,
       totalOrders: Number(r.totalOrders ?? 0),
       totalRevenue: Number(r.totalRevenue ?? 0),
+      openDebt: Number(r.openDebt ?? 0),
+      lifetimeValue: Number(r.lifetimeValue ?? 0),
       creditLimit: Number(r.credit_limit ?? 0),
       actualAddress: r.actual_address ?? null,
       segment: this.mapSegment(String(r.status ?? '')),
