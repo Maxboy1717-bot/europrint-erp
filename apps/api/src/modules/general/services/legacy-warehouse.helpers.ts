@@ -224,7 +224,10 @@ export async function getWarehouseTransfersRaw(): Promise<Record<string, unknown
 
 export async function getWarehouseLotsRaw(): Promise<Record<string, unknown>[]> {
   try {
-    const r = await db.execute(sql`SELECT * FROM material_lots ORDER BY created_at DESC LIMIT 200`);
+    // Audit 2026-08-07: 'material_lots' jadvali bazada YO'Q -> 'catch' bo'sh massiv qaytarardi,
+    // ya'ni ombor partiyalari ekrani har doim bo'sh ko'rinardi. Kanonik partiya jadvali —
+    // 'batch_lots' (WMS expiry hisoboti va PosFifoService ham shundan o'qiydi).
+    const r = await db.execute(sql`SELECT * FROM batch_lots ORDER BY created_at DESC LIMIT 200`);
     return r.rows as Record<string, unknown>[];
   } catch { return []; }
 }
