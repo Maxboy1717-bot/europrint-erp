@@ -69,6 +69,8 @@ import { GetOrderStatusTool }           from './application/tools/get-order-stat
 import { GetProductionStatusTool }      from './application/tools/get-production-status.tool';
 import { GetQualityMetricsTool }        from './application/tools/get-quality-metrics.tool';
 import { GetTodayBriefingTool }         from './application/tools/get-today-briefing.tool';
+import { GetTopDebtorsTool }            from './application/tools/get-top-debtors.tool';
+import { GetSalesLeaderboardTool }      from './application/tools/get-sales-leaderboard.tool';
 import { ListAvailableCamerasTool }     from './application/tools/list-available-cameras.tool';
 import { ScheduleMeetingTool }          from './application/tools/schedule-meeting.tool';
 import { SendEmailTool }                from './application/tools/send-email.tool';
@@ -119,7 +121,7 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     WakeConfigRepository,        // persists Director wake-word sensitivity (settings table)
     AishaHistoryService,         // read/governance surface (history + HITL queue + resume-after-approve via ToolRegistry)
     AishaConversationService,   // #15 P0 tool-execution loop (now persists turns)
-    // 25 AIsha tools — each @Injectable, registered with ToolRegistry on
+    // 27 AIsha tools — each @Injectable, registered with ToolRegistry on
     // module init by AishaToolBootstrap. Order alphabetical, matches the
     // bootstrap service's constructor.
     AnalyzeCameraFeedTool, AssignTaskTool, ComparePeriodsTool,
@@ -129,6 +131,7 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     GetFinancialSummaryTool, GetInventoryLevelsTool,
     GetMachineStateViaVisionTool, GetMachineStatusTool, GetOrderStatusTool,
     GetProductionStatusTool, GetQualityMetricsTool, GetTodayBriefingTool,
+    GetTopDebtorsTool, GetSalesLeaderboardTool,
     ListAvailableCamerasTool, ScheduleMeetingTool, SendEmailTool,
     SendTelegramToTeamTool, WhatIfSimulationTool,
     AishaEmailSenderAdapter, AishaTelegramSenderAdapter,
