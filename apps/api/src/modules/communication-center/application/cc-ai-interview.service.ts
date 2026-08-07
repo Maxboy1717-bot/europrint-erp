@@ -30,6 +30,7 @@ import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { isOk } from '@common/result';
 import { AiRouterCallService } from '../../ai/application/services/ai-router-call.service';
+import type { AiRequest } from '../../ai/domain/types/ai.types';
 import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documents.repo';
 import type { TemplateRow } from '../infrastructure/repositories/cc-documents/types';
 import { CcDocumentNumberService } from './cc-document-number.service';
@@ -212,18 +213,21 @@ export class CcAiInterviewService {
     if (tmpl.numberFormat.includes('TEST') || (tmpl as { testMode?: boolean }).testMode) {
       return `MAVZU: TEST — ${tmpl.nameUz}\n\n[Test rejimida AI chaqirilmadi]\n\nJavoblar:\n${answersList}`;
     }
-    const r = await this.ai.callClaude({
+    const docReq: AiRequest = {
       taskType:    'cc.generate_document',
       systemPrompt, prompt: userPrompt,
       temperature: 0.4, maxTokens: 1500,
       userId:      args.userId, sessionId: sess.id,
       metadata:    { templateCode: tmpl.code, language },
-    });
+    };
+    const r = await this.ai.callClaude(docReq);
     if (!isOk(r)) {
       throw new InternalServerErrorException(
         await this.i18n.t('errors.claudeError', { args: { message: r.error.message } }),
       );
     }
+    // 20-agent audit 2026-08-06: logUsage() must be called explicitly.
+    await this.ai.logUsage('claude', docReq, r.data);
     return r.data.text.trim();
   }
 

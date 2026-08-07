@@ -7,6 +7,7 @@ import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AiRouterCallService } from '../ai/application/services/ai-router-call.service';
+import type { AiRequest } from '../ai/domain/types/ai.types';
 import { isOk } from '@common/result';
 import { FORECAST } from '@common/constants/business.constants';
 
@@ -23,14 +24,17 @@ export class StrategicAgentService {
   /** Agar-tahlil (scenario analysis) */
   async scenarioAnalysis(scenario: string): Promise<{ analysis: string; impact: Record<string, number> }> {
     return this.audit.wrap({ agentName: this.AGENT, action: 'scenario_analysis', aiUsed: true, inputSummary: { scenario } }, async () => {
-      const r = await this.ai.callClaude({
+      const scenarioReq: AiRequest = {
         taskType: 'director.strategic_recommend',
         systemPrompt: 'Sen Europrint strategik AI maslahatchisi sen. O\'zbek tilida agar-tahlil ber.',
         prompt: `Scenario: ${scenario}\n\nKompaniyaga ta'sirini tahlil qil: daromad, ishlab chiqarish, mijozlar, raqobat.`,
         maxTokens: 800,
         temperature: 0.4,
-      });
+      };
+      const r = await this.ai.callClaude(scenarioReq);
       const analysis = isOk(r) ? r.data.text : 'AI tahlil yaratilmadi';
+      // 20-agent audit 2026-08-06: logUsage() must be called explicitly.
+      if (isOk(r)) await this.ai.logUsage('claude', scenarioReq, r.data);
       return { analysis, impact: { revenue: 0, production: 0, customers: 0 } };
     });
   }
@@ -64,7 +68,7 @@ export class StrategicAgentService {
 
       const forecast = await this.forecastRevenue(6);
 
-      const r = await this.ai.callClaude({
+      const investReq: AiRequest = {
         taskType: 'director.strategic_recommend',
         systemPrompt: 'Sen Europrint strategik AI maslahatchisi sen. Faqat JSON massiv qaytar, boshqa matn yozma. ' +
           'Format: [{"item": string, "cost": number (so\'mda), "roi": number (foizda), "priority": "high"|"medium"|"low"}]',
@@ -73,9 +77,12 @@ export class StrategicAgentService {
           `Shu ma'lumotlar asosida 2-4 ta kapital investitsiya tavsiyasini JSON massiv sifatida ber.`,
         maxTokens: 800,
         temperature: 0.4,
-      });
+      };
+      const r = await this.ai.callClaude(investReq);
 
       if (!isOk(r)) return { recommendations: [] };
+      // 20-agent audit 2026-08-06: logUsage() must be called explicitly.
+      await this.ai.logUsage('claude', investReq, r.data);
       return { recommendations: this.parseInvestmentRecommendations(r.data.text) };
     });
   }
