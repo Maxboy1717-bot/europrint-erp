@@ -7,8 +7,9 @@
 >
 > **Natija: 21 ta jonli so'rov yo'li mavjud bo'lmagan jadvalga boradi.**
 >
-> **Holat 2026-08-07 kech: 13 tasi tuzatildi, 8 tasi ochiq. Takrorlanmasligi uchun pre-commit
-> ratchet qo'shildi (pastda).**
+> **Holat 2026-08-07 kech: 16 tasi tuzatildi, 5 tasi ochiq (2 tasi — sxema qarori kutmoqda,
+> 2 tasi — vizyon nomuvofiqligi, 1 tasi — seed skripti, ataylab tegilmadi). Takrorlanmasligi
+> uchun pre-commit ratchet qo'shildi (pastda).**
 
 ## Nima uchun bu jim qoladi
 
@@ -40,6 +41,9 @@ deb yaxshi xabar aytadi.**
 | `agents/security-agent.service.ts:26` | `auth_audit_log` + hech qachon yozilmaydigan `login_failed` | `users.failed_login_attempts` / `locked_until` + `MAX_FAILED_LOGIN_ATTEMPTS` | `3f0052dc` |
 | `general/services/legacy-warehouse.helpers.ts:227` | `material_lots` | `batch_lots` | `3f0052dc` |
 | `ai-agents/mes/mes-monitor.service.ts:203` | `mes_work_orders` | ⛔ mos jadval YO'Q — kafolatlangan yiqiladigan so'rov olib tashlandi, aniq ogohlantirish qo'yildi | `3f0052dc` |
+| `bot-gateway/bots/fin.bot.ts:32` | `finance_transactions` | `entries`⨝`accounts` (`account_type='REVENUE'/'EXPENSE'`, financial-reports bilan bir xil kanon) | `1d8d9f64` |
+| `aisha/.../get-active-alerts.tool.ts:42` | `iot_sensor_alerts` | `iot_alerts` | `1d8d9f64` |
+| `aisha/.../get-active-alerts.tool.ts:46` | `ai_agent_alerts` | `agent_alerts` (`AgentAlertService.send()` bilan bir xil jadval) | `1d8d9f64` |
 
 ---
 
@@ -49,16 +53,14 @@ deb yaxshi xabar aytadi.**
 
 | Fayl:satr | Fantom | Taklif (tasdiqlash kerak) |
 |---|---|---|
-| `hr/telegram-bots/telegram-bots/profile.repo.ts:127` | `inventory_items` | `material_cards` yoki `asset_items` — qaysi biri: kontekstga qarab |
-| `scripts/seed-sd-marketing.ts:112` | `sd_orders` | `sales_orders` (seed skripti — ishga tushirilsa yiqiladi) |
-| `bot-gateway/bots/fin.bot.ts:32` | `finance_transactions` | `gl_entries` / `entries` — ⚠️ `type IN ('INCOME','EXPENSE')` lug'ati GL modeliga mos emas, moslashtirish kerak |
+| `scripts/seed-sd-marketing.ts:112` | `sd_orders` | ⛔ **ATAYLAB TEGILMAYDI** — `sales_orders` ga ko'chirish MEXANIK jihatdan to'g'ri bo'lardi, lekin bu skript FULL COMPANY RESET (2026-07-11) dan oldingi NAMUNAVIY ma'lumot yozadi. Uni tuzatib ishga tushirish egasi qo'lda quryotgan real kompaniya ustiga uydirma buyurtma qo'shib qo'yardi. |
 
 ### B. Manba umuman yo'q — jadval ham, hisob ham qurilmagan
 
 | Fayl:satr | Fantom | Nega ko'chirib bo'lmaydi |
 |---|---|---|
-| `aisha/.../get-active-alerts.tool.ts:38` | `security_alerts` | Bazada 5 xil alert jadvali bor (`system_alerts`, `ai_alerts`, `hr_tz2_security_alerts`, `sos_alerts`, `iot_alerts`) — qaysi biri "xavfsizlik ogohlantirishi" ekani **egasi qarori** (Q-34) |
-| `aisha/.../get-active-alerts.tool.ts:46` | `ai_agent_alerts` | Eng yaqin — `agent_alerts`; nomi bir harfga farq qiladi, lekin ustun mosligi tekshirilmagan |
+| `aisha/.../get-active-alerts.tool.ts:38` | `security_alerts` | ⚠️ Endi izolyatsiya qilingan (`1d8d9f64`) — o'zi bo'sh qaytadi, lekin `iot`/`ai_agents` manbalarini endi BLOKLAMAYDI. Bazada 4 xil nomzod bor (`system_alerts`, `ai_alerts`, `hr_tz2_security_alerts`, `sos_alerts`) — qaysi biri kanonik ekani **egasi qarori** (Q-34) |
+| `hr/telegram-bots/telegram-bots/profile.repo.ts:127` | `inventory_items` + `pos_inventory_items` (IKKALASI HAM) | Xodimga biriktirilgan inventar uchun mos jadval bazada YO'Q. `asset_items` (assigned_to bor) — asosiy vosita hisobi, miqdor/birlik ustuni yo'q; `position_equipment` — lavozim bo'yicha TALAB QILINADIGAN uskuna ro'yxati (master-data), xodimga real biriktirilgan narsani kuzatmaydi. Ikkalasi ham `getEmployeeInventory()` semantikasiga to'g'ri kelmaydi — yangi jadval kerak (Q-35) |
 | `bot-gateway/bots/qc.bot.ts:53` | `qc_dpmo_stats` | DPMO **hisoblanmaydi** — jadval ham, hisoblovchi kod ham yo'q. `qc_defects` dan hisoblash kerak (yangi ish, ko'chirish emas) |
 | `aisha/.../get-production-status.tool.ts:41` | `iot_oee_metrics` | OEE agregat jadvali yo'q; `production-agent.calculateOEE()` mavjud, lekin `performance`/`quality` hamon placeholder (`estimated: true`) |
 | `pp/infrastructure/repositories/drizzle-pp.repo.ts:213` | `bom_components` | `bom_items` / `bom_headers` / `boms` / `tech_card_bom` — **to'rtta** nomzod; ADR-006 `technology_cards` ni kanonik deydi, moslashtirish kerak |
@@ -76,12 +78,9 @@ deb yaxshi xabar aytadi.**
 
 ## Tavsiya etilgan tartib
 
-1. **A guruhi (3 ta qoldi)** — mexanik ko'chirish, ustun mosligini `information_schema` bilan
-   tasdiqlab. ⚠️ `seed-sd-marketing.ts` ni "tuzatish" **tavsiya etilmaydi**: FULL COMPANY RESET
-   (2026-07-11) da egasi namunaviy ma'lumotni ataylab o'chirgan va real kompaniyani CRUD orqali
-   quryapti — bu skriptni ishlatish uydirma ma'lumotni qaytarardi.
-2. **B guruhi (7 ta)** — har biri uchun avval **kanonik manbani belgilash** kerak; bu 3 ta alohida
-   egasi-savoli (alert lug'ati, BOM kanoni, KPI saqlanadimi).
+1. **A guruhi — bo'sh.** Yagona qolgan (`sd_orders`) ataylab tegilmaydi (yuqorida sabab).
+2. **B guruhi (6 ta)** — har biri uchun avval **kanonik manbani belgilash** kerak (4 ta alohida
+   egasi-savoli: security-alert lug'ati, xodim-inventar jadvali, BOM kanoni, KPI saqlanadimi).
 3. **C guruhi (2 ta)** — POS botining maqsadi vizyon bilan solishtirilishi kerak.
 
 ## ✅ Takrorlanmasligi uchun — ratchet qo'shildi (`17c298ac`)
