@@ -15,10 +15,9 @@
  *   QcFailedEvent instance) — that is tracked as a separate cleanup.
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { Notification } from '../../domain/aggregates/notification.aggregate';
-import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
+import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { CreateNotificationCommand } from '../../application/commands/create-notification.command';
 import { NotificationRoutingRepository } from '../notification-routing.repository';
 import { QcFailedEvent } from '@modules/qc/domain/events';
 
@@ -32,8 +31,11 @@ const QC_FAILED_FALLBACK_ROLE = 'production_manager';
 export class QcFailedNotificationListener implements IEventHandler<QcFailedEvent> {
   private readonly logger = new Logger(QcFailedNotificationListener.name);
 
+  // Audit 2026-08-07: was `notificationRepo.save()` — an in-app row only. A failed QC
+  // inspection is exactly the case where the production manager must be reached off-screen,
+  // so this now goes through CreateNotificationHandler (preferences → Telegram → status).
   constructor(
-    @Inject(NOTIFICATION_REPO) private readonly notificationRepo: INotificationRepo,
+    private readonly commandBus: CommandBus,
     private readonly routing: NotificationRoutingRepository,
   ) {}
 
@@ -47,18 +49,19 @@ export class QcFailedNotificationListener implements IEventHandler<QcFailedEvent
         this.logger.warn('QcFailedNotificationListener: no active targets resolved (routing rule + fallback both empty)');
       }
 
-      await Promise.all(
-        userIds.map((id) => {
-          const notification = Notification.createForUser(
-            String(id),
-            'Quality Control Failed',
-            `Inspection #${event.inspectionId} on order ${event.orderId} failed. Reason: ${event.reason}`,
-            'qc_failed',
-          );
-          notification.referenceId = event.inspectionId;
-          notification.referenceType = 'inspection';
-          return this.notificationRepo.save(notification);
-        }),
+      await Promise.allSettled(
+        userIds.map((id) =>
+          this.commandBus.execute(
+            new CreateNotificationCommand(
+              String(id),
+              'Quality Control Failed',
+              `Inspection #${event.inspectionId} on order ${event.orderId} failed. Reason: ${event.reason}`,
+              'qc_failed',
+              String(event.inspectionId),
+              'inspection',
+            ),
+          ),
+        ),
       );
     } catch (err: unknown) {
       this.logger.warn(`QcFailedNotificationListener failed: ${String(err)}`);

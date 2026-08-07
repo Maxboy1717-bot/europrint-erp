@@ -6,10 +6,9 @@
  *   directly to the event class rather than the legacy string topic.
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { Notification } from '../../domain/aggregates/notification.aggregate';
-import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
+import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { CreateNotificationCommand } from '../../application/commands/create-notification.command';
 import { NotificationRoutingRepository } from '../notification-routing.repository';
 import { MroMaintenanceStopEvent } from '@modules/mro/domain/events';
 
@@ -25,8 +24,11 @@ export class MroMachineStoppedNotificationListener
 {
   private readonly logger = new Logger(MroMachineStoppedNotificationListener.name);
 
+  // Audit 2026-08-07: was `notificationRepo.save()` — an in-app row only, so "machine stopped"
+  // waited for the director to open the app. Routed through CreateNotificationHandler, which
+  // applies channel preferences and actually sends (Telegram/email/SMS) + records status.
   constructor(
-    @Inject(NOTIFICATION_REPO) private readonly notificationRepo: INotificationRepo,
+    private readonly commandBus: CommandBus,
     private readonly routing: NotificationRoutingRepository,
   ) {}
 
@@ -40,18 +42,19 @@ export class MroMachineStoppedNotificationListener
       const userIdsResult = await this.routing.resolveUserIds(MRO_STOPPED_EVENT_TYPE, MRO_STOPPED_FALLBACK_ROLE);
       const userIds = userIdsResult.ok ? userIdsResult.data : [];
 
-      await Promise.all(
-        userIds.map((id) => {
-          const notification = Notification.createForUser(
-            String(id),
-            'Equipment Stopped',
-            `Machine ${event.machineId} has stopped (maintenance #${event.maintenanceId})`,
-            'mro_stopped',
-          );
-          notification.referenceId = event.maintenanceId;
-          notification.referenceType = 'maintenance_order';
-          return this.notificationRepo.save(notification);
-        }),
+      await Promise.allSettled(
+        userIds.map((id) =>
+          this.commandBus.execute(
+            new CreateNotificationCommand(
+              String(id),
+              'Equipment Stopped',
+              `Machine ${event.machineId} has stopped (maintenance #${event.maintenanceId})`,
+              'mro_stopped',
+              String(event.maintenanceId),
+              'maintenance_order',
+            ),
+          ),
+        ),
       );
     } catch (err: unknown) {
       this.logger.warn(`MroMachineStoppedNotificationListener failed: ${String(err)}`);

@@ -9,12 +9,11 @@
  *   event-bridge.service.ts.
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
-import { Notification } from '../../domain/aggregates/notification.aggregate';
-import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
+import { CreateNotificationCommand } from '../../application/commands/create-notification.command';
 import { OrderCreatedEvent } from '@modules/sd/domain/events/order-created.event';
 
 @Injectable()
@@ -22,9 +21,9 @@ import { OrderCreatedEvent } from '@modules/sd/domain/events/order-created.event
 export class OrderCreatedNotificationListener implements IEventHandler<OrderCreatedEvent> {
   private readonly logger = new Logger(OrderCreatedNotificationListener.name);
 
-  constructor(
-    @Inject(NOTIFICATION_REPO) private readonly notificationRepo: INotificationRepo,
-  ) {}
+  // Audit 2026-08-07: was `notificationRepo.save()` — in-app row only, no outbound delivery.
+  // Routed through CreateNotificationHandler like orphan-events.listener.ts already was.
+  constructor(private readonly commandBus: CommandBus) {}
 
   async handle(event: OrderCreatedEvent): Promise<void> {
     this.logger.log('Order created event received - creating notification for warehouse manager');
@@ -37,18 +36,19 @@ export class OrderCreatedNotificationListener implements IEventHandler<OrderCrea
         this.logger.warn('OrderCreatedNotificationListener: result capped at 50 warehouse managers — some may not be notified');
       }
 
-      await Promise.all(
-        result.rows.map((u) => {
-          const notification = Notification.createForUser(
-            String(u.id),
-            'New Order Created',
-            `Sales Order #${event.orderNumber} (id=${event.orderId}) has been created for company ${event.companyId}`,
-            'order',
-          );
-          notification.referenceId = String(event.orderId);
-          notification.referenceType = 'sales_order';
-          return this.notificationRepo.save(notification);
-        }),
+      await Promise.allSettled(
+        result.rows.map((u) =>
+          this.commandBus.execute(
+            new CreateNotificationCommand(
+              String(u.id),
+              'New Order Created',
+              `Sales Order #${event.orderNumber} (id=${event.orderId}) has been created for company ${event.companyId}`,
+              'order',
+              String(event.orderId),
+              'sales_order',
+            ),
+          ),
+        ),
       );
     } catch (err: unknown) {
       this.logger.warn(`OrderCreatedNotificationListener failed: ${String(err)}`);

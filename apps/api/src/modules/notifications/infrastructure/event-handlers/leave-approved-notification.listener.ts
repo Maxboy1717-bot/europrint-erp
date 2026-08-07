@@ -13,10 +13,10 @@
  *   Vision: 18-notifications #33 (HR LeaveApprovedEvent -> avto bildirishnoma).
  */
 
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { OnEvent } from '@nestjs/event-emitter';
-import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
-import { Notification } from '../../domain/aggregates/notification.aggregate';
+import { CreateNotificationCommand } from '../../application/commands/create-notification.command';
 
 /** Shape of the LeaveApprovedEvent instance emitted by HR ApproveLeaveHandler. */
 interface LeaveApprovedEventLike {
@@ -33,9 +33,10 @@ interface LeaveApprovedEventLike {
 export class LeaveApprovedNotificationListener {
   private readonly logger = new Logger(LeaveApprovedNotificationListener.name);
 
-  constructor(
-    @Inject(NOTIFICATION_REPO) private readonly notificationRepo: INotificationRepo,
-  ) {}
+  // Audit 2026-08-07: was `notificationRepo.save()` — the approval only showed up if the
+  // employee opened the app. Routed through CreateNotificationHandler, which applies the
+  // employee's channel preferences and actually delivers (Telegram/email/SMS) + records status.
+  constructor(private readonly commandBus: CommandBus) {}
 
   @OnEvent('LeaveApproved')
   async handleLeaveApproved(event: LeaveApprovedEventLike): Promise<void> {
@@ -45,22 +46,24 @@ export class LeaveApprovedNotificationListener {
       return;
     }
     try {
-      const notification = Notification.createForUser(
-        String(userId),
-        "Ta'til so'rovi tasdiqlandi",
-        "Ta'til so'rovingiz tasdiqlandi.",
-        'leave_approved',
-      );
-      // referenceType -> notifications.entity_type (text). referenceId left null:
+      // referenceType -> notifications.entity_type (text). referenceId left undefined:
       // notifications.entity_id is INTEGER and the leave id is not a guaranteed-safe
       // integer on this bus, so we record only the reference type.
-      notification.referenceType = 'leave_request';
-      const saveResult = await this.notificationRepo.save(notification);
-      if (!saveResult.ok) {
-        this.logger.warn(`LeaveApproved -> notification save failed: ${saveResult.error.message}`);
+      const result = await this.commandBus.execute(
+        new CreateNotificationCommand(
+          String(userId),
+          "Ta'til so'rovi tasdiqlandi",
+          "Ta'til so'rovingiz tasdiqlandi.",
+          'leave_approved',
+          undefined,
+          'leave_request',
+        ),
+      );
+      if (result && result.ok === false) {
+        this.logger.warn(`LeaveApproved -> notification failed: ${String(result.error?.message)}`);
         return;
       }
-      this.logger.log(`LeaveApproved -> notification saved for userId=${String(userId)}`);
+      this.logger.log(`LeaveApproved -> notification dispatched for userId=${String(userId)}`);
     } catch (err) {
       this.logger.warn(`LeaveApprovedNotificationListener failed: ${String(err)}`);
     }
