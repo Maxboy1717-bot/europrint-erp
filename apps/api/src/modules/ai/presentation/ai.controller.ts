@@ -34,6 +34,7 @@ import { AiRequest } from '../domain/types/ai.types';
 import { z } from 'zod';
 import { DemandForecastService, DemandForecastResponse } from '../application/services/demand-forecast.service';
 import { RushOrdersService, RushOrderDto } from '../application/services/rush-orders.service';
+import { BottleneckAnalysisService } from '../application/services/bottleneck-analysis.service';
 
 const RejectRushOrderSchema = z.object({
   reason: z.string().max(2000).optional(),
@@ -65,6 +66,7 @@ export class AiController {
  private readonly i18n: I18nService,
  private readonly demandForecastSvc: DemandForecastService,
  private readonly rushOrdersSvc: RushOrdersService,
+ private readonly bottleneckSvc: BottleneckAnalysisService,
  ) {}
 
  @Post('call')
@@ -185,8 +187,11 @@ export class AiController {
  @Get('bottleneck/analysis')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'AI bottleneck tahlili' })
- getBottleneckAnalysis() {
-   return { bottlenecks: [], analyzedAt: new Date().toISOString() };
+ // Audit 2026-08-07: bu metod `{ bottlenecks: [], analyzedAt: <hozir> }` ni qattiq qaytarardi —
+ // bazaga umuman bormasdi, lekin sana bilan "tahlil qilindi, to'siq yo'q" degan taassurot
+ // berardi (Qoida 10 / Q-40). Endi real TOC hisobiga (ρ = λ/μ) delegatsiya qiladi.
+ async getBottleneckAnalysis() {
+   return unwrapOrThrow(await this.bottleneckSvc.analyze(new Date().toISOString()));
  }
 
  @Get('forecast/demand')

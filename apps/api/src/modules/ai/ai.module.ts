@@ -87,6 +87,7 @@ import { AiDailyReportController }   from './presentation/ai-daily-report.contro
 import { AiDailyReportCron }         from './application/services/ai-daily-report.cron';
 // AI Rush Orders (GET/approve/reject /ai/rush-orders, owner 2026-07-13)
 import { RushOrdersService }         from './application/services/rush-orders.service';
+import { BottleneckAnalysisService } from './application/services/bottleneck-analysis.service';
 import { DrizzleRushOrdersRepo }     from './infrastructure/repositories/drizzle-rush-orders.repo';
 
 @Module({
@@ -162,6 +163,7 @@ import { DrizzleRushOrdersRepo }     from './infrastructure/repositories/drizzle
     // GET/approve/reject /ai/rush-orders (owner 2026-07-13)
     DrizzleRushOrdersRepo,
     RushOrdersService,
+    BottleneckAnalysisService,
   ],
   controllers: [
     AiController,
