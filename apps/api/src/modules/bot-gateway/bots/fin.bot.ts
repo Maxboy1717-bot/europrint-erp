@@ -25,12 +25,21 @@ export class FinBotService {
   }
 
   private async getCashflow(): Promise<BotReply> {
+    // Audit 2026-08-07: 'finance_transactions' jadvali bazada YO'Q — bu buyruq HAR DOIM
+    // "0 / 0 / 0" derdi (execSql fallback). Kanonik GL manbai — 'entries' (financial-reports
+    // balans-hisoboti ham aynan shundan o'qiydi, gl_entries EMAS — ikkala jadval jonli bazada
+    // bor, lekin 'entries' hisobot uchun tanlangan kanonik). 'INCOME'/'EXPENSE' lug'ati
+    // to'g'ridan-to'g'ri mos kelmaydi: bu yerda debet-kredit tomonidan account_type='REVENUE'/
+    // 'EXPENSE' bo'yicha hisoblanadi (standart bухгалтерия qoidasi — daromad hisobi kreditlanadi,
+    // xarajat hisobi debetlanadi).
     const rows = await execSql<{ total_in: string; total_out: string }>(sql`
       SELECT
-        SUM(CASE WHEN type = 'INCOME'  THEN amount ELSE 0 END) AS total_in,
-        SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0 END) AS total_out
-      FROM finance_transactions
-      WHERE created_at >= date_trunc('month', NOW())
+        COALESCE(SUM(CASE WHEN ca.account_type = 'REVENUE' THEN e.amount ELSE 0 END), 0) AS total_in,
+        COALESCE(SUM(CASE WHEN da.account_type = 'EXPENSE' THEN e.amount ELSE 0 END), 0) AS total_out
+      FROM entries e
+      LEFT JOIN accounts da ON da.id = e.debit_account_id
+      LEFT JOIN accounts ca ON ca.id = e.credit_account_id
+      WHERE e.created_at >= date_trunc('month', NOW())
     `, [{ total_in: '0', total_out: '0' }]);
 
     const r = rows[0];
