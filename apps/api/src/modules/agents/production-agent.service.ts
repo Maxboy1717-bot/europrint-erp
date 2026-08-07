@@ -9,7 +9,7 @@
  *   Three operations:
  *     - `monitorOrders` — count delayed + at-risk production orders
  *     - `calculateOEE`  — per-machine OEE snapshot
- *     - `detectBottleneck` — find slowest work center by queue size
+ *     - `detectBottleneck` — most loaded work center by TOC utilisation (ρ = λ/μ)
  *
  *   Decisions and alerts go through `AgentAuditService` so they show up
  *   on the Director's AI-Audit panel alongside LLM agent decisions.
@@ -54,6 +54,10 @@ import { db, downtime_events as downtimeEvents, runQuery } from '@shared/db';
 import { AgentAlertService } from './shared/agent-alert.service';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AgentEventBusService } from './shared/agent-event-bus.service';
+// TOC hisobi PP domenida yashaydi va toza funksiya (DI bog'liqligi yo'q) — shuning uchun
+// bu yerda to'g'ridan-to'g'ri instansiya qilinadi, xuddi scheduling.service.ts qilganidek.
+import { SchedulingCapacityService } from '../pp/domain/services/scheduling-capacity.service';
+import type { WorkCenterLoad } from '../pp/domain/services/scheduling.types';
 
 @Injectable()
 export class ProductionAgentService {
@@ -65,6 +69,8 @@ export class ProductionAgentService {
     private readonly audit: AgentAuditService,
     private readonly bus:   AgentEventBusService,
   ) {}
+
+  private readonly capacity = new SchedulingCapacityService();
 
   /** Faol buyurtmalarni tekshirish, kechikish xavfini aniqlash */
   async monitorOrders(): Promise<{ delayed: number; atRisk: number }> {
@@ -135,13 +141,52 @@ export class ProductionAgentService {
     }
   }
 
-  /** Eng sekin ish markazini topish */
-  async detectBottleneck(): Promise<{ machineId: string; queueSize: number } | null> {
-    const r = await runQuery<{ machine_id: string; queue: string }>(sql`
-      SELECT machine_id::text, COUNT(*)::text AS queue FROM production_operations
-      WHERE status = 'pending' GROUP BY machine_id ORDER BY queue DESC LIMIT 1
-    `).catch(() => ({ rows: [] }));
-    return r.rows[0] ? { machineId: r.rows[0].machine_id, queueSize: Number(r.rows[0].queue) } : null;
+  /**
+   * Eng yuklangan ish markazini topish (TOC: ρ = λ/μ, bottleneck = argmax ρ).
+   *
+   * Audit 2026-08-07: bu metod `production_operations` jadvalidan o'qirdi — bunday jadval
+   * bazada UMUMAN YO'Q. Xato `.catch(() => ({rows: []}))` bilan yutilgani uchun endpoint
+   * jimgina HAR DOIM `null` qaytarardi, ya'ni "to'siq yo'q" deb yolg'on aytardi (Q-40).
+   *
+   * Ayni paytda haqiqiy TOC hisobi (`SchedulingCapacityService`) kodda mavjud edi, lekin
+   * uni faqat `SchedulingService` chaqirardi — u esa hech qayerga inject qilinmagan, ya'ni
+   * yetib bo'lmaydigan edi. Endi jonli endpoint o'sha hisobni ishlatadi.
+   *
+   * λ = kutayotgan operatsiyalarning rejalashtirilgan soati, μ = ish markazining kunlik
+   * soati. ρ = kunlardagi zaxira; eng kattasi — to'siq. Ikkala qiymat ham mavjud
+   * ustunlardan olinadi (`production_order_operations.planned_duration`,
+   * `work_centers.hours_per_day`) — hech narsa taxmin qilinmaydi.
+   */
+  async detectBottleneck(): Promise<{ machineId: string; queueSize: number; utilization?: number } | null> {
+    const r = await runQuery<{ work_center_id: string; pending_hours: string; hours_per_day: string; pending_ops: string }>(sql`
+      SELECT wc.id::text                                    AS work_center_id,
+             COALESCE(SUM(op.planned_duration), 0)::text    AS pending_hours,
+             COALESCE(NULLIF(wc.hours_per_day, 0), 8)::text AS hours_per_day,
+             COUNT(op.id)::text                             AS pending_ops
+      FROM work_centers wc
+      JOIN production_order_operations op
+        ON op.work_center_id = wc.id
+       AND op.status IN ('pending', 'queued', 'planned')
+      WHERE wc.is_active = true AND wc.deleted_at IS NULL
+      GROUP BY wc.id, wc.hours_per_day
+    `).catch(() => ({ rows: [] as Array<{ work_center_id: string; pending_hours: string; hours_per_day: string; pending_ops: string }> }));
+
+    const loads: WorkCenterLoad[] = r.rows.map((row) => ({
+      workCenterId: row.work_center_id,
+      arrivalRate: Number(row.pending_hours) || 0,
+      serviceRate: Number(row.hours_per_day) || 8,
+    }));
+    if (loads.length === 0) return null;
+
+    const toc = this.capacity.detectBottleneck(loads);
+    if (!toc.ok) return null;
+
+    const opsById = new Map(r.rows.map((row) => [row.work_center_id, Number(row.pending_ops) || 0]));
+    return {
+      machineId: toc.data.bottleneck,
+      queueSize: opsById.get(toc.data.bottleneck) ?? 0,
+      utilization: toc.data.utilization,
+    };
   }
 
   /** Smena hisoboti */
