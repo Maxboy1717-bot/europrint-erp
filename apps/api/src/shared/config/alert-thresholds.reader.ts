@@ -14,6 +14,24 @@
  *   (allaqachon o'qiladi), bu jadval esa QACHON yuborishni. `alert_type` qiymatlari ikkala
  *   jadvalda ataylab bir xil.
  *
+ * TO'RT CHEGARANING HOLATI (2026-08-07)
+ *   ✅ `wms.lot_expiring` (7 kun) — ULANDI. `abc-aging-expiry.service.ts getExpiry()` `critical`
+ *      statusini shu qiymatdan hisoblaydi; `StockAlertCron` aynan shu statusga tayanadi.
+ *   ✅ `wms.low_stock` (20%) — ULANDI, qo'shimcha daraja sifatida. Batafsil sabab
+ *      `pos-low-stock.job.ts` da (⚠️ ZIDDIYAT: kod 100% da ogohlantiradi, jadval 20% deydi).
+ *   ⛔ `qc.failed` (5%) — ULANMADI, chunki ulash uchun joy YO'Q, ya'ni bu kod-kamchiligi emas:
+ *      `qc-dispatch-conclusion.service.ts:_deriveVerdict()` verdikti **ikkilik** —
+ *      `totalDefects === 0 ? 'passed' : 'failed'`. Foiz chegarasini kiritish "10 000 dan 1 ta
+ *      nuqson butun buyurtmani yiqitadimi?" degan **biznes-savolga javob berish** demakdir, bu esa
+ *      egasi qarori (Q-34), agent qarori emas. ⚠️ Bundan tashqari `business_settings` da
+ *      `qc.lot_defect_fail_ratio` (0.05 = 5%) allaqachon bor — bir xil raqam ikki jadvalda,
+ *      ikkalasi ham "5%". Qaysi biri kanonik ekanini egasi belgilashi kerak; uchinchi yo'l
+ *      qo'shish holatni yomonlashtirardi.
+ *   ⛔ `mro.machine_stopped` (30 daqiqa) — ULANMADI, chunki solishtiradigan **ma'lumot yo'q**:
+ *      `MroMaintenanceStopEvent` faqat `{maintenanceId, machineId}` tashiydi, to'xtash
+ *      davomiyligi umuman uzatilmaydi (`machine-stopped.listener.ts` dagi TODO ham shuni tan
+ *      oladi). Avval `StopMachineCommand` davomiylikni olib yurishi kerak.
+ *
  * QOIDALAR
  *   - Faqat READ (shared-read qoidasi — MODUL_SHARTNOMASI). Boshqaruv admin modulida.
  *   - HECH QACHON throw qilmaydi: qator yo'q / nofaol / DB xatosida fallback qaytaradi, ya'ni

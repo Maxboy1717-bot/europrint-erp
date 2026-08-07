@@ -750,8 +750,12 @@ bir bandni CLAUDE.md ning tegishli bo'limida dalil bilan hujjatlashtirdim:
 ### ⚠️ 2026-08-07 da topilgan HAQIQIY ochiq muammolar
 
 1. **900+ qatorli 6 fayl** — Qoida 13 jadvaliga qarang (jadval "qolmadi" deb yolg'on yozgan edi)
-2. **`alert_thresholds` va `kanban_column_sla`** — jadvallar default qatorlar bilan mavjud, lekin
-   **hech qanday kod ularni o'qimaydi**; `kanban_column_sla` uchun boot-guard ham yo'q
+2. **`alert_thresholds`** — ✅ qisman yopildi (`ce38304b`): `shared/config/alert-thresholds.reader.ts`
+   yaratildi, `wms.lot_expiring` va `wms.low_stock` ulandi. ⛔ Qolgan 2 tasi **atayin ulanmadi**:
+   `qc.failed` (verdikt ikkilik — foiz kiritish egasi qarori, Q-34; ustiga `business_settings.qc.lot_defect_fail_ratio`
+   bilan dublikat) va `mro.machine_stopped` (`MroMaintenanceStopEvent` davomiylikni tashimaydi).
+   Sabablar reader faylining sarlavhasida to'liq yozilgan.
+   **`kanban_column_sla`** — hamon **hech qanday kod o'qimaydi**, boot-guard ham yo'q
 3. **`PosDepartmentGuard` / `PosWarehouseAccessGuard`** — to'liq yozilgan, lekin hech qaysi
    controllerda `@UseGuards()` bilan qo'llanilmagan → bo'lim/ombor izolyatsiyasi amalda ishlamaydi
 4. **`business_settings.pos.norma_fakt_farqi_ortiqcha_sarf_94`** (id=50, 2026-07-11) — hech qaysi
