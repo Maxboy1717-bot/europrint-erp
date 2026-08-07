@@ -1,0 +1,86 @@
+# Fantom jadvallar — kod so'raydi, bazada yo'q (2026-08-07)
+
+> **Topilish usuli:** `apps/api/src` dagi barcha `FROM|JOIN|INTO|UPDATE <nom>` murojaatlari
+> (833 nomzod) jonli `information_schema.tables` (1187 jadval) bilan solishtirildi; CTE nomlari,
+> PG katalog obyektlari va PL/pgSQL o'zgaruvchilari chiqarib tashlandi; qolgani **fayl:satr bilan
+> qo'lda tasdiqlandi** (izoh/DDL/`to_regclass` qo'riqchisi emasligi tekshirildi).
+>
+> **Natija: 21 ta jonli so'rov yo'li mavjud bo'lmagan jadvalga boradi.**
+
+## Nima uchun bu jim qoladi
+
+Ikkala chaqiruv naqshi ham xatoni yutadi:
+- `execSql<T>(sql\`...\`, fallback)` — xato bo'lsa `fallback` qaytaradi → bot **"ma'lumot yo'q"**
+  deb javob beradi. Foydalanuvchi buni "hozircha bo'sh" deb tushunadi, "buzuq" deb emas.
+- `.catch(() => ({ rows: [] }))` / `Result` ichida `Err` — chaqiruvchi ko'pincha bo'sh ro'yxatni
+  "hech narsa topilmadi" deb talqin qiladi.
+
+Bu Q-40 ning eng zararli shakli: **past qoldiq bor bo'lsa ham bot "Barcha materiallar yetarli"
+deb yaxshi xabar aytadi.**
+
+---
+
+## ✅ Tuzatilgan (2026-08-07)
+
+| Fayl | Fantom jadval | Kanonik manba | Commit |
+|---|---|---|---|
+| `bot-gateway/bots/ombor.bot.ts:27` | `warehouse_materials` | `warehouse_stock` + `material_cards` | `de9c4305` |
+| `bot-gateway/bots/logistics.bot.ts:29` | `fleet_vehicles` | `mm_vehicles` (ustunlar aynan mos) | `de9c4305` |
+| `bot-gateway/bots/crm.bot.ts:30` | `crm_opportunities` | `crm_deals` (VIEW; yozish → `deals`) | `de9c4305` |
+| `pos/application/services/pos-fifo.service.ts:36` | `pos_materials` | `material_cards.shelf_life_days` | `5037cde1` |
+| `pos/application/services/pos-fifo.service.ts:63` | `pos_batches` | `batch_lots` | `5037cde1` |
+| `agents/production-agent.service.ts` | `production_operations` | `production_order_operations` | `a65a33ad` |
+
+---
+
+## ⏳ Ochiq — 18 ta so'rov yo'li
+
+### A. Kanonik manba aniq, faqat ko'chirish kerak
+
+| Fayl:satr | Fantom | Taklif (tasdiqlash kerak) |
+|---|---|---|
+| `hr/telegram-bots/telegram-bots/events.repo.ts:189` | `app_users` | `users` (`u.employee_id = e.id` → `employees.user_id`) |
+| `agents/cashflow-agent.service.ts:81` | `ar_invoices` | `finance_invoices` (`invoice_type='sale'`) |
+| `aisha/application/tools/get-financial-summary.tool.ts:54` | `fi_ar_invoices` | `finance_invoices` |
+| `aisha/application/tools/get-employee-info.tool.ts:56` | `hr_employees` | `employees` |
+| `hr/telegram-bots/telegram-bots/profile.repo.ts:127` | `inventory_items` | `material_cards` yoki `asset_items` — qaysi biri: kontekstga qarab |
+| `general/services/legacy-warehouse.helpers.ts:227` | `material_lots` | `batch_lots` |
+| `ai-agents/mes/mes-monitor.service.ts:203` | `mes_work_orders` | `production_orders` |
+| `scripts/seed-sd-marketing.ts:112` | `sd_orders` | `sales_orders` (seed skripti — ishga tushirilsa yiqiladi) |
+| `bot-gateway/bots/fin.bot.ts:32` | `finance_transactions` | `gl_entries` / `entries` — ⚠️ `type IN ('INCOME','EXPENSE')` lug'ati GL modeliga mos emas, moslashtirish kerak |
+
+### B. Manba umuman yo'q — jadval ham, hisob ham qurilmagan
+
+| Fayl:satr | Fantom | Nega ko'chirib bo'lmaydi |
+|---|---|---|
+| `aisha/.../get-active-alerts.tool.ts:38` | `security_alerts` | Bazada 5 xil alert jadvali bor (`system_alerts`, `ai_alerts`, `hr_tz2_security_alerts`, `sos_alerts`, `iot_alerts`) — qaysi biri "xavfsizlik ogohlantirishi" ekani **egasi qarori** (Q-34) |
+| `aisha/.../get-active-alerts.tool.ts:46` | `ai_agent_alerts` | Eng yaqin — `agent_alerts`; nomi bir harfga farq qiladi, lekin ustun mosligi tekshirilmagan |
+| `agents/security-agent.service.ts:26` | `auth_audit_log` | `audit_log` / `audit_logs` / `audit_trail_log` — **uchta nomzod**, kanonik qaysi biri ekani hujjatlashtirilmagan |
+| `bot-gateway/bots/qc.bot.ts:53` | `qc_dpmo_stats` | DPMO **hisoblanmaydi** — jadval ham, hisoblovchi kod ham yo'q. `qc_defects` dan hisoblash kerak (yangi ish, ko'chirish emas) |
+| `aisha/.../get-production-status.tool.ts:41` | `iot_oee_metrics` | OEE agregat jadvali yo'q; `production-agent.calculateOEE()` mavjud, lekin `performance`/`quality` hamon placeholder (`estimated: true`) |
+| `pp/infrastructure/repositories/drizzle-pp.repo.ts:213` | `bom_components` | `bom_items` / `bom_headers` / `boms` / `tech_card_bom` — **to'rtta** nomzod; ADR-006 `technology_cards` ni kanonik deydi, moslashtirish kerak |
+| `hr/telegram-bots/telegram-bots/profile.repo.ts:112` | `employee_kpi` | KPI agregat jadvali yo'q; `employee-kpi.handler.ts` hisoblaydi, lekin saqlamaydi |
+| `aisha/.../schedule-meeting.tool.ts:75` | `telegram_user_links` | Kanonik manba `employees.telegram_chat_id` (`CreateNotificationHandler` shuni ishlatadi) — ⚠️ lekin jonli bazada **0 qator** |
+
+### C. ⚠️ Vizyon nomuvofiqligi — ko'chirish yechim emas
+
+| Fayl:satr | Fantom | Muammo |
+|---|---|---|
+| `bot-gateway/bots/pos.bot.ts:30` | `pos_sales` | **"Bugungi Sotuv"** so'raydi, lekin loyihada **POS Monitor = zavod ombori kirim/chiqim, KASSIR EMAS** (`project_pos_monitor_purpose`). Kassa/pul → Finance. Ya'ni bu buyruqning o'zi noto'g'ri modelda — jadval nomini almashtirish muammoni hal qilmaydi, **egasi bu bot nimani ko'rsatishi kerakligini aytishi lozim**. |
+| `bot-gateway/bots/pos.bot.ts:41` | `pos_inventory` | Yuqoridagi bilan bir xil ildiz; `warehouse_stock` ga ko'chirish mumkin, lekin avval bot maqsadi aniqlanishi kerak |
+
+---
+
+## Tavsiya etilgan tartib
+
+1. **A guruhi (9 ta)** — mexanik ko'chirish, har biri uchun ustun mosligini `information_schema`
+   bilan tasdiqlab. Eng katta darhol foyda: `aisha/` toolarining 3 tasi va HR bot.
+2. **B guruhi (8 ta)** — har biri uchun avval **kanonik manbani belgilash** kerak; bu 4 ta alohida
+   egasi-savoli (alert lug'ati, audit-log kanoni, BOM kanoni, KPI saqlanadimi).
+3. **C guruhi (2 ta)** — POS botining maqsadi vizyon bilan solishtirilishi kerak.
+
+## Takrorlanmasligi uchun
+
+Bu tekshiruvni avtomatlashtirish mumkin: `scripts/` ga `check-phantom-tables.mjs` qo'shilsa,
+pre-commit `information_schema` bilan solishtirib yangi fantom murojaatni bloklaydi. Hozirgi
+ratchetlar (`schema-dup`, `check-fe-api-urls`) bilan bir xil naqsh.
