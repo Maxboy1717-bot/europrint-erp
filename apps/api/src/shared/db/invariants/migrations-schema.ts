@@ -2312,6 +2312,50 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         '0 = faqat sanaydi va hisobot beradi (DEFAULT, xavfsiz); 1 = muddati o''tgan qatorlarni HAQIQATAN o''chiradi. Agregat jadval yo''q, ya''ni o''chirish qaytarib bo''lmaydi — 1 ga faqat egasi qo''yadi.', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // Audit 2026-08-07: overdue-po.cron.ts, credit-check.cron.ts, budget-alert.cron.ts,
+  // warehouse-rental.cron.ts, advance-reminder.cron.ts — beshtasi ham `processed=0` qattiq
+  // yozib hech qanday DB so'rovisiz "muvaffaqiyatli" deb log yozardi (9 ta bir xil naqshdagi
+  // stub topildi, docs/audit/FANTOM-JADVALLAR-2026-08-07.md dan alohida sinf). Har biri endi
+  // real so'rov yuboradi; chegara qiymatlari shu yerda CRUD orqali sozlanadigan qilib seed
+  // qilinadi (egasi qoidasi: hech qachon kodga qotib qolmasin).
+  {
+    name: 'business_settings mm.po_reminder_days_ahead seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('mm', 'mm.po_reminder_days_ahead', 'Xarid buyurtmasi eslatmasi (necha kun oldin)', 'number', 3, 'kun', 0, 60,
+        'overdue-po.cron.ts — kutayotgan (received/invoiced/closed/cancelled emas) PO ning expected_date''i shu kundan yaqin yoki o''tgan bo''lsa, uni yaratgan xaridorga eslatma yuboriladi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings sd.credit_check_warn_pct seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('sd', 'sd.credit_check_warn_pct', 'Kredit-limit ogohlantirish chegarasi', 'number', 0.8, 'ulush', 0, 1,
+        'credit-check.cron.ts — sd_customers.credit_limit ning shu ulushiga (masalan 0.8=80%) sd_payments (status=pending) yig''indisi yetsa, mijoz menejeriga ogohlantirish yuboriladi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  // Audit 2026-08-07: `drizzle-hr-base.repo.ts saveAttendance()` — HR modulining KANONIK
+  // check-in yozish yo'li — `ON CONFLICT (employee_id, attendance_date) DO UPDATE` ishlatadi,
+  // lekin `attendance` jadvalida bu juftlikka mos unique constraint/index UMUMAN YO'Q edi.
+  // Jonli tekshiruv: xuddi shu INSERT rollback-tranzaksiyada ishga tushirilganda Postgres
+  // "нет уникального ограничения... ON CONFLICT" xatosini qaytardi — ya'ni bu yozish yo'li
+  // HAR CHAQIRILGANDA yiqilardi (xodim check-in qilganda kutilmagan xato). Jadval hozircha
+  // bo'sh (FULL COMPANY RESET) — dublikat (employee_id, attendance_date) yo'q, shuning uchun
+  // indeks xavfsiz qo'shiladi.
+  // Jonli sinovda tasdiqlangan (2026-08-07): partial index (`WHERE attendance_date IS NOT
+  // NULL`) `ON CONFLICT (employee_id, attendance_date)` uchun arbiter sifatida ISHLAMAYDI —
+  // Postgres qisman indeksni faqat ON CONFLICT'ning o'zida bir xil WHERE ko'rsatilganda
+  // taniydi. To'liq (partial bo'lmagan) unique indeks ishlatildi — bir nechta NULL
+  // `attendance_date` qatorlar baribir to'qnashuvsiz (Postgres NULL != NULL qoidasi).
+  {
+    name: 'attendance unique employee_id+attendance_date index (2026-08-07)',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_attendance_employee_date ON attendance (employee_id, attendance_date)`,
+  },
+  {
+    name: 'business_settings finance.budget_alert_warn_pct seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('finance', 'finance.budget_alert_warn_pct', 'Byudjet sarf-ogohlantirish chegarasi', 'number', 0.8, 'ulush', 0, 1,
+        'budget-alert.cron.ts — budgets.spent_amount / budget_amount shu ulushdan oshsa, byudjet egasiga (created_by) ogohlantirish yuboriladi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
   {
     name: 'notification_routing_rules director.approval_requested seed (2026-08-07)',
     sql: `INSERT INTO notification_routing_rules (event_type, target_role, target_user_id, notes)
