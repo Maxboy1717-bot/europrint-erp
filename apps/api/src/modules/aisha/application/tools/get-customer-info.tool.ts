@@ -15,14 +15,20 @@ import { Injectable } from '@nestjs/common';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
-import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
-import { provSource, provResult, rowsOf } from './_helpers';
+import type { IAishaTool, ToolResult, AishaToolContext } from '../../domain/tool.interface';
+import { provSource, provResult, rowsOf, hasAishaRole } from './_helpers';
 
 export interface CustomerInfo {
   customerId: string; name: string; clv: number;
   orders6mCount: number; orders6mTotal: number;
   rfmScore: string;
 }
+
+// Same live-role set already fixed in sd-customers.controller.ts/sd-leads.controller.ts
+// (SD-CRM audit §3.2 P0: live users seed 'manager', not 'sales_manager') — mirrored here
+// rather than the unused canonical SALES_ROLES export (roles.constants.ts), which still
+// only lists 'sales_manager' and would silently re-block real managers.
+const CUSTOMER_INFO_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
 
 @Injectable()
 export class GetCustomerInfoTool implements IAishaTool {
@@ -38,7 +44,14 @@ export class GetCustomerInfoTool implements IAishaTool {
     },
   };
 
-  async execute(input: Record<string, unknown>): Promise<Result<ToolResult<CustomerInfo>>> {
+  async execute(input: Record<string, unknown>, ctx?: AishaToolContext): Promise<Result<ToolResult<CustomerInfo>>> {
+    // 20-agent audit 2026-08-06: this tool accepted no ctx/role at all, unlike
+    // get-employee-info.tool.ts's equivalent PII gate — any Aisha user (even
+    // outside the chat controller's own director/admin/manager gate, should that
+    // ever widen) could pull customer CLV/RFM. Same allow-list precedent.
+    if (!hasAishaRole(ctx?.role, CUSTOMER_INFO_ROLES)) {
+      return Err(AppErr('FORBIDDEN', "Mijoz ma'lumotini faqat sotuv/rahbariyat so'rashi mumkin"));
+    }
     const name = String(input['customerName'] ?? '');
     if (!name) return Err(AppErr('VALIDATION', 'customerName majburiy'));
 
