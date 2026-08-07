@@ -207,11 +207,24 @@ export class DrizzlePpRepository implements IPpRepository {
 
   async findActiveBomComponents(): Promise<Result<BomComponentRow[]>> {
     try {
+      // Audit 2026-08-07 (docs/audit/FANTOM-JADVALLAR-2026-08-07.md): 'bom_components' jadvali
+      // bazada YO'Q — bu so'rov HAR DOIM yiqilardi, ya'ni ko'p bosqichli BOM yoyish (MRP
+      // explosion) hech qachon ishlamasdi. Kanonik BOM juftligi — 'bom_headers' + 'bom_items'
+      // (aynan shu jadvallarni 'pp/bom/drizzle-pp-bom.repo.ts' — PP ning boshqa, faol ishlaydigan
+      // BOM repository'si — ishlatadi; komponent-yozish oqimi 'bom_items.component_id' ga
+      // yozadi, eski 'material_id' ustuni yozilmaydi). parent = BOM qaysi mahsulotni ishlab
+      // chiqaradi (bom_headers.product_id); child = tarkibiy material (bom_items.component_id);
+      // qtyPerUnit = bir dona parent uchun kerakli miqdor (bom_items.quantity, base_quantity=1
+      // bo'yicha normallashtirilgan — ustunning default qiymati 1, shuning uchun ko'pchilik BOM
+      // uchun ikkalasi bir xil).
       const result = await runQuery<DbRow>(sql`
-        SELECT parent_id AS "parentId", child_id AS "childId",
-               qty_per_unit AS "qtyPerUnit"
-        FROM bom_components
-        WHERE is_active = true
+        SELECT h.product_id                                              AS "parentId",
+               i.component_id                                            AS "childId",
+               (i.quantity / NULLIF(h.base_quantity, 0))::numeric        AS "qtyPerUnit"
+        FROM bom_items i
+        JOIN bom_headers h ON h.id = i.bom_id
+        WHERE h.is_active = true AND h.deleted_at IS NULL AND i.deleted_at IS NULL
+          AND i.component_id IS NOT NULL
       `);
       const rawRows = result?.rows ?? [];
       const rows: BomComponentRow[] = (Array.isArray(rawRows) ? rawRows : []).map((r) => ({
