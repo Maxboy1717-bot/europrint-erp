@@ -1,12 +1,28 @@
 /**
  * @module PosMovementChiqimLeft
  * @description Left-panel sections for scanner-only CHIQIM (spec 2026-06-27):
- * WarehouseBar (manba ombor — ko'p ombor bo'lsa almashtirish) + ScanZone (asosiy skaner
- * maydoni, qizil-chiqim mavzusi). Qo'lda material-tanlash YO'Q — faqat skan.
+ * WarehouseBar (manba ombor — ko'p ombor bo'lsa almashtirish) + DestinationWarehouseBar
+ * (faqat INTERNAL_TRANSFER uchun — manzil ombor) + ScanZone (asosiy skaner maydoni,
+ * qizil-chiqim mavzusi). Qo'lda material-tanlash YO'Q — faqat skan.
+ *
+ * Audit 2026-08-08: "KO'CHIRISH" (INTERNAL_TRANSFER) tugmasi PosHome.tsx'da "Ombor → ombor"
+ * deb va'da beradi, lekin bu ekranda manzil-ombor maydoni UMUMAN YO'Q edi — material manba
+ * ombordan kamayadi, qayerga borishi ekranda ko'rsatilmasdi (docs/audit/POS-KIRIM-CHIQIM-
+ * VA-MES-JADVAL-TAHLILI-2026-08-08.md §A.3). DestinationWarehouseBar shu bo'shliqni yopadi —
+ * PosMovementKirimSteps.tsx Step1Header'dagi bir xil <select>+warehousesApi.getAll() naqshi
+ * (xavfsizroq — erkin-matn ID emas, haqiqiy ombor ro'yxatidan tanlanadi).
  */
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useTranslation } from '@/lib/i18n';
+import { warehousesApi } from "../api/pos-monitor.api";
+
+interface WarehouseOption {
+  id: string;
+  code?: string | null;
+  name?: string | null;
+  type?: string | null;
+}
 
 // ─── Warehouse bar ────────────────────────────────────────────────────────────
 // Spec: kirgach is_primary ombor avto-ochiladi; bir necha ombor bo'lsa almashtirish.
@@ -34,6 +50,71 @@ export function WarehouseBar({ fromWarehouseId, onFromWarehouseChange }: Warehou
         />
       </div>
       {fromWarehouseId && (
+        <span className="pos-badge pos-badge-green" style={{ fontSize: 11 }}>
+          {t("omborTanlandi", "Ombor tanlandi")}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ─── Destination warehouse bar (FAQAT INTERNAL_TRANSFER uchun) ────────────────
+// Manzil ombor — haqiqiy ombor ro'yxatidan (`warehousesApi.getAll()`), erkin-matn emas.
+// Manba omborni takrorlash oldini olish uchun tanlangan `fromWarehouseId` chiqarib tashlanadi.
+
+interface DestinationWarehouseBarProps {
+  fromWarehouseId: string;
+  toWarehouseId: string;
+  onToWarehouseChange: (v: string) => void;
+  error?: string;
+}
+
+export function DestinationWarehouseBar({
+  fromWarehouseId, toWarehouseId, onToWarehouseChange, error,
+}: DestinationWarehouseBarProps) {
+  const { t } = useTranslation("common");
+  const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const raw = await warehousesApi.getAll();
+        const list = (Array.isArray(raw) ? raw : []) as WarehouseOption[];
+        if (!cancelled) setWarehouses(list);
+      } catch { /* offline — bo'sh ro'yxat, foydalanuvchi qayta urinishi mumkin */ }
+      finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const options = warehouses.filter(w => String(w.id) !== String(fromWarehouseId));
+
+  return (
+    <div className="pos-card" style={{ padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", border: error ? "1px solid var(--pos-action-chiqim)" : undefined }}>
+      <span style={{ fontSize: 22 }}>🎯</span>
+      <div style={{ flex: 1, minWidth: 180 }}>
+        <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 }}>
+          {t("manzilOmbori", "Manzil ombori")}
+        </label>
+        <select
+          className="pos-input"
+          value={toWarehouseId}
+          onChange={e => onToWarehouseChange(e.target.value)}
+          disabled={loading}
+        >
+          <option value="">{loading ? t("yuklanmoqda", "Yuklanmoqda...") : t("omborTanlang", "Ombor tanlang")}</option>
+          {options.map(w => (
+            <option key={w.id} value={w.id}>
+              {w.code ? `${w.code} — ${w.name ?? ""}` : (w.name ?? w.id)}
+            </option>
+          ))}
+        </select>
+        {error && <div style={{ fontSize: 11, color: "var(--pos-action-chiqim)", marginTop: 3 }}>{error}</div>}
+      </div>
+      {toWarehouseId && (
         <span className="pos-badge pos-badge-green" style={{ fontSize: 11 }}>
           {t("omborTanlandi", "Ombor tanlandi")}
         </span>

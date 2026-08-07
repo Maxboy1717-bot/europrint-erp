@@ -161,6 +161,8 @@
   "handoverNotFound": "Акт топилмади: {id}",
   "insufficientAvailableStock": "Етарли мавжуд эмас: мавжуд={available}, сўралган={requested} (жами={total}, бронланган={reserved})",
   "insufficientStockOrMaterialNotInWarehouse": "Етарли мавжуд қолдиқ йўқ ёки материал бу омборда мавжуд эмас",
+  "transferDestinationCreditFailed": "Кўчириш: манзил омборга қўшишда хатолик — ҳаракат бекор қилинди",
+  "transferDestinationWarehouseRequired": "Кўчириш учун манзил омбори танланиши шарт",
   "insufficientWarehouseStock": "Омбор қолдиғи етарли эмас:\n{blocks}",
   "internalIssueMovementTypeNotFound": "INTERNAL_ISSUE ҳаракати тури топилмади",
   "inventoryCountCannotBeApproved": "Инвентаризацияни тасдиқлаб бўлмайди: {status}",

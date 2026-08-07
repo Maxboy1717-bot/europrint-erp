@@ -8,7 +8,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -205,11 +205,24 @@ export class PosMovementStatusService {
         }
         await this.stockLedger.recordEntry(matId, fromWh, -qty, movId, `out:${movType.code}`);
       } else if (movType?.direction === 'transfer') {
+        // Audit 2026-08-08: `toWh` used to be silently allowed empty — the FE never sent
+        // `toWarehouseId` for INTERNAL_TRANSFER (docs/audit/POS-KIRIM-CHIQIM-VA-MES-JADVAL-
+        // TAHLILI-2026-08-08.md §A.3), and `upsertStockIn`'s Result was never checked, so a
+        // failed destination-credit went unnoticed while the (checked) source-debit still
+        // completed — material decremented from the source, never reliably credited anywhere.
+        // Fail fast before touching stock at all when there is no real destination, and check
+        // BOTH halves of the transfer the same way `decrementStock` already was.
+        if (!toWh) {
+          throw new BadRequestException(await this.i18n.t('errors.transferDestinationWarehouseRequired'));
+        }
         const decR = await this.repo.decrementStock(matId, fromWh, qty);
         if (!decR.ok) {
           throw new BadRequestException(await this.i18n.t('errors.insufficientStockOrMaterialNotInWarehouse'));
         }
-        await this.repo.upsertStockIn(matId, toWh, qty);
+        const incR = await this.repo.upsertStockIn(matId, toWh, qty);
+        if (!incR.ok) {
+          throw new InternalServerErrorException(await this.i18n.t('errors.transferDestinationCreditFailed'));
+        }
         await this.stockLedger.recordEntry(matId, fromWh, -qty, movId, `transfer_out:${movType.code}`);
         await this.stockLedger.recordEntry(matId, toWh, qty, movId, `transfer_in:${movType.code}`);
       }

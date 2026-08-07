@@ -161,6 +161,8 @@
   "handoverNotFound": "Akt topilmadi: {id}",
   "insufficientAvailableStock": "Yetarli mavjud emas: mavjud={available}, so'ralgan={requested} (jami={total}, bronlangan={reserved})",
   "insufficientStockOrMaterialNotInWarehouse": "Yetarli mavjud qoldiq yo'q yoki material bu omborda mavjud emas",
+  "transferDestinationCreditFailed": "Ko'chirish: manzil omborga qo'shishda xatolik — harakat bekor qilindi",
+  "transferDestinationWarehouseRequired": "Ko'chirish uchun manzil ombori tanlanishi shart",
   "insufficientWarehouseStock": "Ombor qoldig'i yetarli emas:\n{blocks}",
   "internalIssueMovementTypeNotFound": "INTERNAL_ISSUE harakati turi topilmadi",
   "inventoryCountCannotBeApproved": "Inventarizatsiya tasdiqlab bo'lmaydi: {status}",

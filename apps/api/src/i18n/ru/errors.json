@@ -161,6 +161,8 @@
   "handoverNotFound": "Акт не найден: {id}",
   "insufficientAvailableStock": "Недостаточно доступного остатка: доступно={available}, запрошено={requested} (всего={total}, забронировано={reserved})",
   "insufficientStockOrMaterialNotInWarehouse": "Недостаточно остатка или материал отсутствует на этом складе",
+  "transferDestinationCreditFailed": "Перемещение: ошибка при зачислении на склад назначения — операция отменена",
+  "transferDestinationWarehouseRequired": "Для перемещения необходимо выбрать склад назначения",
   "insufficientWarehouseStock": "Недостаточно остатка на складе:\n{blocks}",
   "internalIssueMovementTypeNotFound": "Тип движения INTERNAL_ISSUE не найден",
   "inventoryCountCannotBeApproved": "Инвентаризацию нельзя подтвердить: {status}",

@@ -27,7 +27,7 @@ import {
   ToastContainer, ScanNotFoundModal, NumericKeypad,
   initialReason, type ReasonState,
 } from "./PosMovementChiqimHelpers";
-import { WarehouseBar, ScanZone } from "./PosMovementChiqimLeft";
+import { WarehouseBar, DestinationWarehouseBar, ScanZone } from "./PosMovementChiqimLeft";
 import { LinesPanel, SuccessScreen } from "./PosMovementChiqimRight";
 import { useTranslation } from '@/lib/i18n';
 
@@ -42,6 +42,10 @@ export default function PosMovementChiqim() {
   const typeMeta = CHIQIM_TYPE_META[movementType];
 
   const [fromWarehouseId, setFromWarehouseId] = useState("");
+  // Audit 2026-08-08: INTERNAL_TRANSFER uchun manzil ombor — avval umuman yo'q edi
+  // (docs/audit/POS-KIRIM-CHIQIM-VA-MES-JADVAL-TAHLILI-2026-08-08.md §A.3).
+  const [toWarehouseId, setToWarehouseId] = useState("");
+  const isTransfer = movementType === "INTERNAL_TRANSFER";
   const [lines, setLines] = useState<ScannedLine[]>([]);
   const [reason, setReason] = useState<ReasonState>(initialReason());
   // VISION-3340 #60: ixtiyoriy foto-dalil URL → pos_movements.photo_evidence_url.
@@ -176,6 +180,10 @@ export default function PosMovementChiqim() {
   function validate(): string | null {
     if (lines.length === 0) return t("kamidaBittaMahsulotSkanerlangan", "Kamida bitta mahsulot skanerlang");
     if (!fromWarehouseId.trim()) return t("manbaOmboriniTanlang", "Manba omborini tanlang");
+    // Audit 2026-08-08: transfer uchun manzil ombor MAJBURIY — bo'lmasa material
+    // manba ombordan kamayadi-yu, hech qayerga real qo'shilmaydi (§A.3).
+    if (isTransfer && !toWarehouseId.trim()) return t("manzilOmboriniTanlang", "Manzil omborini tanlang");
+    if (isTransfer && toWarehouseId.trim() === fromWarehouseId.trim()) return t("manzilManbadanFarqliBolsin", "Manzil ombori manba ombordan farqli bo'lsin");
     const zero = lines.find(l => l.quantity <= 0);
     if (zero) return `${zero.materialName}: ${t("miqdorNolBolmasin", "miqdor 0 dan katta bo'lsin")}`;
     const over = lines.find(l => exceedsAllowed(l));
@@ -207,6 +215,8 @@ export default function PosMovementChiqim() {
     const payload: Record<string, unknown> = {
       movementTypeCode: movementType,
       fromWarehouseId,
+      // Audit 2026-08-08: avval hech qachon yuborilmasdi — transfer manzilsiz yaratilardi.
+      ...(isTransfer ? { toWarehouseId } : {}),
       notes: buildNotes(),
       // VISION-3340 #60: ixtiyoriy foto-dalil URL (bo'lmasa yuborilmaydi → BE NULL yozadi).
       photoEvidenceUrl: photoUrl.trim() || undefined,
@@ -231,7 +241,7 @@ export default function PosMovementChiqim() {
   }, [fromWarehouseId, lines, reason, movementType, photoUrl]);
 
   function resetForm() {
-    setLines([]); setSubmitted(null); setReason(initialReason()); setScanValue(""); setPhotoUrl("");
+    setLines([]); setSubmitted(null); setReason(initialReason()); setScanValue(""); setPhotoUrl(""); setToWarehouseId("");
   }
 
   // ── Success ────────────────────────────────────────────────────────────────
@@ -301,6 +311,13 @@ export default function PosMovementChiqim() {
       <div style={{ display: "grid", gridTemplateColumns: "55fr 45fr", gap: 16, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <WarehouseBar fromWarehouseId={fromWarehouseId} onFromWarehouseChange={setFromWarehouseId} />
+          {isTransfer && (
+            <DestinationWarehouseBar
+              fromWarehouseId={fromWarehouseId}
+              toWarehouseId={toWarehouseId}
+              onToWarehouseChange={setToWarehouseId}
+            />
+          )}
           <ScanZone
             fromWarehouseId={fromWarehouseId}
             scanValue={scanValue}
