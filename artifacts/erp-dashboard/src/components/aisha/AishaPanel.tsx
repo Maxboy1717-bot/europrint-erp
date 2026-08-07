@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { useAishaStore } from '@/aisha/store';
 import { useTranslation } from '@/lib/i18n';
 import { AishaOrb } from './AishaOrb';
+import { AishaHudCorners } from './AishaHudCorners';
 import { useWakeWord } from '@/aisha/hooks/use-wake-word';
 import './aisha-immersive.css';
 
@@ -62,6 +63,7 @@ export function AishaPanel({ isDirector, accessKey = null, ppnUrl = '/aisha/asse
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
+      <AishaHudCorners />
       <header style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <AishaOrb status={status} size={48} />
         {!collapsed && (
@@ -81,6 +83,7 @@ export function AishaPanel({ isDirector, accessKey = null, ppnUrl = '/aisha/asse
           {collapsed ? '▸' : '▾'}
         </button>
       </header>
+      <div className="aisha-hud-scanline" style={{ marginTop: 10 }} />
 
       {!collapsed && (
         <>

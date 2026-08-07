@@ -35,6 +35,7 @@ import { z } from 'zod';
 import { useTranslation } from '@/lib/i18n';
 import { useAisha, useAishaApprovals, useAishaHistory } from '@/hooks/useAisha';
 import { EPErrorState } from '@/components/ep/EPErrorState';
+import { AishaHudCorners } from './AishaHudCorners';
 import { cn } from '@/lib/utils';
 import type {
   AishaApproval,
@@ -297,6 +298,7 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
       className={cn('aisha-glass', className)}
       style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 50, width: 384, maxWidth: 'calc(100vw - 2rem)' }}
     >
+      <AishaHudCorners />
       <div
         className="aisha-glass-divider"
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid' }}
@@ -332,6 +334,7 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
           )}
         </div>
       </div>
+      <div className="aisha-hud-scanline" />
       <div className="space-y-3" style={{ padding: 18 }}>
         {showHistory && <HistoryPanel h={h} />}
         <ApprovalQueue a={approvals} />

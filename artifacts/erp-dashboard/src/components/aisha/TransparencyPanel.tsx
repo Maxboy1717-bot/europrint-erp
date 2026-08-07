@@ -9,6 +9,8 @@
 import { useState } from 'react';
 import { useAishaStore, type ProvenanceSourceUI, type CameraSnapshotUI } from '@/aisha/store';
 import { useTranslation } from '@/lib/i18n';
+import { AishaHudCorners } from './AishaHudCorners';
+import { AishaRadialGauge } from './AishaRadialGauge';
 import './aisha-immersive.css';
 
 export function TransparencyPanel() {
@@ -35,6 +37,7 @@ export function TransparencyPanel() {
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
+      <AishaHudCorners />
       <button
         onClick={() => setOpen(o => !o)}
         className="aisha-glass-muted"
@@ -47,8 +50,12 @@ export function TransparencyPanel() {
           <h3 className="aisha-glass-title" style={{ margin: '8px 0', fontSize: 14 }}>
             {t('transparency.title') as string}
           </h3>
-          <div data-testid="aisha-confidence" className="aisha-glass-muted" style={{ marginBottom: 12, fontSize: 12 }}>
-            {t('transparency.confidence') as string}: {Math.round(provenance.confidence * 100)}%
+          <div className="aisha-hud-scanline" style={{ marginBottom: 12 }} />
+          <div data-testid="aisha-confidence" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <AishaRadialGauge value={provenance.confidence * 100} size={52} strokeWidth={4} />
+            <span className="aisha-glass-muted" style={{ fontSize: 12 }}>
+              {t('transparency.confidence') as string}
+            </span>
           </div>
           <SectionTitle label={t('transparency.sources') as string} count={sources.length} />
           <ul style={{ marginTop: 4, padding: 0, listStyle: 'none' }}>
