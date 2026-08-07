@@ -6,6 +6,9 @@
 > qo'lda tasdiqlandi** (izoh/DDL/`to_regclass` qo'riqchisi emasligi tekshirildi).
 >
 > **Natija: 21 ta jonli so'rov yo'li mavjud bo'lmagan jadvalga boradi.**
+>
+> **Holat 2026-08-07 kech: 13 tasi tuzatildi, 8 tasi ochiq. Takrorlanmasligi uchun pre-commit
+> ratchet qo'shildi (pastda).**
 
 ## Nima uchun bu jim qoladi
 
@@ -56,7 +59,6 @@ deb yaxshi xabar aytadi.**
 |---|---|---|
 | `aisha/.../get-active-alerts.tool.ts:38` | `security_alerts` | Bazada 5 xil alert jadvali bor (`system_alerts`, `ai_alerts`, `hr_tz2_security_alerts`, `sos_alerts`, `iot_alerts`) — qaysi biri "xavfsizlik ogohlantirishi" ekani **egasi qarori** (Q-34) |
 | `aisha/.../get-active-alerts.tool.ts:46` | `ai_agent_alerts` | Eng yaqin — `agent_alerts`; nomi bir harfga farq qiladi, lekin ustun mosligi tekshirilmagan |
-| `agents/security-agent.service.ts:26` | `auth_audit_log` | `audit_log` / `audit_logs` / `audit_trail_log` — **uchta nomzod**, kanonik qaysi biri ekani hujjatlashtirilmagan |
 | `bot-gateway/bots/qc.bot.ts:53` | `qc_dpmo_stats` | DPMO **hisoblanmaydi** — jadval ham, hisoblovchi kod ham yo'q. `qc_defects` dan hisoblash kerak (yangi ish, ko'chirish emas) |
 | `aisha/.../get-production-status.tool.ts:41` | `iot_oee_metrics` | OEE agregat jadvali yo'q; `production-agent.calculateOEE()` mavjud, lekin `performance`/`quality` hamon placeholder (`estimated: true`) |
 | `pp/infrastructure/repositories/drizzle-pp.repo.ts:213` | `bom_components` | `bom_items` / `bom_headers` / `boms` / `tech_card_bom` — **to'rtta** nomzod; ADR-006 `technology_cards` ni kanonik deydi, moslashtirish kerak |
@@ -74,10 +76,12 @@ deb yaxshi xabar aytadi.**
 
 ## Tavsiya etilgan tartib
 
-1. **A guruhi (9 ta)** — mexanik ko'chirish, har biri uchun ustun mosligini `information_schema`
-   bilan tasdiqlab. Eng katta darhol foyda: `aisha/` toolarining 3 tasi va HR bot.
-2. **B guruhi (8 ta)** — har biri uchun avval **kanonik manbani belgilash** kerak; bu 4 ta alohida
-   egasi-savoli (alert lug'ati, audit-log kanoni, BOM kanoni, KPI saqlanadimi).
+1. **A guruhi (3 ta qoldi)** — mexanik ko'chirish, ustun mosligini `information_schema` bilan
+   tasdiqlab. ⚠️ `seed-sd-marketing.ts` ni "tuzatish" **tavsiya etilmaydi**: FULL COMPANY RESET
+   (2026-07-11) da egasi namunaviy ma'lumotni ataylab o'chirgan va real kompaniyani CRUD orqali
+   quryapti — bu skriptni ishlatish uydirma ma'lumotni qaytarardi.
+2. **B guruhi (7 ta)** — har biri uchun avval **kanonik manbani belgilash** kerak; bu 3 ta alohida
+   egasi-savoli (alert lug'ati, BOM kanoni, KPI saqlanadimi).
 3. **C guruhi (2 ta)** — POS botining maqsadi vizyon bilan solishtirilishi kerak.
 
 ## ✅ Takrorlanmasligi uchun — ratchet qo'shildi (`17c298ac`)
