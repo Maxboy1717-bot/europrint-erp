@@ -30,22 +30,23 @@ deb yaxshi xabar aytadi.**
 | `pos/application/services/pos-fifo.service.ts:36` | `pos_materials` | `material_cards.shelf_life_days` | `5037cde1` |
 | `pos/application/services/pos-fifo.service.ts:63` | `pos_batches` | `batch_lots` | `5037cde1` |
 | `agents/production-agent.service.ts` | `production_operations` | `production_order_operations` | `a65a33ad` |
+| `hr/telegram-bots/.../events.repo.ts:189` | `app_users` + fantom ustun `employees.is_department_head` | `users` + `org_departments.head_user_id` | `2a8d0591` |
+| `agents/cashflow-agent.service.ts:81` | `ar_invoices` | `finance_invoices` (`invoice_type='sales'`, `payment_status`) | `2a8d0591` |
+| `aisha/.../get-employee-info.tool.ts:56` | `hr_employees` | `employees` | `2a8d0591` |
+| `aisha/.../get-financial-summary.tool.ts` | `fi_ap_invoices`, `fi_ar_invoices` + `fi_gl_documents` dagi fantom ustunlar | `finance_invoices` (AP/AR) + `gl_entries`⨝`accounts` (kassa) | `2a8d0591` |
+| `agents/security-agent.service.ts:26` | `auth_audit_log` + hech qachon yozilmaydigan `login_failed` | `users.failed_login_attempts` / `locked_until` + `MAX_FAILED_LOGIN_ATTEMPTS` | `3f0052dc` |
+| `general/services/legacy-warehouse.helpers.ts:227` | `material_lots` | `batch_lots` | `3f0052dc` |
+| `ai-agents/mes/mes-monitor.service.ts:203` | `mes_work_orders` | ⛔ mos jadval YO'Q — kafolatlangan yiqiladigan so'rov olib tashlandi, aniq ogohlantirish qo'yildi | `3f0052dc` |
 
 ---
 
-## ⏳ Ochiq — 18 ta so'rov yo'li
+## ⏳ Ochiq — 8 ta so'rov yo'li
 
 ### A. Kanonik manba aniq, faqat ko'chirish kerak
 
 | Fayl:satr | Fantom | Taklif (tasdiqlash kerak) |
 |---|---|---|
-| `hr/telegram-bots/telegram-bots/events.repo.ts:189` | `app_users` | `users` (`u.employee_id = e.id` → `employees.user_id`) |
-| `agents/cashflow-agent.service.ts:81` | `ar_invoices` | `finance_invoices` (`invoice_type='sale'`) |
-| `aisha/application/tools/get-financial-summary.tool.ts:54` | `fi_ar_invoices` | `finance_invoices` |
-| `aisha/application/tools/get-employee-info.tool.ts:56` | `hr_employees` | `employees` |
 | `hr/telegram-bots/telegram-bots/profile.repo.ts:127` | `inventory_items` | `material_cards` yoki `asset_items` — qaysi biri: kontekstga qarab |
-| `general/services/legacy-warehouse.helpers.ts:227` | `material_lots` | `batch_lots` |
-| `ai-agents/mes/mes-monitor.service.ts:203` | `mes_work_orders` | `production_orders` |
 | `scripts/seed-sd-marketing.ts:112` | `sd_orders` | `sales_orders` (seed skripti — ishga tushirilsa yiqiladi) |
 | `bot-gateway/bots/fin.bot.ts:32` | `finance_transactions` | `gl_entries` / `entries` — ⚠️ `type IN ('INCOME','EXPENSE')` lug'ati GL modeliga mos emas, moslashtirish kerak |
 
@@ -79,8 +80,16 @@ deb yaxshi xabar aytadi.**
    egasi-savoli (alert lug'ati, audit-log kanoni, BOM kanoni, KPI saqlanadimi).
 3. **C guruhi (2 ta)** — POS botining maqsadi vizyon bilan solishtirilishi kerak.
 
-## Takrorlanmasligi uchun
+## ✅ Takrorlanmasligi uchun — ratchet qo'shildi (`17c298ac`)
 
-Bu tekshiruvni avtomatlashtirish mumkin: `scripts/` ga `check-phantom-tables.mjs` qo'shilsa,
-pre-commit `information_schema` bilan solishtirib yangi fantom murojaatni bloklaydi. Hozirgi
-ratchetlar (`schema-dup`, `check-fe-api-urls`) bilan bir xil naqsh.
+`scripts/check-phantom-tables.mjs` + `scripts/db-tables.snapshot.json` (1187 jadval) endi
+pre-commit'da ishlaydi va **commitni bloklaydi**. Staged `.ts` fayllarga qo'shilgan qatorlardagi
+`FROM|JOIN|INTO|UPDATE <jadval>` murojaatlari snapshot bilan solishtiriladi.
+
+Ikki tomonlama sinovdan o'tkazildi: mavjud bo'lmagan jadvalni ushlaydi, izohdagi eslatishni
+(`// ilgari FROM pos_batches edi`) o'tkazib yuboradi. CTE nomlari, PG katalog obyektlari,
+migratsiya/seed yo'llari chiqarib tashlanadi.
+
+**Yangi jadval qo'shgach:** migratsiya qo'llangandan KEYIN snapshotni yangilang (usuli skript
+sarlavhasida). Snapshot ataylab qo'lda yangilanadi — "jadval qo'shdim" qadami commit tarixida
+ko'rinib tursin.
