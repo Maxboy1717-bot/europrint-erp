@@ -90,10 +90,18 @@ pp#90←pp#37 gang-runs). Final stragglers cleared: pp#124 `2cb0c620` (productio
 re-anchor providers + dist-rebuild), mes#33 `5bf6e6fd` (production_sessions is_training +
 lms_enrollment_id, re-anchor 3 drifts, dist-rebuild). No chala left in batch-1.
 
-⚠️ **MIGRATIONS-NOT-APPLIED chala:** ~37 batch-1 migration .sql files are COMMITTED but not run
+~~⚠️ **MIGRATIONS-NOT-APPLIED chala:** ~37 batch-1 migration .sql files are COMMITTED but not run
 against live europrint — the code references new columns/tables that don't exist live yet, so those
 endpoints would fail at runtime. Completeness step: apply the session's idempotent migrations to
-europrint (they carry IF NOT EXISTS + APPROVED). business_settings/taxonomy already applied.
+europrint (they carry IF NOT EXISTS + APPROVED). business_settings/taxonomy already applied.~~
+
+✅ **HAL QILINDI — 2026-08-07 da jonli bazada tekshirildi.** `migrations/*2026-07-1*.sql` (116 fayl)
+dagi **barcha 197 obyekt** (`ADD COLUMN` + `CREATE TABLE`) `information_schema` bo'yicha sanab
+chiqildi: **197/197 mavjud, yetishmaydigan 0**. Ya'ni migratsiyalar oradagi vaqtda qo'llangan
+(namuna: `production_sessions.is_training`, `production_sessions.lms_enrollment_id`,
+`production_order_lines` — uchalasi ham bor). Yuqoridagi ogohlantirish **eskirgan**, uni blokchi
+sifatida ishlatmang. Bu ogohlantirishga tayangan vizyon-bandlar (masalan MES EP-MES-005/033/056/059)
+qayta baholanishi kerak — ularning "qurilmagan" sababi bu emas.
 
 ## SD BATCH (06-sd) — 16/30 landed + migrations applied (2026-07-11)
 Re-ran build-spec (wf_a8b1e979-dd5, raw-SQL-first) → 30 ready specs. Harvested 16 (range 7681905b..9ad0c5bb),
