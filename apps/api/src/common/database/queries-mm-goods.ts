@@ -21,6 +21,11 @@ import {
 } from '@shared/db';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { MM_THREE_WAY_MATCH_TOLERANCE } from '@common/constants/business.constants';
+// Audit 2026-08-07: the tolerance shown on this read endpoint is what the buyer sees before
+// deciding to accept a delivery; it must be the SAME number the write path (drizzle-mm.repo
+// validateThreeWayMatch) enforces, otherwise the screen says "matched" and the posting says
+// "blocked". Both now read `mm.three_way_amount_tolerance_pct` from business_settings.
+import { getBusinessSettingNumber } from '../../shared/config/business-settings.reader';
 // P0 fix (2026-08): mm_goods_receipts / goods_receipts is the SAME physical table the WMS
 // karantin darvozasi (quarantine gate) state-machine already governs (DRAFT -> KARANTIN ->
 // QC_PASS/REWORK/REJECT -> MAIN — see wms-quarantine.repository.ts, which runs its state
@@ -417,12 +422,16 @@ export async function queryThreeWayMatch(pid: number): Promise<{
       const invoiceTotal = Number(amtRow.invoice_total ?? 0);
       const amounts = [poTotal, grTotal, invoiceTotal];
       const difference = Math.max(...amounts) - Math.min(...amounts);
-      const toleranceAbs = Math.max(Math.abs(poTotal) * MM_THREE_WAY_MATCH_TOLERANCE, 1);
+      const tolerancePct = await getBusinessSettingNumber(
+        'mm.three_way_amount_tolerance_pct',
+        MM_THREE_WAY_MATCH_TOLERANCE,
+      );
+      const toleranceAbs = Math.max(Math.abs(poTotal) * tolerancePct, 1);
       const documentsPresent = grTotal > 0 && invoiceTotal > 0;
       match = {
         matched: documentsPresent && difference <= toleranceAbs,
         difference: Math.round(difference),
-        tolerance_pct: MM_THREE_WAY_MATCH_TOLERANCE,
+        tolerance_pct: tolerancePct,
         po_total: poTotal,
         goods_receipt_total: grTotal,
         invoice_total: invoiceTotal,

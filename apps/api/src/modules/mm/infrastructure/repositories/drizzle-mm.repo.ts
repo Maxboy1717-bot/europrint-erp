@@ -23,6 +23,7 @@ import { purchase_orders } from '@shared/db/schema-compat-mm-po-intpk';
 import { vendors } from '@shared/db/schema-compat-2';
 import { execMmMaterialInsert } from '@common/database/queries-remaining';
 import { MM_THREE_WAY_MATCH_TOLERANCE } from '@common/constants/business.constants';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 
 type DbRow = Record<string, unknown>;
 
@@ -237,9 +238,16 @@ export class DrizzleMmRepository implements IMmRepository {
       //                      since finance_invoices has no purchase_order_id column.
       //                      finance_invoices = kanonik AP invoice-manba, OWNER QARORI
       //                      2026-07-02 (purchase_invoices endi yozuvchisiz — commit d6286993).
-      // The match passes only when the largest pairwise spread stays within
-      // MM_THREE_WAY_MATCH_TOLERANCE of the PO total. `difference` is the real
+      // The match passes only when the largest pairwise spread stays within the
+      // owner-configured tolerance of the PO total. `difference` is the real
       // numeric spread (UZS), not a boolean flag.
+      //
+      // Audit 2026-08-07: this path read the compile-time MM_THREE_WAY_MATCH_TOLERANCE
+      // (0.02) while the invoice-side matcher already read `mm.three_way_amount_tolerance_pct`
+      // from business_settings (live value 0.05). Same PO could therefore pass on one screen
+      // and fail on the other, and the owner's CRUD change had no effect on the goods-receipt
+      // path — the one that actually gates stock posting. Both now read the same row; the
+      // constant remains only as the fallback when the row is missing/inactive.
       type AmtRow = {
         po_total: number | string | null;
         gr_total: number | string | null;
@@ -299,7 +307,11 @@ export class DrizzleMmRepository implements IMmRepository {
 
       // Tolerance is a fraction of the PO total (absolute floor of 1 UZS so a
       // zero-value PO still requires the other two documents to be present/zero).
-      const toleranceAbs = Math.max(Math.abs(poTotal) * MM_THREE_WAY_MATCH_TOLERANCE, 1);
+      const tolerancePct = await getBusinessSettingNumber(
+        'mm.three_way_amount_tolerance_pct',
+        MM_THREE_WAY_MATCH_TOLERANCE,
+      );
+      const toleranceAbs = Math.max(Math.abs(poTotal) * tolerancePct, 1);
 
       // A goods receipt and an invoice must both exist for a match to be possible.
       const documentsPresent = grTotal > 0 && invoiceTotal > 0;

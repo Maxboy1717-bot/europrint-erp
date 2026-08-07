@@ -401,9 +401,15 @@ export const DIR_DECLINE_LOOKBACK_DAYS = 4;
 // The match passes only when the largest pairwise spread between the PO total,
 // the received goods value and the invoice amount stays within this fraction
 // of the PO total. 0.02 = ±2%.
+//
+// 2026-08-07: this is now a FALLBACK ONLY. The live threshold is the owner-editable
+// `mm.three_way_amount_tolerance_pct` row in business_settings (currently 0.05); all three
+// matcher paths (drizzle-mm.repo.validateThreeWayMatch, queries-mm-goods read endpoint,
+// remaining/three-way-match.service) read that row and fall back here when it is missing or
+// inactive. Do NOT change this number to retune the business rule — change the row via CRUD.
 // ---------------------------------------------------------------------------
 
-/** Allowed relative spread (fraction of PO total) for a passing 3-way match */
+/** Fallback relative spread (fraction of PO total) when the business_settings row is absent */
 export const MM_THREE_WAY_MATCH_TOLERANCE = 0.02;
 
 // ---------------------------------------------------------------------------
