@@ -24,6 +24,9 @@ import { MM_MATERIALS_EXTRAS_REPO } from './domain/repositories/i-mm-materials-e
 import { MmDashboardService } from './application/mm-dashboard.service';
 import { MmDashboardRepository } from './infrastructure/repositories/mm-dashboard.repository';
 import { MM_DASHBOARD_REPO } from './domain/repositories/i-mm-dashboard.repo';
+import { MmVendorInvoiceService } from './application/mm-vendor-invoice.service';
+import { MmVendorInvoiceRepository } from './infrastructure/repositories/mm-vendor-invoice.repository';
+import { MM_VENDOR_INVOICE_REPO } from './domain/repositories/i-mm-vendor-invoice.repo';
 import { CreatePurchaseOrderHandler } from './application/commands/create-purchase-order.handler';
 import { ApprovePurchaseOrderHandler } from './application/commands/approve-purchase-order.handler';
 import { GoodsReceiptHandler } from './application/commands/goods-receipt.handler';
@@ -88,6 +91,9 @@ const repositories = [
     MmDashboardRepository,
     { provide: MM_DASHBOARD_REPO, useClass: MmDashboardRepository },
     MmDashboardService,
+    MmVendorInvoiceRepository,
+    { provide: MM_VENDOR_INVOICE_REPO, useClass: MmVendorInvoiceRepository },
+    MmVendorInvoiceService,
     MmVendorRatingService,
     MmPriceVarianceService,
     MmReconciliationRepository,

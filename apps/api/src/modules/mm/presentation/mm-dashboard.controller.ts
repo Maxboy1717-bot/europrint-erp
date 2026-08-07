@@ -32,7 +32,13 @@ import { MmVendorRatingService } from '../application/mm-vendor-rating.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { MmCreateFleetVehicleSchema, MmCreateFleetVehicleDto, MmCreateFuelLogSchema, MmCreateFuelLogDto, MmCreateFleetDeliverySchema, MmCreateFleetDeliveryDto, MmUpdateFleetDeliveryStatusSchema, MmUpdateFleetDeliveryStatusDto } from '../dto/mm.dto';
-import { notImplemented } from '@common/exceptions/not-implemented';
+import { MmVendorInvoiceService } from '../application/mm-vendor-invoice.service';
+import {
+  MmApproveVendorInvoiceSchema, MmApproveVendorInvoiceDto,
+  MmMatchVendorInvoiceSchema, MmMatchVendorInvoiceDto,
+  MmThreeWayMatchSchema, MmThreeWayMatchDto,
+  MmVendorInvoicePaymentSchema, MmVendorInvoicePaymentDto,
+} from './dto/mm-vendor-invoice.dto';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -50,10 +56,11 @@ type VendorPerformanceDto = z.infer<typeof VendorPerformanceSchema>;
 
 const MM_READ = ['super_admin', 'mm_manager', 'director', 'purchasing_manager'];
 const MM_WRITE = ['super_admin', 'mm_manager', 'director'];
+/** Hisob-fakturani tasdiqlash — MM + moliya menejeri. */
+const MM_INVOICE_APPROVE = ['super_admin', 'director', 'mm_manager', 'finance_manager'];
+/** PUL chiqimi — eng tor doira (konservativ: egasi boshqacha qaror qilmaguncha). */
+const MM_PAYMENT = ['super_admin', 'director', 'finance_manager'];
 
-// FEATURE_FLAGGED: vendor-invoice / 3-way-match / fleet logistics endpoints
-// (tracking #FX-2) - not wired to a service yet. Returning 501 instead of fake
-// payloads so the InvoiceVerification & LogisticsDashboard pages can render a
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Mm Dashboard')
@@ -65,6 +72,7 @@ export class MmDashboardController {
   constructor(
     private readonly svc: MmDashboardService,
     private readonly ratingService: MmVendorRatingService,
+    private readonly invoiceSvc: MmVendorInvoiceService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -183,25 +191,56 @@ export class MmDashboardController {
     return row;
   }
 
-  @ApiOperation({ summary: 'Approve vendor invoice' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
-  @Patch('vendor-invoices/:id/approve') @Roles(...MM_WRITE)
-  async approveVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    return notImplemented('PATCH /mm/vendor-invoices/:id/approve');
+  @ApiOperation({ summary: 'Approve vendor invoice (SoD: creator cannot approve their own invoice)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 403, description: 'SoD violation' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Invoice not in an approvable status' })
+  @Patch('vendor-invoices/:id/approve')
+  @UseInterceptors(AuditInterceptor)
+  @UsePipes(new ZodValidationPipe(MmApproveVendorInvoiceSchema))
+  @Roles(...MM_INVOICE_APPROVE)
+  async approveVendorInvoice(
+    @Param('id') id: string,
+    @Body() body: MmApproveVendorInvoiceDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    this.logger.log(`PATCH approve vendor invoice ${id}`);
+    return unwrapOrThrow(
+      await this.invoiceSvc.approveInvoice(safeInt(id, 0), user?.id ?? null, body?.notes ?? null),
+    );
   }
 
-  @ApiOperation({ summary: 'Match vendor invoice' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
-  @Patch('vendor-invoices/:id/match') @Roles(...MM_WRITE)
-  async matchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    return notImplemented('PATCH /mm/vendor-invoices/:id/match');
+  @ApiOperation({ summary: '2-way match: purchase order ↔ vendor invoice' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'No purchase order linked to the invoice' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('vendor-invoices/:id/match')
+  @UseInterceptors(AuditInterceptor)
+  @UsePipes(new ZodValidationPipe(MmMatchVendorInvoiceSchema))
+  @Roles(...MM_WRITE)
+  async matchVendorInvoice(@Param('id') id: string, @Body() body: MmMatchVendorInvoiceDto) {
+    this.logger.log(`PATCH match vendor invoice ${id}`);
+    return unwrapOrThrow(await this.invoiceSvc.matchInvoiceToPo(safeInt(id, 0), body ?? {}));
   }
 
-  @ApiOperation({ summary: 'Pay vendor invoice' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
-  @Post('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
-  async payVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    return notImplemented('POST /mm/vendor-invoices/:id/payment');
+  @ApiOperation({ summary: 'Record a payment against a vendor invoice' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Overpayment / currency mismatch' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Duplicate reference or already fully paid' })
+  @ApiResponse({ status: 422, description: 'Invoice is not approved' })
+  @Post('vendor-invoices/:id/payment')
+  @UseInterceptors(AuditInterceptor)
+  @UsePipes(new ZodValidationPipe(MmVendorInvoicePaymentSchema))
+  @Roles(...MM_PAYMENT)
+  async payVendorInvoice(
+    @Param('id') id: string,
+    @Body() body: MmVendorInvoicePaymentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    this.logger.log(`POST payment for vendor invoice ${id}`);
+    return unwrapOrThrow(await this.invoiceSvc.recordPayment(safeInt(id, 0), body, user?.id ?? null));
   }
 
   @ApiOperation({ summary: 'Get three way match' })
@@ -267,18 +306,32 @@ export class MmDashboardController {
     return unwrapOrThrow(await this.svc.getDriverExpenses());
   }
 
-  @ApiOperation({ summary: 'Get material suppliers' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiOperation({ summary: 'Get material suppliers (purchase history + price list)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Material not found' })
   @Get('materials/:id/suppliers') @Roles(...MM_READ)
-  async getMaterialSuppliers(@Param('id') _id: string) {
-    return notImplemented('GET /mm/materials/:id/suppliers');
+  async getMaterialSuppliers(@Param('id') id: string) {
+    this.logger.log(`GET suppliers for material ${id}`);
+    return unwrapOrThrow(await this.invoiceSvc.getMaterialSuppliers(safeInt(id, 0)));
   }
 
-  @ApiOperation({ summary: 'Create 3-way match (POST mirror)' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
-  @Post('3way-match/:invoiceId') @Roles(...MM_WRITE)
-  async post3wayMatch(@Param('invoiceId') _invoiceId: string, @Body() _body: Record<string, unknown>) {
-    return notImplemented('POST /mm/3way-match/:invoiceId');
+  @ApiOperation({ summary: '3-way match: purchase order ↔ goods receipt ↔ invoice' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Invoice has no purchase order / goods receipt' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('3way-match/:invoiceId')
+  @UseInterceptors(AuditInterceptor)
+  @UsePipes(new ZodValidationPipe(MmThreeWayMatchSchema))
+  @Roles(...MM_WRITE)
+  async post3wayMatch(
+    @Param('invoiceId') invoiceId: string,
+    @Body() body: MmThreeWayMatchDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    this.logger.log(`POST 3-way match for invoice ${invoiceId}`);
+    return unwrapOrThrow(
+      await this.invoiceSvc.runThreeWayMatch(safeInt(invoiceId, 0), body ?? {}, user?.id ?? null),
+    );
   }
 
   @ApiOperation({ summary: 'Create fleet delivery' })
@@ -292,19 +345,14 @@ export class MmDashboardController {
     return unwrapOrThrow(await this.svc.createFleetDelivery(body));
   }
 
-  @ApiOperation({ summary: 'Match vendor invoice (POST mirror)' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
-  @Post('vendor-invoices/:id/match') @Roles(...MM_WRITE)
-  async postMatchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    return notImplemented('POST /mm/vendor-invoices/:id/match');
-  }
-
-  @ApiOperation({ summary: 'Patch pay vendor invoice' })
-  @ApiResponse({ status: 501, description: 'Not implemented — needs fi_payments table' })
-  @Patch('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
-  async patchPayVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    throw new HttpException(await this.i18n.t('errors.paymentNotImplementedFiPaymentsPending'), HttpStatus.NOT_IMPLEMENTED);
-  }
+  // Q-46 (dublikat marshrutlar o'chirildi, 2026-08-07):
+  //   · `POST   /mm/vendor-invoices/:id/match`   — `PATCH .../match` ning aynan nusxasi
+  //     edi (bir xil yo'l, bir xil body, bir xil 501). FE (LogisticsDashboard.tsx:97)
+  //     PATCH ishlatadi → PATCH qoldi, POST o'chirildi.
+  //   · `PATCH  /mm/vendor-invoices/:id/payment` — `POST .../payment` ning nusxasi
+  //     edi ("fi_payments kerak" deb 501 qaytarardi). To'lov = YANGI resurs yaratish,
+  //     shuning uchun POST kanonik; PATCH o'chirildi. Haqiqiy jadval `invoice_payments`
+  //     (jonli DB da mavjud) — `fi_payments` hech qachon bo'lmagan.
 
   @ApiOperation({ summary: 'Record vendor performance score (4-factor formula: quality 40% + delivery 30% + price 20% + document 10%)' })
   @ApiResponse({ status: 201, description: 'OK' })

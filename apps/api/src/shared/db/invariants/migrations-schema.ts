@@ -2269,4 +2269,24 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'instrument-calibration.repository.ts (next_due_at) va reference-sample.repository.ts (retention_until) — muddat shu kundan yaqinroq bo''lsa due_soon / expiring_soon bayrog''i yoqiladi', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // audit 2026-08-06 (MM — 18 modulli auditga umuman kirmagan modul): vendor-invoice
+  // moslashtirish chegaralari kodda hardcoded bo'lishi mumkin emas ("threshold qiymatlar
+  // = doim CRUD" qoidasi). mm-vendor-invoice.service.ts shu ikki sozlamani o'qiydi;
+  // so'rovda foiz berilsa (FE `{ tolerance: 5 }`) o'sha ustun bo'ladi, aks holda shu qiymat.
+  // ULUSH sifatida saqlanadi (0.05 = 5%) — qc.lot_defect_fail_ratio bilan bir xil konvensiya,
+  // percent 0..100 EMAS.
+  {
+    name: 'business_settings mm.three_way_qty_tolerance_pct seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('mm', 'mm.three_way_qty_tolerance_pct', '3-tomonlama moslik: miqdor chetlanishi uchun ruxsat etilgan ulush', 'number', 0.05, 'ulush', 0, 1,
+        'mm-vendor-invoice.service.ts runThreeWayMatch()/matchInvoiceToPo() — hisob-faktura miqdori qabul qilingan (GR) miqdordan shu ulushdan ko''p farq qilsa match_status=''variance''', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings mm.three_way_amount_tolerance_pct seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('mm', 'mm.three_way_amount_tolerance_pct', '3-tomonlama moslik: summa chetlanishi uchun ruxsat etilgan ulush', 'number', 0.05, 'ulush', 0, 1,
+        'mm-vendor-invoice.service.ts runThreeWayMatch()/matchInvoiceToPo() — hisob-faktura summasi xarid buyurtmasi (PO) summasidan shu ulushdan ko''p farq qilsa match_status=''variance'' va to''lov bloklanadi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];
