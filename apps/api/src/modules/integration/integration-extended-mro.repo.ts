@@ -251,20 +251,4 @@ export class IntegrationExtendedMroRepository {
     );
   }
 
-  performThreeWayMatch(invoiceId: string, tolerancePercent: number): Promise<Result<Row>> {
-    return safeCall(async () => {
-      const rows = await db.insert(three_way_match_results).values({
-        invoice_id: Number(invoiceId),
-        tolerance_percent: String(tolerancePercent),
-        status: 'pending',
-        matched_at: _time.now(),
-      })
-        .onConflictDoUpdate({
-          target: three_way_match_results.invoice_id,
-          set: { tolerance_percent: String(tolerancePercent), matched_at: _time.now() },
-        })
-        .returning();
-      return (rows[0] ?? { invoiceId, status: 'pending' }) as Row;
-    });
-  }
 }
