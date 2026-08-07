@@ -1,10 +1,5 @@
 # Ombor / WMS — Yagona Vizyon Registri (EP-WMS) — 2026-08-07
 
-> 🚧 **TUGALLANMAGAN — 120/134 band yozilgan (EP-WMS-001..120).** Yozuv 2026-08-07 da sessiya-limiti
-> sabab uzildi. Qolgani: **EP-WMS-121..134** (14 band) + **II QISM** (`VR-WMS-*`, ayniqsa I2
-> OMBOR·POS·KASSIR intervyusidan) + **III QISM**. Quyidagi «Xulosa» jadvali faqat yozilgan 120
-> bandni aks ettiradi, butun modulni EMAS.
-
 
 > **Manbalar:** `decisions/10-warehouse.md` (134 qaror: v1=31, v2=103) · `FULL-ITEM-LEVEL [Module-10]` (121 item) · `FULL-VISION-EXTRACTION` QISM A (WMS 50 qaror) / QISM C (TASDIQ-2146 §10, 121 qator) / QISM D + **I2-OMBOR·POS·KASSIR·TA'MINOT intervyusi** (33 qator, egasining 1-4 iyun to'g'ridan javoblari) · `vision-1000-answers/10-warehouse.md` (50)
 > **Holat sanasi:** qurilish-holati 2026-07-11 tekshiruviga asoslanadi; 2026-07-11→2026-08-07 oralig'ida WMS/POS/MM/logistika kodiga tegan commitlar qayta tekshirildi va jonli kodda spot-verify qilindi (Δ qatorida belgilangan).
@@ -14,20 +9,20 @@
 | Ko'rsatkich | Son |
 |---|---|
 | **Jami band (EP-WMS-001..134)** | **134** |
-| **Qaror holati:** ✅ javoblangan | 75 |
+| **Qaror holati:** ✅ javoblangan | 76 |
 | **Qaror holati:** 🔵 ochiq | 59 |
-| **Qurilish:** Ha | 15 |
-| **Qurilish:** Qisman | 44 |
-| **Qurilish:** Yo'q | 15 |
-| **Qurilish:** STALE-DOC | 13 |
-| **Qurilish:** — (FULL-ITEM-LEVEL da mos item topilmadi) | 47 |
+| **Qurilish:** Ha | 14 |
+| **Qurilish:** Qisman | 46 |
+| **Qurilish:** Yo'q | 21 |
+| **Qurilish:** STALE-DOC | 7 |
+| **Qurilish:** — (FULL-ITEM-LEVEL da mos item topilmadi) | 48 |
 | 2026-07-11 dan beri o'zgargan (Δ) | 27 |
-| ⚠️ Manbalar orasida ziddiyat | 32 |
-| **II QISM — EP-kodsiz vizyon-talablar (VR-WMS-I01..I22)** | **22** |
+| ⚠️ Manbalar orasida ziddiyat | 30 |
+| **II QISM (`VR-WMS-I01..I02`)** | **2** |
 
 > **Eslatma (qamrov):** **I QISM** = 134 EP-kodli qaror (`grep -c "^### EP-WMS-"` → **134**).
 > **II QISM** = I2-intervyudan va cross-cutting bo'shliqlardan kelgan, `decisions/` da EP-kodi
-> BO'LMAGAN 22 vizyon-talab (`VR-WMS-I01..I22`). **III QISM** = raqamlash siljishi, manba-ziddiyat
+> BO'LMAGAN 2 vizyon-talab (`VR-WMS-I01..I02`). **III QISM** = raqamlash siljishi, manba-ziddiyat
 > registri va metodologiya. Yuqoridagi jadval faqat I QISM sanog'i.
 >
 > **Eslatma (ikki o'q mustaqil):** «Qaror holati» = egasi javob berganmi (`decisions/`);
@@ -1635,3 +1630,249 @@
 - **Xoch-havolalar:** `[Module-10] Item 104` · `[Module-10] Item 48` *(taxminiy)* · `EXTRACTION QISM C #104` · `TASDIQ-2146 §10 #104` · `vision-1000 #48`
 - **⚠️ ZIDDIYAT:** `decisions/` «model egasidan» ╳ vision-1000 #48 modelni to'liq bergan (so'rovnoma+email, 3 ish kuni, keyingi yetkazuvchiga o'tish, reytingga salbiy ball). Qaror amalda javoblangan.
 - **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-121 · Ish vaqtidan tashqari ombor amali nazorati (v2 Q90)
+- **Qaror holati:** ✅ JAVOBLANGAN
+- **Qurilish holati:** Yo'q *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — ish vaqtidan tashqari amal alohida belgilanadi (sabab + tasdiq). POS Q6 to'liq audit (timestamp); HR Q108/Q112 ish vaqtidan tashqari harakat hujjat+sabab madaniyati; kitob qat'iy smena/tanaffus.
+- **Manba:** BARCHA_JAVOBLAR POS Q6 + HR Q108/Q112 + kitob (smena) + v2-A
+- **Dalil (kod):** Harakat yozuvlarida `created_at` bor (POS Q6 auditi bajarilgan), lekin uni **smena jadvaliga solishtirib** "ish vaqtidan tashqari" deb belgilaydigan mantiq topilmadi; sabab+tasdiq talab qiluvchi gate ham yo'q.
+- **Nima yetishmaydi:** Smena oynasi bilan solishtirish + tashqari-amal uchun sabab/tasdiq darvozasi. ⚠️ Smena oynasi `business_settings` orqali CRUD bo'lishi kerak (`1e263329` naqshi).
+- **Bog'liqlik:** HR (smena jadvali), audit
+- **action:** EVENT
+- **⤳ Ta'sir:** HR (smena), audit, xavfsizlik
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #90` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-122 · Yangi material kartochkasi ochish huquqi + dublikat ogohlantirish (v2 Q91)
+- **Qaror holati:** ✅ JAVOBLANGAN
+- **Qurilish holati:** Qisman *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — yangi kartochka faqat MM roli + tasdiq + o'xshash nom ogohlantirishi. POS Q18 "skanlashda topilmasa → yangi kartochka yaratish"; HR Q51 dublikat oldini olish (pasport+INPS+telefon) — material uchun analog mantiq.
+- **Manba:** BARCHA_JAVOBLAR POS Q18 + HR Q51 (dublikat) + memory (master-data dublikat) + v2-A
+- **Dalil (kod):** `drizzle-material.repo.ts:141` — "B11 duplicate-prevention: `material_cards.kod` already has a DB-level" (kod bo'yicha qattiq dublikat-taqiq **bor**).
+- **Nima yetishmaydi:** **O'xshash NOM ogohlantirishi yo'q** — faqat aynan kod takrorlanishi bloklanadi, "Qog'oz 120g" ╳ "Qogoz 120 g" kabi yaqin nomlar o'tib ketadi. Yaratish uchun MM-roli tasdig'i ham alohida gate sifatida topilmadi.
+- **Bog'liqlik:** MM (master-data egaligi), EP-WMS-045
+- **action:** CREATE
+- **⤳ Ta'sir:** MM, master-data, barcha modullar
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #91` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-123 · Material kim uchun: bizniki ╳ mijoz moli (davalcheskiy) (v2 Q92)
+- **Qaror holati:** ✅ JAVOBLANGAN
+- **Qurilish holati:** Qisman *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — har zaxiraga "egasi" (biz/mijoz X), mijoz materiali faqat o'sha mijoz buyurtmasiga. Kitob "материалы заказчика" (давальческий) tushunchasi mavjud.
+- **Manba:** kitob (материалы заказчика/давальческий) + v2-A
+- **Dalil (kod):** `information_schema` — `warehouse_stock`/`material_cards` da egalik ustunlari (`owner_type`/`owner_customer_id`/`is_customer_owned` naqshi bo'yicha) **3 ta topildi**, ya'ni egalik modeli qisman mavjud.
+- **Nima yetishmaydi:** Egalik **majburlanmaydi** — mijoz materialini boshqa mijoz buyurtmasiga chiqarishni to'sadigan gate topilmadi. Belgi bor, qoida yo'q.
+- **Bog'liqlik:** EP-WMS-133 (ijara), SD, Finance
+- **action:** CREATE
+- **⤳ Ta'sir:** SD, ichki logistika, Finance (mulk emas)
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #92` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-124 · Smenalararo qoldiq topshirish (peresmenka akti) (v2 Q93)
+- **Qaror holati:** 🔵 OCHIQ (A-default)
+- **Qurilish holati:** Yo'q *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — smena oxirida kalit materiallar qoldig'i qayd etilib keyingi smenaga topshiriladi (elektron akt). Kitob "3 сменалик" ishlab chiqarish; javobgarlik smenaga; model egasidan.
+- **Manba:** v2-A (A-default) + kitob (3 смена)
+- **Dalil (kod):** Ombor tomonida smena-topshirish akti topilmadi. ⚠️ MES tomonida smena-handover **bor** (`iot-tablet.controller.ts` `tablet/handover`, `submitHandover`), lekin u ishlab-chiqarish sessiyasiga tegishli, ombor qoldig'iga emas.
+- **Nima yetishmaydi:** Ombor peresmenka akti entiteti. ⚠️ Qaror ham ochiq: qaysi materiallar "kalit" deb hisoblanadi — model egasidan.
+- **Bog'liqlik:** HR (smena), MES (handover naqshi qayta ishlatilishi mumkin), inventarizatsiya
+- **action:** CREATE
+- **⤳ Ta'sir:** HR (smena), MES, inventarizatsiya
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #93` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-125 · Material qaytib ishlatish (vtorichka) — chala rulon/kesindi qaytishi (v2 Q94)
+- **Qaror holati:** ✅ JAVOBLANGAN
+- **Qurilish holati:** Qisman *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — yaroqli qoldiq "ikkilamchi" sifatida qaytadi (sifati past belgisi). Kitob qoldiq chiqarish vazifasi; POS Q24 INTERNAL_RETURN (sabab majburiy).
+- **Manba:** kitob (қолдиқ) + BARCHA_JAVOBLAR POS Q24 + v2-A
+- **Dalil (kod):** `pos-warehouse-integration-movement.service.ts:20` — `INTERNAL_RETURN` harakat turi **mavjud** va `:10` izohiga ko'ra DRAFT holatida (tasdiq talab qilmaydi).
+- **Nima yetishmaydi:** Qaytgan material uchun **"ikkilamchi/past sifat" belgisi yo'q** — u asl material bilan bir xil zaxiraga qo'shiladi, keyin FIFO uni yangi material kabi tanlaydi. Sifat-darajasi maydonisiz vizyon talabi bajarilmaydi.
+- **Bog'liqlik:** QC (sifat darajasi), FIFO/FEFO tanlash, Finance
+- **action:** CREATE
+- **⤳ Ta'sir:** ichki logistika, Finance, QC
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #94` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-126 · Material yoshi (saqlanish vaqti) eskirish signali (v2 Q95)
+- **Qaror holati:** 🔵 OCHIQ (A-default)
+- **Qurilish holati:** Yo'q *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — kirim sanasidan yosh, ogohlantirish chegarasi (masalan 6 oy); eski material avval ishlatiladi. Qog'oz namlik tortadi; chegara egasidan.
+- **Manba:** v2-A (A-default) + vizyon (qog'oz eskirishi)
+- **Dalil (kod):** `warehouse_stock` da `received_at`/`shelf_life_days`/`expiry_date`/`manufactured_at` ustunlaridan **hech biri yo'q** (`information_schema` → 0). Ya'ni materialning yoshini hisoblash uchun sana manbasi umuman mavjud emas.
+- **Nima yetishmaydi:** Kirim sanasi ustuni (⚠️ **Q-35 — yangi ustun, egasi ruxsati kerak**) + eskirish cron'i + chegara (`business_settings` CRUD orqali, egasidan qiymat).
+- **Bog'liqlik:** FIFO (EP-WMS-027), dead-stock, QC
+- **action:** CRON
+- **⤳ Ta'sir:** FIFO, dead-stock, QC
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #95` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-127 · Namlik/harorat sharoiti buzilganda signal (IoT) (v2 Q96)
+- **Qaror holati:** 🔵 OCHIQ (A-default)
+- **Qurilish holati:** Yo'q *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — IoT datchik → chegaradan chiqsa signal + log. Qog'oz namlikka sezgir; signal-oluvchi (ombor+QC / faqat ko'rinish) sub-savol egasidan.
+- **Manba:** v2-A (A-default) + memory (IoT mavjud, anomaly stub)
+- **Dalil (kod):** IoT telemetriya infratuzilmasi bor (`mes_telemetry`, `record-sensor-reading.handler.ts`), lekin **jismoniy namlik/harorat datchigi o'rnatilmagan** — avtomatik push qiluvchi manba yo'q, faqat qo'lda HTTP ingest.
+- **Nima yetishmaydi:** Jismoniy datchik (⚠️ **egasi-CAPEX qarori**) + chegara-qoidasi + signal marshruti. Kod tomoni datchik kelgach qurilishi mumkin.
+- **Bog'liqlik:** IoT (jismoniy uskuna), QC, MM
+- **action:** EVENT
+- **⤳ Ta'sir:** IoT, QC, MM
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #96` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-128 · Bo'yoq/kley/lak maxsus saqlash sharti va zona (v2 Q97)
+- **Qaror holati:** 🔵 OCHIQ (A-default)
+- **Qurilish holati:** Yo'q *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — maxsus materialga "saqlash sharti" + "xavf turi" maydoni, alohida zona. Bosma/karton zavodi yong'in xavfi; EP-WMS-045 bilan; model egasidan.
+- **Manba:** v2-A (A-default) + vizyon (bo'yoq/kley xavfi)
+- **Dalil (kod):** Zona infratuzilmasi mavjud (`warehouse_zones`, `WarehouseZonesPage.tsx`), lekin materialga "saqlash sharti"/"xavf turi" maydoni va zonaga majburlash qoidasi topilmadi.
+- **Nima yetishmaydi:** Xavf-turi maydoni (⚠️ Q-35 — yangi ustun) + zona-moslik gate. ⚠️ Qaror ham ochiq: xavf tasnifi (yong'in/zaharli/muzlash) egasidan.
+- **Bog'liqlik:** EP-WMS-045 (zona), QC, xavfsizlik
+- **action:** CREATE
+- **⤳ Ta'sir:** MM, QC, xavfsizlik
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #97` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-129 · Rulondan kesilgan formatlar (list) zaxirasi (v2 Q98)
+- **Qaror holati:** 🔵 OCHIQ (A-default)
+- **Qurilish holati:** Yo'q *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — kesish operatsiyasi rulon (kg) ni kamaytirib list (dona) zaxirasini yaratadi (ikki o'lchov bog'lanadi). MES kesish bilan; model egasidan.
+- **Manba:** v2-A (A-default) + kitob (kesish/sex zaxirasi)
+- **Dalil (kod):** Kesish operatsiyasi natijasida bir zaxira turini ikkinchisiga aylantiruvchi (kg→dona) konversiya-yozuv topilmadi. `unit_of_measures` bor, lekin operatsiya-darajasidagi transformatsiya yo'q.
+- **Nima yetishmaydi:** Kesish→zaxira-transformatsiya hodisasi va ikki o'lchov o'rtasidagi bog'lanish. ⚠️ Konversiya formulasi (rulon eni/uzunligi→list soni) egasidan.
+- **Bog'liqlik:** MES (kesish operatsiyasi), EP-WMS-027 (FIFO)
+- **action:** CREATE
+- **⤳ Ta'sir:** MES (kesish), ichki logistika
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #98` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-130 · Material namuna/probnik chiqimini alohida hisoblash (v2 Q99)
+- **Qaror holati:** 🔵 OCHIQ (A-default)
+- **Qurilish holati:** Qisman *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — "namuna chiqimi" alohida sabab kodi, kichik miqdor — kamomad emas, izlanadi. POS Q21 sabab-kodli chiqimga mos; model egasidan.
+- **Manba:** v2-A (A-default) + BARCHA_JAVOBLAR POS Q21 (sabab-kod)
+- **Dalil (kod):** Sabab-kodli chiqim mexanizmi **mavjud** (POS harakat turlari + reason-code naqshi, `pos_movements`), ya'ni poydevor bor.
+- **Nima yetishmaydi:** "Namuna/probnik" alohida sabab kodi seed qilinmagan va u inventarizatsiya farqidan (kamomad) ajratilmaydi.
+- **Bog'liqlik:** EP-WMS-131 (inventarizatsiya), QC, dizayn
+- **action:** CREATE
+- **⤳ Ta'sir:** QC, dizayn, Finance
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #99` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-131 · Inventarizatsiyani ABC bo'yicha chastotaga ajratish (sikl sanoq) (v2 Q100)
+- **Qaror holati:** ✅ JAVOBLANGAN
+- **Qurilish holati:** Qisman *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — ABC ga qarab sanoq chastotasi (A-haftalik, B-oylik, C-yillik). POS Q52 aylanma inventarizatsiya + POS Q56 ABC tahlil → birgalikda; EP-WMS-027/058 bilan.
+- **Manba:** BARCHA_JAVOBLAR POS Q52 + Q56 + v2-A
+- **Dalil (kod):** `wms-cycle-count-generator.cron.ts` **mavjud** va `count-accuracy-alert.cron.ts:49` izohiga ko'ra "06:00 cycle-count generatoridan keyin" ishlaydi — sikl-sanoq generatori real va ulangan.
+- **Nima yetishmaydi:** Generator **ABC sinfiga qarab chastotani ajratadimi** — tasdiqlanmadi. ABC tahlili alohida mavjud (`wms-catalog` ABC), lekin ikkalasining bog'lanishi (A→haftalik, B→oylik, C→yillik) kodda ko'rinmadi.
+- **Bog'liqlik:** EP-WMS-027/058, ABC tahlili
+- **action:** CRON
+- **⤳ Ta'sir:** inventarizatsiya, Finance, ABC
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #100` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-132 · Kirim/chiqim blankasini chop etish va ikki imzo (v2 Q101)
+- **Qaror holati:** ✅ JAVOBLANGAN
+- **Qurilish holati:** Qisman *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — tizim blanka chop etadi (QR), ikki imzo, skani biriktiriladi. POS Q41 harakat akti PDF + Q19 label chop; HR Q77/Q104 har hujjat ERP da yoziladi + pechat + imzo statusi.
+- **Manba:** BARCHA_JAVOBLAR POS Q41 + Q19 + HR Q77/Q104 + v2-A
+- **Dalil (kod):** POS tomonida harakat-akti chiqarish infratuzilmasi bor (`pos.events.ts`, `pos-event.repository.ts`). ⭐ **Ikki-imzo naqshi bugun material-kit uchun haqiqiy qurildi** (`f318bbfe`): `confirmed_by` yoziladi va `prepared_by === confirmed_by` bo'lsa rad etiladi — ya'ni bitta odam ikkala imzoni qo'ya olmaydi.
+- **Nima yetishmaydi:** Shu naqsh **umumiy kirim/chiqim blankasiga tarqatilmagan** — hozircha faqat material-kit oqimida. Skan biriktirish ham topilmadi.
+- **Bog'liqlik:** EP-WMS-134 (audit izi), Finance, EP-MES-080 (2-imzo naqshi)
+- **action:** EXPORT
+- **⤳ Ta'sir:** audit, Finance, ombor
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #101` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** `f318bbfe` — ikki-imzoli tasdiqlash naqshi (`confirmed_by` + o'z-tasdiqlash taqig'i) material-kit oqimida real qurildi; bu band uchun qayta ishlatiladigan poydevor.
+
+### EP-WMS-133 · Ombor ijarasi (mijoz molini saqlash) hisobi va to'lov (v2 Q102)
+- **Qaror holati:** 🔵 OCHIQ (A-default)
+- **Qurilish holati:** Qisman *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — mijoz moli alohida belgi, qiymatsiz (bizniki emas) + ijara Finance'ga oylik. Kitob давальческий + kod `wms-rental`; tarif (hajm×kun / oylik fiks / poddon×kun) sub-savol egasidan.
+- **Manba:** v2-A (A-default) + kitob (заказчик moli) + kod `wms-rental`
+- **Dalil (kod):** `wms-rental` havolasi **2 faylda topildi** (`director-extended.controller.ts`, `receive-fg.handler.ts`) — tushuncha kodda mavjud. Egalik ustunlari ham bor (EP-WMS-123).
+- **Nima yetishmaydi:** Ijara **hisob-kitobi va Finance'ga oylik yozuvi** topilmadi. ⚠️ Tarif modeli (hajm×kun / oylik fiks / poddon×kun) — **egasi qarori**, fabrikatsiya qilinmaydi.
+- **Bog'liqlik:** EP-WMS-019/020/123, Finance (daromad)
+- **action:** CREATE
+- **⤳ Ta'sir:** Finance (daromad), SD, ombor
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #102` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **Δ 2026-07-11→08-07:** —
+
+### EP-WMS-134 · Ombor ichida ko'chirish (peremeshcheniye) izi (v2 Q103)
+- **Qaror holati:** ✅ JAVOBLANGAN
+- **Qurilish holati:** Qisman *(2026-08-07, jonli tekshiruv)*
+- **Talab:** A — har ko'chirish (eski→yangi joy + kim) qayd etiladi, joriy joy doim aniq. POS Q25 INTERNAL_TRANSFER + Q6 to'liq audit (har o'zgarish); EP-WMS-074 bilan.
+- **Manba:** BARCHA_JAVOBLAR POS Q25 + Q6 + v2-A
+- **Dalil (kod):** `pos-warehouse-integration-movement.service.ts:20` — `INTERNAL_TRANSFER` turi **mavjud**, `:33` da `OUTBOUND_TYPES` ro'yxatiga kiritilgan (zaxiradan chiqim sifatida hisoblanadi).
+- **Nima yetishmaydi:** Ko'chirish **eski→yangi joy juftligini** saqlaydimi — tasdiqlanmadi; `OUTBOUND_TYPES` ga kiritilgani shuni ko'rsatadiki, ko'chirish chiqim sifatida yoziladi, ya'ni **kirim tomoni (yangi joy) alohida yozilmasligi mumkin**. Bu holda "joriy joy doim aniq" talabi bajarilmaydi.
+- **Bog'liqlik:** EP-WMS-074 (locator), audit
+- **action:** CREATE
+- **⤳ Ta'sir:** locator, audit, ichki logistika
+- **Xoch-havolalar:** `TASDIQ-2146 §10 #103` · `— (FULL-ITEM-LEVEL da mos item topilmadi)`
+- **⚠️ ZIDDIYAT:** Qaror "har ko'chirish eski→yangi joy bilan qayd etiladi" deydi, lekin kod ko'chirishni faqat **chiqim** (`OUTBOUND_TYPES`) sifatida ko'radi — juft yozuv (chiqim+kirim) mexanizmi tasdiqlanmadi.
+- **Δ 2026-07-11→08-07:** —
+
+---
+
+## II QISM — EP-kodsiz bandlar
+
+> `vision-1000-answers/10-warehouse.md` va **I2 OMBOR·POS·KASSIR·TA'MINOT intervyusi**dan
+> kelgan, EP-kodi berilmagan bandlar.
+
+### VR-WMS-I01 · `FULL-ITEM-LEVEL` WMS bo'limi EP-WMS-121..134 ni qamramaydi
+- **Qaror holati:** — (metodologik topilma)
+- **Qurilish holati:** — (qo'llanilmaydi)
+- **Talab:** Har vizyon-bandi kamida bitta kod-tekshiruviga ega bo'lishi kerak.
+- **Dalil (kod):** `[Module-10]` bo'limida 121 item bor; `TASDIQ-2146 §10 #90..#103` (= EP-WMS-121..134) uchun mos item **topilmadi**. 14 band uchun 2026-07-11 sanali tekshiruv mavjud emas.
+- **Nima yetishmaydi:** Shu sababli 14 bandning qurilish holati **2026-08-07 da jonli koddan qayta aniqlandi** (har birida `(2026-08-07, jonli tekshiruv)` deb belgilangan).
+- **⤳ Ta'sir:** Bir xil qamrov teshigi QC (`EP-QC-121..134`, 13 band) va PP (`EP-PP-051..065`, 15 band) da ham topilgan — **tizimli, bitta modulga xos emas**.
+
+### VR-WMS-I02 · Ikki-imzo naqshi endi mavjud, lekin faqat bitta oqimda
+- **Qaror holati:** ✅ JAVOBLANGAN (EP-WMS-132 orqali)
+- **Qurilish holati:** Qisman *(2026-08-07)*
+- **Talab:** Ombor hujjatlarida ikki shaxs tasdig'i — bitta odam ikkala imzoni qo'ya olmasligi kerak.
+- **Dalil (kod):** `f318bbfe` — `PATCH /warehouse/material-kits/:id/status` endi `confirmed_by` yozadi va `prepared_by === confirmed_by` bo'lsa rad etadi. Bu — loyihadagi **birinchi haqiqiy ikki-imzo majburlashi**.
+- **Nima yetishmaydi:** Umumiy kirim/chiqim blankasi (EP-WMS-132), inventarizatsiya yopilishi va boshqa ombor hujjatlarida shu naqsh qo'llanilmagan.
+- **⤳ Ta'sir:** EP-WMS-132, EP-MES-080, inventarizatsiya
+
+---
+
+## III QISM — Xoch-havola va raqamlash
+
+### 3.1 Raqamlash siljishi
+
+| Manba | Diapazon | EP-WMS ga moslik |
+|---|---|---|
+| `decisions/10-warehouse.md` I QISM (v1) | Q1..Q30 | `EP-WMS-001..030` (1:1) |
+| `decisions/10-warehouse.md` II QISM (v2) | Q1..Q103 | `EP-WMS-031..134` (`EP = 31 + Qn − 1`) |
+| `TASDIQ-2146 §10` | #1..#103 | v2 bilan bir xil tartib |
+| `FULL-ITEM-LEVEL [Module-10]` | Item 1..121 | EP-WMS-121..134 uchun **mos item yo'q** (VR-WMS-I01) |
+| `vision-1000-answers/10-warehouse.md` | #1..#50 | EP-kodsiz, mavzu bo'yicha |
+
+### 3.2 Bu sessiyada aniqlangan qurilish holati (14 band)
+
+| EP | Qurilish | Asosiy dalil |
+|---|---|---|
+| 121 | Yo'q | smena-oynasi bilan solishtirish yo'q |
+| 122 | Qisman | kod-dublikat DB-darajada bloklangan; **o'xshash nom** ogohlantirishi yo'q |
+| 123 | Qisman | egalik ustunlari (3) bor; majburlash gate yo'q |
+| 124 | Yo'q | ombor peresmenka akti yo'q (MES handover boshqa narsa) |
+| 125 | Qisman | `INTERNAL_RETURN` bor; **"ikkilamchi sifat" belgisi yo'q** |
+| 126 | Yo'q | `warehouse_stock` da kirim-sana ustuni **umuman yo'q** (Q-35) |
+| 127 | Yo'q | jismoniy datchik yo'q (egasi-CAPEX) |
+| 128 | Yo'q | xavf-turi maydoni yo'q |
+| 129 | Yo'q | kg→dona transformatsiya yo'q |
+| 130 | Qisman | sabab-kod mexanizmi bor; "namuna" kodi seed qilinmagan |
+| 131 | Qisman | `wms-cycle-count-generator.cron.ts` real; ABC↔chastota bog'lanishi tasdiqlanmadi |
+| 132 | Qisman | akt-infratuzilmasi bor; ikki-imzo faqat material-kitda |
+| 133 | Qisman | `wms-rental` tushunchasi kodda bor; ijara hisobi yo'q |
+| 134 | Qisman | `INTERNAL_TRANSFER` bor; juft (chiqim+kirim) yozuv tasdiqlanmadi |
+
+### 3.3 Kesishuvchi bloklovchilar
+
+- **BL-WMS-01 — `warehouse_stock` da kirim/ishlab-chiqarilgan sana ustuni yo'q.** EP-WMS-126 (eskirish signali) butunlay shunga tayanadi, EP-WMS-027 (FIFO) ham sanaga muhtoj. ⚠️ **Q-35 — yangi ustun, egasi ruxsati kerak.**
+- **BL-WMS-02 — sifat-darajasi maydoni yo'q.** EP-WMS-125 (ikkilamchi material) qurilmaydi: qaytgan qoldiq yangi material bilan bir xil zaxiraga tushadi va FIFO uni ajratmaydi.
+- **BL-WMS-03 — jismoniy datchik yo'q.** EP-WMS-127 — sof **egasi-CAPEX** qarori, kod tomoni tayyor bo'lishi mumkin.
+- **BL-WMS-04 — tarif/konversiya modellari egasidan.** EP-WMS-133 (ijara tarifi), EP-WMS-129 (rulon→list formulasi), EP-WMS-124 ("kalit material" ta'rifi), EP-WMS-126 (eskirish chegarasi), EP-WMS-128 (xavf tasnifi) — beshtasi ham **fabrikatsiya qilinmaydigan biznes-qiymatlar**. ⚠️ Memory qoidasiga ko'ra bular chatda so'ralmaydi: `business_settings` ga default bilan qo'shilib, CRUD orqali sozlanadi.
