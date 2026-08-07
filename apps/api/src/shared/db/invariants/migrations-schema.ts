@@ -2356,6 +2356,22 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'budget-alert.cron.ts — budgets.spent_amount / budget_amount shu ulushdan oshsa, byudjet egasiga (created_by) ogohlantirish yuboriladi', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // Audit 2026-08-07: cleanup-old-logs.cron.ts — beshinchi `processed=0` stub, xuddi shu
+  // sinfdan (docs/audit/FANTOM-JADVALLAR-2026-08-07.md dan alohida — bu safar cron-stub sinfi).
+  {
+    name: 'business_settings audit.log_retention_days seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('audit', 'audit.log_retention_days', 'So''rov-log saqlash muddati', 'number', 90, 'kun', 1, 3650,
+        'cleanup-old-logs.cron.ts — audit_log jadvalida created_at shu kundan eski qatorlar "muddati o''tgan" hisoblanadi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings audit.log_retention_enabled seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('audit', 'audit.log_retention_enabled', 'So''rov-loglarini avtomatik o''chirish', 'number', 0, 'bayroq', 0, 1,
+        '0 = faqat sanaydi (DEFAULT, xavfsiz); 1 = muddati o''tgan audit_log qatorlarini HAQIQATAN o''chiradi — faqat egasi yoqadi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
   {
     name: 'notification_routing_rules director.approval_requested seed (2026-08-07)',
     sql: `INSERT INTO notification_routing_rules (event_type, target_role, target_user_id, notes)
