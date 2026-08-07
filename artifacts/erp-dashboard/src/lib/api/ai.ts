@@ -76,8 +76,12 @@ export const aiApi = {
     apiRequest("POST", "/api/crm/ai/extended/auto-tasks/suggest", data),
   crmExtendedCreateTask: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/crm/ai/extended/auto-tasks/create", data),
-  crmExtendedChurnAnalyze: (data: Record<string, unknown>) =>
-    apiRequest("POST", "/api/crm/ai/extended/churn/analyze", data),
+  // crmExtendedChurnAnalyze removed 2026-08-07 (Q-46): it POSTed to
+  // /api/crm/ai/extended/churn/analyze, which does not exist — the backend only exposes
+  // @Get('extended/churn/analyze') (crm-ai-extended.controller.ts:146). It also had zero callers:
+  // ExtendedAIPanel.tsx does its own GET. Dead and broken, so deleted rather than left to look
+  // like available API surface. This was the single entry behind the check-fe-api-urls warning
+  // that fired on every commit.
   crmExtendedVoiceAnalyze: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/crm/ai/extended/voice/analyze-call", data),
   assignExam: (data: Record<string, unknown>) =>
