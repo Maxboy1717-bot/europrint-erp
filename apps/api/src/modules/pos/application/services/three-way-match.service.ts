@@ -4,15 +4,25 @@
  * 3-Tomonlama solishtirish:
  *   PO (Purchase Order) ↔ Receipt (Qabul akti) ↔ Invoice (Hisob-faktura)
  *
- * Variance > 5% bo'lsa — alert va manual review kerak.
+ * Variance chegaradan oshsa — alert va manual review kerak. Chegara egasi tomonidan
+ *   business_settings orqali sozlanadi (mm.three_way_qty/amount_tolerance_pct).
  * Status: PENDING / MATCHED / VARIANCE / FAILED
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Ok, Err, AppError } from '@common/result';
 import { ThreeWayMatchRepository } from '../../infrastructure/repositories/three-way-match.repository';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 
-const QTY_TOLERANCE_PCT    = 0.05;
-const AMOUNT_TOLERANCE_PCT = 0.05;
+// Audit 2026-08-07: the ERP had FOUR independent three-way matchers, each with its own literal
+// tolerance — mm-vendor-invoice.service, mm's drizzle-mm.repo, the queries-mm-goods read endpoint,
+// and this one. The first three were moved onto the owner-editable business_settings rows earlier
+// today; this POS-side matcher was missed, so the same delivery could read MATCHED on one screen
+// and VARIANCE on another, and the owner's CRUD change had no effect here at all. All four now
+// read the same two rows; these constants remain only as the fallback when a row is missing.
+const QTY_TOLERANCE_PCT_DEFAULT    = 0.05;
+const AMOUNT_TOLERANCE_PCT_DEFAULT = 0.05;
+const QTY_TOLERANCE_KEY    = 'mm.three_way_qty_tolerance_pct';
+const AMOUNT_TOLERANCE_KEY = 'mm.three_way_amount_tolerance_pct';
 
 @Injectable()
 export class ThreeWayMatchService {
@@ -40,7 +50,11 @@ export class ThreeWayMatchService {
         ? Math.abs((input.invoiceAmount - input.poAmount) / Math.max(input.poAmount, 1))
         : 0;
 
-      const status = (qtyVar > QTY_TOLERANCE_PCT || amountVar > AMOUNT_TOLERANCE_PCT) ? 'VARIANCE' : 'MATCHED';
+      const [qtyTolerance, amountTolerance] = await Promise.all([
+        getBusinessSettingNumber(QTY_TOLERANCE_KEY, QTY_TOLERANCE_PCT_DEFAULT),
+        getBusinessSettingNumber(AMOUNT_TOLERANCE_KEY, AMOUNT_TOLERANCE_PCT_DEFAULT),
+      ]);
+      const status = (qtyVar > qtyTolerance || amountVar > amountTolerance) ? 'VARIANCE' : 'MATCHED';
 
       const existingR = await this.repo.findByMovement(input.movementId);
       if (!existingR.ok) return Err(existingR.error);
