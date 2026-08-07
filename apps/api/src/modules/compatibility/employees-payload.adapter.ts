@@ -73,7 +73,17 @@ export async function validateEmployeeFks(
   excludeEmployeeId?: number,
 ): Promise<void> {
   if (a.departmentId !== null) {
-    const dept = await rawSql(sql`SELECT id FROM departments WHERE id = ${a.departmentId} LIMIT 1`);
+    // Audit 2026-08-06: this validated against the legacy `departments` table, which holds
+    // 0 rows live — so supplying any department while creating or editing an employee was
+    // rejected outright with "department not found". org_departments is canonical (10 rows).
+    // Both are accepted here: the mirror-sync writes departments rows with their own serial
+    // ids, so an id that resolves in either space is a real department.
+    const dept = await rawSql(sql`
+      SELECT id FROM org_departments WHERE id = ${a.departmentId}
+      UNION ALL
+      SELECT id FROM departments WHERE id = ${a.departmentId}
+      LIMIT 1
+    `);
     if (dbRows(dept).length === 0) {
       throw new BadRequestException(await i18n.t('errors.departmentIdNotFound', { args: { id: a.departmentId } }));
     }

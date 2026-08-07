@@ -65,7 +65,7 @@ export class ErpCameraRepository {
 
   async teamAnalyticsDepartments(): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT d.id, d.name, COUNT(DISTINCT e.id) AS employee_count, COUNT(DISTINCT ce.id) FILTER (WHERE ce.created_at > NOW() - INTERVAL '1 day') AS detections_24h FROM departments d LEFT JOIN employees e ON e.department_id = d.id LEFT JOIN camera_events ce ON ce.description = e.id::text AND ce.event_type = 'face_recognition' GROUP BY d.id, d.name ORDER BY d.name`);  } catch (_e) {
+      return exec(sql`SELECT d.id, d.name, COUNT(DISTINCT e.id) AS employee_count, COUNT(DISTINCT ce.id) FILTER (WHERE ce.created_at > NOW() - INTERVAL '1 day') AS detections_24h FROM org_departments d LEFT JOIN employees e ON e.org_department_id = d.id LEFT JOIN camera_events ce ON ce.description = e.id::text AND ce.event_type = 'face_recognition' GROUP BY d.id, d.name ORDER BY d.name`);  } catch (_e) {
     return Err(String(_e));
   }
 
