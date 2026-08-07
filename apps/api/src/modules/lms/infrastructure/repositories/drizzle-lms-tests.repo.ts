@@ -178,9 +178,28 @@ export class LmsTestsRepository {
       const statusVal = filters?.status ?? null;
       const empId = filters?.employeeId ? parseInt(filters.employeeId, 10) : null;
       const [itemsResult, countResult] = await Promise.all([
+        // FE (AllExams.tsx) expects camelCase userName/testName/startedAt/finishedAt.
+        // `a.*` alone returns raw snake_case columns -> attempt.startedAt was undefined
+        // -> `new Date(undefined)` -> date-fns RangeError -> blank page. Raw columns are
+        // kept alongside the aliases because AttemptsPage.tsx reads the snake_case keys.
         runQuery<Row>(sql`
-          SELECT a.*, c.title_uz AS course_title FROM lms_exam_attempts a
-          LEFT JOIN lms_exams e ON e.id = a.exam_id LEFT JOIN courses c ON c.id = e.course_id
+          SELECT a.*, c.title_uz AS course_title,
+            COALESCE(a.started_at, a.created_at) AS "startedAt",
+            a.submitted_at AS "finishedAt",
+            a.analyzed_at  AS "analyzedAt",
+            e.title AS "testName",
+            COALESCE(
+              NULLIF(TRIM(u.full_name), ''),
+              NULLIF(TRIM(CONCAT_WS(' ', u.last_name, u.first_name)), ''),
+              NULLIF(TRIM(emp.full_name), ''),
+              NULLIF(TRIM(CONCAT_WS(' ', emp.last_name, emp.first_name)), ''),
+              u.username
+            ) AS "userName"
+          FROM lms_exam_attempts a
+          LEFT JOIN lms_exams e ON e.id = a.exam_id
+          LEFT JOIN courses c ON c.id = e.course_id
+          LEFT JOIN users u ON u.id = a.user_id
+          LEFT JOIN employees emp ON emp.id::text = a.employee_id
           WHERE (${statusVal}::text IS NULL OR a.status = ${statusVal}) AND (${empId}::int IS NULL OR a.employee_id = ${empId})
           ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}
         `),
