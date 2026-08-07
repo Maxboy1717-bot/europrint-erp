@@ -71,6 +71,9 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     }
 
     const deliveries: Promise<void>[] = [];
+    // Collects "<channel>: <reason>" for every outbound channel that did not deliver, so the
+    // stored status reflects what actually happened instead of assuming success.
+    const failed: string[] = [];
 
     // 18-notif — KRITIK BUG (2026-07-11 topildi): bu yergacha command.userId
     // (ichki users.id) TO'G'RIDAN-TO'G'RI Telegram chat_id sifatida yuborilardi
@@ -99,12 +102,14 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
             this.logger.log(`Telegram yuborilmadi — user ${command.userId} chat_id bog'lamagan`);
             return;
           }
-          await this.telegramService
-            .sendMessage(String(chatId), `${command.title}\n${command.body}`)
-            .then((): void => { /* void */ })
-            .catch((): void => {
-              this.logger.warn('Telegram notification yuborilmadi');
-            });
+          const sent = await this.telegramService.sendMessage(
+            String(chatId),
+            `${command.title}\n${command.body}`,
+          );
+          if (!sent.ok) {
+            failed.push(`telegram: ${sent.error.message}`);
+            this.logger.warn(`Telegram notification yuborilmadi — ${sent.error.message}`);
+          }
         })().catch((err: unknown): void => {
           this.logger.warn(`Telegram chat_id qidiruvi muvaffaqiyatsiz: ${String(err)}`);
         }),
@@ -113,25 +118,55 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
 
     if (channels.includes('email') && ext.recipientEmail) {
       deliveries.push(
-        this.emailService
-          .sendNotification(ext.recipientEmail, command.title, command.body, ext.link)
-          .then((): void => { /* void */ })
-          .catch((): void => {
-            this.logger.warn('Email notification yuborilmadi');
-          }),
+        (async (): Promise<void> => {
+          const sent = await this.emailService.sendNotification(
+            ext.recipientEmail as string, command.title, command.body, ext.link,
+          );
+          if (!sent.ok) {
+            failed.push(`email: ${sent.error.message}`);
+            this.logger.warn(`Email notification yuborilmadi — ${sent.error.message}`);
+          }
+        })(),
       );
     }
 
     if (channels.includes('sms') && ext.recipientPhone) {
       const smsText = `${command.title}: ${command.body}`.slice(0, 160);
       deliveries.push(
-        this.smsService.send({ to: ext.recipientPhone, text: smsText }).then((): void => { /* void */ }).catch((): void => {
-          this.logger.warn('SMS notification yuborilmadi');
-        }),
+        (async (): Promise<void> => {
+          const sent = await this.smsService.send({ to: ext.recipientPhone as string, text: smsText });
+          if (!sent.ok) {
+            failed.push(`sms: ${sent.error.message}`);
+            this.logger.warn(`SMS notification yuborilmadi — ${sent.error.message}`);
+          }
+        })(),
       );
     }
 
     await Promise.allSettled(deliveries);
+
+    // Audit 2026-08-06 (Notifications): every delivery used .then(()=>{}).catch(...), but the
+    // adapters return Result and never throw — so .catch() was unreachable and the Result's
+    // .ok was discarded. A dead SMTP host or a rejected Telegram send looked identical to a
+    // successful one, and notifications.status (added 2026-07-13 for exactly this) stayed
+    // 'pending' forever. Outcomes are now inspected and written back.
+    const outboundUsed = channels.some((c) => c !== 'in_app');
+    if (outboundUsed) {
+      const status = failed.length === 0 ? 'sent' : 'failed';
+      try {
+        await runQuery(sql`
+          UPDATE notifications SET status = ${status} WHERE id = ${saveResult.data.id}
+        `);
+      } catch (e) {
+        this.logger.warn(`notifications.status yangilanmadi (id=${saveResult.data.id}): ${String(e)}`);
+      }
+      if (failed.length > 0) {
+        this.logger.warn(
+          { notificationId: saveResult.data.id, failed },
+          'Notification yaratildi, lekin ba\'zi kanallar yetkazmadi',
+        );
+      }
+    }
 
     this.logger.log(
       { notificationId: saveResult.data.id, userId: command.userId, channels },
