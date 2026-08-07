@@ -29,10 +29,10 @@ export function TransparencyPanel() {
       data-testid="aisha-transparency"
       className="aisha-glass"
       style={{
-        position: 'fixed', top: 16, right: 360,
+        position: 'fixed', top: 72, right: 360,
         width: open ? 320 : 36,
-        maxHeight: 'calc(100vh - 32px)', overflowY: 'auto',
-        padding: open ? 16 : 8, zIndex: 49,
+        maxHeight: 'calc(100vh - 88px)', overflowY: 'auto',
+        padding: open ? 16 : 8, zIndex: 59,
         transition: 'width .2s ease',
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}

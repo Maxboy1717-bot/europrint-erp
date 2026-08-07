@@ -56,9 +56,9 @@ export function AishaPanel({ isDirector, accessKey = null, ppnUrl = '/aisha/asse
       data-testid="aisha-panel"
       className="aisha-glass"
       style={{
-        position: 'fixed', top: 16, right: 16,
+        position: 'fixed', top: 72, right: 16,
         width: collapsed ? 80 : 320,
-        padding: 16, zIndex: 50,
+        padding: 16, zIndex: 60,
         transition: 'width .2s ease',
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
