@@ -7,9 +7,9 @@
 >
 > **Natija: 21 ta jonli so'rov yo'li mavjud bo'lmagan jadvalga boradi.**
 >
-> **Holat 2026-08-07 kech: 16 tasi tuzatildi, 5 tasi ochiq (2 tasi — sxema qarori kutmoqda,
-> 2 tasi — vizyon nomuvofiqligi, 1 tasi — seed skripti, ataylab tegilmadi). Takrorlanmasligi
-> uchun pre-commit ratchet qo'shildi (pastda).**
+> **Holat 2026-08-07 kech: 17 tasi tuzatildi, 4 tasi ochiq (2 tasi — sxema qarori kutmoqda,
+> 2 tasi — vizyon nomuvofiqligi; 1 ta seed skripti ataylab tegilmadi, sanoqqa kirmaydi).
+> Takrorlanmasligi uchun pre-commit ratchet qo'shildi (pastda).**
 
 ## Nima uchun bu jim qoladi
 
@@ -44,6 +44,7 @@ deb yaxshi xabar aytadi.**
 | `bot-gateway/bots/fin.bot.ts:32` | `finance_transactions` | `entries`⨝`accounts` (`account_type='REVENUE'/'EXPENSE'`, financial-reports bilan bir xil kanon) | `1d8d9f64` |
 | `aisha/.../get-active-alerts.tool.ts:42` | `iot_sensor_alerts` | `iot_alerts` | `1d8d9f64` |
 | `aisha/.../get-active-alerts.tool.ts:46` | `ai_agent_alerts` | `agent_alerts` (`AgentAlertService.send()` bilan bir xil jadval) | `1d8d9f64` |
+| `pp/infrastructure/repositories/drizzle-pp.repo.ts:213` | `bom_components` | `bom_headers`⨝`bom_items` (PP ning boshqa faol BOM repo'si bilan bir xil jadval) — ⭐ **MRP ko'p bosqichli BOM yoyish avval HAR DOIM `Err` qaytarardi, endi ishlaydi** | `bf5021a6` |
 
 ---
 
@@ -63,7 +64,6 @@ deb yaxshi xabar aytadi.**
 | `hr/telegram-bots/telegram-bots/profile.repo.ts:127` | `inventory_items` + `pos_inventory_items` (IKKALASI HAM) | Xodimga biriktirilgan inventar uchun mos jadval bazada YO'Q. `asset_items` (assigned_to bor) — asosiy vosita hisobi, miqdor/birlik ustuni yo'q; `position_equipment` — lavozim bo'yicha TALAB QILINADIGAN uskuna ro'yxati (master-data), xodimga real biriktirilgan narsani kuzatmaydi. Ikkalasi ham `getEmployeeInventory()` semantikasiga to'g'ri kelmaydi — yangi jadval kerak (Q-35) |
 | `bot-gateway/bots/qc.bot.ts:53` | `qc_dpmo_stats` | DPMO **hisoblanmaydi** — jadval ham, hisoblovchi kod ham yo'q. `qc_defects` dan hisoblash kerak (yangi ish, ko'chirish emas) |
 | `aisha/.../get-production-status.tool.ts:41` | `iot_oee_metrics` | OEE agregat jadvali yo'q; `production-agent.calculateOEE()` mavjud, lekin `performance`/`quality` hamon placeholder (`estimated: true`) |
-| `pp/infrastructure/repositories/drizzle-pp.repo.ts:213` | `bom_components` | `bom_items` / `bom_headers` / `boms` / `tech_card_bom` — **to'rtta** nomzod; ADR-006 `technology_cards` ni kanonik deydi, moslashtirish kerak |
 | `hr/telegram-bots/telegram-bots/profile.repo.ts:112` | `employee_kpi` | KPI agregat jadvali yo'q; `employee-kpi.handler.ts` hisoblaydi, lekin saqlamaydi |
 | `aisha/.../schedule-meeting.tool.ts:75` | `telegram_user_links` | Kanonik manba `employees.telegram_chat_id` (`CreateNotificationHandler` shuni ishlatadi) — ⚠️ lekin jonli bazada **0 qator** |
 
@@ -79,8 +79,8 @@ deb yaxshi xabar aytadi.**
 ## Tavsiya etilgan tartib
 
 1. **A guruhi — bo'sh.** Yagona qolgan (`sd_orders`) ataylab tegilmaydi (yuqorida sabab).
-2. **B guruhi (6 ta)** — har biri uchun avval **kanonik manbani belgilash** kerak (4 ta alohida
-   egasi-savoli: security-alert lug'ati, xodim-inventar jadvali, BOM kanoni, KPI saqlanadimi).
+2. **B guruhi (5 ta)** — har biri uchun avval **kanonik manbani belgilash** kerak (3 ta alohida
+   egasi-savoli: security-alert lug'ati, xodim-inventar jadvali, KPI saqlanadimi).
 3. **C guruhi (2 ta)** — POS botining maqsadi vizyon bilan solishtirilishi kerak.
 
 ## ✅ Takrorlanmasligi uchun — ratchet qo'shildi (`17c298ac`)
