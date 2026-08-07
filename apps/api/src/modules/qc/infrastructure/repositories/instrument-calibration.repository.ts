@@ -11,6 +11,10 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { Result, Ok, Err } from '@common/result';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
+
+/** due_soon oynasi sozlanmagan bo'lsa ishlatiladigan zaxira qiymat (audit 2026-08-06 gacha hardcoded edi). */
+const CALIBRATION_DUE_SOON_DAYS_DEFAULT = 30;
 
 export interface CalibrationRow {
   id: number;
@@ -30,17 +34,26 @@ export interface CalibrationRow {
 
 @Injectable()
 export class InstrumentCalibrationRepository {
+  /**
+   * due_soon oynasi (kun) — business_settings 'qc.calibration_due_soon_days' orqali CRUD-sozlanadi.
+   * Sozlama yo'q/nofaol bo'lsa 30 kunga qaytadi (avvalgi hardcoded xatti-harakat = regressiyasiz).
+   */
+  private async dueSoonDays(): Promise<number> {
+    return getBusinessSettingNumber('qc.calibration_due_soon_days', CALIBRATION_DUE_SOON_DAYS_DEFAULT);
+  }
+
   async list(dueSoonOnly: boolean): Promise<Result<CalibrationRow[]>> {
     try {
+      const days = await this.dueSoonDays();
       // Shartli WHERE — boolean parametrni SQL ichida solishtirishdan qochamiz (bind noaniqligi).
       const dueFilter = dueSoonOnly
-        ? sql`WHERE next_due_at IS NOT NULL AND next_due_at <= CURRENT_DATE + 30`
+        ? sql`WHERE next_due_at IS NOT NULL AND next_due_at <= CURRENT_DATE + ${days}::int`
         : sql``;
       const r = await runQuery<CalibrationRow>(sql`
         SELECT id, instrument_name, instrument_code, location, responsible_user_id,
                interval_days, last_calibrated_at, next_due_at, certificate_number, status, notes,
-               (next_due_at IS NOT NULL AND next_due_at <= CURRENT_DATE + 30) AS due_soon,
-               (next_due_at IS NOT NULL AND next_due_at <  CURRENT_DATE)      AS is_overdue
+               (next_due_at IS NOT NULL AND next_due_at <= CURRENT_DATE + ${days}::int) AS due_soon,
+               (next_due_at IS NOT NULL AND next_due_at <  CURRENT_DATE)                AS is_overdue
         FROM qc_instrument_calibrations
         ${dueFilter}
         ORDER BY (next_due_at IS NULL), next_due_at ASC, id DESC
@@ -51,11 +64,12 @@ export class InstrumentCalibrationRepository {
 
   async getById(id: number): Promise<Result<CalibrationRow>> {
     try {
+      const days = await this.dueSoonDays();
       const r = await runQuery<CalibrationRow>(sql`
         SELECT id, instrument_name, instrument_code, location, responsible_user_id,
                interval_days, last_calibrated_at, next_due_at, certificate_number, status, notes,
-               (next_due_at IS NOT NULL AND next_due_at <= CURRENT_DATE + 30) AS due_soon,
-               (next_due_at IS NOT NULL AND next_due_at <  CURRENT_DATE)      AS is_overdue
+               (next_due_at IS NOT NULL AND next_due_at <= CURRENT_DATE + ${days}::int) AS due_soon,
+               (next_due_at IS NOT NULL AND next_due_at <  CURRENT_DATE)                AS is_overdue
         FROM qc_instrument_calibrations WHERE id = ${id}
       `);
       if (!r.rows[0]) return Err({ message: 'Asbob topilmadi', code: 'NOT_FOUND' });

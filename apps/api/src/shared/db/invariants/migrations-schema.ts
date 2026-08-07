@@ -2245,4 +2245,28 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'chat-presence-cleanup.cron.ts — last_seen_at shu daqiqadan eski ONLINE qatorlar avtomatik OFFLINE qilinadi (disconnect-event yo''qolgan holatlar uchun)', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // audit 2026-08-06 (QC): qc-extended.service.ts createInProcessInspection() lot auto-fail
+  // chegarasi getConfigNumber('qc_lot_defect_fail_ratio') orqali ESKI `settings` jadvalidan
+  // o'qilardi — u yerda qator yo'q edi va `settings` uchun CRUD ekran ham yo'q, ya'ni egasi
+  // chegarani HECH QACHON o'zgartira olmasdi (doimo 0.05 fallback). Kanonik business_settings
+  // ga ko'chirildi ("threshold qiymatlar = doim CRUD" qoidasi).
+  // Ulush (ratio) sifatida saqlanadi — kod defects/total > failRatio deb solishtiradi,
+  // shuning uchun value_type='number', 0..1 oralig'i (percent 0..100 konvensiyasi EMAS).
+  {
+    name: 'business_settings qc.lot_defect_fail_ratio seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('qc', 'qc.lot_defect_fail_ratio', 'Lot brak ulushi: shu chegaradan oshsa lot avtomatik "failed"', 'number', 0.05, 'ulush', 0, 1,
+        'qc-extended.service.ts createInProcessInspection() — jarayon-ichi ko''rikda brak/jami nisbati shu ulushdan (0.05 = 5%) katta bo''lsa status=''failed'', aks holda brak bo''lsa ''conditional'', brak yo''q bo''lsa ''passed''', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  // audit 2026-08-06 (QC bonus): kalibrovka/etalon-namuna "due_soon" oynasi xom SQL'da
+  // CURRENT_DATE + 30 deb qattiq yozilgan edi (instrument-calibration.repository.ts,
+  // reference-sample.repository.ts) — CRUD-yo'l yo'q edi. Endi shu sozlama boshqaradi.
+  {
+    name: 'business_settings qc.calibration_due_soon_days seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('qc', 'qc.calibration_due_soon_days', 'Kalibrovka/etalon namuna: muddat tugashiga necha kun qolganda ogohlantiriladi', 'days', 30, 'kun', 1, 365,
+        'instrument-calibration.repository.ts (next_due_at) va reference-sample.repository.ts (retention_until) — muddat shu kundan yaqinroq bo''lsa due_soon / expiring_soon bayrog''i yoqiladi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];

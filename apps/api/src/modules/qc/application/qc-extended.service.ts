@@ -5,7 +5,7 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { getConfigNumber } from '@common/config/business-config.helper';
+import { getBusinessSettingNumber } from '../../../shared/config/business-settings.reader';
 import { QC_EXTENDED_REPO, type IQcExtendedRepo } from '../domain/repositories/i-qc-extended.repo';
 
 const QC_LOT_DEFECT_FAIL_RATIO_DEFAULT = 0.05;
@@ -72,9 +72,14 @@ export class QcExtendedService {
 
   async createInProcessInspection(session_id: number, inspector_id: number | null, check_point: string | null, total: number, defects: number, notes: string | null) {
     // MN-1 (Magic-Numbers Independent Verification 2026-07-07, M6 2/4 gap): the 0.05
-    // QC-lot auto-fail ratio is now settings-table-tunable, matching the ai_auto_reject_score
-    // pattern (M6, f069bb09) -- falls back to the prior hardcoded 0.05 when unset.
-    const failRatio = await getConfigNumber('qc_lot_defect_fail_ratio', QC_LOT_DEFECT_FAIL_RATIO_DEFAULT);
+    // QC-lot auto-fail ratio is tunable rather than hardcoded -- falls back to 0.05 when unset.
+    //
+    // 2026-08-07 (audit 2026-08-06): was getConfigNumber('qc_lot_defect_fail_ratio'), which reads
+    // the legacy generic `settings` table. That table had no row for the key AND has no CRUD/admin
+    // screen, so the threshold was permanently stuck at the 0.05 fallback and the owner could never
+    // change it -- violating the "threshold qiymatlar = doim CRUD" rule. Now reads the canonical
+    // business_settings row (seeded by migrations-schema.ts, editable via the business-settings CRUD).
+    const failRatio = await getBusinessSettingNumber('qc.lot_defect_fail_ratio', QC_LOT_DEFECT_FAIL_RATIO_DEFAULT);
     const status = this.deriveInspectionStatus(total, defects, failRatio);
     return this.repo.createInProcessInspection(session_id, inspector_id, check_point, total, defects, status, notes);
   }

@@ -11,6 +11,10 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { Result, Ok, Err } from '@common/result';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
+
+/** expiring_soon oynasi sozlanmagan bo'lsa ishlatiladigan zaxira qiymat (audit 2026-08-06 gacha hardcoded edi). */
+const EXPIRING_SOON_DAYS_DEFAULT = 30;
 
 export interface ReferenceSampleRow {
   id: number;
@@ -33,24 +37,34 @@ export interface ReferenceSampleRow {
 }
 
 // Derived bayroqlar (kalibrovka due_soon patterni): faqat arxivdagi namuna uchun.
-const SELECT_COLS = sql`
+// Ogohlantirish oynasi (kun) business_settings 'qc.calibration_due_soon_days' dan keladi.
+const selectCols = (days: number) => sql`
   id, sample_ref, product_id, order_id, inspection_id, description, storage_location,
   responsible_user_id, metadata_json, archived_at, retention_months, retention_until,
   status, disposed_at, notes,
-  (status = 'archived' AND retention_until IS NOT NULL AND retention_until <= CURRENT_DATE + 30) AS expiring_soon,
-  (status = 'archived' AND retention_until IS NOT NULL AND retention_until <  CURRENT_DATE)      AS is_expired
+  (status = 'archived' AND retention_until IS NOT NULL AND retention_until <= CURRENT_DATE + ${days}::int) AS expiring_soon,
+  (status = 'archived' AND retention_until IS NOT NULL AND retention_until <  CURRENT_DATE)                AS is_expired
 `;
 
 @Injectable()
 export class ReferenceSampleRepository {
+  /**
+   * expiring_soon oynasi (kun) — business_settings 'qc.calibration_due_soon_days' orqali CRUD-sozlanadi
+   * (kalibrovka bilan bir xil oyna). Sozlama yo'q/nofaol bo'lsa 30 kunga qaytadi (regressiyasiz).
+   */
+  private async expiringSoonDays(): Promise<number> {
+    return getBusinessSettingNumber('qc.calibration_due_soon_days', EXPIRING_SOON_DAYS_DEFAULT);
+  }
+
   async list(opts: { expiringSoonOnly: boolean; includeDisposed: boolean }): Promise<Result<ReferenceSampleRow[]>> {
     try {
+      const days = await this.expiringSoonDays();
       const statusFilter = opts.includeDisposed ? sql`` : sql`AND status = 'archived'`;
       const dueFilter = opts.expiringSoonOnly
-        ? sql`AND retention_until IS NOT NULL AND retention_until <= CURRENT_DATE + 30`
+        ? sql`AND retention_until IS NOT NULL AND retention_until <= CURRENT_DATE + ${days}::int`
         : sql``;
       const r = await runQuery<ReferenceSampleRow>(sql`
-        SELECT ${SELECT_COLS}
+        SELECT ${selectCols(days)}
         FROM qc_reference_samples
         WHERE 1 = 1 ${statusFilter} ${dueFilter}
         ORDER BY (retention_until IS NULL), retention_until ASC, id DESC
@@ -61,8 +75,9 @@ export class ReferenceSampleRepository {
 
   async getById(id: number): Promise<Result<ReferenceSampleRow>> {
     try {
+      const days = await this.expiringSoonDays();
       const r = await runQuery<ReferenceSampleRow>(sql`
-        SELECT ${SELECT_COLS} FROM qc_reference_samples WHERE id = ${id}
+        SELECT ${selectCols(days)} FROM qc_reference_samples WHERE id = ${id}
       `);
       if (!r.rows[0]) return Err({ message: 'Namuna topilmadi', code: 'NOT_FOUND' });
       return Ok(r.rows[0]);
