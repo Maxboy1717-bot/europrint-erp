@@ -359,6 +359,27 @@ export class DrizzleCameraAiRepo {
     } catch (e) { return Err((e as Error).message); }
   }
 
+  /**
+   * Audit 2026-08-08 (docs/audit/AI-KAMERALAR-TAHLILI-2026-08-08.md §5): camera_alerts
+   * writes had no notification recipient list at all — this closes that half-loop for
+   * high/critical severity (same SECURITY/HR_MANAGER/HR_DIRECTOR role set territory
+   * .gateway.ts's ROOM_ALERT_NOTIFY_ROLES uses for the analogous hr.room_anomaly path).
+   */
+  async findAlertNotifyUserIds(): Promise<Result<number[]>> {
+    try {
+      const r = await db.execute(sql`
+        SELECT user_id FROM employees
+        WHERE role = ANY(${['SECURITY', 'HR_MANAGER', 'HR_DIRECTOR']}::text[])
+          AND user_id IS NOT NULL
+        LIMIT 50
+      `);
+      const ids = (r.rows as Array<{ user_id: number | null }>)
+        .map((row) => row.user_id)
+        .filter((id): id is number => id != null);
+      return Ok(ids);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
   private _safeJsonParse(raw: string): unknown {
     try { return JSON.parse(raw); } catch { return null; }
   }

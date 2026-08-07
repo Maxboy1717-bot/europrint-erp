@@ -4,13 +4,18 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { Ok, Err, Result, isErr } from '@common/result';
 import { DrizzleCameraAiRepo } from '../infrastructure/repositories/drizzle-camera-ai.repo';
 import { AiRouterService } from '../../ai/application/services/ai-router.service';
+import { CreateNotificationCommand } from '../../notifications/application/commands/create-notification.command';
 import {
   CAMERA_VISION_MAX_TOKENS,
   CAMERA_VISION_DEFAULT_CONFIDENCE,
 } from '@common/constants/business.constants';
+
+/** Bildirishnoma yuboriladigan severity darajalar — past/o'rta darajalarda shovqin oshirilmaydi. */
+const CAMERA_ALERT_NOTIFY_SEVERITIES = new Set(['high', 'critical']);
 
 /** Standard mission catalog mirrored from FE `camera-ai-modern/taskCatalog.ts` (AI_TASK_CATALOG ids). */
 const DEFAULT_MISSION_HINTS: Record<string, string> = {
@@ -51,6 +56,7 @@ export class CameraAiService {
   constructor(
     private readonly repo: DrizzleCameraAiRepo,
     private readonly aiRouter: AiRouterService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   getSummary(): ReturnType<DrizzleCameraAiRepo['findSummary']> {
@@ -179,7 +185,11 @@ export class CameraAiService {
             title: DEFAULT_MISSION_HINTS[finding.mission] ?? finding.mission,
             message: finding.description,
           });
-          if (!alertResult.ok) this.logger.warn(`analyzeByMissions: camera_alerts insert xato — ${alertResult.error.message}`);
+          if (!alertResult.ok) {
+            this.logger.warn(`analyzeByMissions: camera_alerts insert xato — ${alertResult.error.message}`);
+          } else if (CAMERA_ALERT_NOTIFY_SEVERITIES.has(finding.severity)) {
+            void this._notifyAlertRecipients(input.cameraId, finding, alertResult.data.id);
+          }
         } else {
           this.logger.warn(`analyzeByMissions: camera_events insert xato — ${createResult.error.message}`);
         }
@@ -195,6 +205,38 @@ export class CameraAiService {
       persisted: input.persist,
       persistedEventIds,
     });
+  }
+
+  /**
+   * Audit 2026-08-08: camera_alerts had a real writer (createCameraAlert, above)
+   * but zero notification recipients — SECURITY/HR staff only ever saw a high/
+   * critical camera finding if they happened to open the alerts page. Best-effort
+   * (own try/catch) — a notification failure must never fail the already-persisted
+   * alert write, matching territory.gateway.ts's _notifyPersistent precedent.
+   */
+  private async _notifyAlertRecipients(
+    cameraId: string,
+    finding: CameraVisionFinding,
+    alertId: number,
+  ): Promise<void> {
+    try {
+      const recipientsResult = await this.repo.findAlertNotifyUserIds();
+      if (!recipientsResult.ok) {
+        this.logger.warn(`_notifyAlertRecipients: recipient qidiruv xato — ${recipientsResult.error}`);
+        return;
+      }
+      const title = DEFAULT_MISSION_HINTS[finding.mission] ?? finding.mission;
+      const body = `Kamera ${cameraId}: ${finding.description} (${finding.severity})`;
+      for (const userId of recipientsResult.data) {
+        await this.commandBus.execute(
+          new CreateNotificationCommand(String(userId), title, body, 'camera_alert', String(alertId), 'camera_alert'),
+        ).catch((err: unknown) => {
+          this.logger.warn(`_notifyAlertRecipients: notification failed userId=${userId}: ${String(err)}`);
+        });
+      }
+    } catch (err: unknown) {
+      this.logger.warn(`_notifyAlertRecipients failed: ${String(err)}`);
+    }
   }
 
   private resolveMissions(triggerRules: Record<string, unknown>[]): string[] {
