@@ -1871,10 +1871,22 @@
   `sla_hours=24.00`, `warning_threshold_pct=80.00`, 2026-08-03 da yaratilgan). `grep -rn
   "kanban_column_sla" apps/api/src artifacts/erp-dashboard/src` → **faqat sxema ta'rifi**
   (`schema-kanban.ts:114`). Service, controller, cron, FE — **bittasi ham yo'q**.
-- **Nima yetishmaydi:** O'qish qatlami + eskalatsiyaga ulash + CRUD ekrani. Jadval va default
-  qiymatlar tayyor, ya'ni ish faqat ulash. ⚠️ Boot-guard ham yo'q — jadval yo'qolsa jimgina o'tadi.
-- **Bog'liqlik:** EP-KANBAN-045 (eskalatsiya), `TT_SLA_ESCALATION` BullMQ job'i (mavjud, boshqa manbadan o'qiydi)
-- **action:** UPDATE · **⤳ Ta'sir:** Kanban eskalatsiya, Notifications (`registry/18-notifications.md` — o'sha yerda ham qayd etilgan)
+- **Nima yetishmaydi:** ⚠️ **ASOSIY BLOKER — "ulash" emas, O'LCHASH UCHUN VAQT BELGISI YO'Q**
+  (2026-08-07 chuqurroq tekshiruv). `kanban_cards` da `column_id` bor, lekin **«bu ustunga qachon
+  kirdi» ustuni yo'q**, va karta-harakati tarixi jadvali ham yo'q (26 ta `kanban_*` jadval
+  ko'rildi — bittasi ham harakat tarixini saqlamaydi). `updated_at` ni ishlatish MUMKIN EMAS: u
+  har qanday tahrirda (sarlavha, izoh, mas'ul) yangilanadi → soxta SLA buzilishlari chiqadi,
+  ya'ni "ishlaydi lekin noto'g'ri" (Q-40).
+  Kerak: `kanban_cards.column_entered_at` ustuni **yoki** harakat-tarixi jadvali —
+  ⚠️ **ikkalasi ham Q-35 (egasi ruxsati)**. Undan keyingina o'qish qatlami + eskalatsiya + CRUD.
+  ⚠️ Boot-guard ham yo'q — jadval yo'qolsa jimgina o'tadi.
+- **⚠️ Farqni adashtirmang:** mavjud `TT_SLA_ESCALATION` job'i **vazifa-turi** SLA sini o'lchaydi
+  (`kanban_cards.sla_hours` → `taxonomy_entries.attrs->>'sla_hours'` →
+  `business_settings.kanban.tt_task_sla_hours_default`, `created_at` dan hisoblanadi).
+  `kanban_column_sla` esa **ustun** SLA si — «karta 'Tekshiruvda' ustunida 24 soatdan ko'p
+  turmasin». Bu ikki xil o'q; birinchisi ikkinchisini qoplamaydi.
+- **Bog'liqlik:** EP-KANBAN-045 (eskalatsiya), Q-35 (yangi ustun/jadval — egasi qarori)
+- **action:** CREATE (avval sxema qarori) · **⤳ Ta'sir:** Kanban eskalatsiya, Notifications (`registry/18-notifications.md`)
 
 ### VR-KANBAN-I02 · `/api/basket/unified` yo'q — KAN `basket_type` ╳ CC `basket_state` ikki dunyo
 - **Qaror holati:** 🔵 OCHIQ
