@@ -142,7 +142,7 @@ export { QuarantineWorkflowService }    from './application/services/quarantine-
 export { ThreeWayMatchService }         from './application/services/three-way-match.service';
 export { SmsService }                   from './application/services/sms.service';
 export { EmailService }                 from './application/services/email.service';
-export { TelegramBotService }           from './application/services/telegram-bot.service';
+// TelegramBotService o'chirildi 2026-08-07 (Q-46): PosTelegramService bilan o'lik dublikat edi.
 export { QueueService }                 from './application/services/queue.service';
 export { WarehouseFeaturesController }  from './presentation/warehouse-features.controller';
 export { PosOperationsController }      from './presentation/pos-operations.controller';

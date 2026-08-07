@@ -58,7 +58,7 @@ import {
   PosWmsSyncService, PosWmsQueryService,
   WarehouseEmployeesService, AutoBarcodeService, Material360Service, AutoGlPostingService,
   WarehouseKpiService, GoodsReceiptService, QuarantineWorkflowService, ThreeWayMatchService,
-  SmsService, EmailService, TelegramBotService, QueueService,
+  SmsService, EmailService, QueueService,
   WarehouseEmployeesRepository, GoodsReceiptRepository, AutoBarcodeRepository, WarehouseKpiRepository,
   QuarantineWorkflowRepository, ThreeWayMatchRepository, AutoGlPostingRepository, PosEmployeeBalanceRepository,
 } from './pos.module-imports';
@@ -231,7 +231,6 @@ import { FinanceModule } from '@modules/finance/finance.module';
     ThreeWayMatchService,
     SmsService,
     EmailService,
-    TelegramBotService,
     QueueService,
   ],
   exports: [
