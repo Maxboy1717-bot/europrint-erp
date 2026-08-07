@@ -125,11 +125,10 @@ this.jwtService.verify(body.refreshToken, { secret: refreshSecret });
 -- Migration faylida parol hash bo'lmasligi kerak
 ```
 
-**Hozirgi holat:**
-- `apps/api/src/database/seeds/admin.seed.ts:6` — `'Admin123!'` fallback — **TUZATILISHI KERAK**
-- `apps/api/src/shared/db/migrations/org-structure-sync.sql:40` — `test123` hash — **TUZATILISHI KERAK**
-- `apps/api/src/modules/legacy/controllers/admin-auth.controller.ts:33` — noto'g'ri secret — **TUZATILISHI KERAK**
-- `apps/api/src/modules/auth/domain/value-objects/password.vo.ts:14` — bcrypt rounds 10 (admin 12 ishlatadi) — **TEKSHIRILSIN**
+**Hozirgi holat (2026-08-07 jonli tekshirildi — hammasi YOPILGAN):**
+- `apps/api/src/database/seeds/admin.seed.ts` — ✅ fallback parol yo'q; PA-S1 izohi bilan env yo'q bo'lsa hard-fail. `BCRYPT_ROUNDS` endi `common/constants/security.constants` dan (runtime hasher bilan bir manba).
+- `apps/api/src/shared/db/migrations/org-structure-sync.sql` — ✅ `test123` hash yo'q.
+- `apps/api/src/modules/legacy/controllers/admin-auth.controller.ts` — ✅ fayl umuman yo'q (legacy controller o'chirilgan).
 
 ---
 
@@ -156,10 +155,9 @@ await db.select().from(users).where(eq(users.id, id));
 await db.execute(sql.raw(`CREATE INDEX IF NOT EXISTS ...`));
 ```
 
-**Hozirgi holat:**
-- `apps/api/src/modules/legacy/services/legacy.service.ts:27` — `sql.raw(rawQuery)` — **DARHOL TUZATILSIN**
-- `apps/api/src/shared/db/schema.ts:86,91` — `sql.raw(q)` shared helper — **TUZATILSIN**
-- `apps/api/src/shared/db/invariants.ts:1047` — `sql.raw(m.sql)` — **TUZATILSIN**
+**Hozirgi holat (2026-08-07 jonli tekshirildi — hammasi YOPILGAN):**
+- `apps/api/src/modules/legacy/services/legacy.service.ts` — ✅ `sql.raw` qolmagan.
+- `apps/api/src/shared/db/schema.ts:114` — ✅ `sql.raw(q)` faqat `ddlRun()` ichida qoldi va `DDL_PREFIX_RE` runtime tekshiruvi bilan himoyalangan (PA-S4b): satr DDL kalit so'zi bilan boshlanmasa `throw` qiladi, ya'ni so'rov payload'idan kelgan bo'lak o'tolmaydi.
 
 ---
 
@@ -289,7 +287,7 @@ return { data, total: data.length };
 ```
 
 **Reviewer:** `bash scripts/reviewer-as-unknown.sh`  
-**Hozirgi holat:** FAIL: 3 (`gamification.controller.ts`, `crm-extended.service.ts` ×2)
+**Hozirgi holat (2026-08-07):** ✅ FAIL: 0 (WARN: 1). Avvalgi "FAIL: 3" eskirgan edi — `gamification.controller.ts` umuman yo'q, `crm-extended.service.ts` (endi `modules/compatibility/`) da bitta ham `as unknown` qolmagan.
 
 ---
 
@@ -319,12 +317,11 @@ async getAbc() {
 }
 ```
 
-**Eng yomon fayllar:**
-- `wms-catalog.controller.ts` — 5 ta metod (ABC, aging, expiry, turnover, stock balance) to'liq servisga ko'chirilishi kerak
-- `crm-ai-extended.controller.ts` — risk score hisob-kitobi servisga ko'chirilsin
-- `hr-payroll.controller.ts` — INPS/JSHD hisoblash `PayrollService`ga ko'chirilsin
-- `pp-intelligence.controller.ts` — MRP matrisi `PpIntelligenceService`ga ko'chirilsin
-- `chat-advanced.controller.ts` — N+1 loop `ChatService.getBulkUnread()`ga ko'chirilsin
+**Hozirgi holat (2026-08-07 jonli tekshirildi — ro'yxatning katta qismi yopilgan):**
+- `wms-catalog.controller.ts` — ✅ 0 ta `reduce(`/`.map(` qoldi (ABC/aging/expiry/turnover/stock-balance servisga ko'chirilgan)
+- `pp-intelligence.controller.ts` — ✅ MRP matrisi ko'chirilgan (`this.svc.formatMrpResponse(...)`, izohda "Qoida 6 audit 2026-08-06 T22B"); faylda 1 ta `reduce(` qolgan — tekshirilsin
+- `crm-ai-extended.controller.ts` — 1 ta `.map(` qolgan — tekshirilsin
+- `hr-payroll.controller.ts`, `chat-advanced.controller.ts` — qayta tekshirilmagan
 
 ---
 
@@ -425,10 +422,12 @@ async getItems(@Query() query: unknown) {
 }
 ```
 
-**Hozirgi holat:** ~50 ta soxta javob mavjud — birinchi navbatda tuzatilsin:
-- `chat.controller.ts:307,315,369` — `return { ok: true }`
-- `wms-integration.controller.ts:60,66,88` — `return { data: [] }`
-- `sd-customers.controller.ts:111,152,184,204` — `return {}`
+**Hozirgi holat (2026-08-07 jonli tekshirildi — "~50 ta" eskirgan):**
+- `chat.controller.ts` — ✅ 0 ta `return { ok: true }`
+- `wms-integration.controller.ts` — ✅ butun kod bazasida 0 ta `return { data: [] }`
+- `sd-customers.controller.ts` — 4 ta `return {}` qolgan (270/328/380/413), LEKIN bular **soxta emas**: `svc.softDelete()` / `svc.deleteContact()` real ish bajaradi, faqat javob tanasi bo'sh (DELETE ack). Faylda buni tushuntiruvchi `LEGACY_NOOP` izohi bor.
+- Butun `apps/api/src` bo'yicha 13 ta `return { ok: true }` qolgan (chat-uploads ×3, CC ×5, erp-documents ×2, erp-spreadsheets ×2, kanban ×1) — namunaviy tekshiruv hammasi **qonuniy ack** ekanini ko'rsatdi: avval `if (!result.ok) throw ...`, keyin ok qaytariladi. Bu Qoida 10 buzilishi EMAS.
+- ⚠️ Qoida 10 ning haqiqiy nishoni — **hech narsa qilmasdan** ok qaytaruvchi endpoint. Yangi da'vo qo'shishdan oldin real ish bajarilishini tasdiqlang (Q-29).
 
 ---
 
@@ -453,12 +452,9 @@ async getOne(@Param('id') id: string) {
 }
 ```
 
-**Hozirgi holat:** 8 ta controller `@Param` ishlatadi lekin null tekshirmaydi:
-- `pp-intelligence.controller.ts:64`
-- `mes-production-sessions.controller.ts:54`
-- `wms-catalog.controller.ts:458`
-- `adaptation.controller.ts` — stub ID qaytaradi
-- `hr-dashboard.controller.ts` — stub ID qaytaradi
+**Hozirgi holat (2026-08-07 jonli tekshirildi):**
+- `pp-intelligence.controller.ts`, `mes-production-sessions.controller.ts`, `wms-catalog.controller.ts` — ✅ hammasi `unwrapOrThrow(await ...)` ishlatadi, ya'ni Result xatosi HTTP xatosiga aylanadi. Eski satr raqamlari ham noto'g'ri (kod ko'chgan).
+- `adaptation.controller.ts`, `hr-dashboard.controller.ts` — qayta tekshirilmagan.
 
 ---
 
@@ -527,7 +523,14 @@ HRCapitalTests.tsx         ← faqat state + orchestration (≤ 900 qator)
 
 | Fayl | Qator | Amal |
 |------|-------|------|
-| — | — | ✅ 2026-08-07: `drizzle-kanban-ext.repo.ts` (964) allaqachon bo'lingan — hozir 156-qatorli facade + 8 sub-repo; 900+ fayl qolmadi |
+| `shared/db/invariants/migrations-drift.ts` | 4555 | Migration-reestri (generatsiya qilingan DDL ro'yxati) — bo'lish qiymati past, lekin qoidadan ISTISNO deb hujjatlashtirilmagan |
+| `shared/db/invariants/migrations-schema.ts` | 2292 | Yuqoridagi kabi |
+| `modules/iot/presentation/iot-tablet.controller.ts` | 1219 | ⚠️ Haqiqiy nomzod — bo'linishi kerak |
+| `modules/org-structure/card.repository.ts` | 1061 | ⚠️ Haqiqiy nomzod |
+| `modules/hr/payroll/payroll.service.ts` | 1040 | ⚠️ Haqiqiy nomzod |
+| `artifacts/erp-dashboard/src/pages/CashierHub.tsx` | 1125 | ⚠️ FE — yagona 900+ fayl |
+
+> ⚠️ 2026-08-07 tuzatildi: bu jadval "900+ fayl qolmadi" deb yozilgan edi — bu XATO. `drizzle-kanban-ext.repo.ts` haqiqatan bo'lingan (156-qatorli facade + 8 sub-repo), lekin yuqoridagi 6 fayl chegaradan oshadi. Migration-reestrlarini istisno qilish kerak bo'lsa — bu egasi qarori, o'z-o'zicha "yo'q" deb yozilmaydi (Q-40).
 
 > Eslatma: 300–899 qatorli fayllar endi qoidaga muvofiq (oldin bo'lish kerak edi). Kelajakda 900+ va funksiyalar 150+ qator bo'lgan joylarni bo'lish kifoya.
 
@@ -618,8 +621,8 @@ import { typedExecute } from '@shared/db/typed-execute';
 const rows = await typedExecute<KpiRow>(sql`SELECT * FROM kpi WHERE ...`);
 ```
 
-**Hozirgi holat:** `pos/repositories/` ichida 15+ cast mavjud —
-`typedExecute<T>` helper allaqachon mavjud, ishlatilsin.
+**Hozirgi holat (2026-08-07 jonli tekshirildi):** `modules/pos/` bo'yicha **4 ta** `as unknown as` qolgan
+("15+" eskirgan). `typedExecute<T>` helper mavjud — qolgan 4 tasi shunga o'tkazilsin.
 
 ---
 
@@ -699,7 +702,7 @@ alohida stub-route ortiqcha):
 |--------|-------|-------|
 | `reviewer-array-safety.sh` | Array.isArray | ✅ PASS (0 FAIL, 1172 pass) |
 | `reviewer-result-pattern.sh` | Result\<T\> | ✅ PASS (0 FAIL, 6 WARN) |
-| `reviewer-as-unknown.sh` | as unknown stub | FAIL: 3 |
+| `reviewer-as-unknown.sh` | as unknown stub | ✅ PASS (0 FAIL, 1 WARN) |
 | `reviewer-dto-validation.sh` | Zod validation | ✅ PASS |
 | `reviewer-process-env.sh` | ConfigService | ✅ PASS |
 | `reviewer-jwt-guard.sh` | JWT Guard | ✅ PASS |
@@ -720,21 +723,40 @@ alohida stub-route ortiqcha):
 
 ## Ustuvor Tuzatishlar (Tartibi Bilan)
 
-### 🔴 DARHOL (Production uchun xavfli)
+### ✅ 🔴 DARHOL — 2026-08-07 da BESHTASI HAM YOPILGAN (band-ma-band jonli tekshirildi)
 
-1. `admin.seed.ts:6` — `'Admin123!'` default parolni o'chiring
-2. `org-structure-sync.sql:40` — `test123` bcrypt hashini migration'dan oling
-3. `legacy.service.ts:27` — `sql.raw(rawQuery)` SQL injection — parametrli qiling
-4. `schema.ts:86,91` — `sql.raw(q)` — parametrli qiling
-5. `admin-auth.controller.ts:33` — `JWT_REFRESH_SECRET` ishlatsin
+Bu ro'yxat ~2 oy davomida yopilgan muammolarni "production uchun xavfli" deb ko'rsatib turdi. Har
+bir bandni CLAUDE.md ning tegishli bo'limida dalil bilan hujjatlashtirdim:
 
-### 🟠 MUHIM (Funksional muammolar)
+1. ~~`admin.seed.ts:6` `'Admin123!'`~~ → ✅ fallback yo'q, env bo'lmasa hard-fail (PA-S1)
+2. ~~`org-structure-sync.sql:40` `test123` hash~~ → ✅ faylda hash yo'q
+3. ~~`legacy.service.ts:27` `sql.raw(rawQuery)`~~ → ✅ `sql.raw` qolmagan
+4. ~~`schema.ts:86,91` `sql.raw(q)`~~ → ✅ `ddlRun()` ichida `DDL_PREFIX_RE` runtime darvozasi (PA-S4b)
+5. ~~`admin-auth.controller.ts:33`~~ → ✅ fayl umuman yo'q
 
-6. `wms-catalog.controller.ts` — 5 ta biznes logika metod `WmsCatalogService`ga ko'chiring
-7. `chat.controller.ts:307,315,369` — `return { ok: true }` → real logika
-8. `sd-customers.controller.ts` — 4 ta `return {}` → real logika
-9. `Tests.tsx:179`, `RoutingConfiguration.tsx:528` — o'chirishga tasdiqlash qo'shing
-10. `pos/repositories/*.ts` — 15+ cast `typedExecute<T>` bilan almashtiring
+> ⚠️ Saboq (Q-29): bu jadval o'z-o'zidan yangilanmaydi. Da'voni **jonli kodda tekshirmasdan**
+> ro'yxatga ishonmang — na "ochiq" deb, na "yopilgan" deb.
+
+### 🟠 MUHIM — 2026-08-07 holati
+
+| # | Eski da'vo | Tekshirilgan holat |
+|---|---|---|
+| 6 | `wms-catalog.controller.ts` 5 biznes-metod | ✅ ko'chirilgan (0 `reduce`/`.map`) |
+| 7 | `chat.controller.ts:307,315,369` `{ ok: true }` | ✅ 0 ta qolgan |
+| 8 | `sd-customers.controller.ts` 4 ta `return {}` | ⚠️ qolgan, lekin **soxta emas** — DELETE real ish bajaradi, javob tanasi bo'sh (Qoida 10 buzilishi emas) |
+| 9 | `Tests.tsx:179`, `RoutingConfiguration.tsx:528` tasdiqsiz o'chirish | ⚠️ satr raqamlari eskirgan — qayta tekshirilsin |
+| 10 | `pos/repositories/*.ts` 15+ cast | ⚠️ **4 ta** qolgan (15+ eskirgan) |
+
+### ⚠️ 2026-08-07 da topilgan HAQIQIY ochiq muammolar
+
+1. **900+ qatorli 6 fayl** — Qoida 13 jadvaliga qarang (jadval "qolmadi" deb yolg'on yozgan edi)
+2. **`alert_thresholds` va `kanban_column_sla`** — jadvallar default qatorlar bilan mavjud, lekin
+   **hech qanday kod ularni o'qimaydi**; `kanban_column_sla` uchun boot-guard ham yo'q
+3. **`PosDepartmentGuard` / `PosWarehouseAccessGuard`** — to'liq yozilgan, lekin hech qaysi
+   controllerda `@UseGuards()` bilan qo'llanilmagan → bo'lim/ombor izolyatsiyasi amalda ishlamaydi
+4. **`business_settings.pos.norma_fakt_farqi_ortiqcha_sarf_94`** (id=50, 2026-07-11) — hech qaysi
+   kod o'qimaydi, ~1 oydan beri egasi javobini kutmoqda
+5. **`GET /coordination/baskets`** — orfan (FE-chaqiruv o'chirilgan, endpoint qolgan)
 
 ### 🟡 KEYINROQ (Kod sifati)
 
