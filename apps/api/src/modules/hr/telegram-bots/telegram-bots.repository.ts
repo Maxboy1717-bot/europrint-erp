@@ -61,12 +61,13 @@ export class TelegramBotsRepository {
   archiveInactiveCandidates = () => this.events.archiveInactiveCandidates();
 
   // ─── Manager workflow ────────────────────────────────────────────────────
+  // Audit 2026-08-07 (Q-46): getDocumentEmployeeId/approveDocument/rejectDocument o'chirildi —
+  // fantom jadvallarga murojaat qilardi VA hech qanday real chaqiruvchisi yo'q edi (haqiqiy
+  // tasdiqlash/rad etish `document-workflow.service.ts approveStep()/rejectStep()` orqali).
+  // Tafsilot: manager.repo.ts.
   getCurrentPendingStepId = (d: number, a: number) => this.manager.getCurrentPendingStepId(d, a);
-  getDocumentEmployeeId = (id: number) => this.manager.getDocumentEmployeeId(id);
   getManagerByChatId = (c: number) => this.manager.getManagerByChatId(c);
   getPendingDocumentsForManager = (m: number) => this.manager.getPendingDocumentsForManager(m);
-  approveDocument = (d: number, a: number) => this.manager.approveDocument(d, a);
-  rejectDocument = (d: number, r: number, reason: string) => this.manager.rejectDocument(d, r, reason);
   getTeamForManager = (m: number) => this.manager.getTeamForManager(m);
   getDailyReportStatusForManager = (m: number) => this.manager.getDailyReportStatusForManager(m);
   getDepartmentKpi = (d: number) => this.manager.getDepartmentKpi(d);
