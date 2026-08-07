@@ -184,13 +184,22 @@ export class TelegramBotsEventsRepo {
   async getEmergencyRecipients(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
+        -- Audit 2026-08-07: bu so'rovda IKKI fantom murojaat bor edi —
+        --   (a) 'app_users' jadvali bazada YO'Q; kanonik jadval 'users' (users.employee_id mavjud);
+        --   (b) 'employees.is_department_head' ustuni ham YO'Q.
+        -- Ikkalasi ham xatoga olib kelardi, ya'ni FAVQULODDA XABAR OLUVCHILAR RO'YXATI HAR DOIM
+        -- BO'SH qaytardi — favqulodda holatda hech kimga xabar ketmasdi (Q-40).
+        -- Bo'lim boshlig'i uchun kanonik yo'l: org_departments.head_user_id (org_departments =
+        -- kanonik bo'lim jadvali, memory 'project_massiv_100_complete').
         SELECT DISTINCT e.id, e.telegram_chat_id, e.phone
         FROM employees e
-        LEFT JOIN app_users u ON u.employee_id = e.id
+        LEFT JOIN users u ON u.employee_id = e.id
         WHERE e.status = 'active'
           AND (
             u.role IN ('admin', 'hr', 'director')
-            OR e.is_department_head = true
+            OR EXISTS (
+              SELECT 1 FROM org_departments d WHERE d.head_user_id = u.id
+            )
           )
       `);
       return rows.rows as Row[];

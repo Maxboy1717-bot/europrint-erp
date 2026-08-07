@@ -53,7 +53,9 @@ export class GetEmployeeInfoTool implements IAishaTool {
     try {
       const start = Date.now();
       const emp = rowsOf<{ id: number; full_name: string; position: string }>(await db.execute(sql`
-        SELECT id, full_name, position FROM hr_employees
+        -- Audit 2026-08-07: 'hr_employees' jadvali bazada YO'Q; kanonik xodim jadvali
+        -- 'employees' (id / full_name / position ustunlari aynan mavjud).
+        SELECT id, full_name, position FROM employees
         WHERE LOWER(full_name) LIKE LOWER('%' || ${q} || '%') OR id::text = ${q}
         LIMIT 1
       `))[0];
