@@ -2294,6 +2294,24 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
   // through this table, so the owner changes who approves what via the routing CRUD rather than a
   // code edit. Seeded with 'director' (the same role the listener falls back to when no active
   // rule exists), so behaviour is identical until the owner narrows it.
+  // Audit 2026-08-07: iot-data-cleanup.cron.ts had NO database access at all — it hardcoded
+  // processed=0 and logged success every Saturday. It now counts real expired rows; deletion stays
+  // OFF until the owner enables it, because there is no aggregate/summary table to fall back on
+  // (verified) and the "S3 Glacier archive" the old comment described was never built.
+  {
+    name: 'business_settings iot.telemetry_retention_days seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('iot', 'iot.telemetry_retention_days', 'Telemetriya saqlash muddati', 'number', 90, 'kun', 1, 3650,
+        'iot-data-cleanup.cron.ts — mes_telemetry / iot_sensor_readings / sensor_readings jadvallarida recorded_at shu kundan eski qatorlar "muddati o''tgan" hisoblanadi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings iot.telemetry_retention_enabled seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('iot', 'iot.telemetry_retention_enabled', 'Telemetriyani avtomatik o''chirish', 'number', 0, 'bayroq', 0, 1,
+        '0 = faqat sanaydi va hisobot beradi (DEFAULT, xavfsiz); 1 = muddati o''tgan qatorlarni HAQIQATAN o''chiradi. Agregat jadval yo''q, ya''ni o''chirish qaytarib bo''lmaydi — 1 ga faqat egasi qo''yadi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
   {
     name: 'notification_routing_rules director.approval_requested seed (2026-08-07)',
     sql: `INSERT INTO notification_routing_rules (event_type, target_role, target_user_id, notes)
