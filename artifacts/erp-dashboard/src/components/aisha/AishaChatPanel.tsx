@@ -16,6 +16,15 @@
  *   This component is presentation-only; all state and side-effects live in
  *   `useAisha()`. The existing wake-word AishaPanel (under the same folder)
  *   stays untouched — this is a sibling, not a replacement.
+ *
+ *   2026-08-08 restyle: this panel used to render as a default shadcn Card
+ *   (light bg-card/text-foreground) floating on top of the dark cosmic
+ *   .aisha-immersive backdrop — a jarring visual mismatch. Every color-bearing
+ *   shadcn element (Card/Badge/Input/Button) is replaced here with plain
+ *   elements styled via the aisha-glass-* classes (aisha-immersive.css) so
+ *   this panel shares the same dark glass/cyan-glow chrome as the orb and the
+ *   other two floating panels. Logic, hooks, and every data-testid are
+ *   unchanged — presentation only.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -25,10 +34,6 @@ import { Bot, Check, History, Mic, MicOff, Send, ShieldAlert, X } from 'lucide-r
 import { z } from 'zod';
 import { useTranslation } from '@/lib/i18n';
 import { useAisha, useAishaApprovals, useAishaHistory } from '@/hooks/useAisha';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EPErrorState } from '@/components/ep/EPErrorState';
 import { cn } from '@/lib/utils';
 import type {
@@ -37,6 +42,7 @@ import type {
   AishaConversationListItem,
   AishaToolCall,
 } from '@/lib/api/aisha.schema';
+import './aisha-immersive.css';
 
 // ─── Form schema ─────────────────────────────────────────────────────────────
 const ChatFormSchema = z.object({
@@ -49,16 +55,17 @@ type ChatFormValues = z.infer<typeof ChatFormSchema>;
 function StatusPill({ connected }: { connected: boolean }) {
   const { t } = useTranslation('aisha');
   return (
-    <Badge
-      variant={connected ? 'default' : 'destructive'}
-      className={cn(
-        'text-[10px] uppercase tracking-wider',
-        connected ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' : '',
-      )}
+    <span
+      className={cn('aisha-glass-badge', !connected && 'aisha-glass-badge--off')}
+      style={{
+        display: 'inline-flex', alignItems: 'center', padding: '2px 8px',
+        borderRadius: 999, fontSize: 10, fontWeight: 600,
+        textTransform: 'uppercase', letterSpacing: '.06em',
+      }}
       data-testid="aisha-chat-status"
     >
       {connected ? t('connected') : t('disconnected')}
-    </Badge>
+    </span>
   );
 }
 
@@ -67,14 +74,12 @@ function MessageBubble({ msg }: { msg: AishaMessage }) {
   const isUser = msg.role === 'user';
   return (
     <div className={cn('flex flex-col gap-1', isUser ? 'items-end' : 'items-start')}>
-      <span className="text-[10px] font-medium uppercase text-muted-foreground">
+      <span className="aisha-glass-subtle" style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase' }}>
         {isUser ? t('you') : t('aisha')}
       </span>
       <div
-        className={cn(
-          'rounded-lg px-3 py-2 text-sm max-w-[85%] break-words',
-          isUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground',
-        )}
+        className={isUser ? 'aisha-glass-bubble-user' : 'aisha-glass-bubble-ai'}
+        style={{ borderRadius: 10, padding: '8px 12px', fontSize: 13, maxWidth: '85%', wordBreak: 'break-word' }}
       >
         {msg.content}
       </div>
@@ -87,14 +92,14 @@ function MessageList({ messages, isLoading }: { messages: AishaMessage[]; isLoad
   const endRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isLoading]);
   if (messages.length === 0 && !isLoading) {
-    return <p className="text-xs text-muted-foreground text-center py-6">{t('noMessages')}</p>;
+    return <p className="aisha-glass-muted" style={{ fontSize: 12, textAlign: 'center', padding: '24px 0' }}>{t('noMessages')}</p>;
   }
   const safe = Array.isArray(messages) ? messages : [];
   return (
     <div className="flex flex-col gap-2" data-testid="aisha-chat-messages">
       {safe.map((m, i) => <MessageBubble key={`${m.timestamp}-${i}`} msg={m} />)}
       {isLoading && (
-        <p className="text-[11px] italic text-muted-foreground">{t('thinking')}</p>
+        <p className="aisha-glass-muted" style={{ fontSize: 11, fontStyle: 'italic' }}>{t('thinking')}</p>
       )}
       <div ref={endRef} />
     </div>
@@ -113,13 +118,11 @@ function ConversationRow({
       type="button"
       onClick={onSelect}
       data-testid="aisha-history-row"
-      className={cn(
-        'w-full text-left rounded-md border px-2 py-1.5 text-xs transition-colors',
-        active ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted',
-      )}
+      className={cn('aisha-glass-row', active && 'aisha-glass-row--active')}
+      style={{ width: '100%', textAlign: 'left', padding: '6px 8px', fontSize: 12, transition: 'background-color .15s ease' }}
     >
-      <div className="font-medium text-foreground line-clamp-1">{title}</div>
-      <div className="text-[10px] text-muted-foreground">
+      <div className="aisha-glass-title line-clamp-1" style={{ fontWeight: 500 }}>{title}</div>
+      <div className="aisha-glass-muted" style={{ fontSize: 10 }}>
         {when} · {item.messageCount} · {item.toolCount} tool
       </div>
     </button>
@@ -128,10 +131,10 @@ function ConversationRow({
 
 function ToolCallRow({ tc }: { tc: AishaToolCall }) {
   return (
-    <li className="rounded-md border bg-background/60 px-2 py-1.5 text-[11px]">
+    <li className="aisha-glass-row" style={{ padding: '6px 8px', fontSize: 11 }}>
       <div className="flex items-center justify-between">
-        <span className="font-medium text-foreground">{tc.toolName}</span>
-        <span className="text-muted-foreground">
+        <span className="aisha-glass-title" style={{ fontWeight: 500 }}>{tc.toolName}</span>
+        <span className="aisha-glass-muted">
           {typeof tc.latencyMs === 'number' ? `${tc.latencyMs}ms` : tc.source ?? ''}
         </span>
       </div>
@@ -144,13 +147,13 @@ function HistoryPanel({ h }: { h: ReturnType<typeof useAishaHistory> }) {
   const convs = Array.isArray(h.conversations) ? h.conversations : [];
   const tools = Array.isArray(h.detail?.toolCalls) ? h.detail!.toolCalls : [];
   return (
-    <div className="space-y-2 border rounded-md bg-background/50 p-2" data-testid="aisha-history-panel">
+    <div className="space-y-2 aisha-glass-row" style={{ padding: 8 }} data-testid="aisha-history-panel">
       {h.error ? (
-        <p className="text-[11px] text-destructive">{h.error.message}</p>
+        <p className="aisha-glass-error" style={{ fontSize: 11 }}>{h.error.message}</p>
       ) : h.isLoadingList ? (
-        <p className="text-[11px] italic text-muted-foreground">{t('thinking')}</p>
+        <p className="aisha-glass-muted" style={{ fontSize: 11, fontStyle: 'italic' }}>{t('thinking')}</p>
       ) : convs.length === 0 ? (
-        <p className="text-[11px] text-center text-muted-foreground py-3">{t('noMessages')}</p>
+        <p className="aisha-glass-muted" style={{ fontSize: 11, textAlign: 'center', padding: '12px 0' }}>{t('noMessages')}</p>
       ) : (
         <div className="max-h-32 overflow-y-auto space-y-1">
           {convs.map((c) => (
@@ -164,11 +167,11 @@ function HistoryPanel({ h }: { h: ReturnType<typeof useAishaHistory> }) {
         </div>
       )}
       {h.selectedId && (
-        <div className="border-t pt-2">
+        <div className="aisha-glass-divider" style={{ borderTop: '1px solid', paddingTop: 8 }}>
           {h.isLoadingDetail ? (
-            <p className="text-[11px] italic text-muted-foreground">{t('thinking')}</p>
+            <p className="aisha-glass-muted" style={{ fontSize: 11, fontStyle: 'italic' }}>{t('thinking')}</p>
           ) : tools.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground">—</p>
+            <p className="aisha-glass-subtle" style={{ fontSize: 11 }}>—</p>
           ) : (
             <ul className="space-y-1" data-testid="aisha-history-transcript">
               {tools.map((tc) => <ToolCallRow key={tc.id} tc={tc} />)}
@@ -196,38 +199,41 @@ function ApprovalRow({
   const { t } = useTranslation('aisha');
   return (
     <li
-      className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 px-2.5 py-2 text-xs space-y-1.5"
+      className="aisha-glass-approval"
+      style={{ padding: '8px 10px', fontSize: 12 }}
       data-testid="aisha-approval-row"
     >
-      <div className="flex items-center gap-1.5 font-medium text-amber-900 dark:text-amber-200">
+      <div className="flex items-center gap-1.5" style={{ fontWeight: 500 }}>
         <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
         <span>{item.toolName ?? '—'}</span>
-        <span className="text-[10px] font-normal text-amber-700/80 dark:text-amber-300/70">
+        <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.75 }}>
           {t('approval.highStake')}
         </span>
       </div>
       {summariseApprovalInput(item.input) && (
-        <p className="text-[11px] text-muted-foreground break-words">{summariseApprovalInput(item.input)}</p>
+        <p className="aisha-glass-muted" style={{ fontSize: 11, wordBreak: 'break-word', marginTop: 4 }}>{summariseApprovalInput(item.input)}</p>
       )}
-      <div className="flex gap-2 pt-0.5">
-        <Button
-          type="button" size="sm" variant="default"
-          className="h-6 px-2 text-[11px] bg-emerald-600 hover:bg-emerald-700"
+      <div className="flex gap-2" style={{ paddingTop: 6 }}>
+        <button
+          type="button"
           disabled={busy}
           onClick={onApprove}
           data-testid="aisha-approval-approve"
+          className="aisha-glass-btn aisha-glass-btn--success"
+          style={{ height: 24, padding: '0 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center' }}
         >
           <Check className="h-3 w-3 mr-1" />{t('approval.approve')}
-        </Button>
-        <Button
-          type="button" size="sm" variant="outline"
-          className="h-6 px-2 text-[11px]"
+        </button>
+        <button
+          type="button"
           disabled={busy}
           onClick={onReject}
           data-testid="aisha-approval-reject"
+          className="aisha-glass-btn"
+          style={{ height: 24, padding: '0 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center' }}
         >
           <X className="h-3 w-3 mr-1" />{t('approval.reject')}
-        </Button>
+        </button>
       </div>
     </li>
   );
@@ -238,7 +244,7 @@ function ApprovalQueue({ a }: { a: ReturnType<typeof useAishaApprovals> }) {
   if (a.pending.length === 0) return null;
   return (
     <ul className="space-y-1.5" data-testid="aisha-approval-queue">
-      <li className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+      <li className="aisha-glass-approval-title" style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em' }}>
         {t('approval.title')} ({a.pending.length})
       </li>
       {a.pending.map((item) => (
@@ -286,47 +292,50 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
   if (!isDirector || !open) return null;
 
   return (
-    <Card
+    <div
       data-testid="aisha-chat-panel"
-      className={cn(
-        'fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-2rem)] shadow-xl',
-        'border-primary/20',
-        className,
-      )}
+      className={cn('aisha-glass', className)}
+      style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 50, width: 384, maxWidth: 'calc(100vw - 2rem)' }}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-          <Bot className="h-4 w-4 text-primary" />
-          <span>{t('title')}</span>
-          <span className="text-xs font-normal text-muted-foreground">— {t('subtitle')}</span>
-        </CardTitle>
+      <div
+        className="aisha-glass-divider"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid' }}
+      >
+        <div className="flex items-center gap-2" style={{ fontSize: 13, fontWeight: 600 }}>
+          <Bot className="h-4 w-4 aisha-glass-accent" />
+          <span className="aisha-glass-title">{t('title')}</span>
+          <span className="aisha-glass-muted" style={{ fontSize: 11, fontWeight: 400 }}>— {t('subtitle')}</span>
+        </div>
         <div className="flex items-center gap-1">
           <StatusPill connected={a.isConnected} />
-          <Button
-            variant="ghost" size="icon"
+          <button
+            type="button"
             aria-label={t('panel.history')}
             onClick={() => setShowHistory((v) => !v)}
             data-testid="aisha-chat-history-toggle"
-            className={cn('h-7 w-7', showHistory && 'bg-primary/10 text-primary')}
+            className={cn('aisha-glass-btn', showHistory && 'aisha-glass-btn')}
+            style={{ height: 28, width: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
           >
             <History className="h-4 w-4" />
-          </Button>
+          </button>
           {closable && (
-            <Button
-              variant="ghost" size="icon" className="h-7 w-7"
+            <button
+              type="button"
               aria-label={t('close')}
               onClick={() => setOpen(false)}
               data-testid="aisha-chat-close"
+              className="aisha-glass-btn"
+              style={{ height: 28, width: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
             >
               <X className="h-4 w-4" />
-            </Button>
+            </button>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
+      </div>
+      <div className="space-y-3" style={{ padding: 18 }}>
         {showHistory && <HistoryPanel h={h} />}
         <ApprovalQueue a={approvals} />
-        <div className="max-h-72 min-h-[8rem] overflow-y-auto pr-1 border rounded-md bg-background/50 p-3">
+        <div className="aisha-glass-row" style={{ maxHeight: 288, minHeight: '8rem', overflowY: 'auto', padding: 12 }}>
           {a.error ? (
             <EPErrorState
               variant="inline"
@@ -341,32 +350,40 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
-          <Input
+          <input
             data-testid="aisha-chat-input"
             placeholder={a.isListening ? t('listening') : t('placeholder')}
             autoComplete="off"
             disabled={a.isLoading}
+            className="aisha-glass-input"
+            style={{ flex: 1, height: 36, padding: '0 12px', fontSize: 13 }}
             {...form.register('message')}
           />
-          <Button
-            type="button" variant="outline" size="icon"
+          <button
+            type="button"
             aria-label={a.isListening ? t('listening') : t('listen')}
             onClick={a.isListening ? a.stopListening : a.startListening}
             data-testid="aisha-chat-mic"
-            className={cn(a.isListening && 'bg-red-50 text-red-600')}
+            className="aisha-glass-btn"
+            style={{
+              height: 36, width: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+              ...(a.isListening ? { background: 'rgba(244,63,94,.16)', color: '#fca5b5', borderColor: 'rgba(244,63,94,.4)' } : {}),
+            }}
           >
             {a.isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          <Button
+          </button>
+          <button
             type="submit"
             disabled={a.isLoading || !form.formState.isValid}
             data-testid="aisha-chat-send"
             aria-label={t('send')}
+            className="aisha-glass-btn aisha-glass-btn--primary"
+            style={{ height: 36, width: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
           >
             <Send className="h-4 w-4" />
-          </Button>
+          </button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

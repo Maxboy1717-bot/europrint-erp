@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { useAishaStore, type ProvenanceSourceUI, type CameraSnapshotUI } from '@/aisha/store';
 import { useTranslation } from '@/lib/i18n';
+import './aisha-immersive.css';
 
 export function TransparencyPanel() {
   const lastResponse = useAishaStore((s) => s.lastResponse);
@@ -24,13 +25,11 @@ export function TransparencyPanel() {
   return (
     <aside
       data-testid="aisha-transparency"
+      className="aisha-glass"
       style={{
         position: 'fixed', top: 16, right: 360,
         width: open ? 320 : 36,
         maxHeight: 'calc(100vh - 32px)', overflowY: 'auto',
-        background: 'var(--ep-surface)', borderRadius: 16,
-        boxShadow: '0 8px 32px rgba(15, 23, 42, .08)',
-        border: '1px solid var(--ep-border)',
         padding: open ? 16 : 8, zIndex: 49,
         transition: 'width .2s ease',
         fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -38,16 +37,17 @@ export function TransparencyPanel() {
     >
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ background: 'transparent', border: 0, cursor: 'pointer', fontSize: 14, color: 'var(--ep-muted)' }}
+        className="aisha-glass-muted"
+        style={{ background: 'transparent', border: 0, cursor: 'pointer', fontSize: 14 }}
       >
         {open ? '▸' : '◂'}
       </button>
       {open && (
         <>
-          <h3 style={{ margin: '8px 0', fontSize: 14, color: 'var(--ep-text)', fontWeight: 600 }}>
+          <h3 className="aisha-glass-title" style={{ margin: '8px 0', fontSize: 14 }}>
             {t('transparency.title') as string}
           </h3>
-          <div data-testid="aisha-confidence" style={{ marginBottom: 12, fontSize: 12, color: 'var(--ep-muted)' }}>
+          <div data-testid="aisha-confidence" className="aisha-glass-muted" style={{ marginBottom: 12, fontSize: 12 }}>
             {t('transparency.confidence') as string}: {Math.round(provenance.confidence * 100)}%
           </div>
           <SectionTitle label={t('transparency.sources') as string} count={sources.length} />
@@ -65,9 +65,9 @@ export function TransparencyPanel() {
               <SectionTitle label={t('transparency.citations') as string} count={citations.length} />
               <ul style={{ marginTop: 4, padding: 0, listStyle: 'none' }}>
                 {citations.map((c, i) => (
-                  <li key={i} style={{ fontSize: 12, padding: '4px 0', borderBottom: '1px solid var(--ep-border)' }}>
-                    {c.url ? <a href={c.url} style={{ color: 'var(--ep-blue)' }}>{c.label}</a> : c.label}
-                    {c.snippet && <div style={{ color: 'var(--ep-subtle)', marginTop: 2 }}>{c.snippet}</div>}
+                  <li key={i} className="aisha-glass-divider" style={{ fontSize: 12, padding: '4px 0', borderBottom: '1px solid' }}>
+                    {c.url ? <a href={c.url} className="aisha-glass-accent">{c.label}</a> : <span className="aisha-glass-title">{c.label}</span>}
+                    {c.snippet && <div className="aisha-glass-subtle" style={{ marginTop: 2 }}>{c.snippet}</div>}
                   </li>
                 ))}
               </ul>
@@ -81,20 +81,20 @@ export function TransparencyPanel() {
 
 function SectionTitle({ label, count }: { label: string; count: number }) {
   return (
-    <div style={{ marginTop: 12, fontSize: 11, fontWeight: 600, color: 'var(--ep-text)', textTransform: 'uppercase' }}>
-      {label} <span style={{ color: 'var(--ep-subtle)', fontWeight: 400 }}>({count})</span>
+    <div className="aisha-glass-title" style={{ marginTop: 12, fontSize: 11, textTransform: 'uppercase' }}>
+      {label} <span className="aisha-glass-subtle" style={{ fontWeight: 400 }}>({count})</span>
     </div>
   );
 }
 
 function SourceRow({ s, freshnessLabel }: { s: ProvenanceSourceUI; freshnessLabel: string }) {
   return (
-    <li style={{ fontSize: 12, padding: '6px 0', borderBottom: '1px solid var(--ep-border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <li className="aisha-glass-divider" style={{ fontSize: 12, padding: '6px 0', borderBottom: '1px solid', display: 'flex', flexDirection: 'column', gap: 2 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontWeight: 500, color: 'var(--ep-text)' }}>{s.identifier}</span>
-        <span style={{ color: 'var(--ep-muted)' }}>{s.latencyMs}ms</span>
+        <span className="aisha-glass-title" style={{ fontWeight: 500 }}>{s.identifier}</span>
+        <span className="aisha-glass-muted">{s.latencyMs}ms</span>
       </div>
-      <div style={{ color: 'var(--ep-subtle)' }}>
+      <div className="aisha-glass-subtle">
         {s.type} · {freshnessLabel}{typeof s.rowCount === 'number' ? ` · ${s.rowCount} qator` : ''}
       </div>
     </li>
@@ -105,7 +105,7 @@ function CameraGrid({ snapshots }: { snapshots: CameraSnapshotUI[] }) {
   return (
     <div data-testid="aisha-cameras" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
       {snapshots.map(c => (
-        <a key={c.cameraId} href={`/iot/cameras/${c.cameraId}`} style={{ textDecoration: 'none', color: 'var(--ep-text)' }}>
+        <a key={c.cameraId} href={`/iot/cameras/${c.cameraId}`} className="aisha-glass-title" style={{ textDecoration: 'none' }}>
           <img src={c.snapshotUrl} alt={c.cameraName} style={{ width: '100%', borderRadius: 8 }} />
           <div style={{ fontSize: 11, marginTop: 4 }}>{c.cameraName}</div>
         </a>

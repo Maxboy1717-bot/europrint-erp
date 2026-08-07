@@ -77,3 +77,115 @@
 @media (prefers-reduced-motion: reduce) {
   .aisha-core__ring, .aisha-core__bulb { animation: none !important; }
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Glass HUD panels (owner design-exception, Q-41) — 2026-08-08 restyle.
+ * AishaPanel/TransparencyPanel/AishaChatPanel used to float on top of the
+ * dark cosmic backdrop above while still wearing the app's light EP tokens
+ * (var(--ep-surface) etc.) — three disconnected visual languages on one
+ * page. These classes give every floating panel the SAME dark glass/cyan-
+ * glow chrome as the core orb, so the page reads as one coherent surface.
+ * Scoped to .aisha-immersive descendants only — the rest of the ERP is
+ * untouched.
+ * ────────────────────────────────────────────────────────────────────── */
+
+.aisha-glass {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(8, 12, 24, 0.88) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(2, 6, 23, 0.55), 0 0 0 1px rgba(56, 189, 248, 0.05) inset,
+              0 0 24px rgba(56, 189, 248, 0.06);
+  color: #cbd5e1;
+}
+
+.aisha-glass-title { color: #e2e8f0; font-weight: 600; }
+.aisha-glass-muted { color: #64748b; }
+.aisha-glass-subtle { color: #475569; }
+.aisha-glass-accent { color: #38bdf8; }
+.aisha-glass-divider { border-color: rgba(148, 163, 184, 0.14) !important; }
+
+.aisha-glass-btn {
+  background: rgba(56, 189, 248, 0.10);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  transition: background .15s ease, border-color .15s ease;
+}
+.aisha-glass-btn:hover { background: rgba(56, 189, 248, 0.18); border-color: rgba(56, 189, 248, 0.4); }
+.aisha-glass-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.aisha-glass-btn--danger {
+  background: rgba(244, 63, 94, 0.10);
+  color: #fca5b5;
+  border-color: rgba(244, 63, 94, 0.25);
+}
+.aisha-glass-btn--danger:hover { background: rgba(244, 63, 94, 0.18); border-color: rgba(244, 63, 94, 0.4); }
+
+.aisha-glass-btn--primary {
+  background: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+  color: #06111f;
+  border: none;
+  font-weight: 600;
+}
+.aisha-glass-btn--primary:hover { filter: brightness(1.08); }
+.aisha-glass-btn--primary:disabled { filter: grayscale(0.4); opacity: .5; }
+
+.aisha-glass-input {
+  background: rgba(2, 6, 23, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  color: #e2e8f0;
+}
+.aisha-glass-input::placeholder { color: #475569; }
+.aisha-glass-input:focus { outline: none; border-color: rgba(56, 189, 248, 0.5); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12); }
+
+.aisha-glass-badge {
+  background: rgba(45, 212, 191, 0.14);
+  color: #5eead4;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+}
+.aisha-glass-badge--off {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.aisha-glass-bubble-user {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(99, 102, 241, 0.22) 100%);
+  color: #f0f9ff;
+}
+.aisha-glass-bubble-ai {
+  background: rgba(148, 163, 184, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.aisha-glass-row {
+  background: rgba(2, 6, 23, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 8px;
+}
+.aisha-glass-row--active {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.08);
+}
+.aisha-glass-row:hover { background: rgba(148, 163, 184, 0.06); }
+
+.aisha-glass-approval {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 8px;
+  color: #fde68a;
+}
+.aisha-glass-approval-title { color: #fbbf24; }
+
+.aisha-glass-error { color: #fca5b5; }
+
+.aisha-glass-btn--success {
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.aisha-glass-btn--success:hover { background: rgba(16, 185, 129, 0.26); }
