@@ -104,7 +104,7 @@
 - **action:** CREATE
 - **⤳ Ta'sir:** MM (zakaz/narx), QC (karantin), GL
 - **Xoch-havolalar:** `[Module-19] Item 54` · `[Module-19] Item 1` *(taxminiy — bosqich event + eskalatsiya)* · `EXTRACTION QISM A #1` · `TASDIQ-2146 §19 #4` · `QISM C 19.4` · `QISM I2 #8`
-- **Δ 2026-07-11→08-07:** `4d7422fc` (08-06) — karantin **48-soatlik eskalatsiyasi CRUD-sozlanadigan** qilindi (`business_settings`). `9ea7c155` (08-07) — ⭐ **ikkita parallel karantin-eskalatsiya yo'li birlashtirildi**: `quarantine-workflow.service.ts` `business_settings` dan o'qirdi, `pos-inventory-passport.service.ts:64,70` esa literal `48` ishlatardi → egasi soatni CRUD orqali o'zgartirsa ikki tizim **ziddiyatli** ishlardi. **2026-08-06 topilmasi TASDIQLANADI.**
+- **Δ 2026-07-11→08-07:** `4d7422fc` (08-06) — karantin **48-soatlik eskalatsiyasi CRUD-sozlanadigan** qilindi (`business_settings`). `9ea7c155` (08-07) — ⭐ **ikkita parallel karantin-eskalatsiya yo'li birlashtirildi**: `quarantine-workflow.service.ts` `business_settings` dan o'qirdi, `pos-inventory-passport.service.ts:64,70` esa literal `48` ishlatardi → egasi soatni CRUD orqali o'zgartirsa ikki tizim **ziddiyatli** ishlardi. **2026-08-06 topilmasi TASDIQLANADI.** ✅ **YOPILDI `e0f6b4ca` (2026-08-07):** fayl to'liq o'chirildi, provider va re-eksport ham olib tashlandi (Q-46 — jonli `PosTelegramService` bilan bir xil token manbai va bir xil vazifa, 8 iste'molchisi bor).
 
 ### EP-POS-005 · Chiqim (otpusk) sababi majburiymi
 - **Qaror holati:** ✅ JAVOBLANGAN
@@ -1383,5 +1383,5 @@ Registrda **29 ta `⚠️ ZIDDIYAT`** belgilangan. Ular uch toifaga bo'linadi:
 | `business.constants.ts` 5 ta POS-anomaliya konstantasi compile-time | ✅ **TASDIQLANADI** | `apps/api/src/common/constants/business.constants.ts:416-436` (+`:442` `POS_OVER_NORM_FACTOR`); EP-POS-020/077/081 |
 | `business_settings` `pos.norma_fakt_farqi_ortiqcha_sarf_94` (id=50) — hech qaysi kod o'qimaydi | ✅ **TASDIQLANADI** | `grep` faqat `business-settings-s1-keys-2026-07-11.sql:52` topdi; ~1 oydan beri egasi javobini kutmoqda; EP-POS-044 |
 | `PosDepartmentGuard`/`PosWarehouseAccessGuard` hech qayerda `@UseGuards` bilan qo'llanilmagan | ✅ **TASDIQLANADI** | `grep` → faqat ta'rif (`:25,47`) + provider (`pos.module.ts:53,165`) + re-eksport (`pos.module-imports.ts:115`); EP-POS-003/074 |
-| `telegram-bot.service.ts` (144 qator) — provider, hech qayerda chaqirilmaydi | ✅ **TASDIQLANADI** | `grep TelegramBotService` → 5 hit, hammasi ta'rif/ro'yxat/re-eksport; hech qanday inyeksiya; EP-POS-071 |
+| `telegram-bot.service.ts` (144 qator) — provider, hech qayerda chaqirilmaydi | ✅ **TASDIQLANDI → YOPILDI `e0f6b4ca`** | `grep TelegramBotService` → 5 hit, hammasi ta'rif/ro'yxat/re-eksport; hech qanday inyeksiya; EP-POS-071 |
 | POS↔WMS sinxronizatsiya regressiyasiz | ✅ **TASDIQLANADI** | `1753ed0d` kanonik `warehouse_stock`; `pos-balance-guard` fail-CLOSED; EP-POS-010/030 |
