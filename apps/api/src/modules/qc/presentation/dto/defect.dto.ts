@@ -4,9 +4,10 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const ReportDefectDtoSchema = z.object({
-  inspectionId: z.string().uuid().nullable().optional(),
+  inspectionId: IntegerIdSchema.nullable().optional(),
   productionOrderId: z.string().uuid().nullable().optional(),
   workCenterId: z.string().uuid().nullable().optional(),
   defectCode: z.string().min(2, 'Defect code must be at least 2 characters'),

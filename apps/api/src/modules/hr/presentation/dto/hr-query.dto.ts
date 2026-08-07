@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const GetEmployeesDtoSchema = z.object({
   department: z.string().optional(),
@@ -13,13 +14,13 @@ export const GetEmployeesDtoSchema = z.object({
 });
 
 export const GetPayrollDtoSchema = z.object({
-  employeeId: z.string().uuid().optional(),
+  employeeId: IntegerIdSchema.optional(),
   period: z.string().optional(),
   status: z.enum(['pending', 'processing', 'completed', 'paid']).optional(),
 });
 
 export const GetAttendanceDtoSchema = z.object({
-  employeeId: z.string().uuid(),
+  employeeId: IntegerIdSchema,
   period: z.string().regex(/^\d{4}-\d{2}$/),
 });
 

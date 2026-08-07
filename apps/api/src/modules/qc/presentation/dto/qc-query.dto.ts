@@ -4,10 +4,11 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const GetInspectionsDtoSchema = z.object({
   status: z.enum(['pending', 'in_progress', 'passed', 'failed', 'on_hold']).optional(),
-  inspectorId: z.string().uuid().optional(),
+  inspectorId: IntegerIdSchema.optional(),
   referenceType: z.string().optional(),
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(20),

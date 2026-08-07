@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const GetPurchaseOrdersDtoSchema = z.object({
   status: z.enum([
@@ -16,7 +17,7 @@ export const GetPurchaseOrdersDtoSchema = z.object({
     'paid',
     'cancelled',
   ]).optional(),
-  vendorId: z.string().uuid().optional(),
+  vendorId: IntegerIdSchema.optional(),
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(20),
 });

@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 import { FISCAL_YEAR_MIN, FISCAL_YEAR_MAX } from '@common/constants/app.constants';
 
 export const CreateIncomeCategorySchema = z.object({
@@ -46,7 +47,7 @@ export const CreateAccountingPeriodSchema = z.object({
 });
 
 export const CreatePaymentSchema = z.object({
-  invoiceId: z.string().uuid().optional(),
+  invoiceId: IntegerIdSchema.optional(),
   amount: z.number().positive("Summa musbat bo'lishi kerak"),
   currency: z.string().default('UZS'),
   paymentMethod: z.string().min(1, "To'lov usuli talab qilinadi"),

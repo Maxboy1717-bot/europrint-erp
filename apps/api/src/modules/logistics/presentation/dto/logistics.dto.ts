@@ -4,17 +4,18 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 
 export const DispatchDeliverySchema = z.object({
-  deliveryId: z.string().uuid().optional(),
+  deliveryId: IntegerIdSchema.optional(),
   orderId:    z.number().int(),
   driverId:   z.number().int(),
 });
 export class DispatchDeliveryDto extends createZodDto(DispatchDeliverySchema) {}
 
 export const AssignDriverSchema = z.object({
-  driverId:      z.string().uuid(),
+  driverId:      IntegerIdSchema,
   vehicleNumber: z.string().min(1),
 });
 export class AssignDriverDto extends createZodDto(AssignDriverSchema) {}

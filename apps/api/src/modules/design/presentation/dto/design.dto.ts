@@ -4,10 +4,11 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 import { MAX_DESCRIPTION_LENGTH } from '@common/constants/app.constants';
 export const RequestDesignDtoSchema = z.object({
-  salesOrderId: z.string().uuid().optional(),
+  salesOrderId: IntegerIdSchema.optional(),
   title: z.string().min(1).max(255),
   description: z.string().min(1).max(MAX_DESCRIPTION_LENGTH),
 });
