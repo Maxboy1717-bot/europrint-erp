@@ -26,8 +26,10 @@ export class LogisticsBotService {
 
   private async getVehicles(): Promise<BotReply> {
     const rows = await execSql<{ plate: string; status: string; driver: string }>(sql`
+      -- Audit 2026-08-07: fleet_vehicles jadvali BAZADA YO'Q; kanonik avtopark jadvali
+      -- mm_vehicles (ustun nomlari aynan mos: plate_number / status / driver_name).
       SELECT plate_number AS plate, status, driver_name AS driver
-      FROM fleet_vehicles
+      FROM mm_vehicles
       ORDER BY status
       LIMIT 8
     `);
