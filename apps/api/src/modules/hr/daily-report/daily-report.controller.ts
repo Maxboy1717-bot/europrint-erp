@@ -31,9 +31,14 @@ const SubmitReportSchema = z.object({
 });
 class SubmitReportDto extends createZodDto(SubmitReportSchema) {}
 
+// Audit 2026-08-08: FE (DailyReportPage.tsx handleOverride) sends {is_auto_absent, reason} —
+// neither key existed here (`is_auto_absent` missing entirely, `reason` vs `override_notes`
+// name mismatch), so Zod silently dropped both and the "HR override — mark as absence"
+// button never actually changed anything.
 const OverrideReportSchema = z.object({
   hr_user_id:     z.number().int().optional(),
-  override_notes: z.string().optional(),
+  is_auto_absent: z.boolean().optional(),
+  reason:         z.string().optional(),
 });
 class OverrideReportDto extends createZodDto(OverrideReportSchema) {}
 
@@ -73,7 +78,9 @@ export class DailyReportController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const hrUserId = body.hr_user_id ?? user?.id ?? 0;
-    return unwrapOrInternal(await this.svc.hrOverride(id, hrUserId, body.override_notes ?? ''));
+    return unwrapOrInternal(
+      await this.svc.hrOverride(id, hrUserId, body.reason ?? '', undefined, body.is_auto_absent),
+    );
   }
 
   @Get('stats')
