@@ -22,11 +22,19 @@ export interface Employee {
   employeeId: string;
 }
 
+/**
+ * Audit 2026-08-08: bu avval {userId,skillId,level} deb yozilgan edi — real BE
+ * (hr-compat-a.repository.ts getEmployeeSkills, `employee_skills` jadvali) bunday
+ * ustunlarni umuman qaytarmaydi. skill_catalog.id ga FK yo'q — skill_name erkin matn,
+ * employee_name esa JOIN orqali allaqachon tayyor keladi.
+ */
 export interface EmployeeSkillRecord {
   id: string;
-  userId: string;
-  skillId: string;
-  level: number;
+  employee_id: number;
+  employee_name?: string;
+  skill_name: string;
+  proficiency_level: string;
+  proficiency_score: number;
   notes?: string;
 }
 
@@ -41,6 +49,10 @@ export const skillFormSchema = z.object({
 
 export type SkillFormValues = z.infer<typeof skillFormSchema>;
 
+// Forma o'zi employee/skill'ni dropdown orqali tanlaydi (real ID/nom, xato-bardosh) —
+// BE haqiqiy shakliga o'tkazish (employee_id/skill_name/proficiency_level/score)
+// SkillsMatrix.tsx'dagi onEmployeeSkillSubmit'da bajariladi (BE skill_name'ni erkin
+// matn sifatida saqlaydi, skill_catalog.id ga FK yo'q — tekshirilgan).
 export const employeeSkillFormSchema = z.object({
   userId: z.string().min(1, "Xodim talab qilinadi"),
   skillId: z.string().min(1, "Ko'nikma talab qilinadi"),

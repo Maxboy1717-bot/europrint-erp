@@ -44,7 +44,7 @@ import {
   DatabaseModule, RedisModule,
   CacheModule, QueueModule,
   AuthModule, AdminModule, CrmModule, SdModule, PpModule, MesModule,
-  WmsModule, QcModule, HrModule, LmsModule, FinanceModule, MmModule,
+  WmsModule, KnowledgeGraphModule, QcModule, HrModule, LmsModule, FinanceModule, MmModule,
   LogisticsModule, NotificationsModule, IotModule, DesignModule,
   MarketingModule, MroModule, SecurityModule, KanbanModule, AiModule, AiFitModule,
   AiAgentsModule, BotGatewayModule, DirectorModule, AishaModule,
@@ -146,6 +146,7 @@ import { ErpSpreadsheetsModule } from './modules/erp-spreadsheets/erp-spreadshee
     PpModule,
     MesModule,
     WmsModule,
+    KnowledgeGraphModule,
     QcModule,
     HrModule,  // HrV2Module is composed inside HrModule — single registration point
     LmsModule,

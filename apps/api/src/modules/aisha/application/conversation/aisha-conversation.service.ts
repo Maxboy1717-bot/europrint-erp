@@ -18,7 +18,7 @@ import { AishaHistoryRepository } from '../../infrastructure/persistence/aisha-h
 
 /** Tools that mutate the outside world (email/telegram/calendar/kanban) — never auto-run; always confirm-gated.
  *  audit 2026-08-06 T11: assign_task did a real INSERT INTO kanban_cards without pause — added here. */
-const HIGH_STAKE_TOOLS = new Set(['send_email', 'send_telegram_to_team', 'schedule_meeting', 'assign_task']);
+const HIGH_STAKE_TOOLS = new Set(['send_email', 'send_telegram_to_team', 'schedule_meeting', 'assign_task', 'execute_erp_action']);
 const MAX_TOOL_ITERATIONS = 8;
 
 export interface AishaToolRun {

@@ -244,3 +244,8 @@ export type { ErpDocumentRow, ErpDocumentInsert } from './schema-erp-documents';
 // document-control layer (same tiers, logged, download-blocked, watermarked, CC-surfaced).
 export { erp_spreadsheets } from './schema-erp-spreadsheets';
 export type { ErpSpreadsheetRow, ErpSpreadsheetInsert } from './schema-erp-spreadsheets';
+
+// schema-knowledge-graph: AI Bilim Grafigi — native ERP-ichi graf (owner 2026-08-08,
+// Obsidian rad etildi). kg_nodes = polimorfik entity ko'rsatgich, kg_edges = tipli aloqa.
+export { kg_nodes, kg_edges } from './schema-knowledge-graph';
+export type { KgNodeRow, KgNodeInsert, KgEdgeRow, KgEdgeInsert } from './schema-knowledge-graph';

@@ -124,8 +124,8 @@ export class HrCompatAController {
   @Post('employee-skills')
   @UsePipes(new ZodValidationPipe(HrEmployeeSkillSchema))
   async createEmployeeSkill(@Body() body: HrEmployeeSkillDto) {
-    const { employee_id, skill_name, proficiency_level, proficiency_score, certified_date } = body;
-    return unwrapOrThrow(await this.svc.createEmployeeSkill(employee_id, skill_name, proficiency_level, proficiency_score, certified_date));
+    const { employee_id, skill_name, skill_category, proficiency_level, proficiency_score, certified_date, notes } = body;
+    return unwrapOrThrow(await this.svc.createEmployeeSkill(employee_id, skill_name, skill_category, proficiency_level, proficiency_score, certified_date, notes));
   }
 
   @Get('employee-skills/:employeeId')

@@ -105,9 +105,13 @@ export type HrConflictReportDto = z.infer<typeof HrConflictReportSchema>;
 export const HrEmployeeSkillSchema = z.object({
   employee_id:       z.number().int().positive(),
   skill_name:        z.string().min(1).max(MAX_NAME_LENGTH),
+  // Audit 2026-08-08: `employee_skills.skill_category` jonlida NOT NULL, DEFAULT yo'q —
+  // yubormasdan INSERT doim xato berardi. skill_catalog.category'dan real qiymat keladi.
+  skill_category:    z.string().min(1).max(50),
   proficiency_level: z.enum(['beginner', 'intermediate', 'advanced', 'expert']),
   proficiency_score: z.number().min(0).max(100),
   certified_date:    z.string().optional(),
+  notes:             z.string().max(MAX_NOTES_LENGTH).optional(),
 });
 export type HrEmployeeSkillDto = z.infer<typeof HrEmployeeSkillSchema>;
 

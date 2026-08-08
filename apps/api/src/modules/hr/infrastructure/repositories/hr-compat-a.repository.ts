@@ -128,14 +128,16 @@ export class HrCompatARepository implements IHrCompatARepo {
       }, 'DB_ERROR');
   }
 
-  async createEmployeeSkill(employeeId: unknown, skillName: unknown, proficiencyLevel: unknown, proficiencyScore: unknown, certifiedDate: unknown): Promise<Result<Row>> {
+  async createEmployeeSkill(employeeId: unknown, skillName: unknown, skillCategory: unknown, proficiencyLevel: unknown, proficiencyScore: unknown, certifiedDate: unknown, notes?: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(employee_skills).values({
         employeeId:       (employeeId ?? null) as number,
         skillName:        (skillName ?? '') as string,
+        skillCategory:    (skillCategory ?? null) as string,
         proficiencyLevel: (proficiencyLevel ?? 'beginner') as string,
         proficiencyScore: proficiencyScore != null ? String(proficiencyScore) : null,
         certifiedDate:    (certifiedDate ?? null) as string,
+        notes:            (notes ?? null) as string,
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');

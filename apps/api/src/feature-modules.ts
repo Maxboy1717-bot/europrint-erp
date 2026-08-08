@@ -22,6 +22,7 @@ export { SdModule } from './modules/sd/sd.module';
 export { PpModule } from './modules/pp/pp.module';
 export { MesModule } from './modules/mes/mes.module';
 export { WmsModule } from './modules/wms/wms.module';
+export { KnowledgeGraphModule } from './modules/knowledge-graph/knowledge-graph.module';
 export { QcModule } from './modules/qc/qc.module';
 export { HrModule } from './modules/hr/hr.module';
 export { LmsModule } from './modules/lms/lms.module';

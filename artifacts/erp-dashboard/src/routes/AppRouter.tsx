@@ -18,6 +18,7 @@ import {
 } from "@/routes/ProductionRoutes";
 import { SALES_ROUTES, MARKETING_ROUTES } from "@/routes/CRMRoutes";
 import { DOCUMENTS_ROUTES } from "@/routes/DocumentsRoutes";
+import { KNOWLEDGE_GRAPH_ROUTES } from "@/routes/KnowledgeGraphRoutes";
 import { WAREHOUSE_ROUTES } from "@/routes/WarehouseRoutes";
 import {
   ADMIN_ROUTES, INTEGRATION_ROUTES,
@@ -49,6 +50,7 @@ const ALL_MODULE_ROUTES = [
   ...KAIZEN_ROUTES, ...ORDERS_REGISTRY_ROUTES,
   ...ARCHITECTURE_GAP_ROUTES,
   ...DOCUMENTS_ROUTES,
+  ...KNOWLEDGE_GRAPH_ROUTES,
   ...STUB_ROUTES,
 ];
 
@@ -128,6 +130,7 @@ export function AppRouter() {
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={KAIZEN_ROUTES}          />
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={ORDERS_REGISTRY_ROUTES} />
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={DOCUMENTS_ROUTES}       />
+      <ModuleGroup roles={ALL_AUTHENTICATED}  routes={KNOWLEDGE_GRAPH_ROUTES} />
       <ModuleGroup roles={ADMIN_ROLES}        routes={ARCHITECTURE_GAP_ROUTES} />
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={STUB_ROUTES}            />
 

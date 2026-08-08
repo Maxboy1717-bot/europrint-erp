@@ -33,9 +33,11 @@ export interface IHrCompatARepo {
   createEmployeeSkill(
     employeeId: unknown,
     skillName: unknown,
+    skillCategory: unknown,
     proficiencyLevel: unknown,
     proficiencyScore: unknown,
     certifiedDate: unknown,
+    notes?: unknown,
   ): Promise<Result<Row>>;
   deleteEmployeeSkill(id: number): Promise<Result<{ deleted: number }>>;
   getEmployeeSkillsById(employeeId: number): Promise<Result<Row[]>>;

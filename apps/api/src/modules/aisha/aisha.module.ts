@@ -83,6 +83,12 @@ import { AishaEmailSenderAdapter, AishaTelegramSenderAdapter } from './infrastru
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SendTelegramToTeamTool }       from './application/tools/send-telegram-to-team.tool';
 import { WhatIfSimulationTool }         from './application/tools/what-if-simulation.tool';
+// AI Bilim Grafigi (owner 2026-08-08) — 4 yangi tool, KnowledgeGraphModule'dan KNOWLEDGE_GRAPH_REPO oladi.
+import { SearchGraphTool }              from './application/tools/search-graph.tool';
+import { ReadNodeTool }                 from './application/tools/read-node.tool';
+import { CreateLinkTool }               from './application/tools/create-link.tool';
+import { ExecuteErpActionTool }         from './application/tools/execute-erp-action.tool';
+import { KnowledgeGraphModule }         from '../knowledge-graph/knowledge-graph.module';
 
 @Module({
   imports: [
@@ -91,6 +97,7 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     CqrsModule,
     EventEmitterModule,
     ScheduleModule.forRoot(),
+    KnowledgeGraphModule,
   ],
   providers: [
     AishaConfig,
@@ -121,7 +128,7 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     WakeConfigRepository,        // persists Director wake-word sensitivity (settings table)
     AishaHistoryService,         // read/governance surface (history + HITL queue + resume-after-approve via ToolRegistry)
     AishaConversationService,   // #15 P0 tool-execution loop (now persists turns)
-    // 27 AIsha tools — each @Injectable, registered with ToolRegistry on
+    // 31 AIsha tools — each @Injectable, registered with ToolRegistry on
     // module init by AishaToolBootstrap. Order alphabetical, matches the
     // bootstrap service's constructor.
     AnalyzeCameraFeedTool, AssignTaskTool, ComparePeriodsTool,
@@ -134,6 +141,8 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     GetTopDebtorsTool, GetSalesLeaderboardTool,
     ListAvailableCamerasTool, ScheduleMeetingTool, SendEmailTool,
     SendTelegramToTeamTool, WhatIfSimulationTool,
+    // AI Bilim Grafigi (owner 2026-08-08) — tool #28-31.
+    SearchGraphTool, ReadNodeTool, CreateLinkTool, ExecuteErpActionTool,
     AishaEmailSenderAdapter, AishaTelegramSenderAdapter,
     { provide: AISHA_EMAIL_SENDER, useExisting: AishaEmailSenderAdapter },
     { provide: AISHA_TELEGRAM_SENDER, useExisting: AishaTelegramSenderAdapter },
