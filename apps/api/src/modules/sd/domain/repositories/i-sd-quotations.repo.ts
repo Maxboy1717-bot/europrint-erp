@@ -19,7 +19,7 @@ export interface ISdQuotationsRepo {
   listPriceFormulas(lim: number, off: number): Promise<Result<Row[]>>;
   getKpiTeam(year: number, month: number): Promise<Result<Row[]>>;
   getKpiTargets(managerId: number | null): Promise<Result<Row[]>>;
-  getFunnelReport(): Promise<Result<Row>>;
+  getFunnelReport(): Promise<Result<Row[]>>;
   getQuotationById(id: string): Promise<Result<Row | null>>;
   getQuotationForPdf(id: string): Promise<Result<Row | null>>;
   getQuotationItems(id: string): Promise<Result<Row[]>>;

@@ -375,15 +375,10 @@ export class SdQuotationsService {
     return this.repo.getKpiTargets(managerId);
   }
 
-  async getFunnelReport(period: string | null) {
-    const r = await this.repo.getFunnelReport();
-    if (!r.ok) return r;
-    const data = r.data;
-    return Ok({
-      ...data,
-      conversion_rate: data['total_leads'] ? Number(data['won_deals'] ?? 0) / Number(data['total_leads'] ?? 1) * 100 : 0,
-      period: period ?? 'monthly',
-    });
+  async getFunnelReport(_period: string | null) {
+    // FE (SDKpi.tsx) reads this response directly as FunnelItem[] — return the
+    // per-status array as-is, no object wrapper (see repo method's audit comment).
+    return this.repo.getFunnelReport();
   }
 
   async convertToOrder(id: string, convertedByUserId?: number): Promise<Result<{ order: { id: unknown; documentNumber: string } }, AppError>> {

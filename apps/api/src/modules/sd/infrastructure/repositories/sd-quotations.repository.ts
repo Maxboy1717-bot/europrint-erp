@@ -215,35 +215,26 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     }
   }
 
+  // Audit 2026-08-08: avval snake_case (`manager_id`/`quota_amount`/`achieved_amount`)
+  // qaytarardi, FE (SDKpi.tsx TargetRow) camelCase `managerId`/`revenueTarget` o'qiydi —
+  // jadval hamisha "—" ko'rsatardi. `orderCountTarget`/`newCustomerTarget` uchun
+  // `sd_manager_quotas`da ustun yo'q (Q-35, yangi ustun egasi ruxsatisiz qo'shilmaydi) —
+  // shu ikkitasi qaytarilmaydi, FE ularni ixtiyoriy deb ko'radi (undefined → "—", soxta emas).
   async getKpiTargets(managerId: number | null): Promise<Result<Row[]>> {
     try {
-      if (managerId != null) {
-        return exec(sql`
-          SELECT
-            q.id,
-            q.manager_id,
-            CONCAT(e.first_name, ' ', e.last_name) AS manager_name,
-            q.year,
-            q.month,
-            q.quota_amount,
-            q.achieved_amount
-          FROM sd_manager_quotas q
-          LEFT JOIN employees e ON e.id = q.manager_id
-          WHERE q.manager_id = ${managerId}
-          ORDER BY q.year DESC, q.month DESC
-        `);
-      }
+      const managerFilter = managerId != null ? sql`WHERE q.manager_id = ${managerId}` : sql``;
       return exec(sql`
         SELECT
           q.id,
-          q.manager_id,
-          CONCAT(e.first_name, ' ', e.last_name) AS manager_name,
+          q.manager_id                                    AS "managerId",
+          CONCAT(e.first_name, ' ', e.last_name)          AS "managerName",
           q.year,
           q.month,
-          q.quota_amount,
-          q.achieved_amount
+          q.quota_amount                                  AS "revenueTarget",
+          q.achieved_amount                                AS "achievedAmount"
         FROM sd_manager_quotas q
         LEFT JOIN employees e ON e.id = q.manager_id
+        ${managerFilter}
         ORDER BY q.year DESC, q.month DESC
       `);
     } catch {
@@ -251,10 +242,24 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     }
   }
 
-  async getFunnelReport(): Promise<Result<Row>> {
-    const rows = await exec(sql`SELECT COUNT(DISTINCT l.id)::int AS total_leads, COUNT(DISTINCT CASE WHEN l.status_description ILIKE '%active%' OR l.status_description ILIKE '%new%' THEN l.id END)::int AS active_leads, COUNT(DISTINCT d.id)::int AS total_deals, COUNT(DISTINCT CASE WHEN d.stage_semantic_id = 'won' THEN d.id END)::int AS won_deals, COALESCE(SUM(CASE WHEN d.stage_semantic_id = 'won' THEN d.opportunity END), 0)::numeric(15,2) AS won_revenue FROM crm_leads l LEFT JOIN crm_deals d ON d.lead_id::text = l.id::text`);
-    if (!rows.ok) return rows as Result<Row>;
-    return Ok((rows.data[0] ?? {}) as Row);
+  // Audit 2026-08-08 (Savdo-CRM production-readiness audit): avval bitta obyekt (jami
+  // agregat: total_leads/won_deals/...) qaytarardi, FE (SDKpi.tsx FunnelItem[]) esa
+  // status bo'yicha guruhlangan massiv kutadi — Funnel bloki hech qachon render bo'lmagan
+  // (`Array.isArray(funnelRaw)` doim false). Endi `crm_leads.status` (real ustun, LEAD_
+  // STATUS_LABELS bilan bir xil qadriyatlar: new/working/quoted/negotiating/won/lost/
+  // frozen) bo'yicha GROUP BY — real per-bosqich funnel.
+  async getFunnelReport(): Promise<Result<Row[]>> {
+    const rows = await exec(sql`
+      SELECT l.status,
+             COUNT(DISTINCT l.id)::int AS count,
+             COALESCE(SUM(l.opportunity_amount), 0)::numeric(15,2) AS "totalValue"
+      FROM crm_leads l
+      WHERE l.deleted_at IS NULL
+      GROUP BY l.status
+      ORDER BY count DESC
+    `);
+    if (!rows.ok) return rows as Result<Row[]>;
+    return Ok(rows.data);
   }
 
   async getQuotationById(id: string): Promise<Result<Row | null>> {
