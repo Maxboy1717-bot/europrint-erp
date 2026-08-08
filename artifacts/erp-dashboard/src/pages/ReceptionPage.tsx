@@ -28,9 +28,12 @@ export default function ReceptionPage() {
     visitor_name: "", visitor_phone: "", visitor_company: "",
     visit_purpose: "", host_employee_id: "",
   });
-  interface BadgeVisit { visitor_name: string; visitor_company: string; check_in_at: string; }
-  interface BadgeResult { badge_code: string; badge_expires_at: string; visit?: BadgeVisit; }
-  interface ValidateResult { valid: boolean; visitor_name?: string; host_name?: string; expires_at?: string; error?: string; }
+  // Audit 2026-08-08: BE (reception.service.ts checkInVisitor) qaytaradigan haqiqiy shakl —
+  // `badge_code`/`badge_expires_at`/nested `visit` avval FE'da kutilgan edi, lekin BE hech
+  // qachon bunday qaytarmagan (real ustun nomi `badge_number`, muddat tushunchasi
+  // `visitor_log`da umuman yo'q — badge check-out'gacha amal qiladi).
+  interface BadgeResult { badge_number: string; visitor_name: string; visitor_company?: string; check_in_at?: string; }
+  interface ValidateResult { valid: boolean; visitor_name?: string; host_name?: string; error?: string; }
   const [lastBadge, setLastBadge] = useState<BadgeResult | null>(null);
   const [validateCode, setValidateCode] = useState("");
   const [validateResult, setValidateResult] = useState<ValidateResult | null>(null);
@@ -47,14 +50,14 @@ export default function ReceptionPage() {
     refetchInterval: 30000,
   });
 
-  interface ActiveVisit { id: number; visitor_name: string; visitor_company: string; host_name: string; check_in_at: string; badge_code: string }
+  interface ActiveVisit { id: number; visitor_name: string; visitor_company: string; host_name: string; check_in_at: string; badge_number: string }
   const { data: active, isLoading } = useQuery<ActiveVisit[]>({
     queryKey: ["/api/hr-v2/reception/active"],
     queryFn: () => apiRequest("GET", "/api/hr-v2/reception/active"),
     refetchInterval: 30000,
   });
 
-  interface VisitLogEntry { id: number; visitor_name: string; visitor_company: string; host_name: string; check_in_at: string; check_out_at: string; duration_minutes: number; badge_code: string }
+  interface VisitLogEntry { id: number; visitor_name: string; visitor_company: string; host_name: string; check_in_at: string; check_out_at: string; duration_minutes: number; badge_number: string }
   const { data: log } = useQuery<VisitLogEntry[]>({
     queryKey: ["/api/hr-v2/reception/log"],
     queryFn: () =>
@@ -65,7 +68,7 @@ export default function ReceptionPage() {
   const checkIn = useMutation<BadgeResult, Error, Record<string, unknown>>({
     mutationFn: (data) => apiRequest<BadgeResult>("POST", "/api/hr-v2/reception/check-in", data),
     onSuccess: (data) => {
-      toast({ title: "✅ Tashrif ro'yxatga olindi", description: `Badge kodi: ${data.badge_code}` });
+      toast({ title: "✅ Tashrif ro'yxatga olindi", description: `Badge kodi: ${data.badge_number}` });
       setLastBadge(data);
       setForm({ visitor_name: "", visitor_phone: "", visitor_company: "", visit_purpose: "", host_employee_id: "" });
       qc.invalidateQueries({ queryKey: ["/api/hr-v2/reception/active"] });
@@ -156,12 +159,14 @@ export default function ReceptionPage() {
                 <CardContent className="text-center space-y-4">
                   <div className="bg-white text-black p-6 rounded-xl mx-auto max-w-64">
                     <div className="text-blue-900 font-bold text-lg">{t("europrint1")}</div>
-                    <div className="text-3xl font-bold tracking-widest my-4 text-[var(--ep-red)]">{lastBadge.badge_code}</div>
-                    <div className="font-semibold">{lastBadge.visit?.visitor_name}</div>
-                    <div className="text-sm text-gray-600">{lastBadge.visit?.visitor_company}</div>
-                    <div className="text-xs text-gray-400 mt-2">
-                      {new Date(lastBadge.visit?.check_in_at ?? '').toLocaleTimeString()} — {new Date(lastBadge.badge_expires_at).toLocaleTimeString()}
-                    </div>
+                    <div className="text-3xl font-bold tracking-widest my-4 text-[var(--ep-red)]">{lastBadge.badge_number}</div>
+                    <div className="font-semibold">{lastBadge.visitor_name}</div>
+                    {lastBadge.visitor_company && <div className="text-sm text-gray-600">{lastBadge.visitor_company}</div>}
+                    {lastBadge.check_in_at && (
+                      <div className="text-xs text-gray-400 mt-2">
+                        Kirdi: {new Date(lastBadge.check_in_at).toLocaleTimeString()}
+                      </div>
+                    )}
                   </div>
                   <Button onClick={() => window.print()} variant="outline" className="border-border text-muted-foreground">
                     {t("chopEtish")}
@@ -188,7 +193,7 @@ export default function ReceptionPage() {
                       <div className="text-xs text-muted-foreground">{v.visitor_company} → {v.host_name}</div>
                       <div className="text-xs text-muted-foreground">
                         Kirdi: {new Date(v.check_in_at).toLocaleTimeString()} |
-                        Badge: <span className="font-mono text-yellow-400">{v.badge_code}</span>
+                        Badge: <span className="font-mono text-yellow-400">{v.badge_number}</span>
                       </div>
                     </div>
                     <Button size="sm" onClick={() => checkOut.mutate(v.id)}
@@ -225,7 +230,6 @@ export default function ReceptionPage() {
                       <div className="text-green-400 font-bold text-lg">{t("badgeHaqiqiy")}</div>
                       <div className="text-foreground">{validateResult.visitor_name}</div>
                       <div className="text-muted-foreground text-sm">Mezboni: {validateResult.host_name}</div>
-                      <div className="text-muted-foreground text-sm">Muddat: {new Date(validateResult.expires_at ?? '').toLocaleString()}</div>
                     </div>
                   ) : (
                     <div>
@@ -262,7 +266,7 @@ export default function ReceptionPage() {
                         <td className="py-2 px-3 text-foreground">{new Date(v.check_in_at).toLocaleTimeString()}</td>
                         <td className="py-2 px-3 text-foreground">{v.check_out_at ? new Date(v.check_out_at).toLocaleTimeString() : <EPStatusPill tone="success">{t("ichkari")}</EPStatusPill>}</td>
                         <td className="py-2 px-3 text-muted-foreground">{v.duration_minutes ? Math.round(v.duration_minutes) : "—"}</td>
-                        <td className="py-2 px-3 font-mono text-yellow-400">{v.badge_code}</td>
+                        <td className="py-2 px-3 font-mono text-yellow-400">{v.badge_number}</td>
                       </tr>
                     ))}
                   </tbody>

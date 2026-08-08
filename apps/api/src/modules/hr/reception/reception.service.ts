@@ -43,10 +43,11 @@ export class ReceptionService {
     return safeCall(async () => {
       const badgeNumber = `VB-${randomBytes(3).toString('hex').toUpperCase()}`;
       const row = await this.repo.checkInVisitor({ ...dto, badgeNumber });
+      if (!row.ok) throw new Error(row.error.message);
 
-      const rowData = (row?.ok ? row.data as Record<string, unknown> : {});
+      const rowData = row.data as Record<string, unknown>;
       this.eventEmitter.emit(HrV2Events.VISITOR_CHECKED_IN, {
-        visitorId: rowData?.['id'],
+        visitorId: rowData['id'],
         visitorName: dto.visitorName,
         hostEmployeeId: dto.hostEmployeeId,
         badgeCode: badgeNumber,
@@ -57,7 +58,19 @@ export class ReceptionService {
         message: `👤 Mehmon keldi: ${dto.visitorName} (${dto.visitorCompany || ''}).\nBetj raqami: ${badgeNumber}\nMaqsad: ${dto.purpose}`,
       });
 
-      return { ...row, badge_number: badgeNumber };
+      // Bug fixed: `return { ...row, badge_number: badgeNumber }` spread the repo's OWN
+      // Result wrapper (`{ok, data}`), so the real visitor_log row (id/visitor_name/
+      // check_in_at/...) stayed nested under a `.data` key the FE never read — every
+      // field except the accidentally-top-level badge_number came back undefined. FE
+      // (ReceptionPage.tsx) reads a flat shape; there is no real badge-expiry concept
+      // in visitor_log (checked columns: no expiry field) — badges stay valid until
+      // check-out, so `badge_expires_at` is not fabricated here (Q-40).
+      return {
+        badge_number: badgeNumber,
+        visitor_name: String(rowData['visitor_name'] ?? dto.visitorName),
+        visitor_company: rowData['visitor_company'] != null ? String(rowData['visitor_company']) : undefined,
+        check_in_at: rowData['check_in_at'] != null ? String(rowData['check_in_at']) : undefined,
+      };
     });
   }
 
