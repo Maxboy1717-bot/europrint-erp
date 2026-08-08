@@ -24,6 +24,7 @@ import { tLabel } from "@/lib/i18n/tLabel";
 import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 import { Pagination } from "@/components/Pagination";
+import { exportToCSV } from "@/lib/export-utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -139,6 +140,26 @@ export default function SDSalesPayments() {
   })();
   const totalPages = Math.ceil(paymentsTotal / pageSize) || 1;
 
+  // Audit 2026-08-08: tugma avval `window.open("/api/sd/payments/export")` chaqirardi —
+  // bunday BE marshrut umuman yo'q edi (404). Sahifa allaqachon `/api/sd/payments`dan
+  // haqiqiy ma'lumot yuklaydi (paymentsArr) — shu jonli ro'yxatdan mavjud lib/export-utils.ts
+  // (bu sessiyada boshqa 10+ sahifada ishlatilgan real naqsh, rol-darvoza bilan) orqali
+  // client-side CSV yasaladi, yangi BE endpoint qurish shart emas.
+  const handleExportCsv = () => {
+    if (view === "debitors") return;
+    exportToCSV(paymentsArr as unknown as Record<string, unknown>[], "sd_tolovlar", [
+      { key: "id", label: "ID" },
+      { key: "orderId", label: "Buyurtma" },
+      { key: "type", label: "Turi" },
+      { key: "amount", label: "Summa" },
+      { key: "status", label: "Holat" },
+      { key: "dueDate", label: "Muddat" },
+      { key: "paidDate", label: "To'langan sana" },
+      { key: "overdueDays", label: "Kechikkan kun" },
+      { key: "notes", label: "Izoh" },
+    ]);
+  };
+
   const { data: orders } = useQuery<OrdersResponse>({
     queryKey: ["/api/sd/orders"],
     queryFn: () => apiRequest("GET", "/api/sd/orders?limit=100"),
@@ -204,7 +225,8 @@ export default function SDSalesPayments() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => window.open("/api/sd/payments/export", "_blank")}
+          onClick={handleExportCsv}
+          disabled={view === "debitors" || paymentsArr.length === 0}
           data-testid="button-export-csv"
         >
           <Download className="h-4 w-4 mr-1" />
