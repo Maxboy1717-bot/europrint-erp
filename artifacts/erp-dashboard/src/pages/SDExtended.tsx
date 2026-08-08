@@ -111,6 +111,20 @@ export default function SDExtended() {
     ["approved", "ready_for_planning"].includes(o.status)
   );
 
+  // Audit 2026-08-08: AdvancePanel avval "Kritik muddati o'tgan"/"Bajarilgan avanslar"
+  // kartalarida qattiq-kodlangan "0" ko'rsatardi (hech qanday hisob-kitobga bog'lanmagan,
+  // Qoida 10/12 buzilishi). Endi real ma'lumotdan hisoblanadi: muddati o'tgan — kutilayotgan
+  // avans-buyurtmalar orasida `tayyor_bolish_sanasi` bugundan oldin bo'lganlar; bajarilgan —
+  // butun papka_orders ro'yxatidan `status === "completed"` (PapkaOrders.tsx'da xuddi shu
+  // qiymat ishlatiladi — yangi status ixtiro qilinmadi).
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const criticalOverdueCount = advanceOrders.filter((o: PapkaOrder) =>
+    o.tayyor_bolish_sanasi && new Date(o.tayyor_bolish_sanasi) < todayStart
+  ).length;
+  const completedAdvancesCount = (Array.isArray(papkaOrders) ? papkaOrders : []).filter(
+    (o: PapkaOrder) => o.status === "completed"
+  ).length;
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -175,7 +189,11 @@ export default function SDExtended() {
         />
         <QuotaPanel managerStats={managerStats} />
         <RentalPanel rentalData={Array.isArray(rentalData) ? rentalData : []} rentalLoading={rentalLoading} />
-        <AdvancePanel advanceOrders={advanceOrders} />
+        <AdvancePanel
+          advanceOrders={advanceOrders}
+          criticalOverdueCount={criticalOverdueCount}
+          completedAdvancesCount={completedAdvancesCount}
+        />
       </Tabs>
     </div>
   );

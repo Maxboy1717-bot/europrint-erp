@@ -117,9 +117,11 @@ export function RentalPanel({ rentalData, rentalLoading }: RentalPanelProps) {
 
 interface AdvancePanelProps {
   advanceOrders: PapkaOrder[];
+  criticalOverdueCount: number;
+  completedAdvancesCount: number;
 }
 
-export function AdvancePanel({ advanceOrders }: AdvancePanelProps) {
+export function AdvancePanel({ advanceOrders, criticalOverdueCount, completedAdvancesCount }: AdvancePanelProps) {
   const { t } = useTranslation("common");
   const safeOrders = Array.isArray(advanceOrders) ? advanceOrders : [];
 
@@ -144,7 +146,7 @@ export function AdvancePanel({ advanceOrders }: AdvancePanelProps) {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("kritikMuddatiOTgan")}</p>
-              <p className="text-3xl font-bold tracking-tight text-[var(--ep-red)]">0</p>
+              <p className="text-3xl font-bold tracking-tight text-[var(--ep-red)]">{criticalOverdueCount}</p>
             </div>
           </CardContent>
         </Card>
@@ -155,7 +157,7 @@ export function AdvancePanel({ advanceOrders }: AdvancePanelProps) {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("bajarilganAvanslar")}</p>
-              <p className="text-3xl font-bold tracking-tight text-primary">0</p>
+              <p className="text-3xl font-bold tracking-tight text-primary">{completedAdvancesCount}</p>
             </div>
           </CardContent>
         </Card>
