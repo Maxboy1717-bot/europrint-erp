@@ -4,15 +4,20 @@
  *
  * Behaviour ladder:
  *   1. No LLM key configured  → graceful "AIsha hali sozlanmagan" stub reply.
- *   2. ANTHROPIC_API_KEY set   → calls ClaudeService.streamWithTools(), collects
- *      every text_delta into a single reply, records which tools the LLM used.
- *      Tools are pulled from the global ToolRegistry so the LLM can call into
- *      any of the 25 registered AIsha tools (camera, KPI, alerts, …).
+ *   2. ANTHROPIC_API_KEY set   → `AishaConversationService.runTurn()` drives the
+ *      real tool-execution loop (up to MAX_TOOL_ITERATIONS): ask Claude, run any
+ *      requested tools for real, feed results back, repeat until Claude stops
+ *      calling tools. Blocks until the full turn resolves, then returns ONE
+ *      final JSON reply.
  *   3. Claude errors           → falls back to the same stub as case 1 with the
  *      error message in the reply (so the UI shows a friendly message, not a 500).
  *
- * Streaming SSE responses live in `aisha-sse.gateway.ts` — this controller is
- * the simple request/response shape AishaChatPanel uses today.
+ * `sessionId` is passed straight through into `runTurn()` (#186 fix): the FE
+ * opens `/api/aisha/stream/:sessionId` (aisha-sse.gateway.ts) BEFORE sending
+ * this request, so `runTurn()` can push `tool_use`/`tool_result` events on
+ * that same id while the loop runs — the ONLY way "buyruqni bajarish jarayoni"
+ * is visible live, since this endpoint itself is a single blocking response,
+ * not a stream.
  */
 
 import {
@@ -31,8 +36,6 @@ import type { FastifyRequest } from 'fastify';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AishaConfig } from '../../config/aisha.config';
-import { CLAUDE_PORT, IClaudePort } from '../../domain/ports/i-claude-port';
-import { ToolRegistry } from '../../application/tools/tool.registry';
 import { AishaConversationService } from '../../application/conversation/aisha-conversation.service';
 
 const ChatRequestSchema = z.object({
@@ -74,8 +77,6 @@ export class AishaChatController {
 
   constructor(
     private readonly cfg: AishaConfig,
-    @Inject(CLAUDE_PORT) private readonly claude: IClaudePort,
-    private readonly tools: ToolRegistry,
     private readonly conversation: AishaConversationService,
   ) {}
 
@@ -96,29 +97,6 @@ export class AishaChatController {
       sessionId,
       toolsUsed: [],
     }};
-  }
-
-  /**
-   * Drain the Claude stream, accumulating text deltas and tool-use names.
-   * Tool-result dispatch is intentionally deferred — invoking tools mid-stream
-   * requires a multi-turn loop with the LLM (call tool → feed result back).
-   * For the simple request/response chat surface, we just surface which tools
-   * the LLM asked for; SSE gateway is where the streaming loop lives.
-   */
-  private async collectClaudeReply(message: string): Promise<{ reply: string; toolsUsed: string[] }> {
-    let reply = '';
-    const toolsUsed: string[] = [];
-    const toolDefinitions = this.tools.size() > 0 ? this.tools.getDefinitions() : undefined;
-    for await (const ev of this.claude.streamWithTools({
-      messages: [{ role: 'user', content: message }],
-      system:   SYSTEM_PROMPT,
-      tools:    toolDefinitions as Array<Record<string, unknown>> | undefined,
-    })) {
-      if (ev.kind === 'text_delta') reply += ev.text;
-      else if (ev.kind === 'tool_use') toolsUsed.push(ev.name);
-      else if (ev.kind === 'error') throw new Error(ev.message);
-    }
-    return { reply: reply.trim() || "AIsha javob bermadi (bo'sh oqim).", toolsUsed };
   }
 
   private routeOrReply(sessionId: string, messageLength: number): ChatResponse | null {
@@ -149,7 +127,7 @@ export class AishaChatController {
       // The turn is persisted (conversation + transcript + tool_calls + pending_approvals) inside runTurn.
       // `role` is threaded into every tool's execute() (AishaToolContext) so role-gated tools
       // (get_employee_info, get_financial_summary) can enforce the same RBAC a REST endpoint would.
-      const turnR = await this.conversation.runTurn(userId, role, dto.message, SYSTEM_PROMPT);
+      const turnR = await this.conversation.runTurn(userId, role, dto.message, SYSTEM_PROMPT, sessionId);
       if (!turnR.ok) return this.errorReply(sessionId, turnR.error.message);
       const { conversationId, reply, toolsUsed, toolResults, pendingApprovals } = turnR.data;
       this.logger.log({ sessionId, conversationId, replyLength: reply.length, toolsUsed: toolsUsed.length, ran: toolResults.length, pending: pendingApprovals.length }, 'AIsha chat answered via tool loop');

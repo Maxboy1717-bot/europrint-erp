@@ -15,6 +15,7 @@ import { safeCall, Result, AppError } from '@common/result';
 import { CLAUDE_PORT, IClaudePort, ClaudeMessage } from '../../domain/ports/i-claude-port';
 import { ToolRegistry } from '../tools/tool.registry';
 import { AishaHistoryRepository } from '../../infrastructure/persistence/aisha-history.repo';
+import { AishaSseGateway } from '../../infrastructure/streaming/aisha-sse.gateway';
 
 /** Tools that mutate the outside world (email/telegram/calendar/kanban) — never auto-run; always confirm-gated.
  *  audit 2026-08-06 T11: assign_task did a real INSERT INTO kanban_cards without pause — added here. */
@@ -50,6 +51,7 @@ export class AishaConversationService {
     @Inject(CLAUDE_PORT) private readonly claude: IClaudePort,
     private readonly tools: ToolRegistry,
     private readonly history: AishaHistoryRepository,
+    private readonly sse: AishaSseGateway,
   ) {}
 
   /**
@@ -61,8 +63,19 @@ export class AishaConversationService {
    * Returns the final reply plus provenance (which tools ran + their real data),
    * any high-stake tools awaiting human approval, and the persisted
    * conversationId so the caller can correlate the transcript.
+   *
+   * `sseSessionId` — the client's OWN stream-subscription key (NOT the DB
+   * `conversationId`, which the FE never sees at subscribe-time: it opens
+   * `/api/aisha/stream/:sessionId` before this turn even starts). Live
+   * `tool_use`/`tool_result` progress events are pushed keyed by THIS id, or
+   * silently dropped (no-op) if the caller has no active stream (`sse.push`
+   * already no-ops on an unknown key). `done`/`error` are deliberately never
+   * pushed per-turn here — the SSE connection is per-SESSION, not per-turn,
+   * and `AishaSseGateway.push` completes+deletes the stream on those two
+   * kinds, which would silently kill live-progress for every later turn in
+   * the same session.
    */
-  async runTurn(userId: number, role: string | null, userMessage: string, system: string): Promise<Result<AishaTurnResult, AppError>> {
+  async runTurn(userId: number, role: string | null, userMessage: string, system: string, sseSessionId?: string): Promise<Result<AishaTurnResult, AppError>> {
     return safeCall(async () => {
       const ctx = { userId, role };
       const conversationId = await this.startConversation(userId, userMessage);
@@ -94,17 +107,24 @@ export class AishaConversationService {
         let paused = false;
         for (const tu of toolUses) {
           toolsUsed.push(tu.name);
+          // Live progress (#186 — SSE gateway existed but nothing ever called .push();
+          // this is the wiring that makes "buyruqni bajarish jarayoni" actually visible).
+          if (sseSessionId) this.sse.push(sseSessionId, { kind: 'tool_use', id: tu.id, name: tu.name, input: tu.input });
+
           if (HIGH_STAKE_TOOLS.has(tu.name)) {
             paused = true;
             pendingApprovals.push({ toolUseId: tu.id, name: tu.name, input: tu.input, stake: 'high' });
             await this.persistPendingApproval(conversationId, tu.name, tu.input);
-            resultBlocks.push({ type: 'tool_result', tool_use_id: tu.id, is_error: false,
-              content: `APPROVAL_REQUIRED: "${tu.name}" yuqori xavfli amal — inson tasdig'ini kutmoqda, avtomatik bajarilmadi (E1).` });
+            const approvalMsg = `APPROVAL_REQUIRED: "${tu.name}" yuqori xavfli amal — inson tasdig'ini kutmoqda, avtomatik bajarilmadi (E1).`;
+            resultBlocks.push({ type: 'tool_result', tool_use_id: tu.id, is_error: false, content: approvalMsg });
+            if (sseSessionId) this.sse.push(sseSessionId, { kind: 'tool_result', id: tu.id, content: approvalMsg });
             continue;
           }
           const toolR = this.tools.getToolByName(tu.name);
           if (!toolR.ok) {
-            resultBlocks.push({ type: 'tool_result', tool_use_id: tu.id, is_error: true, content: `unknown tool: ${tu.name}` });
+            const msg = `unknown tool: ${tu.name}`;
+            resultBlocks.push({ type: 'tool_result', tool_use_id: tu.id, is_error: true, content: msg });
+            if (sseSessionId) this.sse.push(sseSessionId, { kind: 'tool_result', id: tu.id, content: msg });
             continue;
           }
           const startMs = Date.now();
@@ -114,6 +134,7 @@ export class AishaConversationService {
           toolResults.push({ name: tu.name, ok: exec.ok, result: payload });
           await this.persistToolCall(conversationId, tu.name, tu.input, payload, exec.ok, latencyMs);
           resultBlocks.push({ type: 'tool_result', tool_use_id: tu.id, is_error: !exec.ok, content: JSON.stringify(payload) });
+          if (sseSessionId) this.sse.push(sseSessionId, { kind: 'tool_result', id: tu.id, content: payload });
         }
         messages.push({ role: 'user', content: resultBlocks });
 

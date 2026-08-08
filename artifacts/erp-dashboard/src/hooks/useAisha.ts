@@ -94,6 +94,12 @@ async function getWakeConfig(): Promise<AishaWakeConfigView> {
 
 // ─── Hook return shape ───────────────────────────────────────────────────────
 
+export interface AishaActivityStep {
+  id:     string;
+  name:   string;
+  status: 'running' | 'done';
+}
+
 export interface UseAishaReturn {
   messages:       AishaMessage[];
   sendMessage:    (text: string) => void;
@@ -106,11 +112,14 @@ export interface UseAishaReturn {
   isConnected:    boolean;
   retry:          () => void;
   sessionId:      string;
+  /** Live tool_use/tool_result progress for the turn in flight (SSE) — empty once the reply lands. */
+  activitySteps:  AishaActivityStep[];
 }
 
 export function useAisha(): UseAishaReturn {
-  const [messages,    setMessages]    = useState<AishaMessage[]>([]);
-  const [isListening, setIsListening] = useState(false);
+  const [messages,      setMessages]      = useState<AishaMessage[]>([]);
+  const [isListening,   setIsListening]   = useState(false);
+  const [activitySteps, setActivitySteps] = useState<AishaActivityStep[]>([]);
   const [sessionId]                   = useState<string>(() => newSessionId());
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const queryClient = useQueryClient();
@@ -125,6 +134,7 @@ export function useAisha(): UseAishaReturn {
     mutationFn: (text: string) => postChat(text, sessionId),
     onSuccess: (res) => {
       setMessages((prev) => [...prev, makeMessage('assistant', res.data.reply)]);
+      setActivitySteps([]); // turn's final reply landed — the live step list is no longer relevant
       // Item #171-185: a high-stake tool call (send_email/telegram/schedule_meeting/
       // assign_task) paused for human approval this turn — refresh the queue so it
       // surfaces immediately instead of waiting for useAishaApprovals' own poll.
@@ -132,14 +142,16 @@ export function useAisha(): UseAishaReturn {
         void queryClient.invalidateQueries({ queryKey: ['/api/aisha/approvals'] });
       }
     },
+    onError: () => setActivitySteps([]),
   });
 
-  useStreamSubscription(sessionId, setMessages);
+  useStreamSubscription(sessionId, setMessages, setActivitySteps);
 
   const sendMessage = useCallback((text: string): void => {
     const trimmed = text.trim();
     if (!trimmed) return;
     setMessages((prev) => [...prev, makeMessage('user', trimmed)]);
+    setActivitySteps([]); // fresh turn — clear any leftover steps from a previous one
     chatMutation.mutate(trimmed);
   }, [chatMutation]);
 
@@ -187,19 +199,30 @@ export function useAisha(): UseAishaReturn {
     isConnected:    !wakeQuery.isError,
     retry:          () => { chatMutation.reset(); void wakeQuery.refetch(); },
     sessionId,
+    activitySteps,
   };
 }
 
 // ─── Streaming subscription (SSE) ────────────────────────────────────────────
 
 /**
- * Subscribe to `/api/aisha/stream/:sessionId` Server-Sent Events and append
- * incremental `text_delta` tokens to the last assistant message. Skipped
- * silently if `EventSource` isn't available (tests, SSR).
+ * Subscribe to `/api/aisha/stream/:sessionId` Server-Sent Events:
+ *   - `text_delta` appends incremental tokens to the last assistant message
+ *     (currently unused by the backend turn loop — `runTurn()` returns the
+ *     full reply via the REST response instead — but kept live for a future
+ *     token-streaming path; harmless no-op today).
+ *   - `tool_use`/`tool_result` (#186) drive `activitySteps`, the ONLY current
+ *     live signal: `runTurn()` pushes these while it runs each tool, so the
+ *     panel can show "buyruqni bajarish jarayoni" instead of a blind spinner.
+ * Skipped silently if `EventSource` isn't available (tests, SSR). Never
+ * closed on `done`/`error` from here — the backend deliberately never pushes
+ * those per-turn (see aisha-conversation.service.ts) since the connection is
+ * per-SESSION, not per-turn; only real stream-level errors close it.
  */
 function useStreamSubscription(
   sessionId: string,
   setMessages: React.Dispatch<React.SetStateAction<AishaMessage[]>>,
+  setActivitySteps: React.Dispatch<React.SetStateAction<AishaActivityStep[]>>,
 ): void {
   useEffect(() => {
     if (typeof window === 'undefined' || typeof EventSource === 'undefined') return;
@@ -213,12 +236,23 @@ function useStreamSubscription(
       if (parsed?.kind !== 'text_delta') return;
       setMessages((prev) => appendStreamDelta(prev, parsed.text));
     };
+    const onToolUse = (event: MessageEvent): void => {
+      const parsed = safeParseEvent(event.data);
+      if (parsed?.kind !== 'tool_use') return;
+      setActivitySteps((prev) => [...prev, { id: parsed.id, name: parsed.name, status: 'running' }]);
+    };
+    const onToolResult = (event: MessageEvent): void => {
+      const parsed = safeParseEvent(event.data);
+      if (parsed?.kind !== 'tool_result') return;
+      setActivitySteps((prev) => prev.map((s) => (s.id === parsed.id ? { ...s, status: 'done' } : s)));
+    };
 
     es.addEventListener('text_delta', onText as EventListener);
-    es.addEventListener('done', () => es.close());
+    es.addEventListener('tool_use', onToolUse as EventListener);
+    es.addEventListener('tool_result', onToolResult as EventListener);
     es.addEventListener('error', () => es.close());
     return () => es.close();
-  }, [sessionId, setMessages]);
+  }, [sessionId, setMessages, setActivitySteps]);
 }
 
 function safeParseEvent(raw: unknown): ReturnType<typeof AishaStreamEventSchema.safeParse>['data'] | null {

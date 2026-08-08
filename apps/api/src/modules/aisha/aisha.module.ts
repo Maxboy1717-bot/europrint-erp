@@ -103,6 +103,9 @@ import { KnowledgeGraphModule }         from '../knowledge-graph/knowledge-graph
     AishaConfig,
     WhisperService,
     ElevenLabsService,
+    // Also a @Controller (registered below) — listed here too so
+    // AishaConversationService can inject it directly (push() streaming).
+    AishaSseGateway,
     // LLM stack — hex-arch ports (P2-23). Concrete adapters live in
     // `infrastructure/external/`; domain code depends on the port tokens
     // via `@Inject(CLAUDE_PORT)` / `@Inject(GEMINI_PORT)`. The legacy

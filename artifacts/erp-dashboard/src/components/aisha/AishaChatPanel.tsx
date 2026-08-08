@@ -30,10 +30,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Bot, Check, History, Mic, MicOff, Send, ShieldAlert, X } from 'lucide-react';
+import { Bot, Check, History, Loader2, Mic, MicOff, Send, ShieldAlert, Wrench, X } from 'lucide-react';
 import { z } from 'zod';
 import { useTranslation } from '@/lib/i18n';
 import { useAisha, useAishaApprovals, useAishaHistory } from '@/hooks/useAisha';
+import type { AishaActivityStep } from '@/hooks/useAisha';
 import { EPErrorState } from '@/components/ep/EPErrorState';
 import { AishaHudCorners } from './AishaHudCorners';
 import { cn } from '@/lib/utils';
@@ -88,10 +89,41 @@ function MessageBubble({ msg }: { msg: AishaMessage }) {
   );
 }
 
-function MessageList({ messages, isLoading }: { messages: AishaMessage[]; isLoading: boolean }) {
+/** Turns "get_top_debtors" into "get top debtors" — just readability, not a full label map for 31 tools. */
+function humaniseToolName(name: string): string {
+  return name.replace(/_/g, ' ');
+}
+
+/**
+ * Live "buyruqni bajarish jarayoni" (#186) — one row per tool the current
+ * turn has called so far, spinner while running, check once its
+ * `tool_result` SSE event lands. Replaces the old blind "thinking..." text
+ * whenever the turn has actually reached a tool call; falls back to
+ * "thinking" for the (common) case of a pure-text reply with no tools yet.
+ */
+function ActivityStepsList({ steps }: { steps: AishaActivityStep[] }) {
+  if (steps.length === 0) return null;
+  return (
+    <ul className="flex flex-col gap-1" data-testid="aisha-chat-activity">
+      {steps.map((s) => (
+        <li key={s.id} className="aisha-glass-muted flex items-center gap-1.5" style={{ fontSize: 11 }}>
+          {s.status === 'running'
+            ? <Loader2 className="h-3 w-3 animate-spin aisha-glass-accent" />
+            : <Check className="h-3 w-3 aisha-glass-success" />}
+          <Wrench className="h-3 w-3" />
+          <span>{humaniseToolName(s.name)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function MessageList({
+  messages, isLoading, activitySteps,
+}: { messages: AishaMessage[]; isLoading: boolean; activitySteps: AishaActivityStep[] }) {
   const { t } = useTranslation('aisha');
   const endRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isLoading]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isLoading, activitySteps]);
   if (messages.length === 0 && !isLoading) {
     return <p className="aisha-glass-muted" style={{ fontSize: 12, textAlign: 'center', padding: '24px 0' }}>{t('noMessages')}</p>;
   }
@@ -100,7 +132,9 @@ function MessageList({ messages, isLoading }: { messages: AishaMessage[]; isLoad
     <div className="flex flex-col gap-2" data-testid="aisha-chat-messages">
       {safe.map((m, i) => <MessageBubble key={`${m.timestamp}-${i}`} msg={m} />)}
       {isLoading && (
-        <p className="aisha-glass-muted" style={{ fontSize: 11, fontStyle: 'italic' }}>{t('thinking')}</p>
+        activitySteps.length > 0
+          ? <ActivityStepsList steps={activitySteps} />
+          : <p className="aisha-glass-muted" style={{ fontSize: 11, fontStyle: 'italic' }}>{t('thinking')}</p>
       )}
       <div ref={endRef} />
     </div>
@@ -348,7 +382,7 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
               title={t('error')}
             />
           ) : (
-            <MessageList messages={a.messages} isLoading={a.isLoading} />
+            <MessageList messages={a.messages} isLoading={a.isLoading} activitySteps={a.activitySteps} />
           )}
         </div>
 
