@@ -9,8 +9,9 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { and, desc, eq, ilike, inArray, or } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { db, kg_nodes, kg_edges } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { Result, Ok, Err, AppErr, safeCall } from '@common/result';
 import type {
   IKnowledgeGraphRepository, KgNode, KgEdge, NodeUpsert, EdgeUpsert,
@@ -190,5 +191,29 @@ export class DrizzleKnowledgeGraphRepository implements IKnowledgeGraphRepositor
       return Err(AppErr('VALIDATION', "O'z-o'ziga bog'lanish yaratib bo'lmaydi"));
     }
     return this.upsertEdge({ ...input, source: input.source ?? 'manual' });
+  }
+
+  // RULE4_EXCEPTION: correlated NOT-EXISTS self-join (same edge is old enough
+  // AND no sibling edge of the expected relation type exists yet for the same
+  // source) is awkward to express safely in the Drizzle query builder — raw
+  // parameterized SQL, no string interpolation (Qoida B).
+  async findSilentEdges(input: { fromRelationType: string; expectedRelationType: string; olderThanHours: number }): Promise<Result<KgEdge[]>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<typeof kg_edges.$inferSelect>(sql`
+        SELECT e.* FROM kg_edges e
+        WHERE e.relation_type = ${input.fromRelationType}
+          AND e.is_broken = false
+          AND e.deleted_at IS NULL
+          AND e.created_at < NOW() - (${input.olderThanHours} || ' hours')::interval
+          AND NOT EXISTS (
+            SELECT 1 FROM kg_edges e2
+            WHERE e2.source_type = e.source_type
+              AND e2.source_id = e.source_id
+              AND e2.relation_type = ${input.expectedRelationType}
+              AND e2.deleted_at IS NULL
+          )
+      `);
+      return rows.map(toKgEdge);
+    });
   }
 }

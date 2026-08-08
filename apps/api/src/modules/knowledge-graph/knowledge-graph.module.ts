@@ -2,7 +2,8 @@
  * @module knowledge-graph.module
  * @description AI Bilim Grafigi — native ERP-ichi graf (owner 2026-08-08).
  * Faza A: sxema + sinxronizatsiya (6 haqiqiy voqea) + REST + AIsha tool'lar
- * uchun repository. Faza B (Canvas UI) alohida FE ishi, backend o'zgarishsiz.
+ * uchun repository. Faza B: Canvas UI (FE) + kg-staleness.cron.ts ("jimlik"
+ * uzilish aniqlash, ScheduleModule.forRoot() app.module.ts'da global).
  */
 
 import { Module } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { MesCompletedKgListener } from './infrastructure/event-handlers/mes-comp
 import { QcPassedKgListener } from './infrastructure/event-handlers/qc-passed-kg.listener';
 import { QcFailedKgListener } from './infrastructure/event-handlers/qc-failed-kg.listener';
 import { WmsGoodsIssuedKgListener } from './infrastructure/event-handlers/wms-goods-issued-kg.listener';
+import { KgStalenessCron } from './infrastructure/kg-staleness.cron';
 
 const listeners = [
   OrderCreatedKgListener,
@@ -33,6 +35,7 @@ const listeners = [
   providers: [
     { provide: KNOWLEDGE_GRAPH_REPO, useClass: DrizzleKnowledgeGraphRepository },
     KgSyncService,
+    KgStalenessCron,
     ...listeners,
   ],
   exports: [KNOWLEDGE_GRAPH_REPO],

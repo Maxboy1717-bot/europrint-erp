@@ -1,45 +1,28 @@
 /**
  * @module GraphView
- * @description AI Bilim Grafigi — Faza A minimal ro'yxat UI (hali Canvas
- * emas, Faza B). Node/edge ro'yxatlarini `EPTable` bilan ko'rsatadi + yangi
- * qo'lda bog'lanish (manual link) yaratish formasi (Q-19 CRUD talabi).
- * `/api/knowledge-graph/*` — row-level RBAC serverda hisoblanadi, FE hech
- * narsani filtrlamaydi (backend allaqachon ruxsatsiz turlarni chiqarib
- * tashlaydi).
+ * @description AI Bilim Grafigi — Faza B: interactive Canvas (React Flow) +
+ * table-view toggle (Faza A's original list, preserved per Q-46). Manual
+ * link creation dialog (Q-19 CRUD). `/api/knowledge-graph/*` — row-level
+ * RBAC computed server-side; FE renders exactly what the backend returns.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Link2 } from 'lucide-react';
+import { Loader2, Link2, LayoutList, Waypoints } from 'lucide-react';
 import { EPPageHeader } from '@/components/ep/EPPageHeader';
-import { EPTable } from '@/components/ep';
-import type { TableColumn } from '@/components/ep';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { tLabel } from '@/lib/i18n/tLabel';
-
-interface KgNode {
-  id: string;
-  entityType: string;
-  entityId: string;
-  title: string;
-  summary: string | null;
-  updatedAt: string;
-}
-
-interface KgEdge {
-  id: string;
-  sourceType: string;
-  sourceId: string;
-  targetType: string;
-  targetId: string;
-  relationType: string;
-  isBroken: boolean;
-  brokenReason: string | null;
-}
+import type { KgNode, KgEdge, GraphView as ViewMode, LayoutMode } from './GraphViewTypes';
+import { nodeKey } from './GraphViewTypes';
+import { bfsDepth } from './GraphViewLayout';
+import { GraphViewCanvas } from './GraphViewCanvas';
+import { GraphViewControls } from './GraphViewControls';
+import { GraphViewDetailDrawer } from './GraphViewDetailDrawer';
+import { GraphViewListPanel } from './GraphViewListPanel';
 
 function CreateLinkDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { toast } = useToast();
@@ -66,11 +49,11 @@ function CreateLinkDialog({ open, onClose }: { open: boolean; onClose: () => voi
           <DialogTitle>{tLabel('knowledgeGraph.newLink', "Yangi bog'lanish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
-          <Input placeholder={tLabel('knowledgeGraph.sourceType', "Manba turi (masalan sales_order)")} value={form.sourceType} onChange={(e) => setForm({ ...form, sourceType: e.target.value })} className="h-9 text-sm" />
+          <Input placeholder={tLabel('knowledgeGraph.sourceType', 'Manba turi (masalan sales_order)')} value={form.sourceType} onChange={(e) => setForm({ ...form, sourceType: e.target.value })} className="h-9 text-sm" />
           <Input placeholder={tLabel('knowledgeGraph.sourceId', 'Manba ID')} value={form.sourceId} onChange={(e) => setForm({ ...form, sourceId: e.target.value })} className="h-9 text-sm" />
-          <Input placeholder={tLabel('knowledgeGraph.targetType', "Maqsad turi (masalan document)")} value={form.targetType} onChange={(e) => setForm({ ...form, targetType: e.target.value })} className="h-9 text-sm" />
+          <Input placeholder={tLabel('knowledgeGraph.targetType', 'Maqsad turi (masalan document)')} value={form.targetType} onChange={(e) => setForm({ ...form, targetType: e.target.value })} className="h-9 text-sm" />
           <Input placeholder={tLabel('knowledgeGraph.targetId', 'Maqsad ID')} value={form.targetId} onChange={(e) => setForm({ ...form, targetId: e.target.value })} className="h-9 text-sm" />
-          <Input placeholder={tLabel('knowledgeGraph.relationType', "Aloqa turi (masalan related_to)")} value={form.relationType} onChange={(e) => setForm({ ...form, relationType: e.target.value })} className="h-9 text-sm" />
+          <Input placeholder={tLabel('knowledgeGraph.relationType', 'Aloqa turi (masalan related_to)')} value={form.relationType} onChange={(e) => setForm({ ...form, relationType: e.target.value })} className="h-9 text-sm" />
           <div className="flex gap-2 pt-1">
             <Button variant="outline" onClick={onClose} className="flex-1">{tLabel('common.cancel', 'Bekor')}</Button>
             <Button onClick={() => create.mutate()} disabled={!isValid || create.isPending} className="flex-1 gap-1.5">
@@ -86,6 +69,13 @@ function CreateLinkDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
 export default function GraphView() {
   const [showCreate, setShowCreate] = useState(false);
+  const [view, setView] = useState<ViewMode>('canvas');
+  const [search, setSearch] = useState('');
+  const [entityTypeFilter, setEntityTypeFilter] = useState<string | null>(null);
+  const [layout, setLayout] = useState<LayoutMode>('grid');
+  const [depth, setDepth] = useState(2);
+  const [focusKey, setFocusKey] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<KgNode | null>(null);
 
   const nodesQ = useQuery<{ data: KgNode[] }>({
     queryKey: ['/api/knowledge-graph/nodes'],
@@ -96,64 +86,101 @@ export default function GraphView() {
     queryFn: () => apiRequest<{ data: KgEdge[] }>('GET', '/api/knowledge-graph/edges?limit=100'),
   });
 
-  const nodes = Array.isArray(nodesQ.data?.data) ? nodesQ.data.data : [];
-  const edges = Array.isArray(edgesQ.data?.data) ? edgesQ.data.data : [];
+  const allNodes = Array.isArray(nodesQ.data?.data) ? nodesQ.data.data : [];
+  const allEdges = Array.isArray(edgesQ.data?.data) ? edgesQ.data.data : [];
 
-  const nodeColumns: TableColumn<KgNode>[] = [
-    { key: 'entityType', label: tLabel('knowledgeGraph.colType', 'Turi'), width: '160px' },
-    { key: 'entityId', label: tLabel('knowledgeGraph.colId', 'ID'), width: '100px' },
-    { key: 'title', label: tLabel('knowledgeGraph.colTitle', 'Sarlavha'), sortable: true },
-    {
-      key: 'updatedAt', label: tLabel('knowledgeGraph.colUpdated', "O'zgartirilgan"), width: '170px', sortable: true,
-      render: (_v, row) => new Date(row.updatedAt).toLocaleString('uz-UZ'),
-    },
-  ];
+  const filteredNodes = useMemo(() => allNodes.filter((n) => {
+    if (entityTypeFilter && n.entityType !== entityTypeFilter) return false;
+    if (search && !n.title.toLowerCase().includes(search.toLowerCase()) && !n.entityId.includes(search)) return false;
+    return true;
+  }), [allNodes, entityTypeFilter, search]);
 
-  const edgeColumns: TableColumn<KgEdge>[] = [
-    {
-      key: 'sourceType', label: tLabel('knowledgeGraph.colSource', 'Manba'), width: '220px',
-      render: (_v, row) => `${row.sourceType}:${row.sourceId}`,
-    },
-    { key: 'relationType', label: tLabel('knowledgeGraph.colRelation', 'Aloqa'), width: '140px' },
-    {
-      key: 'targetType', label: tLabel('knowledgeGraph.colTarget', 'Maqsad'), width: '220px',
-      render: (_v, row) => `${row.targetType}:${row.targetId}`,
-    },
-    {
-      key: 'isBroken', label: tLabel('knowledgeGraph.colStatus', 'Holat'), width: '200px',
-      render: (_v, row) => row.isBroken
-        ? <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-red-50 text-red-700 border-red-200" title={row.brokenReason ?? ''}>{tLabel('knowledgeGraph.broken', 'Uzilgan')}</span>
-        : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">{tLabel('knowledgeGraph.healthy', 'Sog\'lom')}</span>,
-    },
-  ];
+  const visibleKeys = useMemo(() => {
+    if (!focusKey) return null;
+    const dist = bfsDepth(focusKey, allEdges, depth);
+    return new Set(dist.keys());
+  }, [focusKey, allEdges, depth]);
+
+  const selectedNodeEdges = useMemo(() => {
+    if (!selectedNode) return [];
+    return allEdges.filter((e) =>
+      (e.sourceType === selectedNode.entityType && e.sourceId === selectedNode.entityId) ||
+      (e.targetType === selectedNode.entityType && e.targetId === selectedNode.entityId));
+  }, [selectedNode, allEdges]);
+
+  function handleNodeClick(node: KgNode) {
+    setSelectedNode(node);
+    setFocusKey(nodeKey(node.entityType, node.entityId));
+  }
 
   return (
     <div className="p-4 space-y-4">
       <EPPageHeader
         title={tLabel('knowledgeGraph.title', 'Bilim Grafigi')}
-        subtitle={tLabel('knowledgeGraph.subtitle', 'ERP entity\'lari orasidagi bog\'lanishlar — AI agentlar shu grafni qidiradi')}
-        actions={<Button onClick={() => setShowCreate(true)} className="gap-1.5"><Link2 className="w-4 h-4" />{tLabel('knowledgeGraph.newLink', "Yangi bog'lanish")}</Button>}
+        subtitle={tLabel('knowledgeGraph.subtitle', "ERP entity'lari orasidagi bog'lanishlar — AI agentlar shu grafni qidiradi")}
+        actions={(
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-md border border-[var(--ep-border)] overflow-hidden">
+              <button
+                onClick={() => setView('canvas')}
+                className={`px-2.5 py-1.5 text-[12px] flex items-center gap-1 ${view === 'canvas' ? 'bg-[var(--ep-primary)] text-white' : 'bg-[var(--ep-surface)] text-[var(--ep-muted)]'}`}
+              >
+                <Waypoints className="w-3.5 h-3.5" />{tLabel('knowledgeGraph.viewCanvas', 'Grafik')}
+              </button>
+              <button
+                onClick={() => setView('table')}
+                className={`px-2.5 py-1.5 text-[12px] flex items-center gap-1 ${view === 'table' ? 'bg-[var(--ep-primary)] text-white' : 'bg-[var(--ep-surface)] text-[var(--ep-muted)]'}`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />{tLabel('knowledgeGraph.viewTable', "Ro'yxat")}
+              </button>
+            </div>
+            <Button onClick={() => setShowCreate(true)} className="gap-1.5">
+              <Link2 className="w-4 h-4" />{tLabel('knowledgeGraph.newLink', "Yangi bog'lanish")}
+            </Button>
+          </div>
+        )}
       />
-      <EPTable<KgNode>
-        title={tLabel('knowledgeGraph.nodesTitle', 'Node\'lar')}
-        columns={nodeColumns}
-        data={nodes}
-        isLoading={nodesQ.isLoading}
-        searchable
-        searchPlaceholder={tLabel('knowledgeGraph.searchNodes', 'Node qidirish...')}
-        emptyMessage={tLabel('knowledgeGraph.emptyNodes', "Hali node yo'q — real ERP hodisalari (buyurtma, ishlab chiqarish, sifat nazorati) sodir bo'lganda avtomatik paydo bo'ladi")}
-        zebra
-      />
-      <EPTable<KgEdge>
-        title={tLabel('knowledgeGraph.edgesTitle', "Bog'lanishlar")}
-        columns={edgeColumns}
-        data={edges}
-        isLoading={edgesQ.isLoading}
-        searchable
-        searchPlaceholder={tLabel('knowledgeGraph.searchEdges', "Bog'lanish qidirish...")}
-        emptyMessage={tLabel('knowledgeGraph.emptyEdges', "Hali bog'lanish yo'q")}
-        zebra
-      />
+
+      {view === 'canvas' ? (
+        <>
+          <GraphViewControls
+            search={search}
+            onSearchChange={setSearch}
+            entityTypeFilter={entityTypeFilter}
+            onEntityTypeFilterChange={setEntityTypeFilter}
+            layout={layout}
+            onLayoutChange={setLayout}
+            depth={depth}
+            onDepthChange={setDepth}
+            focusActive={focusKey !== null}
+          />
+          {focusKey && (
+            <button
+              onClick={() => setFocusKey(null)}
+              className="text-[12px] text-[var(--ep-primary)] hover:underline"
+            >
+              {tLabel('knowledgeGraph.clearFocus', "Filtrni tozalash — hammasini ko'rsatish")}
+            </button>
+          )}
+          <GraphViewCanvas
+            nodes={filteredNodes}
+            edges={allEdges}
+            layout={layout}
+            visibleKeys={visibleKeys}
+            onNodeClick={handleNodeClick}
+          />
+        </>
+      ) : (
+        <GraphViewListPanel nodes={filteredNodes} edges={allEdges} nodesLoading={nodesQ.isLoading} edgesLoading={edgesQ.isLoading} />
+      )}
+
+      {selectedNode && (
+        <GraphViewDetailDrawer
+          node={selectedNode}
+          edges={selectedNodeEdges}
+          onClose={() => setSelectedNode(null)}
+        />
+      )}
       <CreateLinkDialog open={showCreate} onClose={() => setShowCreate(false)} />
     </div>
   );

@@ -80,6 +80,12 @@ export interface IKnowledgeGraphRepository {
   getNode(entityType: string, entityId: string, allowedTypes: readonly string[]): Promise<Result<KgNode | null>>;
   getEdgesForNode(entityType: string, entityId: string, allowedTypes: readonly string[]): Promise<Result<KgEdge[]>>;
   createManualLink(input: EdgeUpsert): Promise<Result<KgEdge>>;
+  /**
+   * "Jimlik" uzilishi: `relationType` edge'i `olderThanHours`dan eski, LEKIN
+   * shu source (`fromRelationType`)dan `toRelationType` edge'i HALI yo'q,
+   * hali `is_broken=false`. `kg-staleness.cron.ts` uchun.
+   */
+  findSilentEdges(input: { fromRelationType: string; expectedRelationType: string; olderThanHours: number }): Promise<Result<KgEdge[]>>;
 }
 
 export const KNOWLEDGE_GRAPH_REPO = Symbol('KNOWLEDGE_GRAPH_REPO');

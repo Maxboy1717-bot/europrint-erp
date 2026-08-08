@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-07",
+  "generatedAt": "2026-08-08",
   "source": "information_schema.tables (public)",
-  "count": 1187,
+  "count": 1189,
   "tables": [
     "_of_to_od_crosswalk",
     "abc_analysis",
@@ -563,6 +563,8 @@
     "kanban_templates",
     "kanban_time_tracks",
     "kanban_wip_overrides",
+    "kg_edges",
+    "kg_nodes",
     "knowledge_base",
     "kpi_definitions",
     "kpi_results",
