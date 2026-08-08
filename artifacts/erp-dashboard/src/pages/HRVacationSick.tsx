@@ -18,7 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Calendar, Plus, RefreshCw } from "lucide-react";
+import { Calendar, Plus, RefreshCw, Check, X as XIcon } from "lucide-react";
 import { EPStatusPill, EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -61,6 +61,8 @@ export default function HRVacationSick() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
+  const [rejectTargetId, setRejectTargetId] = useState<string | number | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const form = useForm({
     resolver: zodResolver(LeaveRequestSchema),
     defaultValues: { type: "annual", startDate: "", endDate: "", reason: "", employeeId: "" },
@@ -77,6 +79,30 @@ export default function HRVacationSick() {
       setShowDialog(false);
       form.reset();
       toast({ title: "So'rov yuborildi" });
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  // Audit 2026-08-08: backend'da to'liq approve/reject oqimi bor edi (hr-leave.controller.ts
+  // PATCH /api/hr/leave/:id/approve|reject), lekin bu sahifada tugma/mutation yo'q edi — HR
+  // menejer ta'til so'rovlarini bu yerdan boshqara olmasdi (faqat status badge o'qilardi).
+  const approveMutation = useMutation({
+    mutationFn: (id: string | number) => apiRequest("PATCH", `/api/hr/leave/${id}/approve`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/leave-requests"] });
+      toast({ title: "So'rov tasdiqlandi" });
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string | number; reason: string }) =>
+      apiRequest("PATCH", `/api/hr/leave/${id}/reject`, { reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/leave-requests"] });
+      setRejectTargetId(null);
+      setRejectReason("");
+      toast({ title: "So'rov rad etildi" });
     },
     onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
   });
@@ -134,15 +160,16 @@ export default function HRVacationSick() {
                   <TableHead>{t("tugash")}</TableHead>
                   <TableHead>{t("sabab")}</TableHead>
                   <TableHead>{t("holati")}</TableHead>
+                  <TableHead className="text-right">{t("amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
                 ) : isError ? (
-                  <TableRow><TableCell colSpan={6} className="p-0"><EPErrorState variant="inline" error={error} onRetry={() => refetch()} /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="p-0"><EPErrorState variant="inline" error={error} onRetry={() => refetch()} /></TableCell></TableRow>
                 ) : (leaveRequests as LeaveRequest[]).length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("tatilSorovlariYoq")}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">{t("tatilSorovlariYoq")}</TableCell></TableRow>
                 ) : (leaveRequests as LeaveRequest[]).slice(0, 30).map((v) => (
                   <TableRow key={v.id} data-testid={`row-vacation-${v.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{v.employeeName || v.employee_name || v.employeeId || v.employee_id || `#${v.id}`}</TableCell>
@@ -156,6 +183,27 @@ export default function HRVacationSick() {
                       <Badge variant={v.status === "approved" ? "default" : v.status === "rejected" ? "destructive" : "secondary"}>
                         {v.status === "approved" ? "Tasdiqlangan" : v.status === "rejected" ? "Rad etilgan" : "Kutilmoqda"}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {v.status === "pending" && (
+                        <div className="flex gap-1.5 justify-end">
+                          <Button
+                            size="sm" variant="outline" className="h-7 text-xs"
+                            onClick={() => approveMutation.mutate(v.id)}
+                            disabled={approveMutation.isPending}
+                            data-testid={`button-approve-${v.id}`}
+                          >
+                            <Check className="h-3 w-3 mr-1 text-[var(--ep-green)]" /> {t("tasdiqlash")}
+                          </Button>
+                          <Button
+                            size="sm" variant="outline" className="h-7 text-xs"
+                            onClick={() => { setRejectTargetId(v.id); setRejectReason(""); }}
+                            data-testid={`button-reject-${v.id}`}
+                          >
+                            <XIcon className="h-3 w-3 mr-1 text-[var(--ep-red)]" /> {t("radEtish")}
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -203,6 +251,35 @@ export default function HRVacationSick() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rejectTargetId !== null} onOpenChange={(open) => { if (!open) setRejectTargetId(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("radEtish")}</DialogTitle></DialogHeader>
+          <div className="space-y-1 py-2">
+            <Label>{t("sabab")}</Label>
+            <Input
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder={t("tatilSababi1")}
+              data-testid="input-reject-reason"
+            />
+            {rejectReason.length > 0 && rejectReason.length < 5 && (
+              <p className="text-sm text-destructive">Kamida 5 ta belgi kiriting</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={() => setRejectTargetId(null)}>{t("Bekor")}</Button>
+            <Button
+              variant="destructive"
+              disabled={rejectReason.trim().length < 5 || rejectMutation.isPending}
+              onClick={() => { if (rejectTargetId !== null) rejectMutation.mutate({ id: rejectTargetId, reason: rejectReason.trim() }); }}
+              data-testid="button-confirm-reject"
+            >
+              {rejectMutation.isPending ? "Yuborilmoqda..." : t("radEtish")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
