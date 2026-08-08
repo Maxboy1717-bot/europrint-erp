@@ -9,15 +9,26 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module';
+// T18-C2 — kanonik ЦКП-fakt yozish uchun (AI-answer → ckp_fact_values source=AI_CHAT)
+import { OrgStructureModule } from '../org-structure/org-structure.module';
+// 2.8 — AI-reservation → warehouse_stock.reserved_quantity wiring (WMS_REPO.reserveMaterial)
+import { WmsModule } from '../wms/wms.module';
+// 07-07 to'lqin: AiAutomationDailyService kunlik ijroiya xulosasini Telegram'ga yuboradi (SB0379 naqshi)
+import { TelegramModule } from '../../telegram/telegram.module';
 import { AiRouterService }          from './application/services/ai-router.service';
 import { AiRouterCallService }       from './application/services/ai-router-call.service';
+import { CentralAiService }          from './application/services/central-ai.service';
 import { AiRouterRepository }       from './infrastructure/repositories/ai-router.repository';
 import { AI_ROUTER_REPO }            from './domain/repositories/i-ai-router.repo';
+import { DrizzleAiProviderConfigRepo } from './infrastructure/repositories/drizzle-ai-provider-config.repo';
+import { AI_PROVIDER_CONFIG_REPO }   from './domain/repositories/i-ai-provider-config.repo';
+import { AiProviderConfigController } from './presentation/ai-provider-config.controller';
 import { AiExamService }             from './application/services/ai-exam.service';
 import { AiHrNewService }            from './application/services/ai-hr-new.service';
 import { AiPlanningService }         from './application/services/ai-planning.service';
 import { AiReservationService }      from './application/services/ai-reservation.service';
 import { InsightsService }           from './application/services/insights.service';
+import { DemandForecastService }     from './application/services/demand-forecast.service';
 import { AiController }              from './presentation/ai.controller';
 import { AiExamController }          from './presentation/ai-exam.controller';
 import { AiHrNewController }         from './presentation/ai-hr-new.controller';
@@ -68,6 +79,16 @@ import { CrostonService }            from './forecast/croston.service';
 import { NelderMeadService }         from './forecast/nelder-mead.service';
 import { EnsembleForecastService }   from './forecast/ensemble-forecast.service';
 import { ForecastExtController }     from './presentation/forecast-ext.controller';
+// A75 — Kunlik AI-chatbot (mashinasiz xodim ЦКП-hisoboti)
+import { AiDailyReportService }      from './application/services/ai-daily-report.service';
+import { AiDailyReportRepository }   from './infrastructure/repositories/ai-daily-report.repository';
+import { AiDailyReportController }   from './presentation/ai-daily-report.controller';
+// T12-08 — Kunlik ЦКП AI-chatbot cron (mashinasiz xodimga savol)
+import { AiDailyReportCron }         from './application/services/ai-daily-report.cron';
+// AI Rush Orders (GET/approve/reject /ai/rush-orders, owner 2026-07-13)
+import { RushOrdersService }         from './application/services/rush-orders.service';
+import { BottleneckAnalysisService } from './application/services/bottleneck-analysis.service';
+import { DrizzleRushOrdersRepo }     from './infrastructure/repositories/drizzle-rush-orders.repo';
 
 @Module({
   imports: [
@@ -76,12 +97,21 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     AuthModule,
+    // T18-C2 — exports CkpFactService (kanonik ЦКП-fakt yozish: formula + deadline + cascade).
+    OrgStructureModule,
+    // 2.8 — exports WMS_REPO (IWmsRepository.reserveMaterial) for AiReservationService.
+    WmsModule,
+    // 07-07 to'lqin: exports TelegramService for AiAutomationDailyService's owner digest push.
+    TelegramModule,
   ],
   providers: [
     AiRouterRepository,
     { provide: AI_ROUTER_REPO, useClass: AiRouterRepository },
     AiRouterService,
     AiRouterCallService,
+    CentralAiService,
+    DrizzleAiProviderConfigRepo,
+    { provide: AI_PROVIDER_CONFIG_REPO, useClass: DrizzleAiProviderConfigRepo },
     DrizzleService,
     HrAiRepository,
     HrAiService,
@@ -123,9 +153,21 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     CrostonService,
     NelderMeadService,
     EnsembleForecastService,
+    // GET /ai/forecast/demand — real per-product EMA forecast (owner 2026-07-13)
+    DemandForecastService,
+    // A75 — Kunlik AI-chatbot
+    AiDailyReportService,
+    AiDailyReportRepository,
+    // T12-08 — Kunlik ЦКП AI-chatbot cron (08:00 Du-Sha, mashinasiz xodimga savol)
+    AiDailyReportCron,
+    // GET/approve/reject /ai/rush-orders (owner 2026-07-13)
+    DrizzleRushOrdersRepo,
+    RushOrdersService,
+    BottleneckAnalysisService,
   ],
   controllers: [
     AiController,
+    AiProviderConfigController,
     AiHrController,
     AiCrmController,
     AiFinanceController,
@@ -140,10 +182,13 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     InsightsController,
     GptController,
     ForecastExtController,
+    // A75 — Kunlik AI-chatbot
+    AiDailyReportController,
   ],
   exports: [
     AiRouterService,
     AiRouterCallService,
+    CentralAiService,
     HrAiService,
     HrAiExtService,
     CrmAiService,

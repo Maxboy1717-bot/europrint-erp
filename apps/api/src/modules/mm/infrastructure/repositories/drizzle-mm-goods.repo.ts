@@ -6,10 +6,12 @@
 import { Injectable } from '@nestjs/common';
 import {
   queryGoodsReceipts, queryGoodsReceipt, execCreateGoodsReceipt, execInsertGoodsReceiptItem,
-  execUpdateGoodsReceipt, execDeleteGoodsReceipt,
+  execCountReceiptItemsMissingLocation, execAssignReceiptItemLocation,
+  execUpdateGoodsReceipt, execDeleteGoodsReceipt, execPostGoodsReceiptStock,
   queryGoodsIssues, queryGoodsIssue, execCreateGoodsIssue, execInsertGoodsIssueItem,
   execUpdateGoodsIssue, execDeleteGoodsIssue,
   queryThreeWayMatch, queryCurrencies, queryPriceComparison,
+  type GoodsReceiptPostBlockReason,
 } from '@common/database/queries-mm-goods';
 
 type Row = Record<string, unknown>;
@@ -24,12 +26,40 @@ export class DrizzleMmGoodsRepository {
     return queryGoodsReceipt(gid);
   }
 
-  async createGoodsReceipt(purchase_order_id: unknown, received_by: unknown, notes: unknown, delivery_note: unknown): Promise<Row> {
-    return execCreateGoodsReceipt(purchase_order_id, received_by, notes, delivery_note);
+  async createGoodsReceipt(purchase_order_id: unknown, received_by: unknown, notes: unknown, delivery_note: unknown, warehouse_id?: unknown): Promise<Row> {
+    return execCreateGoodsReceipt(purchase_order_id, received_by, notes, delivery_note, warehouse_id);
   }
 
-  async insertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown): Promise<void> {
-    return execInsertGoodsReceiptItem(receiptId, material_id, ordered_qty, received_qty, batch_number);
+  async insertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown, zone_id?: unknown, bin_location_id?: unknown): Promise<void> {
+    return execInsertGoodsReceiptItem(receiptId, material_id, ordered_qty, received_qty, batch_number, undefined, zone_id, bin_location_id);
+  }
+
+  /** vision 10-wms#5: how many lines of this receipt still lack a zone (address). >0 blocks confirm. */
+  async countReceiptItemsMissingLocation(gid: number): Promise<number> {
+    return execCountReceiptItemsMissingLocation(gid);
+  }
+
+  /** vision 10-wms#5: assign a real zone (+optional bin) to a draft receipt line; null when item/zone/bin invalid. */
+  async assignReceiptItemLocation(itemId: number, zoneId: number, binLocationId: number | null): Promise<Record<string, unknown> | null> {
+    return execAssignReceiptItemLocation(itemId, zoneId, binLocationId);
+  }
+
+  /**
+   * #09 xarid->kirim + WMS karantin darvozasi (P0 fix): post the receipt's received quantities into
+   * canonical warehouse_stock ONLY when the receipt has cleared the WMS quarantine gate (status
+   * QC_PASS) — execPostGoodsReceiptStock enforces this atomically (see queries-mm-goods.ts). Idempotent
+   * — a receipt already at MAIN is not posted again (no double stock). `blockedReason` surfaces WHY the
+   * write did not happen so the service layer can turn 'blocked_quarantine' into a real 409, same
+   * pattern as the existing missing-location gate in MmGoodsService.postGoodsReceipt.
+   */
+  async postGoodsReceipt(gid: number): Promise<{ posted: boolean; lines: number; status: string; blockedReason?: GoodsReceiptPostBlockReason; currentStatus?: string | null }> {
+    const result = await execPostGoodsReceiptStock(gid);
+    if (!result.ok) {
+      if (result.reason === 'not_found') return { posted: false, lines: 0, status: 'not_found', blockedReason: 'not_found' };
+      if (result.reason === 'already_posted') return { posted: false, lines: 0, status: 'already_received', blockedReason: 'already_posted' };
+      return { posted: false, lines: 0, status: 'blocked_quarantine', blockedReason: 'blocked_quarantine', currentStatus: result.status };
+    }
+    return { posted: true, lines: result.lines, status: result.status };
   }
 
   async updateGoodsReceipt(gid: number, status: unknown, notes: unknown): Promise<Row[]> {
@@ -48,8 +78,8 @@ export class DrizzleMmGoodsRepository {
     return queryGoodsIssue(gid);
   }
 
-  async createGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, notes: unknown): Promise<Row> {
-    return execCreateGoodsIssue(issued_by, cost_center, work_order_id, notes);
+  async createGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, notes: unknown, warehouse_id?: unknown): Promise<Row> {
+    return execCreateGoodsIssue(issued_by, cost_center, work_order_id, notes, warehouse_id);
   }
 
   async insertGoodsIssueItem(issueId: unknown, material_id: unknown, quantity: unknown, batch_number: unknown): Promise<void> {
@@ -64,7 +94,10 @@ export class DrizzleMmGoodsRepository {
     return execDeleteGoodsIssue(gid);
   }
 
-  async threeWayMatch(pid: number): Promise<{ purchase_order: unknown; goods_receipts: Row[]; purchase_invoices: Row[] }> {
+  async threeWayMatch(pid: number): Promise<{
+    purchase_order: unknown; goods_receipts: Row[]; purchase_invoices: Row[];
+    match: { matched: boolean; difference: number; tolerance_pct: number; po_total: number; goods_receipt_total: number; invoice_total: number; documents_present: boolean } | null;
+  }> {
     return queryThreeWayMatch(pid);
   }
 

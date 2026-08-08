@@ -89,9 +89,19 @@ export class ChatRoomService {
     return result.ok ? result.data : false;
   }
 
+  async isRoomAdmin(roomId: string | number, userId: number): Promise<boolean> {
+    const result = await this.roomRepo.checkIsAdmin(String(roomId), userId);
+    return result.ok ? result.data : false;
+  }
+
   async getTotalUnreadCount(userId: number): Promise<number> {
     const result = await this.roomRepo.getTotalUnread(String(userId));
     return result.ok ? result.data : 0;
+  }
+
+  async getBulkUnreadCounts(userIds: number[]): Promise<Record<number, number>> {
+    const result = await this.roomRepo.getBulkUnreadCounts(userIds);
+    return result.ok ? result.data : {};
   }
 
   async getAllEmployees(search?: string): Promise<Record<string, unknown>[]> {
@@ -105,5 +115,9 @@ export class ChatRoomService {
 
   async toggleMemberMute(roomId: string, userId: string, muted: boolean): Promise<void> {
     await this.roomRepo.updateMemberMute(roomId, userId, muted);
+  }
+
+  async getSharedFiles(roomId: string | number, type?: string): Promise<Result<Record<string, unknown>[], AppError>> {
+    return this.roomRepo.findSharedFiles(String(roomId), type);
   }
 }

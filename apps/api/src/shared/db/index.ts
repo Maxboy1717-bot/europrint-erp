@@ -91,13 +91,14 @@ export {
   kanbanNotifications, kanbanTemplates, kanbanTimeTracks,
   kanbanTags, kanbanCardTags, kanbanResults, kanbanResultFiles,
   kanbanObservers, kanbanCoExecutors, kanbanFiles,
+  kanbanWipOverrides, kanbanColumnSla,
 } from './schema-kanban';
 
 // schema-ext: Extended/stub tables for Drizzle builder usage
 export {
   stocks, current_stock, ideal_rasm_targets, order_status_logs,
   pos_damage_qc_links, pos_barcode_print_queue, employee_issuance_log,
-  pos_inventory_count_lines, inventory_barcode_assignments,
+  pos_inventory_count_lines, inventory_barcode_assignments, pos_barcode_map,
   lessons, certificates_table, courses_table,
   hr_interview_questions, hr_applications, gl_lines,
   sd_customer_contacts, sd_customer_documents, sd_customer_competitors, sd_sales_orders,
@@ -107,7 +108,7 @@ export {
   mm_goods_receipt_items, mm_goods_issue_items,
   mm_goods_issues_ext, mm_goods_receipts_ext,
   mm_purchase_order_items, mm_materials_ext, mm_vendors_ext,
-  tech_cards, clients, papka_orders_tech,
+  tech_cards, papka_orders_tech,
   boms_int, routings_int, production_orders_int, routing_operations_int,
   pos_movements_legacy, hr_documents_legacy,
   wms_alerts, gamification_totals, hr_brand_settings,
@@ -158,14 +159,16 @@ export {
   raci_matrix,
   // CRM Extended (new tables, different from existing crm_ tables)
   crm_leads, crm_deals, crm_contacts,
-  // POS Extended
-  pos_categories, pos_products, pos_orders, pos_order_items, pos_movements, pos_printer_configs,
+  // POS Extended (pos_printer_configs olib tashlandi 2026-07-02 — G9-4/Q-46 dublikat pgTable;
+  // kanonik = posPrinterConfig 'pos_printer_config', lib/db pos-schema-v2.ts)
+  pos_categories, pos_products, pos_orders, pos_order_items, pos_movements,
   // KPI & Goals
   kpi_definitions, kpi_values, goals,
   // Gamification Extended
   assessment_skips, enps_survey_responses_ext,
-  // Vendor Performance
-  vendor_performance, erp_purchase_requisitions,
+  // Vendor Performance (vendor_performance olib tashlandi 2026-07-02 — dead/orfan, Q-46;
+  // qarang schema-ext-b-3.ts izohi va vendor-rating-unified-view-2026-07-02.sql)
+  erp_purchase_requisitions,
   // Warehouse Rental
   warehouse_rental_records, warehouse_rental_settings, warehouse_access_grants,
   warehouse_stock, warehouse_batches, warehouse_transactions, warehouse_transfers,
@@ -204,7 +207,7 @@ export {
   chatStarredMessages, chat_starred_messages,
   chatUserPresence, chat_user_presence,
   chatMessages, chatMembers, chatRooms, chatReactions, chatPolls, chatPollVotes,
-  chatMessageTasks, chat_message_tasks,
+  chatMessageTasks, chat_message_tasks, chatMessageHiddenFor, chatRoomTags, chatRoomNotes,
 } from './schema-chat';
 
 // schema-hr-tz2: HR Territory/Camera Attendance + Inspection tables (HR-03/04)
@@ -221,3 +224,28 @@ export {
 
 // schema-outbox: Domain events outbox table (PA0-6)
 export { domain_events } from './schema-outbox';
+
+// schema-cc-document-hashes: CC document PDF integrity hash (Q-35, owner 2026-07-11,
+// CC-COMPLETE-FRESH-ANALYSIS item #12/#45/#50 "document_hashes" half; schema-only draft,
+// no dispatcher wired yet)
+export { document_hashes } from './schema-cc-document-hashes';
+
+// schema-document-control: cross-module document-leak-prevention layer (Q-28/owner 2026-07-13).
+// Single canonical document_access_log (view/print/copy/export). STEP 3.1.
+export { document_access_log, DOCUMENT_ACCESS_ACTIONS, SENSITIVITY_TIERS } from './schema-document-control';
+export type { DocumentAccessLogRow, DocumentAccessLogInsert, DocumentAccessAction, SensitivityTier } from './schema-document-control';
+
+// schema-erp-documents: "erkin hujjatlar" free-form documents (Phase A1, owner 2026-07-13).
+// Consumes the document-control layer above (same tiers, logged, download-blocked, watermarked).
+export { erp_documents } from './schema-erp-documents';
+export type { ErpDocumentRow, ErpDocumentInsert } from './schema-erp-documents';
+
+// schema-erp-spreadsheets: "Jadval" spreadsheets (Phase B, owner 2026-07-13). Consumes the
+// document-control layer (same tiers, logged, download-blocked, watermarked, CC-surfaced).
+export { erp_spreadsheets } from './schema-erp-spreadsheets';
+export type { ErpSpreadsheetRow, ErpSpreadsheetInsert } from './schema-erp-spreadsheets';
+
+// schema-knowledge-graph: AI Bilim Grafigi — native ERP-ichi graf (owner 2026-08-08,
+// Obsidian rad etildi). kg_nodes = polimorfik entity ko'rsatgich, kg_edges = tipli aloqa.
+export { kg_nodes, kg_edges } from './schema-knowledge-graph';
+export type { KgNodeRow, KgNodeInsert, KgEdgeRow, KgEdgeInsert } from './schema-knowledge-graph';

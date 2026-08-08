@@ -34,7 +34,7 @@ export class WarehouseKpiRepository {
           COALESCE(from_warehouse_id, to_warehouse_id) AS wh_id,
           COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE) AS today_count,
           COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') AS week_count,
-          COUNT(*) FILTER (WHERE status IN ('pending','draft','qc_pending')) AS pending_count
+          COUNT(*) FILTER (WHERE status IN ('pending','draft','qc_pending','karantin','qc_review')) AS pending_count
         FROM pos_movements
         WHERE deleted_at IS NULL
         GROUP BY COALESCE(from_warehouse_id, to_warehouse_id)
@@ -92,7 +92,10 @@ export class WarehouseKpiRepository {
            LEFT JOIN material_cards mc ON mc.id = ws.material_id) AS total_stock_value,
         (SELECT COUNT(*) FROM low_stock_alerts WHERE is_resolved = false)::int AS low_stock_alerts,
         (SELECT COUNT(*) FROM pos_movements WHERE status IN ('pending','draft') AND deleted_at IS NULL)::int AS pending_movements,
-        (SELECT COUNT(*) FROM pos_movements WHERE status = 'qc_pending' AND deleted_at IS NULL)::int AS qc_pending,
+        -- 'karantin'/'qc_review' — real/ulangan karantin-QC oqimida ishlatiladigan statuslar
+        -- ('qc_pending' faqat muqobil qo'lda-yuborish yo'lida ishlatiladi); ikkalasi ham
+        -- "QC kutmoqda" hisobiga kirishi kerak, aks holda dashboard karantindagi kirimlarni ko'rsatmaydi.
+        (SELECT COUNT(*) FROM pos_movements WHERE status IN ('qc_pending','karantin','qc_review') AND deleted_at IS NULL)::int AS qc_pending,
         (SELECT COUNT(*) FROM pos_movements WHERE created_at >= CURRENT_DATE AND deleted_at IS NULL)::int AS today_movements,
         (SELECT COUNT(*) FROM pos_movements WHERE created_at >= CURRENT_DATE - INTERVAL '7 days' AND deleted_at IS NULL)::int AS weekly_movements,
         (SELECT COUNT(*) FROM pos_movements WHERE created_at >= CURRENT_DATE - INTERVAL '30 days' AND deleted_at IS NULL)::int AS monthly_movements

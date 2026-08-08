@@ -33,6 +33,7 @@ export function useWizardState() {
   const [formData, setFormData] = useState<FormData>({
     papkaNo: "",
     mijozNomi: "",
+    customerId: "",
     mahsulotNomi: "",
     productId: "",
     mahsulotTuri: "",
@@ -40,6 +41,7 @@ export function useWizardState() {
     zakazFormy: "new",
     tiraj: 0,
     krasok: "1+0",
+    narx: 0,
     formatA: 0,
     formatB: 0,
     formatC: 0,
@@ -164,62 +166,54 @@ export function useWizardState() {
   const sufficientCount = (Array.isArray(materialCalculations) ? materialCalculations : []).filter((m) => m.status === "sufficient").length;
   const insufficientCount = (Array.isArray(materialCalculations) ? materialCalculations : []).filter((m) => m.status === "insufficient").length;
 
+  // Owner decision 2026-07-13 (chat) — "buyurtma 1 ta joydan yaratilishi kerak": this wizard
+  // now creates a REAL sales_orders + sales_order_items row (via the same canonical
+  // POST /api/sd/orders -> CreateOrderCommand path SDSalesOrders.tsx uses), instead of the
+  // legacy /api/papka-orders table, which had zero link into the golden thread (no Design/
+  // QC/Technologist/AI-planning event ever fired from a papka_order). companyId+customerId
+  // both carry sd_customers.id — the same "same value in both fields" convention already
+  // established at SDSalesOrders.tsx:290-294 (sales_orders.customer_id is NOT NULL live).
+  // designFlag defaults true: every order from this single entry point should enter the
+  // Design -> (lab) -> Technologist -> production-planning chain the owner described.
+  // The wizard's own "product" picker sources from material_cards (raw materials — see the
+  // /api/erp/products query above), not the finished-goods `products` catalog, so it cannot
+  // bind sales_order_items.product_id (a real products-table FK). This order line is
+  // therefore posted as a bespoke job (product_id left unset) using the custom-spec columns
+  // already wired for this exact case on the quotation-conversion paths (owner decision
+  // 2026-07-13 — same "Mahsulot vs Buyurtma" decision). krasok ("4+4" style) is parsed for
+  // its leading print-colors count; the "+back" side isn't captured as a separate field yet.
   const createOrderMutation = useMutation({
     mutationFn: async () => {
-      const productRouting = (Array.isArray(routingsResponse) ? routingsResponse : []).find(
-        (r) => r.routing.productId === formData.productId && r.routing.status === "active"
-      );
-      
-      const materialReqs = (Array.isArray(materialCalculations) ? materialCalculations : []).map(m => ({
-        componentId: m.componentId,
-        componentName: m.componentName,
-        componentCode: m.componentCode,
-        unit: m.unit,
-        requiredQuantity: m.requiredQuantity,
-        availableStock: m.availableStock,
-        deficit: m.deficit,
-        status: m.status
-      }));
-      
+      const printColors = parseInt(formData.krasok.split("+")[0] ?? "", 10);
+      const netPrice = Number(formData.narx) || 0;
       const orderData = {
-        papkaNo: formData.papkaNo || "",
-        mijozNomi: formData.mijozNomi,
-        mahsulotNomi: formData.mahsulotNomi,
-        mahsulotTuri: formData.mahsulotTuri,
-        vidZakaza: formData.vidZakaza || null,
-        zakazFormy: formData.zakazFormy || "new",
-        tiraj: formData.tiraj,
-        krasok: formData.krasok || null,
-        formatA: formData.formatA,
-        formatB: formData.formatB,
-        formatC: formData.formatC || null,
-        sana: formData.sana,
-        tayyorBolishSanasi: formData.tayyorBolishSanasi,
-        tayyorBolishVaqti: formData.tayyorBolishVaqti || null,
-        schetNo: formData.schetNo || null,
-        menedzherZakaza: formData.menedzherZakaza || null,
-        texnolog: formData.texnolog || null,
-        primZakaza: formData.primZakaza || null,
-        status: "new",
-        bomId: formData.selectedBomId || null,
-        productId: formData.productId || null,
-        routingId: productRouting?.routing?.id || null,
-        materialRequirements: materialReqs.length > 0 ? materialReqs : null,
-        stockCheckResult: materialReqs.length > 0 ? {
-          sufficient: sufficientCount,
-          insufficient: insufficientCount,
-          total: materialReqs.length
-        } : null,
-        estimatedProductionTime: estimatedProductionTime || null,
+        companyId: Number(formData.customerId),
+        customerId: Number(formData.customerId),
+        totalAmount: netPrice * formData.tiraj,
+        currency: "UZS",
+        designFlag: true,
+        sampleFlag: false,
+        items: [{
+          description: formData.mahsulotNomi || formData.papkaNo || "Maxsus buyurtma",
+          orderQuantity: formData.tiraj,
+          unit: "dona",
+          netPrice,
+          productType: formData.mahsulotTuri || undefined,
+          printColors: Number.isFinite(printColors) ? printColors : undefined,
+          lengthMm: formData.formatA || undefined,
+          widthMm: formData.formatB || undefined,
+          heightMm: formData.formatC || undefined,
+        }],
       };
-      return apiRequest("POST", "/api/papka-orders", orderData);
+      return apiRequest("POST", "/api/sd/orders", orderData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sd/orders"] });
       toast({ title: t.created });
       setFormData({
         papkaNo: "",
         mijozNomi: "",
+        customerId: "",
         mahsulotNomi: "",
         productId: "",
         mahsulotTuri: "",
@@ -227,6 +221,7 @@ export function useWizardState() {
         zakazFormy: "new",
         tiraj: 0,
         krasok: "1+0",
+        narx: 0,
         formatA: 0,
         formatB: 0,
         formatC: 0,
@@ -242,8 +237,8 @@ export function useWizardState() {
       setCurrentStep(1);
     },
     onError: (error: Error) => {
-      toast({ 
-        variant: "destructive", 
+      toast({
+        variant: "destructive",
         title: t.error,
         description: error.message || t.error
       });
@@ -253,10 +248,14 @@ export function useWizardState() {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(formData.mijozNomi && formData.mahsulotNomi && formData.tiraj > 0);
-      case 2:
-        return !!formData.selectedBomId;
+        return !!(formData.mijozNomi && formData.customerId && formData.mahsulotNomi && formData.tiraj > 0 && formData.narx > 0);
       default:
+        // Steps 2-4 (BOM/material/routing) are optional context: this wizard submits a
+        // bespoke custom-spec job (owner decision 2026-07-13, see createOrderMutation
+        // comment above) that never depends on product_id/BOM binding. Gating on
+        // selectedBomId here permanently blocked order creation whenever bom_headers
+        // was empty (e.g. right after the 2026-07-11 full DB reset) since there was no
+        // way to ever satisfy the gate — the sole canonical entry point was unusable.
         return true;
     }
   };

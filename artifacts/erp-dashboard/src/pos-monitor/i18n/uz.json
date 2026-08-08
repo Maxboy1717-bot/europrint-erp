@@ -1,4 +1,13 @@
 {
+  "anomaliya": "Anomaliya",
+  "texkartaTekshiruvi": "Texkarta tekshiruvi",
+  "texkartaQaytaTekshir": "Texkartani qayta tekshir",
+  "texkartaRuxsat": "Texkarta bo'yicha ruxsat berilgan",
+  "texkartaBloklangan": "Texkarta bloklagan",
+  "texkarta": "Texkarta",
+  "qcQabul": "Qabul qilish",
+  "qaytaIshlash": "Qayta ishlash",
+  "qcChiqarish": "Ta'minotchiga qaytarish",
   "nav": {
     "dashboard": "Bosh sahifa",
     "newKirim": "📥 Yangi Kirim",
@@ -6,7 +15,9 @@
     "newMaterial": "➕ Yangi Material",
     "materials": "Materiallar",
     "qcreview": "QC Ko'rib chiqish",
-    "myInventory": "Mening invertarim"
+    "myInventory": "Mening invertarim",
+    "handovers": "🤝 Smena topshirish",
+    "inTransit": "🚢 Yo'ldagi import"
   },
   "common": {
     "search": "Qidirish...",
@@ -74,6 +85,7 @@
     "completed": "Bajarildi",
     "cancelled": "Bekor qilindi",
     "karantin": "Karantinda",
+    "qc_review": "QC ko'rib chiqilmoqda",
     "DRAFT": "Qoralama",
     "SUBMITTED": "Yuborildi",
     "APPROVED": "Tasdiqlandi",
@@ -312,8 +324,15 @@
     "returnButton": "Qaytarish",
     "returnModal": "Qaytarish so'rovi",
     "hrWarning": "Ishdan ketishdan oldin qaytaring",
+    "hrWarningDetail": "Siz hali {count} turdagi material qaytarmagansiz. Ishdan ketishdan oldin hammasini qaytaring.",
     "noItems": "Sizga hech qanday material berilmagan",
-    "checklist": "Qaytarish cheklisti"
+    "checklist": "Qaytarish cheklisti",
+    "downloadReport": "Hisobotni yuklab olish",
+    "givenCount": "Berilgan materiallar soni",
+    "currentBalance": "Hozirgi balans",
+    "returnedCount": "Qaytarilgan materiallar",
+    "itemsList": "Materiallar ro'yxati",
+    "optionalNote": "Ixtiyoriy izoh"
   },
   "glPosting": {
     "title": "GL Posting holati",

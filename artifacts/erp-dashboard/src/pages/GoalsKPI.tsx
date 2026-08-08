@@ -10,7 +10,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGoalSchema, type Goal, type InsertGoal } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { useUndoDelete } from "@/components/undo-toast";
 import { GoalDialog } from "./GoalsKPIDialogs";
 import { GoalsSummaryCards, GoalsList } from "./GoalsKPISections";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
@@ -19,7 +18,6 @@ import { useTranslation } from '@/lib/i18n';
 export default function GoalsKPI() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
-  const { showUndoToast } = useUndoDelete();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
@@ -90,12 +88,9 @@ export default function GoalsKPI() {
       await apiRequest('DELETE', `/api/goals/${id}`);
       return id;
     },
-    onSuccess: (id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
-      const goal = (Array.isArray(goals) ? goals : []).find(g => g.id === id);
-      showUndoToast("goals", id, goal?.title || id, () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
-      });
+      toast({ title: "Maqsad o'chirildi" });
     },
   });
 

@@ -6,6 +6,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { inventoryApi } from "../api/pos-monitor.api";
+import {
+  varianceConfigApi, deviationApi, freezeZonesApi,
+  type VarianceThreshold, type VarianceDecisionView, type DeviationReason, type FreezeZone,
+} from "../api/pos-wms-extra.api";
 
 function NewPlanModal({ onClose, onCreated, t }: { onClose: () => void; onCreated: () => void; t: (k: string) => string }) {
   const [warehouseId, setWarehouseId] = useState("");
@@ -57,9 +61,289 @@ const STATUS_BADGE: Record<string, string> = {
   CANCELLED:"pos-badge-red",
 };
 
+// ─── FE-P2: Farq sozlamalari / og'ish-sabab / muzlatilgan-zona paneli (additive) ──
+
+function VarianceConfigPanel({ plans }: { plans: Plan[] }) {
+  // Farq avto-tasdiq chegarasi (egasi-DATA — Q-43 real saqlash)
+  const [warehouseId, setWarehouseId]   = useState("");
+  const [qtyPct, setQtyPct]             = useState("");
+  const [valueUzs, setValueUzs]         = useState("");
+  const [notes, setNotes]               = useState("");
+  const [cfgLoading, setCfgLoading]     = useState(false);
+  const [cfgSaving, setCfgSaving]       = useState(false);
+  const [cfgMsg, setCfgMsg]             = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  // Farq qarori (avto-tasdiq / eskalatsiya)
+  const [decCountId, setDecCountId]     = useState("");
+  const [decision, setDecision]         = useState<VarianceDecisionView | null>(null);
+  const [decLoading, setDecLoading]     = useState(false);
+  const [decErr, setDecErr]             = useState("");
+
+  // Og'ish-sabab katalogi
+  const [reasons, setReasons]           = useState<DeviationReason[]>([]);
+
+  // Muzlatilgan zonalar
+  const [zones, setZones]               = useState<FreezeZone[]>([]);
+  const [zonesLoading, setZonesLoading] = useState(false);
+  const [fzWh, setFzWh]                  = useState("");
+  const [fzMat, setFzMat]               = useState("");
+  const [fzReason, setFzReason]         = useState("");
+  const [fzSaving, setFzSaving]         = useState(false);
+  const [fzMsg, setFzMsg]               = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [releaseId, setReleaseId]       = useState<number | null>(null);
+
+  const loadConfig = useCallback(async () => {
+    setCfgLoading(true); setCfgMsg(null);
+    try {
+      const whNum = warehouseId.trim() !== "" ? Number(warehouseId) : null;
+      const cfg = await varianceConfigApi.getConfig(whNum) as VarianceThreshold | null;
+      setQtyPct(cfg?.autoApproveQtyPct != null ? String(cfg.autoApproveQtyPct) : "");
+      setValueUzs(cfg?.autoApproveValueUzs != null ? String(cfg.autoApproveValueUzs) : "");
+      setNotes(cfg?.notes ?? "");
+    } catch { setCfgMsg({ kind: "err", text: "Konfiguratsiya yuklanmadi" }); }
+    finally { setCfgLoading(false); }
+  }, [warehouseId]);
+
+  const loadReasons = useCallback(async () => {
+    try { setReasons(await deviationApi.getReasons()); } catch { setReasons([]); }
+  }, []);
+
+  const loadZones = useCallback(async () => {
+    setZonesLoading(true);
+    try { setZones(await freezeZonesApi.getAll({ status: "ACTIVE" })); }
+    catch { setZones([]); }
+    finally { setZonesLoading(false); }
+  }, []);
+
+  useEffect(() => { void loadConfig(); void loadReasons(); void loadZones(); }, [loadConfig, loadReasons, loadZones]);
+
+  async function saveConfig() {
+    const q = Number(qtyPct), v = Number(valueUzs);
+    if (!Number.isFinite(q) || q < 0) { setCfgMsg({ kind: "err", text: "Miqdor foizi noto'g'ri" }); return; }
+    if (!Number.isFinite(v) || v < 0) { setCfgMsg({ kind: "err", text: "Qiymat (so'm) noto'g'ri" }); return; }
+    setCfgSaving(true); setCfgMsg(null);
+    try {
+      await varianceConfigApi.saveConfig({
+        warehouseId: warehouseId.trim() !== "" ? Number(warehouseId) : null,
+        autoApproveQtyPct: q,
+        autoApproveValueUzs: v,
+        notes: notes.trim() || undefined,
+      });
+      setCfgMsg({ kind: "ok", text: "Saqlandi" });
+    } catch (e) { setCfgMsg({ kind: "err", text: e instanceof Error ? e.message : "Xatolik" }); }
+    finally { setCfgSaving(false); }
+  }
+
+  async function loadDecision() {
+    const id = Number(decCountId);
+    if (!Number.isFinite(id) || id <= 0) { setDecErr("Reja ID noto'g'ri"); return; }
+    setDecLoading(true); setDecErr(""); setDecision(null);
+    try { setDecision(await varianceConfigApi.getDecision(id)); }
+    catch (e) { setDecErr(e instanceof Error ? e.message : "Xatolik"); }
+    finally { setDecLoading(false); }
+  }
+
+  async function freezeZone() {
+    const wh = Number(fzWh);
+    if (!Number.isFinite(wh) || wh <= 0) { setFzMsg({ kind: "err", text: "Ombor ID majburiy" }); return; }
+    setFzSaving(true); setFzMsg(null);
+    try {
+      await freezeZonesApi.freeze({
+        warehouse_id: wh,
+        material_id: fzMat.trim() !== "" ? Number(fzMat) : null,
+        reason: fzReason.trim() || undefined,
+      });
+      setFzMsg({ kind: "ok", text: "Zona muzlatildi" });
+      setFzMat(""); setFzReason("");
+      void loadZones();
+    } catch (e) { setFzMsg({ kind: "err", text: e instanceof Error ? e.message : "Xatolik" }); }
+    finally { setFzSaving(false); }
+  }
+
+  async function releaseZone(id: number) {
+    try { await freezeZonesApi.release(id); void loadZones(); }
+    catch { setFzMsg({ kind: "err", text: "Muzdan chiqarib bo'lmadi" }); }
+    finally { setReleaseId(null); }
+  }
+
+  const lbl = { fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" } as const;
+  const planList = Array.isArray(plans) ? plans : [];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* ── Farq avto-tasdiq chegarasi (Q-43 real saqlash) ── */}
+      <div className="pos-card">
+        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>⚙️ Farq avto-tasdiq chegarasi</div>
+        <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginBottom: 12 }}>
+          Inventar farqi shu chegara ichida bo'lsa avto-tasdiqlanadi; oshsa menejer-tasdiq (eskalatsiya).
+          Ombor ID bo'sh = global standart.
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, marginBottom: 12 }}>
+          <div>
+            <label style={lbl}>Ombor ID (ixtiyoriy)</label>
+            <input className="pos-input" placeholder="Global default" value={warehouseId}
+              onChange={e => setWarehouseId(e.target.value)} onBlur={() => void loadConfig()} />
+          </div>
+          <div>
+            <label style={lbl}>Miqdor farqi chegarasi (%)</label>
+            <input className="pos-input" type="number" min={0} placeholder="0" value={qtyPct} onChange={e => setQtyPct(e.target.value)} />
+          </div>
+          <div>
+            <label style={lbl}>Qiymat farqi chegarasi (so'm)</label>
+            <input className="pos-input" type="number" min={0} placeholder="0" value={valueUzs} onChange={e => setValueUzs(e.target.value)} />
+          </div>
+          <div>
+            <label style={lbl}>Izoh (ixtiyoriy)</label>
+            <input className="pos-input" value={notes} onChange={e => setNotes(e.target.value)} />
+          </div>
+        </div>
+        {cfgMsg && (
+          <div style={{ fontSize: 12, marginBottom: 10, color: cfgMsg.kind === "ok" ? "var(--pos-success)" : "var(--pos-danger)" }}>
+            {cfgMsg.text}
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button className="pos-btn pos-btn-ghost" disabled={cfgLoading} onClick={() => void loadConfig()}>
+            {cfgLoading ? "…" : "Qayta yuklash"}
+          </button>
+          <button className="pos-btn pos-btn-primary" disabled={cfgSaving} onClick={() => void saveConfig()}>
+            {cfgSaving ? "…" : "Saqlash"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Farq qarori (avto-tasdiq / eskalatsiya) ── */}
+      <div className="pos-card">
+        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>🧮 Farq qarori (avto-tasdiq / eskalatsiya)</div>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-end", marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={{ minWidth: 180 }}>
+            <label style={lbl}>Inventarizatsiya rejasi</label>
+            <select className="pos-input" value={decCountId} onChange={e => setDecCountId(e.target.value)}>
+              <option value="">— tanlang —</option>
+              {planList.map(p => (
+                <option key={p.id} value={p.id}>{p.planNumber ?? `#${p.id}`}{p.warehouseId ? ` · ${p.warehouseId}` : ""}</option>
+              ))}
+            </select>
+          </div>
+          <button className="pos-btn pos-btn-primary" disabled={decLoading} onClick={() => void loadDecision()}>
+            {decLoading ? "…" : "Qarorni ko'rish"}
+          </button>
+        </div>
+        {decErr && <div style={{ fontSize: 12, color: "var(--pos-danger)", marginBottom: 8 }}>{decErr}</div>}
+        {decision && (
+          <div style={{ padding: 14, background: "rgba(0,0,0,0.2)", borderRadius: 10, border: "1px solid var(--pos-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span className={`pos-badge ${decision.decision === "AUTO_APPROVE" ? "pos-badge-green" : "pos-badge-yellow"}`}>
+                {decision.decision === "AUTO_APPROVE" ? "AVTO-TASDIQ" : "ESKALATSIYA (menejer-tasdiq)"}
+              </span>
+              <span style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
+                {decision.varianceLineCount} satr · {decision.escalatedLines} eskalatsiya
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginBottom: 6 }}>
+              Chegara: miqdor ≤ {decision.threshold?.autoApproveQtyPct ?? 0}% · qiymat ≤ {decision.threshold?.autoApproveValueUzs ?? 0} so'm
+            </div>
+            {Array.isArray(decision.reasons) && decision.reasons.length > 0 && (
+              <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12, color: "var(--pos-warning)" }}>
+                {decision.reasons.map((r, i) => <li key={`rsn-${i}`}>{r}</li>)}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Og'ish-sabab katalogi ── */}
+      <div className="pos-card">
+        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>📑 Og'ish-sabab katalogi</div>
+        {reasons.length === 0 ? (
+          <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>Katalog bo'sh</div>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {reasons.map(r => (
+              <span key={r.code} className="pos-badge pos-badge-gray" style={{ fontSize: 11 }} title={r.description ?? undefined}>
+                <span className="pos-mono" style={{ color: "var(--pos-accent)" }}>{r.code}</span>
+                {(r.nameUz ?? r.name) ? ` · ${r.nameUz ?? r.name}` : ""}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Muzlatilgan zonalar (sanash paytida) ── */}
+      <div className="pos-card">
+        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>🧊 Muzlatilgan zonalar</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr) auto", gap: 10, alignItems: "flex-end", marginBottom: 12 }}>
+          <div>
+            <label style={lbl}>Ombor ID</label>
+            <input className="pos-input" value={fzWh} onChange={e => setFzWh(e.target.value)} placeholder="masalan: 1" />
+          </div>
+          <div>
+            <label style={lbl}>Material ID (ixtiyoriy)</label>
+            <input className="pos-input" value={fzMat} onChange={e => setFzMat(e.target.value)} placeholder="butun zona uchun bo'sh" />
+          </div>
+          <div>
+            <label style={lbl}>Sabab (ixtiyoriy)</label>
+            <input className="pos-input" value={fzReason} onChange={e => setFzReason(e.target.value)} />
+          </div>
+          <button className="pos-btn pos-btn-primary" disabled={fzSaving} onClick={() => void freezeZone()}>
+            {fzSaving ? "…" : "🧊 Muzlatish"}
+          </button>
+        </div>
+        {fzMsg && (
+          <div style={{ fontSize: 12, marginBottom: 10, color: fzMsg.kind === "ok" ? "var(--pos-success)" : "var(--pos-danger)" }}>
+            {fzMsg.text}
+          </div>
+        )}
+        {zonesLoading ? (
+          <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>Yuklanmoqda…</div>
+        ) : zones.length === 0 ? (
+          <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>Faol muzlatilgan zona yo'q</div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="pos-table">
+              <thead><tr><th>ID</th><th>Ombor</th><th>Material</th><th>Sabab</th><th>Amal</th></tr></thead>
+              <tbody>
+                {zones.map(z => (
+                  <tr key={z.id}>
+                    <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{z.id}</td>
+                    <td>{z.warehouseId}</td>
+                    <td>{z.materialId != null ? `#${z.materialId}` : "— butun zona —"}</td>
+                    <td style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>{z.reason ?? "—"}</td>
+                    <td>
+                      <button className="pos-btn pos-btn-ghost" style={{ fontSize: 11, padding: "3px 8px" }} onClick={() => setReleaseId(z.id)}>
+                        Muzdan chiqarish
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* O'chirish/muzdan-chiqarish tasdiqi (Q-14) */}
+      {releaseId !== null && (
+        <div className="pos-modal-overlay">
+          <div className="pos-modal" style={{ maxWidth: 400 }}>
+            <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Muzdan chiqarishni tasdiqlang</div>
+            <div style={{ fontSize: 13, color: "var(--pos-text-muted)", marginBottom: 16 }}>
+              #{releaseId} muzlatilgan zona qaytadan faollashtiriladi.
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button className="pos-btn pos-btn-ghost" onClick={() => setReleaseId(null)}>Bekor</button>
+              <button className="pos-btn pos-btn-primary" onClick={() => void releaseZone(releaseId)}>Tasdiqlash</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PosInventory() {
   const { t } = usePosI18n();
-  const [tab, setTab]     = useState<"plans" | "active" | "variances">("plans");
+  const [tab, setTab]     = useState<"plans" | "active" | "variances" | "config">("plans");
   const [plans, setPlans] = useState<Plan[]>([]);
   const [active, setActive] = useState<Plan | null>(null);
   const [variances, setVariances] = useState<VarianceLine[]>([]);
@@ -121,9 +405,10 @@ export default function PosInventory() {
         <div className={`pos-tab ${tab === "plans" ? "active" : ""}`} onClick={() => setTab("plans")}>{t("inventory.plans")}</div>
         <div className={`pos-tab ${tab === "active" ? "active" : ""}`} onClick={() => setTab("active")}>{t("inventory.activeCount")}</div>
         <div className={`pos-tab ${tab === "variances" ? "active" : ""}`} onClick={() => setTab("variances")}>{t("inventory.variances")}</div>
+        <div className={`pos-tab ${tab === "config" ? "active" : ""}`} onClick={() => setTab("config")}>⚙️ Sozlamalar</div>
       </div>
 
-      {loading && <div style={{ textAlign: "center", padding: 40, color: "var(--pos-text-muted)" }}>{t("common.loading")}</div>}
+      {loading && tab !== "config" && <div style={{ textAlign: "center", padding: 40, color: "var(--pos-text-muted)" }}>{t("common.loading")}</div>}
 
       {!loading && tab === "plans" && (
         <div className="pos-card" style={{ overflowX: "auto" }}>
@@ -216,6 +501,8 @@ export default function PosInventory() {
           )}
         </div>
       )}
+
+      {tab === "config" && <VarianceConfigPanel plans={plans} />}
 
       {showNewPlan && <NewPlanModal onClose={() => setShowNewPlan(false)} onCreated={() => { setShowNewPlan(false); void loadData(); }} t={t} />}
     </div>

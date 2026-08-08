@@ -63,18 +63,18 @@ export class ArAgingHandler implements IQueryHandler<ArAgingQuery> {
     const result = await runQuery<Record<string, unknown>>(sql`
       SELECT
         CASE
-          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date) <= 30 THEN '0-30'
-          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date) <= 60 THEN '31-60'
-          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date) <= 90 THEN '61-90'
+          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date::date) <= 30 THEN '0-30'
+          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date::date) <= 60 THEN '31-60'
+          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date::date) <= 90 THEN '61-90'
           ELSE '90+'
         END                              AS bucket,
         COUNT(*)::int                    AS invoice_count,
         COALESCE(SUM(
           total_amount - COALESCE(paid_amount, 0)
         ), 0)::numeric(18,4)             AS remaining
-      FROM fi_invoices
-      WHERE status NOT IN ('paid', 'cancelled', 'void')
-        AND COALESCE(type, 'receivable') = 'receivable'
+      FROM finance_invoices
+      WHERE payment_status NOT IN ('paid', 'cancelled', 'void')
+        AND COALESCE(invoice_type, 'sales') = 'sales'
         AND total_amount > COALESCE(paid_amount, 0)
       GROUP BY 1
     `);

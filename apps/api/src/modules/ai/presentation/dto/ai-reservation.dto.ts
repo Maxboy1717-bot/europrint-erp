@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 
 import { MAX_NOTES_LENGTH, MAX_NAME_LENGTH } from '@common/constants/app.constants';
@@ -19,7 +20,7 @@ export const CreateReservationRequestDtoSchema = z.object({
 export const CreateBatchDtoSchema = z.object({
   materialType: z.string().min(1).max(MAX_NAME_LENGTH),
   items:        z.array(z.object({
-    materialId: z.string().uuid(),
+    materialId: IntegerIdSchema,
     quantity:   z.number().positive(),
   })).min(1),
   scheduledAt:  z.string().datetime().optional(),

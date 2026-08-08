@@ -125,6 +125,8 @@ export class KanbanExtService {
 
   acceptCard(cardId: string, userId: number): Promise<Result<Record<string, unknown>>> { return this.card.acceptCard(cardId, userId); }
   completeCard(cardId: string, userId: number, completionReport?: string): Promise<Result<Record<string, unknown>>> { return this.card.completeCard(cardId, userId, completionReport); }
+  rejectCard(cardId: string, userId: number, reason: string): Promise<Result<Record<string, unknown>>> { return this.card.rejectCard(cardId, userId, reason); }
+  bulkAssignCards(cardIds: number[], ownerUserId: number | null): Promise<Result<{ updated: number; ids: number[] }>> { return this.card.bulkAssignCards(cardIds, ownerUserId); }
 
   // ─── Analytics ────────────────────────────────────────────────────────────
 
@@ -132,6 +134,7 @@ export class KanbanExtService {
   getTeamMetrics(boardId?: string): Promise<Result<Record<string, unknown>>> { return this.flow.getTeamMetrics(boardId); }
   getOverdueInbox(boardId?: string): Promise<Result<Record<string, unknown>[]>> { return this.flow.getOverdueInbox(boardId); }
   getEmployees(): Promise<Result<Record<string, unknown>[]>> { return this.flow.getEmployees(); }
+  getResourceAllocation(boardId?: string): Promise<Result<Record<string, unknown>[]>> { return this.flow.getResourceAllocation(boardId); }
 
   // ─── Board operations ─────────────────────────────────────────────────────
 
@@ -148,5 +151,5 @@ export class KanbanExtService {
   createCardFlat(body: Record<string, unknown>, _userId: number): Promise<Result<Record<string, unknown>>> { return this.card.createCardFlat(body); }
   getProductivityReport(): Promise<Result<Record<string, unknown>>> { return this.flow.getProductivityReport(); }
   getOverdueReport(): Promise<Result<Record<string, unknown>>> { return this.flow.getOverdueReport(); }
-  getEmployeePerformance(): Promise<Result<Record<string, unknown>>> { return this.flow.getEmployeePerformance(); }
+  getEmployeePerformance(): Promise<Result<Record<string, unknown>[]>> { return this.flow.getEmployeePerformance(); }
 }

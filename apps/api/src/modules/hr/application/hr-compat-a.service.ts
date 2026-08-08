@@ -39,8 +39,8 @@ export class HrCompatAService {
     return this.repo.getEmployeeSkills(employeeId);
   }
 
-  async createEmployeeSkill(employeeId: unknown, skillName: unknown, proficiencyLevel: unknown, proficiencyScore: unknown, certifiedDate: unknown) {
-    return this.repo.createEmployeeSkill(employeeId, skillName, proficiencyLevel, proficiencyScore, certifiedDate);
+  async createEmployeeSkill(employeeId: unknown, skillName: unknown, skillCategory: unknown, proficiencyLevel: unknown, proficiencyScore: unknown, certifiedDate: unknown, notes?: unknown) {
+    return this.repo.createEmployeeSkill(employeeId, skillName, skillCategory, proficiencyLevel, proficiencyScore, certifiedDate, notes);
   }
 
   async getEmployeeSkillsById(employeeId: number) {
@@ -91,8 +91,8 @@ export class HrCompatAService {
     });
   }
 
-  async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown) {
-    return this.repo.createDisciplineRecord(employeeId, violationType, disciplineType, severity, violationDate, description, fineAmount);
+  async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown, issuedBy?: unknown) {
+    return this.repo.createDisciplineRecord(employeeId, violationType, disciplineType, severity, violationDate, description, fineAmount, issuedBy);
   }
 
   async getPayrollRuns(period?: string) {

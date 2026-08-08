@@ -21,6 +21,7 @@
   "status.muted": "Без звука",
   "status.error": "Произошла ошибка",
   "status.offline": "Нет соединения",
+  "immersiveHint": "Говорите или напишите в окно ниже — позовите \"Aisha\"",
   "panel.history": "История команд",
   "panel.noHistory": "Пока нет команд",
   "panel.expand": "Развернуть",

@@ -2,14 +2,11 @@
  * @module kanban-schema
  * @description Re-export shim. Canonical definitions live in ./kanban/kanban-core and
  * ./kanban/kanban-extended. This file is kept so that any legacy import of
- * "./kanban-schema" continues to resolve all 28 table symbols unchanged.
+ * "./kanban-schema" continues to resolve remaining table symbols unchanged.
+ * NOTE: `kanbanBoards`/`kanbanColumns` removed 2026-07-02 — orphan in lib/db.
  */
 
 export {
-  kanbanBoards,
-  insertKanbanBoardSchema,
-  kanbanColumns,
-  insertKanbanColumnSchema,
   kanbanCards,
   insertKanbanCardSchema,
   kanbanComments,
@@ -17,10 +14,6 @@ export {
 } from "./kanban/kanban-core";
 
 export type {
-  KanbanBoard,
-  InsertKanbanBoard,
-  KanbanColumn,
-  InsertKanbanColumn,
   KanbanCard,
   InsertKanbanCard,
   KanbanComment,

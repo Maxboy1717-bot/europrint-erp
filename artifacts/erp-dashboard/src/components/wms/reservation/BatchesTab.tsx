@@ -15,10 +15,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Search, Plus, Package, Archive, AlertTriangle } from "lucide-react";
-import { MaterialBatchData, Translations } from "./types";
+import { MaterialBatchData, TFunc, STATUS_I18N_KEY } from "./types";
 
 interface BatchesTabProps {
-  t: Translations;
+  t: TFunc;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   typeFilter: string;
@@ -53,11 +53,11 @@ export function BatchesTab({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2">
           <Package className="w-5 h-5" />
-          {t.batches.title}
+          {t("Reservation.batchesTitle")}
         </CardTitle>
         <Button size="sm" onClick={() => setIsAddBatchOpen(true)} className="gap-2" data-testid="button-add-batch">
           <Plus className="w-4 h-4" />
-          {t.batches.addBatch}
+          {t("Reservation.batchesAddBatch")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -65,7 +65,7 @@ export function BatchesTab({
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t.search}
+              placeholder={t("Reservation.search")}
               className="pl-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -75,10 +75,10 @@ export function BatchesTab({
           <div className="flex gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="select-type-filter">
-                <SelectValue placeholder={t.allTypes} />
+                <SelectValue placeholder={t("Reservation.allTypes")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t.allTypes}</SelectItem>
+                <SelectItem value="all">{t("Reservation.allTypes")}</SelectItem>
                 {(Array.isArray(materialTypes) ? materialTypes : []).map((mt) => (
                   <SelectItem key={mt} value={mt}>
                     {mt}
@@ -88,13 +88,13 @@ export function BatchesTab({
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="select-status-filter">
-                <SelectValue placeholder={t.allStatuses} />
+                <SelectValue placeholder={t("Reservation.allStatuses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t.allStatuses}</SelectItem>
-                <SelectItem value="available">{t.statuses.available}</SelectItem>
-                <SelectItem value="depleted">{t.statuses.depleted}</SelectItem>
-                <SelectItem value="expired">{t.statuses.expired}</SelectItem>
+                <SelectItem value="all">{t("Reservation.allStatuses")}</SelectItem>
+                <SelectItem value="available">{t("Reservation.statusAvailable")}</SelectItem>
+                <SelectItem value="depleted">{t("Reservation.statusDepleted")}</SelectItem>
+                <SelectItem value="expired">{t("Reservation.statusExpired")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -111,14 +111,14 @@ export function BatchesTab({
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t.batches.batchNum}</TableHead>
-                  <TableHead>{t.batches.material}</TableHead>
-                  <TableHead>{t.batches.total}</TableHead>
-                  <TableHead>{t.batches.available}</TableHead>
-                  <TableHead>{t.batches.expiry}</TableHead>
-                  <TableHead>{t.batches.location}</TableHead>
-                  <TableHead>{t.batches.status}</TableHead>
-                  <TableHead className="text-right">{t.batches.grade}</TableHead>
+                  <TableHead>{t("Reservation.batchesBatchNum")}</TableHead>
+                  <TableHead>{t("Reservation.batchesMaterial")}</TableHead>
+                  <TableHead>{t("Reservation.batchesTotal")}</TableHead>
+                  <TableHead>{t("Reservation.batchesAvailable")}</TableHead>
+                  <TableHead>{t("Reservation.batchesExpiry")}</TableHead>
+                  <TableHead>{t("Reservation.batchesLocation")}</TableHead>
+                  <TableHead>{t("Reservation.batchesStatus")}</TableHead>
+                  <TableHead className="text-right">{t("Reservation.batchesGrade")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -148,7 +148,7 @@ export function BatchesTab({
                     <TableCell className="text-xs">{b.location || "-"}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={STATUS_COLORS[b.status] || ""}>
-                        {t.statuses[b.status as keyof typeof t.statuses] || b.status}
+                        {STATUS_I18N_KEY[b.status] ? t(STATUS_I18N_KEY[b.status]) : b.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -162,7 +162,7 @@ export function BatchesTab({
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-12">
                       <Archive className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground">{t.batches.noBatches}</p>
+                      <p className="text-muted-foreground">{t("Reservation.batchesNoBatches")}</p>
                     </TableCell>
                   </TableRow>
                 )}

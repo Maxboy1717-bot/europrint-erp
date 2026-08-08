@@ -16,12 +16,12 @@ import { useTranslation } from '@/lib/i18n';
 export default function MESHomeDashboard() {
   const { t } = useTranslation('common');
   const { data: stats, isLoading: sLoad, refetch: refetchStats } = useQuery<DashStats>({
-    queryKey: ["/api/iot/dashboard/stats"],
+    queryKey: ["/api/mes/stats"],
     refetchInterval: 30000,
   });
 
   const { data: sessionsRaw, isLoading: sessLoad, refetch: refetchSess } = useQuery<Session[]>({
-    queryKey: ["/api/iot/production-sessions"],
+    queryKey: ["/api/mes/production-sessions"],
     refetchInterval: 30000,
   });
 
@@ -39,15 +39,19 @@ export default function MESHomeDashboard() {
   const downtimes: Downtime[] = safeArray<Downtime>(downtimesRaw);
   const orders: ProductionOrder[] = safeArray<ProductionOrder>(ordersRaw, "orders");
 
-  const activeSessions = (Array.isArray(sessions) ? sessions : []).filter(s => s.status === "running" || s.status === "active");
+  const activeSessions = (Array.isArray(sessions) ? sessions : []).filter(s => s.status === "running" || s.status === "active" || s.status === "in_progress");
   const stoppedSessions = (Array.isArray(sessions) ? sessions : []).filter(s => s.status === "stopped" || s.status === "paused");
 
-  const avgOee = stats?.averageOee ?? 0;
+  // OEE derived from sessions list (averageOee not in /api/mes/stats)
+  const sessWithOee = (Array.isArray(sessions) ? sessions : []).filter(s => s.oee != null);
+  const avgOee = sessWithOee.length > 0
+    ? sessWithOee.reduce((a, s) => a + Number(s.oee ?? 0), 0) / sessWithOee.length / 100
+    : 0;
   const oeePercent = Math.round(avgOee * 100);
 
-  const totalProduced = (Array.isArray(sessions) ? sessions : []).reduce((a, s) => a + (s.actualQuantity || 0), 0);
-  const totalDefects  = (Array.isArray(sessions) ? sessions : []).reduce((a, s) => a + (s.defectQuantity || 0), 0);
-  const defectRate    = totalProduced > 0 ? ((totalDefects / totalProduced) * 100).toFixed(1) : "0";
+  // Use stats.produced_today directly from /api/mes/stats; defect_rate also comes from stats
+  const totalProduced = stats?.produced_today ?? (Array.isArray(sessions) ? sessions : []).reduce((a, s) => a + (Number(s.actual_quantity) || 0), 0);
+  const defectRate    = stats?.defect_rate != null ? String(stats.defect_rate) : "0";
 
   const inProgressOrders = (Array.isArray(orders) ? orders : []).filter(o => o.status === "in_progress");
 

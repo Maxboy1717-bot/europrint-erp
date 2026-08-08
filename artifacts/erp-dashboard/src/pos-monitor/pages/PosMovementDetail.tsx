@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
-import { movementsApi } from "../api/pos-monitor.api";
+import { movementsApi, movementExtraApi, warehouseFeaturesApi } from "../api/pos-monitor.api";
 import { GlTab } from "../components/GlTab";
 import { StepsTab } from "../components/StepsTab";
 
@@ -20,10 +20,26 @@ interface Movement {
   fromWarehouseId?: string; toWarehouseId?: string; totalAmount?: number;
   createdAt: string; supplierDoc?: string; notes?: string;
   lines?: MovLine[];
+  /** Anomaliya-flag: harakatda shubhali holat aniqlangan (BE qo'yadi). */
+  isAnomaly?: boolean;
+  anomalyReason?: string;
 }
 
+/** recheck-techcard natija shakli (movementExtraApi.recheckTechcard). */
+interface TechcardCheck {
+  allowed: boolean;
+  blocks?: { code: string; message: string }[];
+  techCardId?: number;
+  checkedAt?: string;
+}
+
+// EXTERNAL_IN (tashqi kirim) — real oqim: draft yaratilganda avtomatik 'karantin'ga
+// o'tadi (pos.events.ts onMovementCreated → QuarantineWorkflowService.moveToQuarantine),
+// so'ng QC qarori (qcDecision) bilan 'approved'/'rejected'ga o'tadi. 'qc_pending'/'qc_approved'
+// — qo'lda (karantinsiz) yuborilgan eski/muqobil yo'l uchun ham qoldirilgan (Q-39: mavjud
+// yo'l o'chirilmaydi, faqat qo'shiladi).
 const STATUS_STEPS: Record<string, string[]> = {
-  EXTERNAL_IN:   ["draft", "qc_pending", "qc_approved", "pending", "approved", "completed"],
+  EXTERNAL_IN:   ["draft", "karantin", "qc_review", "qc_pending", "qc_approved", "pending", "approved", "completed"],
   EXTERNAL_OUT:  ["draft", "pending", "approved", "completed"],
   INTERNAL_ISSUE:["draft", "pending", "approved", "completed"],
 };
@@ -32,6 +48,7 @@ const STATUS_BADGE: Record<string, string> = {
   draft: "pos-badge-gray", pending: "pos-badge-yellow", approved: "pos-badge-green",
   completed: "pos-badge-green", cancelled: "pos-badge-red",
   qc_pending: "pos-badge-yellow", qc_approved: "pos-badge-green",
+  karantin: "pos-badge-yellow", qc_review: "pos-badge-yellow", rejected: "pos-badge-red",
 };
 
 export default function PosMovementDetail() {
@@ -45,6 +62,10 @@ export default function PosMovementDetail() {
   const [loading, setLoading]   = useState(true);
   const [acting, setActing]     = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  // ── recheck-techcard (texkarta qayta tekshiruvi) ──
+  const [techCheck, setTechCheck]     = useState<TechcardCheck | null>(null);
+  const [rechecking, setRechecking]   = useState(false);
+  const [recheckErr, setRecheckErr]   = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -68,6 +89,29 @@ export default function PosMovementDetail() {
     } catch { /* noop */ } finally { setActing(false); }
   }
 
+  /** Karantin/QC ko'rib-chiqish navbatidagi kirim uchun QC qarori (QABUL/REWORK/CHIQARISH).
+   *  Jonli/ulangan QuarantineWorkflowService orqali — real stok ko'chirish (QC-HOLD → RM-MAIN)
+   *  va keyingi OMBOR_MENEJER/AI_GL bosqichlarini ('pos.movement.data.approved' hodisasi orqali) ishga tushiradi. */
+  async function doQcDecision(decision: "QABUL" | "REWORK" | "CHIQARISH") {
+    setActing(true);
+    try {
+      await warehouseFeaturesApi.qcDecision(id, decision, rejectReason || undefined);
+      await loadData();
+      setRejectReason("");
+    } catch { /* noop */ } finally { setActing(false); }
+  }
+
+  async function doRecheckTechcard() {
+    setRechecking(true);
+    setRecheckErr(null);
+    try {
+      const res = await movementExtraApi.recheckTechcard(id);
+      setTechCheck(res as TechcardCheck);
+    } catch (e) {
+      setRecheckErr(e instanceof Error ? e.message : t("common.error"));
+    } finally { setRechecking(false); }
+  }
+
   if (loading) return <div style={{ textAlign: "center", padding: 60, color: "var(--pos-text-muted)" }}>{t("common.loading")}</div>;
   if (!movement) return <div style={{ textAlign: "center", padding: 60, color: "var(--pos-danger)" }}>{t("harakatTopilmadi")}</div>;
 
@@ -83,6 +127,11 @@ export default function PosMovementDetail() {
         </button>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{movement.movementNumber ?? `#${movement.id}`}</h2>
         <span className={`pos-badge ${STATUS_BADGE[movement.status] ?? "pos-badge-gray"}`}>{t(`status.${movement.status}`)}</span>
+        {movement.isAnomaly && (
+          <span className="pos-badge pos-badge-red" title={movement.anomalyReason ?? ""}>
+            ⚠️ {t("anomaliya")}
+          </span>
+        )}
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 8 }}>
           {movement.status === "draft" && (
@@ -98,6 +147,13 @@ export default function PosMovementDetail() {
             <>
               <button className="pos-btn pos-btn-success" disabled={acting} onClick={() => void doAction("qc_approved")}>{t("qcQabul")}</button>
               <button className="pos-btn pos-btn-danger"  disabled={acting} onClick={() => void doAction("qc_rework")}>{t("qaytaIshlash")}</button>
+            </>
+          )}
+          {(movement.status === "karantin" || movement.status === "qc_review") && (
+            <>
+              <button className="pos-btn pos-btn-success" disabled={acting} onClick={() => void doQcDecision("QABUL")}>{t("qcQabul")}</button>
+              <button className="pos-btn pos-btn-ghost"   disabled={acting} onClick={() => void doQcDecision("REWORK")}>{t("qaytaIshlash")}</button>
+              <button className="pos-btn pos-btn-danger"  disabled={acting} onClick={() => void doQcDecision("CHIQARISH")}>{t("qcChiqarish")}</button>
             </>
           )}
           <a className="pos-btn pos-btn-ghost" href={movementsApi.getPdf(movement.id)} target="_blank" rel="noreferrer" style={{ fontSize: 12, padding: "6px 12px" }}>
@@ -181,6 +237,67 @@ export default function PosMovementDetail() {
               <div className="pos-mono" style={{ fontSize: 28, fontWeight: 700, color: "var(--pos-accent)" }}>
                 {movement.totalAmount?.toLocaleString("uz-UZ") ?? "—"}
               </div>
+            </div>
+
+            {/* ── Texkarta qayta tekshiruvi (recheck-techcard) ── */}
+            <div className="pos-card" style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--pos-text-muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>
+                {t("texkartaTekshiruvi")}
+              </div>
+              <button
+                className="pos-btn pos-btn-primary"
+                style={{ width: "100%", marginBottom: techCheck || recheckErr ? 12 : 0 }}
+                disabled={rechecking}
+                onClick={() => void doRecheckTechcard()}
+              >
+                {rechecking ? t("common.loading") : `🔄 ${t("texkartaQaytaTekshir")}`}
+              </button>
+
+              {recheckErr && (
+                <div className="pos-badge pos-badge-red" style={{ display: "block", padding: 10, fontSize: 12 }}>
+                  {recheckErr}
+                </div>
+              )}
+
+              {techCheck && (
+                <div>
+                  <div
+                    className={`pos-badge ${techCheck.allowed ? "pos-badge-green" : "pos-badge-red"}`}
+                    style={{ display: "block", padding: 10, fontSize: 13, fontWeight: 700, marginBottom: 8 }}
+                  >
+                    {techCheck.allowed ? `✅ ${t("texkartaRuxsat")}` : `⛔ ${t("texkartaBloklangan")}`}
+                  </div>
+                  {techCheck.techCardId && (
+                    <div className="pos-mono" style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 6 }}>
+                      {t("texkarta")}: #{techCheck.techCardId}
+                    </div>
+                  )}
+                  {Array.isArray(techCheck.blocks) && techCheck.blocks.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {techCheck.blocks.map((b, i) => (
+                        <div
+                          key={b.code || i}
+                          style={{
+                            background: "var(--pos-accent-soft)",
+                            border: "1px solid var(--pos-border)",
+                            borderRadius: 6,
+                            padding: "6px 8px",
+                            fontSize: 12,
+                          }}
+                        >
+                          <span className="pos-mono" style={{ color: "var(--pos-danger)", marginRight: 6 }}>{b.code}</span>
+                          <span style={{ color: "var(--pos-text-muted)" }}>{b.message}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {techCheck.checkedAt && (
+                    <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginTop: 8 }}>
+                      {new Date(techCheck.checkedAt).toLocaleString("uz-UZ")}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             {history.length > 0 && (
               <div className="pos-card">

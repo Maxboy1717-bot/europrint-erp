@@ -23,6 +23,11 @@ export const SdUpdateCustomerSchema = z.object({
   email:        z.string().email().optional(),
   address:      z.string().optional(),
   status:       z.enum(['active', 'inactive', 'blacklisted']).optional(),
+  // CRM-13 #120: same vocabulary as SdCreatePaymentSchema.payment_method below /
+  // sd_payments.payment_method — the customer's usual settlement method.
+  default_payment_type: z.enum(['cash', 'card', 'bank_transfer', 'online']).optional(),
+  // CRM-13 #133 — agreed packaging method (free text; runtime-entered, no fixed vocabulary in vision)
+  packaging_method: z.string().max(500).optional(),
 }).passthrough();
 export type SdUpdateCustomerDto = z.infer<typeof SdUpdateCustomerSchema>;
 
@@ -66,12 +71,28 @@ export const SdUpdateDeliveryStatusSchema = z.object({
 });
 export type SdUpdateDeliveryStatusDto = z.infer<typeof SdUpdateDeliveryStatusSchema>;
 
+// deliveryNumber is generated server-side (DLV-XXXXXXXXXX); callers provide optional metadata
+export const SdCreateDeliverySchema = z.object({
+  salesOrderId:             z.string().optional(),
+  customerId:               z.number().int().positive().optional(),
+  plannedGoodsMovementDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD').optional(),
+  driverName:               z.string().max(100).optional(),
+  vehicleNumber:            z.string().max(20).optional(),
+  createdBy:                z.number().int().positive().optional(),
+});
+export type SdCreateDeliveryDto = z.infer<typeof SdCreateDeliverySchema>;
+
 export const SdCreatePaymentSchema = z.object({
   order_id:       z.number().int().positive().optional(),
   amount:         z.number().positive().optional(),
   payment_method: z.enum(['cash', 'card', 'bank_transfer', 'online']).optional(),
   currency:       z.string().max(10).optional(),
   notes:          z.string().optional(),
+  // C1.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): supplying a distinct value here bypasses the
+  // repository's short debounce-window duplicate check — see sd-payments.repository.ts create().
+  // NOT yet persistently deduped (no unique index backs this field today); a real client-side
+  // idempotency-key flow is a separate, larger frontend follow-up.
+  idempotency_key: z.string().min(1).max(100).optional(),
 }).passthrough();
 export type SdCreatePaymentDto = z.infer<typeof SdCreatePaymentSchema>;
 

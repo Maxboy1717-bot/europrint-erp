@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { AuthErrorCode } from '../../src/modules/auth/domain/types';
+import { IS_PUBLIC_KEY } from '../../src/common/decorators/public.decorator';
 
 // ─── Fakes ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,8 @@ function makeRepo(user: ReturnType<typeof makeUser> | null) {
     incrementFailedAttempts: jest.fn().mockResolvedValue(undefined),
     resetFailedAttempts: jest.fn().mockResolvedValue(undefined),
     updateLastLogin: jest.fn().mockResolvedValue(undefined),
+    // EP-ORG card-gate: flag OFF (egasi qarori) → gate hisoblanadi lekin login bloklamaydi.
+    resolveCardGate: jest.fn().mockResolvedValue({ activeCardCount: 1, primaryCardId: null, rbacTier: null, positionId: null }),
   };
 }
 
@@ -102,6 +105,17 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
 
 function makeReflector(value: unknown): Reflector {
   return { getAllAndOverride: jest.fn().mockReturnValue(value) } as unknown as Reflector;
+}
+
+// RolesGuard now checks IS_PUBLIC_KEY before 'roles' (@Public() bypass) — unlike
+// makeReflector() above (used for JwtAuthGuard, which only ever reads IS_PUBLIC_KEY),
+// this must return `required` only for the 'roles' lookup and stay non-public otherwise.
+function makeRolesReflector(required: unknown): Reflector {
+  return {
+    getAllAndOverride: jest.fn().mockImplementation((key: string) =>
+      key === IS_PUBLIC_KEY ? undefined : required,
+    ),
+  } as unknown as Reflector;
 }
 
 function makeCtx(req: { headers?: Record<string, string>; user?: unknown } = {}): ExecutionContext {
@@ -163,11 +177,11 @@ describe('LoginService — token issuance details', () => {
     expect(r.ok).toBe(true);
   });
 
-  it('access token expires in 24h', async () => {
+  it('access token expires in 15m', async () => {
     const jwt = makeJwt();
     const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, jwt, makeConfig(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
-    expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '24h' });
+    expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '15m' });
   });
 
   it('refresh token expires in 7d with separate secret', async () => {
@@ -362,7 +376,7 @@ const ROLE_MATRIX: Array<[string, string[], boolean]> = [
 
 describe('RolesGuard — every role × required-list combination', () => {
   it.each(ROLE_MATRIX)('user=%s required=%j → allowed=%s', async (role, required, allowed) => {
-    const guard = new RolesGuard(makeReflector(required), makeI18n());
+    const guard = new RolesGuard(makeRolesReflector(required), makeI18n());
     if (allowed) {
       await expect(guard.canActivate(makeCtx({ user: role ? { role } : {} }))).resolves.toBe(true);
     } else {
@@ -371,12 +385,12 @@ describe('RolesGuard — every role × required-list combination', () => {
   });
 
   it('allows everything when @Roles() metadata is undefined', async () => {
-    const guard = new RolesGuard(makeReflector(undefined), makeI18n());
+    const guard = new RolesGuard(makeRolesReflector(undefined), makeI18n());
     await expect(guard.canActivate(makeCtx({ user: { role: 'anything' } }))).resolves.toBe(true);
   });
 
   it('rejects when user has no role', async () => {
-    const guard = new RolesGuard(makeReflector(['hr']), makeI18n());
+    const guard = new RolesGuard(makeRolesReflector(['hr']), makeI18n());
     await expect(guard.canActivate(makeCtx({ user: {} }))).rejects.toThrow(ForbiddenException);
   });
 });

@@ -79,19 +79,13 @@ export const owOrderSamples = pgTable('ow_order_samples', {
   check('ow_sample_decision', sql`${t.customerDecision} IN ('APPROVED','REJECTED','PENDING')`),
 ]);
 
-// ─── 5. ow_contracts ─────────────────────────────────────────────────────────
-export const owContracts = pgTable('ow_contracts', {
-  id:                 uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:            uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
-  contractNumber:     text('contract_number').notNull().unique(),
-  signedAt:           timestamp('signed_at', { withTimezone: true }),
-  fileUrl:            text('file_url'),
-  templateId:         uuid('template_id'),
-  aiGenerated:        boolean('ai_generated').notNull().default(true),
-  signedByCustomerAt: timestamp('signed_by_customer_at', { withTimezone: true }),
-  signedByCompanyAt:  timestamp('signed_by_company_at', { withTimezone: true }),
-  version:            integer('version').notNull().default(1),
-});
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02
+// ow_contracts pgTable REMOVED (dead code — order-workflow module deregistered
+// 2026-07-02 in apps/api/src/app.module.ts, canonical live contract table is
+// sd_contracts under apps/api/src/modules/sd/. owContracts had zero code
+// references anywhere in the app; no type was even exported for it). The `ow_contracts`
+// DB table itself is left in place untouched (0 rows) per project rule: never
+// DROP TABLE, only code-level disconnection.
 
 // ─── 6. ow_tech_cards ────────────────────────────────────────────────────────
 export const owTechCards = pgTable('ow_tech_cards', {

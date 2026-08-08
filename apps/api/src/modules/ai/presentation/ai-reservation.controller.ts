@@ -12,7 +12,7 @@ import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }  from '../../auth/guards/roles.guard';
 import { Roles }       from '../../auth/decorators/roles.decorator';
-import { Role }        from '../../auth/types/role';
+import { Role }        from '@common/constants/roles.constants';
 import { unwrapOrBadRequest } from '@common/http-result';
 import { AiReservationService } from '../application/services/ai-reservation.service';
 import { CreateReservationRequestDto, CreateBatchDto } from './dto/ai-reservation.dto';
@@ -22,7 +22,7 @@ import { CreateReservationRequestDto, CreateBatchDto } from './dto/ai-reservatio
 @AiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ai-reservation')
-@Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER, Role.WAREHOUSE)
+@Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER, Role.WAREHOUSE_KEEPER)
 export class AiReservationController {
   private readonly logger = new Logger(AiReservationController.name);
 

@@ -20,7 +20,8 @@ export class UpdateWorkCenterCommand {
     public readonly capacity?: number,
     public readonly costPerHour?: number,
     public readonly certificationLmsCourseId?: string | null,
-    public readonly department?: string | null) {}
+    public readonly department?: string | null,
+    public readonly isActive?: boolean) {}
 }
 
 @Injectable()
@@ -65,7 +66,7 @@ export class UpdateWorkCenterHandler implements ICommandHandler<UpdateWorkCenter
           ? command.certificationLmsCourseId
           : existing.certificationLmsCourseId,
         command.department !== undefined ? command.department : existing.department,
-        existing.isActive,
+        command.isActive !== undefined ? command.isActive : existing.isActive,
         existing.createdAt,
         _time.now(),
       );

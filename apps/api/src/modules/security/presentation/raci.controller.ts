@@ -18,6 +18,7 @@ BadRequestException,
   UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
   RaciCreateTaskSchema, RaciCreateTaskDto,
@@ -44,7 +45,7 @@ const MANAGER_ROLES = ['admin', 'super_admin', 'director', 'department_head', 'm
 export class RaciController {
   private readonly logger = new Logger(RaciController.name);
 
-  constructor(private readonly svc: RaciService) {}
+  constructor(private readonly svc: RaciService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List tasks' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -63,7 +64,7 @@ export class RaciController {
     @CurrentUser() user: { id: number; role: string },
   ) {
     const { title, description, responsible_id, accountable_id, deadline } = body;
-    assertRequired(title, 'title majburiy');
+    assertRequired(title, await this.i18n.t('errors.titleRequired'));
     return unwrapOrInternal(await this.svc.createTask(
       title as string,
       (description as string) ?? null,
@@ -89,9 +90,9 @@ export class RaciController {
   @UsePipes(new ZodValidationPipe(RaciCreateAssignmentSchema))
   async createAssignment(@Body() body: RaciCreateAssignmentDto) {
     const { task_id, employee_id, role } = body;
-    assertRequired(task_id, 'task_id majburiy');
-    assertRequired(employee_id, 'employee_id majburiy');
-    assertRequired(role, 'role majburiy');
+    assertRequired(task_id, await this.i18n.t('validation.taskIdRequired'));
+    assertRequired(employee_id, await this.i18n.t('errors.employeeIdRequired'));
+    assertRequired(role, await this.i18n.t('validation.roleRequired'));
     return unwrapOrInternal(await this.svc.createAssignment(Number(task_id), Number(employee_id), role as string));
   }
 
@@ -136,7 +137,7 @@ export class RaciController {
     @CurrentUser() user: { id: number; role: string },
   ) {
     const { title, risk_level, description, likelihood, impact } = body;
-    assertRequired(title, 'title majburiy');
+    assertRequired(title, await this.i18n.t('errors.titleRequired'));
     return unwrapOrInternal(await this.svc.createAssessment(
       title as string,
       (risk_level as string) ?? 'medium',

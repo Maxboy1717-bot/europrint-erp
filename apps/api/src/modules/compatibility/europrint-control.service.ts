@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -18,6 +19,8 @@ import { safeCall, Result, AppError, Ok } from '@common/result';
 @Injectable()
 export class EuroprintControlCompatService {
   private readonly logger = new Logger(EuroprintControlCompatService.name);
+
+  constructor(private readonly i18n: I18nService) {}
 
   getBusinessRules() {
     return [
@@ -58,48 +61,112 @@ export class EuroprintControlCompatService {
     ]);
     const uRow = usersR.ok ? (dbRows(usersR.data)[0] ?? {}) : {};
     const oRow = ordersR.ok ? (dbRows(ordersR.data)[0] ?? {}) : {};
+    // system-uptime is REAL: derived from the running process uptime (seconds → hours).
+    // data-quality was fabricated (94.2) with no source → removed per Q-40/Q-46.
+    const uptimeHours = Math.round((process.uptime() / 3600) * 10) / 10;
     return Ok([
       { id: 'active-users', name: 'Faol foydalanuvchilar', value: Number(uRow['cnt'] ?? 0), target: 100, unit: 'ta' },
       { id: 'open-orders', name: 'Ochiq buyurtmalar', value: Number(oRow['cnt'] ?? 0), target: 50, unit: 'ta' },
-      { id: 'system-uptime', name: 'Tizim ishonchliligi', value: 99.7, target: 99.5, unit: '%' },
-      { id: 'data-quality', name: "Ma'lumotlar sifati", value: 94.2, target: 95, unit: '%' },
+      { id: 'process-uptime', name: 'Server ish vaqti', value: uptimeHours, target: 0, unit: 'soat' },
     ]);
   }
 
   async getAuditorDashboard() {
+    // audit_logs has NO entity_type column; the real groupable column is table_name.
+    const [topR, totalR, actionR, rulesR] = await Promise.all([
+      safeCall(() => rawSql(sql`
+        SELECT action, table_name, COUNT(*) AS cnt FROM audit_logs
+        WHERE created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY action, table_name ORDER BY cnt DESC LIMIT 20
+      `)),
+      safeCall(() => rawSql(sql`SELECT COUNT(*) AS cnt FROM audit_logs`)),
+      safeCall(() => rawSql(sql`
+        SELECT
+          COUNT(*) FILTER (WHERE action = 'DELETE') AS deleted,
+          COUNT(*) FILTER (WHERE action = 'UPDATE') AS updated
+        FROM audit_logs
+      `)),
+      safeCall(() => rawSql(sql`
+        SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE is_active = true) AS active FROM business_rules
+      `)),
+    ]);
+    const topActions = topR.ok ? dbRows(topR.data) : [];
+    const totalAuditLogs = Number((totalR.ok ? dbRows(totalR.data)[0] : {})?.['cnt'] ?? 0);
+    const actionRow = actionR.ok ? (dbRows(actionR.data)[0] ?? {}) : {};
+    const rulesRow = rulesR.ok ? (dbRows(rulesR.data)[0] ?? {}) : {};
+    return {
+      totalRules:       Number(rulesRow['total'] ?? 0),
+      activeRules:      Number(rulesRow['active'] ?? 0),
+      violationsToday:  0,
+      totalAuditLogs,
+      deletedRecords:   Number(actionRow['deleted'] ?? 0),
+      overrides:        Number(actionRow['updated'] ?? 0),
+      reversals:        Number(actionRow['deleted'] ?? 0),
+      topActions,
+      suspiciousEvents: 0,
+      systemHealth:     'healthy',
+      lastChecked:      _time.now(),
+    };
+  }
+
+  /**
+   * SAP enterprise-pattern summary consumed by EuroprintControlCenter.tsx
+   * (sapPatterns?.<pattern>?.count). Each pattern's count is a REAL aggregate over
+   * business_rules grouped by category (0 today — table is empty). The prior
+   * hardcoded { totalPatterns: 38, modules[] } was a fabrication that did not even
+   * match the FE contract → replaced with honest per-pattern counts (Q-40/Q-46).
+   */
+  private async getRuleCategoryCounts(): Promise<Record<string, number>> {
     const r = await safeCall(() => rawSql(sql`
-      SELECT action, entity_type, COUNT(*) AS cnt FROM audit_logs
-      WHERE created_at >= NOW() - INTERVAL '30 days'
-      GROUP BY action, entity_type ORDER BY cnt DESC LIMIT 20
+      SELECT category, COUNT(*) AS cnt FROM business_rules WHERE is_active = true GROUP BY category
     `));
     const rows = r.ok ? dbRows(r.data) : [];
-    const totalAuditLogs = (Array.isArray(rows) ? rows : []).reduce((s, row) => s + Number(row['cnt'] ?? 0), 0);
+    const map: Record<string, number> = {};
+    for (const row of Array.isArray(rows) ? rows : []) {
+      map[String(row['category'] ?? '')] = Number(row['cnt'] ?? 0);
+    }
+    return map;
+  }
+
+  private buildSapPatterns(byCategory: Record<string, number>) {
+    const c = (key: string) => byCategory[key] ?? 0;
     return {
-      totalRules: 24,
-      activeRules: 22,
-      violationsToday: 0,
-      totalAuditLogs,
-      topActions:     rows,
-      suspiciousEvents: 0,
-      systemHealth:   'healthy',
-      lastChecked:    _time.now(),
+      documentLifecycle:  { count: c('document_lifecycle'), name: 'Hujjat Hayoti', nameRu: 'Жизненный цикл' },
+      changeRequests:     { count: c('change_management'), name: "O'zgarish Boshqaruvi", nameRu: 'Управление изменениями' },
+      separationOfDuties: { count: c('separation_of_duties'), name: 'Vazifalar Ajratish', nameRu: 'Разделение обязанностей' },
+      exceptionInbox:     { count: c('exception_inbox'), name: 'Muammolar Markazi', nameRu: 'Исключения' },
+      postingEngine:      { count: c('posting_engine'), name: 'GL Yozuv Mexanizmi', nameRu: 'Модуль проводок' },
+      costObjects:        { count: c('cost_objects'), name: "Xarajat Ob'ektlari", nameRu: 'Объекты затрат' },
+      sops:               { count: c('sop'), name: 'SOP Shablonlari', nameRu: 'Шаблоны СОП' },
+      roleUiConfigs:      { count: c('role_ui'), name: 'Rol UI Sozlamalari', nameRu: 'UI по ролям' },
     };
   }
 
-  getSapPatternsSummary() {
-    return {
-      totalPatterns: 38, implemented: 38, pending: 0, lastSync: _time.now(),
-      modules: [
-        { module: 'SD', patterns: 8, implemented: 8 }, { module: 'PP', patterns: 6, implemented: 6 },
-        { module: 'WMS', patterns: 5, implemented: 5 }, { module: 'Finance', patterns: 7, implemented: 7 },
-        { module: 'HR', patterns: 4, implemented: 4 }, { module: 'QC', patterns: 4, implemented: 4 },
-        { module: 'MES', patterns: 4, implemented: 4 },
-      ],
-    };
+  async getSapPatternsSummary() {
+    const byCategory = await this.getRuleCategoryCounts();
+    return this.buildSapPatterns(byCategory);
   }
 
-  getAllRulesSummary() {
-    return { totalRules: 24, activeRules: 22, hardBlocks: 8, warnings: 14, lastUpdated: _time.now() };
+  /**
+   * All-rules summary consumed by EuroprintControlCenter.tsx
+   * (allRules?.nonBypassableRules?.<rule>?.count). Real counts over business_rules
+   * by category (0 today). The prior hardcoded { totalRules: 24, activeRules: 22, ... }
+   * did not match the FE contract and was fabricated → replaced (Q-40/Q-46).
+   */
+  async getAllRulesSummary() {
+    const byCategory = await this.getRuleCategoryCounts();
+    const c = (key: string) => byCategory[key] ?? 0;
+    return {
+      sapPatterns: this.buildSapPatterns(byCategory),
+      nonBypassableRules: {
+        processChains: { count: c('process_chains'), name: 'Majburiy Zanjirlar', nameRu: 'Обязательные цепочки' },
+        auditTrail:    { count: c('audit_trail'), name: 'Audit Izi', nameRu: 'Аудит лог' },
+        fiscalPeriods: { count: c('fiscal_periods'), name: 'Moliya Davrlari', nameRu: 'Фискальные периоды' },
+        masterData:    { count: c('master_data'), name: "Master Ma'lumotlar", nameRu: 'Мастер данные' },
+        batchLots:     { count: c('batch_lots'), name: 'Partiya Kuzatuvi', nameRu: 'Отслеживание партий' },
+        multiCurrency: { count: c('multi_currency'), name: "Ko'p Valyuta", nameRu: 'Мультивалюта' },
+      },
+    };
   }
 
   async getLogs(entityType?: string, fromDate?: string, limit = '50') {
@@ -125,7 +192,7 @@ export class EuroprintControlCompatService {
       WHERE al.id = ${id}
     `));
     const found = r.ok ? dbRows(r.data)[0] : undefined;
-    if (!found) throw new NotFoundException('Record not found');
+    if (!found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return found;
   }
 
@@ -146,20 +213,49 @@ export class EuroprintControlCompatService {
     }));
   }
 
-  getValidationSummary() {
+  async getValidationSummary() {
+    const r = await safeCall(() => rawSql(sql`
+      SELECT
+        COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE status = 'passed') AS passed,
+        COUNT(*) FILTER (WHERE status = 'failed') AS failed,
+        COUNT(*) FILTER (WHERE status = 'warning') AS warnings,
+        MAX(run_at) AS last_run
+      FROM validation_results
+    `));
+    const row = r.ok ? (dbRows(r.data)[0] ?? {}) : {};
+    const total = Number(row['total'] ?? 0);
+    const passed = Number(row['passed'] ?? 0);
+    const passRate = total > 0 ? `${((passed / total) * 100).toFixed(1)}%` : '0.0%';
     return {
-      total: 24, passed: 20, failed: 2, warnings: 2,
-      passRate: '83.3%', lastRun: _time.now(),
+      total,
+      passed,
+      failed: Number(row['failed'] ?? 0),
+      warnings: Number(row['warnings'] ?? 0),
+      passRate,
+      lastRun: row['last_run'] ?? null,
     };
   }
 
-  getValidationResults(ruleId?: string, limit = '50') {
+  async getValidationResults(ruleId?: string, limit = '50') {
     const lim = Math.min(parseInt(limit, 10) || 50, MAX_LARGE_QUERY_LIMIT);
-    void ruleId; void lim;
-    return [
-      { ruleId: 'FIN-001', entity: 'invoice', entityId: 1, status: 'passed', checkedAt: _time.now() },
-      { ruleId: 'INV-002', entity: 'stock_move', entityId: 2, status: 'failed', reason: 'Insufficient stock', checkedAt: _time.now() },
-    ];
+    const ruleFilter = ruleId ? sql`AND rule_code = ${ruleId}` : sql``;
+    const r = await safeCall(() => rawSql(sql`
+      SELECT id, rule_code, status, violation_count, violation_details, run_at
+      FROM validation_results
+      WHERE true ${ruleFilter}
+      ORDER BY run_at DESC NULLS LAST
+      LIMIT ${lim}
+    `));
+    const rows = r.ok ? dbRows(r.data) : [];
+    return (Array.isArray(rows) ? rows : []).map((row) => ({
+      id: String(row['id'] ?? ''),
+      ruleCode: String(row['rule_code'] ?? ''),
+      status: String(row['status'] ?? ''),
+      issuesFound: Number(row['violation_count'] ?? 0),
+      details: (row['violation_details'] ?? {}) as Record<string, unknown>,
+      executedAt: row['run_at'] ?? null,
+    }));
   }
 
   async getAuditStats(period = '30d') {

@@ -8,7 +8,7 @@ import { castTo } from '@common/db-rows';
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { eq, and, sql } from 'drizzle-orm';
-import { chatMessages, chatMembers, chatReactions, chatPolls, chatPollVotes, chatStarredMessages, appUsers } from '@shared/db';
+import { chatMessages, chatMembers, chatReactions, chatPolls, chatPollVotes, chatStarredMessages, chatRooms, appUsers } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 
 @Injectable()
@@ -184,5 +184,29 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
   async unstarMessage(messageId: string, userId: string): Promise<void> {
     await db.delete(chatStarredMessages)
       .where(and(eq(chatStarredMessages.messageId, messageId), eq(chatStarredMessages.userId, userId)));
+  }
+
+  async findStarredForUser(userId: string): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          message_id:  chatStarredMessages.messageId,
+          starred_at:  chatStarredMessages.createdAt,
+          content:     sql<string>`COALESCE(${chatMessages.content}, ${chatMessages.text})`,
+          sender_name: appUsers.full_name,
+          room_id:     sql<string>`${chatMessages.roomId}::text`,
+          room_name:   chatRooms.name,
+        })
+        .from(chatStarredMessages)
+        .innerJoin(
+          chatMessages,
+          sql`${chatMessages.id}::text = ${chatStarredMessages.messageId} AND ${chatMessages.isDeleted} = false`,
+        )
+        .leftJoin(appUsers, sql`${appUsers.id} = ${chatMessages.senderId}::int`)
+        .leftJoin(chatRooms, sql`${chatRooms.id}::text = ${chatMessages.roomId}::text`)
+        .where(eq(chatStarredMessages.userId, userId))
+        .orderBy(sql`${chatStarredMessages.createdAt} DESC`);
+      return castTo<Record<string, unknown>[]>(rows);
+    }, 'DB_ERROR');
   }
 }

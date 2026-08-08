@@ -41,7 +41,7 @@ export function ERPDowntimeTab() {
   });
 
   const { data: workCenters = [] } = useQuery<WorkCenter[]>({
-    queryKey: ["/api/erp/work-centers"],
+    queryKey: ["/api/pp/work-centers"],
   });
 
   const form = useForm<InsertDowntimeLog>({

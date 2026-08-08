@@ -9,7 +9,7 @@
 
 import {
   Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query,
-  UseGuards, BadRequestException, NotFoundException,
+  UseGuards, BadRequestException, NotFoundException, ConflictException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -19,6 +19,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { safeInt } from '../../hr/common/db-rows';
@@ -42,8 +43,8 @@ const UpdateWarehouseSchema = z.object({
   is_active: z.boolean().optional(),
 }).passthrough();
 
-const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
-const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'manager', 'accountant', 'finance'];
+const WH_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 /**
  * WmsGatewayWarehousesController
@@ -57,7 +58,10 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
 export class WmsGatewayWarehousesController {
   private readonly logger = new Logger(WmsGatewayWarehousesController.name);
 
-  constructor(private readonly svc: WmsWarehouseGatewayService) {}
+  constructor(
+    private readonly svc: WmsWarehouseGatewayService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get warehouses total stats' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -87,14 +91,20 @@ export class WmsGatewayWarehousesController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('warehouses')
   @Roles(...WH_READ)
-  async getWarehouses(@Query('type') type?: string) {
+  async getWarehouses(@Query('type') type?: string, @Query('isActive') isActive?: string) {
     try {
+      // audit 2026-08-06 T14: default to active-only, matching GetWarehousesHandler —
+      // this endpoint previously ignored is_active entirely (and silently dropped the
+      // ?isActive param the sidebar sends), so deactivated warehouses kept showing on
+      // WMSDashboard/Bins/Zones/GoodsIssue/InventoryCount/BarcodeSystem pages.
+      const includeInactive = isActive === 'false' || isActive === 'all';
       const r = await rawSql(sql`
         SELECT id::text AS id, code, name, name_ru, type, location, is_active,
                manager_id, created_at,
                (SELECT COUNT(*)::int FROM warehouse_stock ws WHERE ws.warehouse_id = warehouses.id) AS stock_items
         FROM warehouses
         WHERE deleted_at IS NULL
+          AND (${includeInactive} OR is_active = true)
           AND (${type ?? null}::text IS NULL OR type = ${type ?? null})
         ORDER BY name ASC LIMIT 200
       `);
@@ -135,6 +145,17 @@ export class WmsGatewayWarehousesController {
       const warehouseType = String(dto.type ?? dto.warehouse_type ?? 'main');
       const nameRu   = dto.name_ru ? String(dto.name_ru) : null;
       const location = (dto.location ?? dto.address) ? String(dto.location ?? dto.address) : null;
+
+      // Ombor tozalash (WMS-POS-FULL-AUDIT-2026-07-05, item 2): same duplicate-name
+      // guard as WmsWarehousesController.create() -- code has a DB UNIQUE constraint,
+      // name does not.
+      const dup = await rawSql(sql`
+        SELECT id FROM warehouses WHERE is_active = true AND lower(trim(name)) = lower(trim(${name})) LIMIT 1
+      `);
+      if ((dup as { rows?: Record<string, unknown>[] }).rows?.length) {
+        throw new ConflictException(await this.i18n.t('errors.warehouseNameAlreadyExists', { args: { name } }));
+      }
+
       const r = await rawSql(sql`
         INSERT INTO warehouses (code, name, name_ru, type, location, is_active, manager_id)
         VALUES (${code}, ${name}, ${nameRu}, ${warehouseType}, ${location}, true, ${user?.id ?? null})
@@ -142,7 +163,8 @@ export class WmsGatewayWarehousesController {
       `);
       return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
     } catch (e) {
-      throw new BadRequestException(`Ombor yaratishda xatolik: ${String(e).substring(0, 200)}`);
+      if (e instanceof ConflictException) throw e;
+      throw new BadRequestException(await this.i18n.t('errors.warehouseCreationFailed', { args: { message: String(e).substring(0, 200) } }));
     }
   }
 
@@ -150,7 +172,7 @@ export class WmsGatewayWarehousesController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('warehouses/:id/stock')
-  @Roles(...WH_READ, 'pos_operator', 'employee', 'manager', 'admin')
+  @Roles(...WH_READ, 'pos_operator', 'employee')
   async getWarehouseStock(@Param('id') id: string) {
     const wid = safeInt(id, 0);
     if (!wid) return { totalItems: 0, items: [] };
@@ -193,15 +215,22 @@ export class WmsGatewayWarehousesController {
     }
   }
 
-  @ApiOperation({ summary: 'Get warehouse stats' })
+  @ApiOperation({ summary: 'Get warehouse stats (warehouse-360: stock + value + occupancy + zones/bins + batch/expiry + movements)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('warehouses/:id/stats')
   @Roles(...WH_READ)
   async getWarehouseStats(@Param('id') id: string) {
+    const wid = safeInt(id, 0);
     try {
-      const [wRows, sRows] = await Promise.all([
-        rawSql(sql`SELECT id, code, name, name_ru, type, location, is_active, created_at FROM warehouses WHERE id = ${id} AND deleted_at IS NULL`),
+      // warehouse-360 rollup: each source is one round-trip (no N+1). Stock/value
+      // from warehouse_stock×material_cards; occupancy from warehouse_bins
+      // (current_occupancy/max_volume = the real capacity source — warehouses.capacity
+      // is unpopulated); zone count from warehouse_zones; batch/expiry from batch_lots;
+      // movements (kirim/chiqim) from warehouse_transactions. Q-40: every number is a
+      // live SELECT — empty source tables stay honestly zero, no hardcoded/echo values.
+      const [wRows, sRows, occRows, zRows, blRows, mvRows] = await Promise.all([
+        rawSql(sql`SELECT id, code, name, name_ru, type, location, is_active, capacity, created_at FROM warehouses WHERE id = ${wid} AND deleted_at IS NULL`),
         rawSql(sql`
           SELECT COUNT(DISTINCT ws.material_id)::int AS material_count,
                  COALESCE(SUM(ws.quantity),0)::numeric AS total_quantity,
@@ -211,21 +240,79 @@ export class WmsGatewayWarehousesController {
                  SUM(CASE WHEN mc.min_stock > 0 AND ws.quantity < mc.min_stock THEN 1 ELSE 0 END)::int AS low_stock_count
           FROM warehouse_stock ws
           LEFT JOIN material_cards mc ON mc.id = ws.material_id
-          WHERE ws.warehouse_id = ${id}
+          WHERE ws.warehouse_id = ${wid}
+        `),
+        rawSql(sql`
+          SELECT COUNT(*)::int AS bin_count,
+                 COUNT(*) FILTER (WHERE is_active = true)::int AS active_bin_count,
+                 COALESCE(SUM(current_occupancy),0)::numeric AS used_volume,
+                 COALESCE(SUM(max_volume),0)::numeric AS capacity_volume
+          FROM warehouse_bins
+          WHERE warehouse_id = ${wid} AND deleted_at IS NULL
+        `),
+        rawSql(sql`SELECT COUNT(*)::int AS zone_count FROM warehouse_zones WHERE warehouse_id = ${wid} AND deleted_at IS NULL`),
+        rawSql(sql`
+          SELECT COUNT(*)::int AS lot_count,
+                 COUNT(*) FILTER (WHERE expiry_date IS NOT NULL AND expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days')::int AS expiring_soon_count,
+                 COUNT(*) FILTER (WHERE expiry_date IS NOT NULL AND expiry_date < NOW())::int AS expired_count
+          FROM batch_lots WHERE warehouse_id = ${wid} AND is_active = true
+        `),
+        rawSql(sql`
+          SELECT COUNT(*)::int AS movement_count,
+                 COALESCE(SUM(CASE WHEN transaction_type IN ('receipt','goods_receipt','in','inbound','kirim') THEN quantity ELSE 0 END),0)::numeric AS total_in,
+                 COALESCE(SUM(CASE WHEN transaction_type IN ('issue','goods_issue','out','outbound','chiqim') THEN quantity ELSE 0 END),0)::numeric AS total_out,
+                 MAX(created_at)::text AS last_movement_at
+          FROM warehouse_transactions WHERE warehouse_id = ${wid}
         `),
       ]);
-      const w = (wRows as { rows?: Record<string, unknown>[] }).rows?.[0];
-      const s = (sRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const w  = (wRows  as { rows?: Record<string, unknown>[] }).rows?.[0];
+      const s  = (sRows  as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const oc = (occRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const z  = (zRows  as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const bl = (blRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const mv = (mvRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const usedVolume     = Number(oc.used_volume     ?? 0);
+      const capacityVolume = Number(oc.capacity_volume ?? 0);
+      const totalIn  = Number(mv.total_in  ?? 0);
+      const totalOut = Number(mv.total_out ?? 0);
       return {
-        ...(w ?? { id }),
+        ...(w ?? { id: String(wid) }),
         materialCount:     Number(s.material_count    ?? 0),
         totalQuantity:     Number(s.total_quantity     ?? 0),
         reservedQuantity:  Number(s.reserved_qty       ?? 0),
         availableQuantity: Number(s.available_qty      ?? 0),
         stockValue:        Number(s.stock_value        ?? 0),
         lowStockCount:     Number(s.low_stock_count    ?? 0),
+        // Occupancy (Zona-Qator-Javon locator volume). occupancyPct = used/capacity
+        // when a capacity is defined; null when no bins/capacity yet (honest-empty).
+        occupancy: {
+          zoneCount:      Number(z.zone_count        ?? 0),
+          binCount:       Number(oc.bin_count        ?? 0),
+          activeBinCount: Number(oc.active_bin_count ?? 0),
+          usedVolume,
+          capacityVolume,
+          occupancyPct: capacityVolume > 0 ? Math.round((usedVolume / capacityVolume) * 1000) / 10 : null,
+        },
+        // Batch / expiry (FEFO-relevant) summary.
+        batch: {
+          lotCount:          Number(bl.lot_count           ?? 0),
+          expiringSoonCount: Number(bl.expiring_soon_count ?? 0),
+          expiredCount:      Number(bl.expired_count       ?? 0),
+        },
+        // Movements (kirim/chiqim). warehouse_transactions is currently empty in this
+        // environment → totals are honestly 0; populated once movements are logged.
+        movements: {
+          movementCount:  Number(mv.movement_count ?? 0),
+          totalIn,
+          totalOut,
+          netChange:      totalIn - totalOut,
+          lastMovementAt: mv.last_movement_at ? String(mv.last_movement_at) : null,
+        },
       };
-    } catch { return { id, materialCount: 0, totalQuantity: 0 }; }
+    } catch (e) {
+      this.logger.warn(`getWarehouseStats failed: ${(e as Error).message}`);
+      return { id: String(wid), materialCount: 0, totalQuantity: 0 };
+    }
   }
 
   @ApiOperation({ summary: 'Get warehouse by id' })
@@ -237,7 +324,7 @@ export class WmsGatewayWarehousesController {
     try {
       const r = await rawSql(sql`SELECT id, code, name, name_ru, type, location, is_active, manager_id, created_at FROM warehouses WHERE id = ${id} AND deleted_at IS NULL`);
       const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
-      if (!row) throw new NotFoundException(`Ombor #${id} topilmadi`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id } }));
       return row;
     } catch (e) { if (e instanceof NotFoundException) throw e; return { id }; }
   }

@@ -6,7 +6,7 @@
  */
 
 import {
-  pgTable, serial, text, integer, timestamp, numeric, date,
+  pgTable, serial, text, integer, timestamp, numeric, date, varchar,
 } from 'drizzle-orm/pg-core';
 
 // salary_history: used with snake_case columns (base_salary) in finance-actions.repository.ts
@@ -20,8 +20,57 @@ export const salary_history = pgTable('salary_history', {
   salary_earned:         numeric('salary_earned', { precision: 15, scale: 2 }),
   total_bonuses:         numeric('total_bonuses', { precision: 15, scale: 2 }).default('0'),
   other_bonuses:         numeric('other_bonuses', { precision: 15, scale: 2 }).default('0'),
+  // Workflow columns — exist in live DB; added to schema so updatePayroll() can write them
+  status:                varchar('status').default('draft'),
+  approved_by:           integer('approved_by'),
+  paid_by:               integer('paid_by'),
+  paid_date:             date('paid_date'),
   created_at:            timestamp('created_at').defaultNow(),
   updated_at:            timestamp('updated_at').defaultNow(),
+});
+
+// salary_change_log: oylik-o'zgarish AUDIT-JURNALI (Concept A). Split out of `salary_history`
+// (APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02) — bitta ko'tarilish/tekshiruv hodisasi = bitta
+// yozuv. Payroll-davr hisob-kitobi (Concept B) bilan aralashtirilmaydi — u payroll_period_record'da.
+// Consumer: drizzle-hr-payroll.repo.ts (maosh tarixi/audit ro'yxati), drizzle-hr.repo.ts
+// (reviewSalaryTransactional — "maosh tekshiruv" hodisasi).
+export const salary_change_log = pgTable('salary_change_log', {
+  id:              serial('id').primaryKey(),
+  employee_id:     integer('employee_id').notNull(),
+  user_id:         integer('user_id'),
+  effective_date:  timestamp('effective_date'),
+  change_type:     varchar('change_type'),
+  previous_salary: numeric('previous_salary', { precision: 15, scale: 2 }),
+  new_salary:      numeric('new_salary', { precision: 15, scale: 2 }),
+  change_percent:  numeric('change_percent', { precision: 6, scale: 2 }),
+  reason:          text('reason'),
+  approved_by:     integer('approved_by'),
+  created_by:      integer('created_by'),
+  created_at:      timestamp('created_at').defaultNow(),
+});
+
+// payroll_period_record: PAYROLL-DAVR hisob-kitobi (Concept B). Split out of `salary_history`
+// (APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02) — har oylik-davr uchun xodimning hisob-kitobi
+// (asosiy maosh, mukofot, GL/to'lov holati). Audit-jurnal (Concept A) bilan aralashtirilmaydi.
+// Consumer: drizzle-hr.repo.ts (findPayroll/savePayroll/updatePayroll/postPayrollToGL/
+// getPayrollSummary), finance-actions.repository.ts (bozor-maosh statistikasi), hr-gsd.repository.ts,
+// employees-compat-financials.service.ts, employees-compat-profile-raw.service.ts (xodim profili).
+export const payroll_period_record = pgTable('payroll_period_record', {
+  id:                   serial('id').primaryKey(),
+  employee_id:          integer('employee_id').notNull(),
+  salary_period_start:  date('salary_period_start'),
+  salary_period_end:    date('salary_period_end'),
+  base_salary:          numeric('base_salary', { precision: 15, scale: 2 }),
+  salary_earned:        numeric('salary_earned', { precision: 15, scale: 2 }),
+  total_bonuses:        numeric('total_bonuses', { precision: 15, scale: 2 }).default('0'),
+  other_bonuses:        numeric('other_bonuses', { precision: 15, scale: 2 }).default('0'),
+  status:               varchar('status').default('draft'),
+  approved_by:          integer('approved_by'),
+  paid_by:              integer('paid_by'),
+  paid_date:            date('paid_date'),
+  created_at:           timestamp('created_at').defaultNow(),
+  updated_at:           timestamp('updated_at').defaultNow(),
+  created_by:           integer('created_by'),
 });
 
 // payroll_periods_hr: used with snake_case columns (period_name etc.) in drizzle-hr.repo.ts

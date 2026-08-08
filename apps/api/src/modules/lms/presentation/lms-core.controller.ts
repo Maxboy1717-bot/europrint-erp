@@ -28,8 +28,9 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { LmsCoreService } from '../application/services/lms-core.service';
 import {
   CreateExamSchema, CreateExamDto,
-  SubmitExamSchema, SubmitExamDto
+  SubmitExamSchema, SubmitExamDto,
 } from './dto/lms-core.dto';
+import { AuthenticatedUser } from '@common/types/user.types';
 import { db } from '@shared/db';
 import { lms_support_tickets } from '@shared/db';
 
@@ -62,6 +63,16 @@ export class LmsCoreController {
     return unwrapOrInternal(result);
   }
 
+  @ApiOperation({ summary: 'Get exam questions (for FE exam UI — no correct_option exposed)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get('exams/:id/questions')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async getExamQuestions(@Param('id') id: string) {
+    const result = await this.svc.getExamQuestions(id);
+    return unwrapOrInternal(result);
+  }
+
   @ApiOperation({ summary: 'Create exam' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -89,6 +100,15 @@ export class LmsCoreController {
     const result = await this.svc.submitExam(id, userId, dto);
     const data = unwrapOrInternal(result);
     return { message: 'Imtihon topshirildi', data };
+  }
+
+  @ApiOperation({ summary: 'LMS leaderboard — top performers by completed courses and avg score' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('leaderboard')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async leaderboard() {
+    const result = await this.svc.getLeaderboard();
+    return unwrapOrInternal(result);
   }
 
   @ApiOperation({ summary: 'Recent activity lang' })

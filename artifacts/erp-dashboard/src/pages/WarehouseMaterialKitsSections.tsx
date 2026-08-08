@@ -16,7 +16,7 @@ import { STATUS_BADGES } from "./WarehouseMaterialKitsTypes";
 
 interface SummaryCardsProps {
   kits: MaterialKit[];
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function SummaryCards({ kits, t }: SummaryCardsProps) {
@@ -26,7 +26,7 @@ export function SummaryCards({ kits, t }: SummaryCardsProps) {
       <Card data-testid="card-pending-count">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Clock className="h-4 w-4 text-[var(--ep-yellow)]" />{t("Kutilmoqda", "Ожидает")}
+            <Clock className="h-4 w-4 text-[var(--ep-yellow)]" />{t("WarehouseMaterialKits.kutilmoqda")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -36,7 +36,7 @@ export function SummaryCards({ kits, t }: SummaryCardsProps) {
       <Card data-testid="card-preparing-count">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Package className="h-4 w-4 text-[var(--ep-blue)]" />{t("Tayyorlanmoqda", "Готовится")}
+            <Package className="h-4 w-4 text-[var(--ep-blue)]" />{t("WarehouseMaterialKits.tayyorlanmoqda")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -46,7 +46,7 @@ export function SummaryCards({ kits, t }: SummaryCardsProps) {
       <Card data-testid="card-ready-count">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />{t("Tayyor", "Готов")}
+            <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />{t("WarehouseMaterialKits.statusReady")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -56,7 +56,7 @@ export function SummaryCards({ kits, t }: SummaryCardsProps) {
       <Card data-testid="card-delivered-count">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Truck className="h-4 w-4 text-[var(--ep-purple)]" />{t("Yetkazildi", "Доставлен")}
+            <Truck className="h-4 w-4 text-[var(--ep-purple)]" />{t("WarehouseMaterialKits.statusDelivered")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -75,18 +75,17 @@ interface KitsTableProps {
   setSelectedTab: (v: string) => void;
   searchQuery: string;
   setSearchQuery: (v: string) => void;
-  lang: "uz" | "ru";
   onPrepare: (kitId: number) => void;
   onMarkReady: (kitId: number) => void;
   onOpenDetails: (kit: MaterialKit) => void;
   preparePending: boolean;
   markReadyPending: boolean;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function KitsTable({
   filteredKits, kitsLoading, selectedTab, setSelectedTab,
-  searchQuery, setSearchQuery, lang, onPrepare, onMarkReady, onOpenDetails,
+  searchQuery, setSearchQuery, onPrepare, onMarkReady, onOpenDetails,
   preparePending, markReadyPending, t,
 }: KitsTableProps) {
   return (
@@ -95,17 +94,17 @@ export function KitsTable({
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
             <TabsList>
-              <TabsTrigger value="pending" data-testid="tab-pending">{t("Kutilmoqda", "Ожидает")}</TabsTrigger>
-              <TabsTrigger value="preparing" data-testid="tab-preparing">{t("Tayyorlanmoqda", "Готовится")}</TabsTrigger>
-              <TabsTrigger value="ready" data-testid="tab-ready">{t("Tayyor", "Готов")}</TabsTrigger>
-              <TabsTrigger value="delivered" data-testid="tab-delivered">{t("Yetkazildi", "Доставлен")}</TabsTrigger>
-              <TabsTrigger value="all" data-testid="tab-all">{t("Barchasi", "Все")}</TabsTrigger>
+              <TabsTrigger value="pending" data-testid="tab-pending">{t("WarehouseMaterialKits.kutilmoqda")}</TabsTrigger>
+              <TabsTrigger value="preparing" data-testid="tab-preparing">{t("WarehouseMaterialKits.tayyorlanmoqda")}</TabsTrigger>
+              <TabsTrigger value="ready" data-testid="tab-ready">{t("WarehouseMaterialKits.statusReady")}</TabsTrigger>
+              <TabsTrigger value="delivered" data-testid="tab-delivered">{t("WarehouseMaterialKits.statusDelivered")}</TabsTrigger>
+              <TabsTrigger value="all" data-testid="tab-all">{t("WarehouseMaterialKits.tabAll")}</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t("Qidirish...", "Поиск...")}
+              placeholder={t("WarehouseMaterialKits.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -122,19 +121,19 @@ export function KitsTable({
         ) : filteredKits.length === 0 ? (
           <div className="text-center py-12 text-[13px] text-muted-foreground">
             <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>{t("To'plamlar topilmadi", "Комплекты не найдены")}</p>
+            <p>{t("WarehouseMaterialKits.noKitsFound")}</p>
           </div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("To'plam raqami", "Номер комплекта")}</TableHead>
-                <TableHead>{t("Buyurtma", "Заказ")}</TableHead>
-                <TableHead>{t("Mahsulot", "Продукция")}</TableHead>
-                <TableHead>{t("Tiraj", "Тираж")}</TableHead>
-                <TableHead>{t("Holat", "Статус")}</TableHead>
-                <TableHead>{t("Yaratilgan", "Создан")}</TableHead>
-                <TableHead className="text-right">{t("Amallar", "Действия")}</TableHead>
+                <TableHead>{t("WarehouseMaterialKits.colKitNumber")}</TableHead>
+                <TableHead>{t("WarehouseMaterialKits.colOrder")}</TableHead>
+                <TableHead>{t("WarehouseMaterialKits.colProduct")}</TableHead>
+                <TableHead>{t("WarehouseMaterialKits.colQty")}</TableHead>
+                <TableHead>{t("WarehouseMaterialKits.colStatus")}</TableHead>
+                <TableHead>{t("WarehouseMaterialKits.colCreated")}</TableHead>
+                <TableHead className="text-right">{t("WarehouseMaterialKits.colActions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -153,7 +152,7 @@ export function KitsTable({
                     <TableCell>{kit.order?.tiraj?.toLocaleString() || "-"}</TableCell>
                     <TableCell>
                       <Badge variant={statusInfo.variant}>
-                        {lang === "uz" ? statusInfo.label : statusInfo.labelRu}
+                        {t(statusInfo.labelKey)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{formatDateTime(kit.createdAt)}</TableCell>
@@ -161,16 +160,16 @@ export function KitsTable({
                       <div className="flex items-center justify-end gap-2">
                         {kit.status === "pending" && (
                           <Button size="sm" onClick={() => onPrepare(kit.id)} disabled={preparePending} data-testid={`button-prepare-${kit.id}`}>
-                            {t("Tayyorlash", "Готовить")}
+                            {t("WarehouseMaterialKits.prepareButton")}
                           </Button>
                         )}
                         {kit.status === "preparing" && (
                           <Button size="sm" onClick={() => onMarkReady(kit.id)} disabled={markReadyPending} data-testid={`button-ready-${kit.id}`}>
-                            <CheckCircle className="h-4 w-4 mr-1" />{t("Tayyor", "Готов")}
+                            <CheckCircle className="h-4 w-4 mr-1" />{t("WarehouseMaterialKits.statusReady")}
                           </Button>
                         )}
                         <Button size="sm" variant="outline" onClick={() => onOpenDetails(kit)} data-testid={`button-details-${kit.id}`}>
-                          {t("Batafsil", "Подробнее")}
+                          {t("WarehouseMaterialKits.detailsButton")}
                         </Button>
                       </div>
                     </TableCell>

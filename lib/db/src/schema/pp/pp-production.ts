@@ -5,11 +5,13 @@
 
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, index, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, date, jsonb, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, users } from "../core-schema";
-import { crmCompanies } from "../crm-schema";
+// ORFAN CLEANUP (2026-07-02): import of crmCompanies from "../crm-schema"
+// removed — that pgTable declaration was deleted (dead lib/db duplicate,
+// Q-29 verified). orders.customerId FK below converted to a plain column.
 // rawMaterials import removed: production_order_components.rawMaterialId FK
 // now references material_cards via DB migration (avoiding circular import cycle)
 import { salesOrders } from "../sd-schema";
@@ -66,6 +68,10 @@ export const workCenters = pgTable("work_centers", {
    * Masalan: "Offset bosma", "Digital bosma", "Sifat nazorati"
    */
   requiredSkillName: varchar("required_skill_name", { length: 100 }),
+  // Wave 1 (500K build): PP sex taxonomy — kanonik sex kodi + FLEKSO/OFSET bo'lim.
+  // NULLABLE: qiymatlar egasi-DATA (22-sex ro'yxati), struktura hozir (Q-40).
+  sexCode: varchar("sex_code", { length: 50 }),
+  departmentKind: varchar("department_kind", { length: 10 }),
   // ── ADD-ONLY: live DB superset columns ──
   nameUz: text("name_uz"),
   hoursPerDay: numericMoney("hours_per_day"),
@@ -75,6 +81,12 @@ export const workCenters = pgTable("work_centers", {
   capacityPerHour: numericMoney("capacity_per_hour"),
   // Per-work-center efficiency/OEE factor (0–1) used by CRP available-hours calc; defaults to 0.85.
   efficiencyRate: numericMoney("efficiency_rate"),
+  // Wave 4 (500K build): per-sex norma/brak/crew parametrlar. NULLABLE: qiymatlar egasi-DATA (Q-40).
+  normaM2PerShift: numericMoney("norma_m2_per_shift"),
+  normaKgPerShift: numericMoney("norma_kg_per_shift"),
+  brakLimitPct: numericMoney("brak_limit_pct"),
+  minCrewSize: integer("min_crew_size"),
+  maxCrewSize: integer("max_crew_size"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -128,7 +140,8 @@ export const orders = pgTable("orders", {
   productId: varchar("product_id").references(() => products.id, { onDelete: 'set null' }),
   quantity: integer("quantity").notNull(),
   customerName: text("customer_name"),
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
   dueDate: varchar("due_date", { length: 10 }),
   priority: varchar("priority", { length: 20 }).notNull().default("normal"),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
@@ -282,85 +295,6 @@ export const insertDowntimeLogSchema = createInsertSchema(downtimeLogs, {
 export type DowntimeLog = typeof downtimeLogs.$inferSelect;
 export type InsertDowntimeLog = z.infer<typeof insertDowntimeLogSchema>;
 
-// BOM Headers (BOM bosh)
-export const bomHeaders = pgTable("bom_headers", {
-  id: serial("id").primaryKey(),
-  bomNumber: varchar("bom_number", { length: 50 }).notNull().unique(),
-  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
-  version: varchar("version", { length: 20 }).notNull().default("1.0"),
-  status: varchar("status", { length: 20 }).notNull().default("draft"),
-  baseQuantity: numericMoney("base_quantity").notNull().default(1),
-  baseUnit: varchar("base_unit", { length: 20 }).notNull().default("dona"),
-  validFrom: varchar("valid_from", { length: 10 }),
-  validTo: varchar("valid_to", { length: 10 }),
-  description: text("description"),
-  // ── ADD-ONLY: live DB superset columns ──
-  isActive: boolean("is_active").notNull().default(true),
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-}, (t) => [
-  index("idx_bom_headers_product_id").on(t.productId),
-  index("idx_bom_headers_status").on(t.status),
-  index("idx_bom_headers_created_at").on(t.createdAt),
-  check("bom_headers_status_chk", sql`${t.status} IN ('draft','active','inactive','archived')`),
-]);
-
-export const insertBomHeaderSchema = createInsertSchema(bomHeaders, {
-  bomNumber: z.string().min(1, "BOM raqami talab qilinadi"),
-  productId: z.string().min(1, "Mahsulot tanlash kerak"),
-  version: z.string().min(1, "Versiya talab qilinadi"),
-  status: z.enum(["draft", "active", "inactive", "archived"]),
-  baseQuantity: z.number().positive("Asosiy miqdor musbat bo'lishi kerak"),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export type BomHeader = typeof bomHeaders.$inferSelect;
-export type InsertBomHeader = z.infer<typeof insertBomHeaderSchema>;
-
-// BOM Items (BOM komponentlari)
-export const bomItems = pgTable("bom_items", {
-  id: serial("id").primaryKey(),
-  bomId: varchar("bom_id").notNull().references(() => bomHeaders.id, { onDelete: "cascade" }),
-  itemNumber: varchar("item_number", { length: 10 }).notNull(),
-  componentType: varchar("component_type", { length: 20 }).notNull().default("material"),
-  // FK type fix: should reference material_cards.id (integer), not products.id.
-  // Cannot use .references() here without creating a circular import
-  // (pp-production → mm-material-cards → pp-schema → pp-production).
-  // DB-level FK is applied via migrations-drift.ts entry below.
-  componentId: integer("component_id").notNull(),
-  quantity: numericMoney("quantity").notNull(),
-  unit: varchar("unit", { length: 20 }).notNull().default("dona"),
-  scrapPercentage: numericMoney("scrap_percentage").notNull().default(0),
-  position: integer("position").notNull().default(0),
-  notes: text("notes"),
-  // ── ADD-ONLY: live DB superset columns ──
-  materialId: integer("material_id"),
-  scrapPercent: numericMoney("scrap_percent"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-}, (t) => [
-  index("idx_bom_items_bom_id").on(t.bomId),
-  index("idx_bom_items_component_id").on(t.componentId),
-  index("idx_bom_items_created_at").on(t.createdAt),
-  check("bom_items_component_type_chk", sql`${t.componentType} IN ('material','sub_assembly')`),
-]);
-
-export const insertBomItemSchema = createInsertSchema(bomItems, {
-  bomId: z.string().min(1, "BOM ID talab qilinadi"),
-  itemNumber: z.string().min(1, "Item raqami talab qilinadi"),
-  componentType: z.enum(["material", "sub_assembly"]),
-  componentId: z.string().min(1, "Komponent tanlash kerak"),
-  quantity: z.number().positive("Miqdor musbat bo'lishi kerak"),
-  scrapPercentage: z.number().min(0).max(100, "Brak foizi 0-100 oralig'ida bo'lishi kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type BomItem = typeof bomItems.$inferSelect;
-export type InsertBomItem = z.infer<typeof insertBomItemSchema>;
-
 // Routings (Texnologik jarayon bosh)
 export const routings = pgTable("routings", {
   id: serial("id").primaryKey(),
@@ -421,6 +355,14 @@ export const routingOperations = pgTable("routing_operations", {
   isActive: boolean("is_active"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  // Wave 2: non-linear routing graph (live DB cols) — predecessor/successor/return-edge.
+  predecessorOperationId: integer("predecessor_operation_id"),
+  successorOperationIds: jsonb("successor_operation_ids"),
+  returnToOperationId: integer("return_to_operation_id"),
+  routingCondition: varchar("routing_condition", { length: 50 }),
+  // 07-pp#24: per-operation alternative (backup) work-center for IoT/MRO-downtime fail-over.
+  // NULL = no alternative = fail-over never triggers (current behavior). FK -> work_centers(id).
+  alternativeWorkCenterId: integer("alternative_work_center_id"),
 }, (t) => [
   index("idx_routing_operations_routing_id").on(t.routingId),
   index("idx_routing_operations_work_center_id").on(t.workCenterId),
@@ -447,20 +389,43 @@ export const productionOrders = pgTable("production_orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("order_number", { length: 50 }).notNull().unique(),
   productId: integer("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
-  bomId: varchar("bom_id").references(() => bomHeaders.id, { onDelete: "set null" }),
+  // NOTE: FK to bomHeaders removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  bomId: varchar("bom_id"),
   routingId: varchar("routing_id").references(() => routings.id, { onDelete: "set null" }),
+  // Golden-thread SD->PP link (A1). NULLABLE BY DESIGN — internal/sample production
+  // runs legitimately have no originating sales order. The two canonical create paths
+  // (POST /pp/orders CQRS requires soId; SD->PP ready-for-planning listener) always set
+  // it; manual/generic writers carry it through when supplied (never silently dropped).
   salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
   plannedQuantity: numericMoney("planned_quantity").notNull(),
   confirmedQuantity: numericMoney("confirmed_quantity").notNull().default(0),
   scrapQuantity: numericMoney("scrap_quantity").notNull().default(0),
   orderType: varchar("order_type", { length: 20 }).notNull().default("standard"),
-  status: varchar("status", { length: 20 }).notNull().default("created"),
+  // Item #81: length was 20, which doesn't fit 'released_to_production' (22 chars) — one of
+  // this same table's own 13 status_chk values below. Live column is varchar(50) (confirmed).
+  status: varchar("status", { length: 50 }).notNull().default("created"),
   plannedStartDate: varchar("planned_start_date", { length: 10 }),
   plannedEndDate: varchar("planned_end_date", { length: 10 }),
   actualStartDate: varchar("actual_start_date", { length: 10 }),
   actualEndDate: varchar("actual_end_date", { length: 10 }),
   priority: integer("priority").notNull().default(3),
+  // EP-PP-097 ZARUR (urgent) flag — floats the order above every non-urgent one
+  // in the production queue. Orthogonal to the numeric priority band.
+  isUrgent: boolean("is_urgent").notNull().default(false),
+  // EP-PP-025 / EP-PP-061 frozen-zone (no-preempt): once committed to the
+  // near-term window the order cannot be displaced by a new higher-priority order.
+  // Cleared only by owner/director authority.
+  isFrozen: boolean("is_frozen").notNull().default(false),
+  frozenUntil: timestamp("frozen_until"),
+  // EP-PP-085 "Очеред" — operator ko'radigan stanok-ichi navbat raqami (1,2,3...), drag-drop
+  // bilan qayta tartiblanadi. `priority` (band) va `isUrgent` (ZARUR) dan ALOHIDA. (Batch 5 Item 4)
+  queueSequence: integer("queue_sequence"),
   workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
+  // SB0233/SB0234/SB0258 (06-PP audit): karta-markazli ERP-ORG — buyurtma qaysi
+  // org-karta (sex/bo'lim)ga tegishli ekanini bildiradi. Naqsh work_centers.orgDepartmentId
+  // bilan bir xil (org_departments = kanonik KARTA jadvali). NULLABLE: create-vaqtida
+  // card hali tanlanmasligi mumkin (egasi-DATA — avtomatik karta-tayinlash qoidasi yo'q hali).
+  orgDepartmentId: integer("org_department_id"),
   productionType: varchar("production_type", { length: 30 }).default("other"),
   defectiveQty: numericMoney("defective_qty").notNull().default(0),
   plannedCost: numericMoney("planned_cost"),
@@ -484,12 +449,17 @@ export const productionOrders = pgTable("production_orders", {
 }, (t) => [
   index("idx_production_orders_product_id").on(t.productId),
   index("idx_production_orders_work_center_id").on(t.workCenterId),
+  index("idx_production_orders_org_department_id").on(t.orgDepartmentId),
   index("idx_production_orders_status").on(t.status),
   index("idx_production_orders_priority").on(t.priority),
+  index("idx_production_orders_urgent").on(t.isUrgent),
+  index("idx_production_orders_frozen").on(t.isFrozen),
   index("idx_production_orders_created_at").on(t.createdAt),
   index("idx_production_orders_updated_at").on(t.updatedAt),
   check("production_orders_order_type_chk", sql`${t.orderType} IN ('standard','rework','sample')`),
-  check("production_orders_status_chk", sql`${t.status} IN ('created','released','in_progress','completed','closed','qc_hold')`),
+  // EP-PP-082 (7-status owner override) + legacy strings kept as a SUPERSET so
+  // nothing that already persisted ('created'/'pending'/'released'/'qc_hold') breaks (Q-46).
+  check("production_orders_status_chk", sql`${t.status} IN ('created','pending','planned','confirmed','released','released_to_production','in_progress','in_qc','qc_hold','completed','closed','cancelled','paused')`),
 ]);
 
 export const insertProductionOrderSchema = createInsertSchema(productionOrders, {
@@ -499,12 +469,38 @@ export const insertProductionOrderSchema = createInsertSchema(productionOrders, 
   confirmedQuantity: z.number().nonnegative("Tasdiqlangan miqdor 0 yoki katta bo'lishi kerak"),
   scrapQuantity: z.number().nonnegative("Chiqindi miqdori 0 yoki katta bo'lishi kerak"),
   orderType: z.enum(["standard", "rework", "sample"]),
-  status: z.enum(["created", "released", "in_progress", "completed", "closed", "qc_hold"]),
+  // Item #81: was a 6-value subset that didn't match this table's own 13-value status_chk
+  // (line ~460) or PoStatus (production-order.aggregate.ts) — expanded to the full CHECK list.
+  // Not imported anywhere in apps/api (grepped), so this was a documentation-only drift, not a
+  // runtime gap; kept in sync anyway so a future consumer doesn't inherit a wrong constraint.
+  status: z.enum(["created", "pending", "planned", "confirmed", "released", "released_to_production", "in_progress", "in_qc", "qc_hold", "completed", "closed", "cancelled", "paused"]),
   priority: z.number().int().min(1).max(5, "Ustuvorlik 1-5 oralig'ida bo'lishi kerak"),
 }).omit({ id: true, createdAt: true, updatedAt: true } as never);
 
 export type ProductionOrder = typeof productionOrders.$inferSelect;
 export type InsertProductionOrder = z.infer<typeof insertProductionOrderSchema>;
+
+// EP-PP-106 (vision 07-pp#20): per-order plan-vs-actual snapshot feeding the
+// last-year-fact recommendation (median primary + best-20% mean + last-5 mean).
+// production_order_id / product_id are ON DELETE SET NULL so a snapshot survives its
+// source order/product (historical stats must never vanish). product_id is the
+// denormalised grouping key the recommendation reads by; entry_date windows "last
+// year". All quantity columns are nullable so a half-logged row never blocks.
+export const ppPlanFactEntries = pgTable("pp_plan_fact_entries", {
+  id: serial("id").primaryKey(),
+  productionOrderId: integer("production_order_id").references(() => productionOrders.id, { onDelete: "set null" }),
+  productId: integer("product_id").references(() => products.id, { onDelete: "set null" }),
+  entryDate: date("entry_date").notNull().default(sql`CURRENT_DATE`),
+  plannedQty: numericMoney("planned_qty"),
+  actualQty: numericMoney("actual_qty"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_pp_plan_fact_entries_product_date").on(t.productId, t.entryDate),
+  index("idx_pp_plan_fact_entries_order").on(t.productionOrderId),
+]);
+
+export type PpPlanFactEntry = typeof ppPlanFactEntries.$inferSelect;
+export type InsertPpPlanFactEntry = typeof ppPlanFactEntries.$inferInsert;
 
 // Production Order Operations
 export const productionOrderOperations = pgTable("production_order_operations", {
@@ -516,14 +512,37 @@ export const productionOrderOperations = pgTable("production_order_operations", 
   plannedDuration: numericMoney("planned_duration").notNull().default(0),
   actualDuration: numericMoney("actual_duration").notNull().default(0),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
+  // vision 07-pp#46: op enters the work-center queue at queued_at; the gap
+  // queued_at -> started_at is WAITING time (not machine work) and is EXCLUDED from the
+  // OEE availability denominator (which uses active work = completed_at - started_at).
+  // NULL = untracked -> 0 queue time, so existing rows keep their current OEE contribution.
+  queuedAt: timestamp("queued_at"),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   operatorId: integer("operator_id"),
+  // Wave 2: rework history (non-linear routing returns — tisneniya->karton tigel qaytishi).
+  returnedFromOperationId: integer("returned_from_operation_id"),
+  reworkReason: text("rework_reason"),
+  reworkCount: integer("rework_count").notNull().default(0),
 }, (t) => [
   index("idx_production_order_operations_production_order_id").on(t.productionOrderId),
   index("idx_production_order_operations_work_center_id").on(t.workCenterId),
   index("idx_production_order_operations_status").on(t.status),
   check("prod_order_ops_status_chk", sql`${t.status} IN ('pending','in_progress','completed')`),
+]);
+
+// Wave 2 (500K): sex kirish/chiqish routing qoidalari (nochiziqli graf — tigel->faqat packing;
+// tisneniya->karton tigel/rezka/skleyka return). Qiymatlar egasi 22-sex routing royxatidan (Q-40).
+export const workCenterIoRules = pgTable("work_center_io_rules", {
+  id: serial("id").primaryKey(),
+  workCenterId: integer("work_center_id").notNull().references(() => workCenters.id, { onDelete: "cascade" }),
+  allowedPredecessors: jsonb("allowed_predecessors").notNull().default(sql`'[]'::jsonb`),
+  allowedSuccessors: jsonb("allowed_successors").notNull().default(sql`'[]'::jsonb`),
+  reworkAllowedTo: jsonb("rework_allowed_to").notNull().default(sql`'[]'::jsonb`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_work_center_io_rules_wc").on(t.workCenterId),
 ]);
 
 export const insertProductionOrderOperationSchema = createInsertSchema(productionOrderOperations, {
@@ -839,3 +858,120 @@ export const insertProductionStatusHistorySchema = createInsertSchema(production
 
 export type ProductionStatusHistory = typeof productionStatusHistory.$inferSelect;
 export type InsertProductionStatusHistory = z.infer<typeof insertProductionStatusHistorySchema>;
+
+// Multi-line order (EP-PP-118, vision 07-pp#124) — each order POSITION is one row here, with
+// its own product / route / quantity / status / seq. Additive CHILD of production_orders; the
+// scalar production_orders.product_id is RETAINED (Q-46, nothing regresses) and every existing
+// order is back-filled to a single line (seq=1) by pp-production-order-lines-2026-07-11.sql.
+//
+// Appended at the END of the file (after production_status_history — the prior last statement)
+// so this insert never collides with sibling edits elsewhere in the file, and needs NO new
+// pg-core import (it uses only already-imported symbols).
+//
+// NOTE (schema-barrel precedence): the runtime PP repo reads/writes this table via parameterised
+// runQuery (like the pp_reason_codes sibling), because @europrint/schemas resolves productionOrders
+// from the apps/api compat layer — NOT this lib/db module — so a lib/db-only table object is not
+// import-resolvable at runtime. This def is the CANONICAL schema mirror, kept aligned with the
+// migration (columns / types / defaults). product_id is a plain NOT NULL integer with NO FK,
+// mirroring the scalar production_orders.product_id (live carries dangling ids — products
+// master-data is still seeding). route_id is a plain column here (technology_cards lives in another
+// schema file — same in-file convention as bomId / orgDepartmentId above, avoiding an import cycle);
+// the migration carries its real FK -> technology_cards(id) ON DELETE SET NULL. The (order, seq)
+// pair is UNIQUE at the DB level (uq_production_order_lines_order_seq in the migration); the mirror
+// declares it as a plain index() to avoid adding a uniqueIndex import to this shared file — the
+// mirror is documentation only (runtime uniqueness is enforced by the migration DDL, DB-proven).
+export const productionOrderLines = pgTable("production_order_lines", {
+  id: serial("id").primaryKey(),
+  productionOrderId: integer("production_order_id").notNull().references(() => productionOrders.id, { onDelete: "cascade" }),
+  productId: integer("product_id").notNull(),
+  quantity: numericMoney("quantity").notNull().default(0),
+  routeId: integer("route_id"),
+  seq: integer("seq").notNull().default(1),
+  status: varchar("status", { length: 20 }).notNull().default("created"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_production_order_lines_order").on(t.productionOrderId),
+  index("idx_production_order_lines_product").on(t.productId),
+  index("idx_production_order_lines_route").on(t.routeId),
+  // DB-level constraint is UNIQUE (uq_production_order_lines_order_seq — see migration); the
+  // mirror uses index() to avoid a new pg-core uniqueIndex import on this shared file.
+  index("idx_production_order_lines_order_seq").on(t.productionOrderId, t.seq),
+]);
+
+export type ProductionOrderLine = typeof productionOrderLines.$inferSelect;
+export type InsertProductionOrderLine = typeof productionOrderLines.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// vision 07-pp#49 — Director "holat formulasi" PP reja% smena/kunlik SNAPSHOT.
+// Director dashboardi reja%-ni real-time EMAS, muzlatilgan snapshotdan o'qiydi (har
+// smena yopilganda / kunlik cron yozadi). MES offline bo'lsa oxirgi snapshot "offline"
+// belgisi bilan ko'rsatiladi (A5). Formula qat'iy: actual/planned*100. #20
+// (pp_plan_fact_entries) dan ALOHIDA — bu Director uchun agregat, offline-xavfsiz.
+// Migration: pp-plan-snapshots-director-status-2026-07-11.sql (append-only; Director
+// eng oxirgi captured_at qatorini o'qiydi). date/numericMoney/serial/index import allaqachon mavjud.
+// ─────────────────────────────────────────────────────────────────────────────
+export const ppPlanSnapshots = pgTable("pp_plan_snapshots", {
+  id: serial("id").primaryKey(),
+  snapshotDate: date("snapshot_date").notNull(),
+  periodType: varchar("period_type", { length: 10 }).notNull().default("daily"),
+  shiftLabel: varchar("shift_label", { length: 20 }),
+  workCenterId: integer("work_center_id"),
+  plannedQty: numericMoney("planned_qty").notNull().default(0),
+  actualQty: numericMoney("actual_qty").notNull().default(0),
+  planPercent: numericMoney("plan_percent").notNull().default(0),
+  sessionCount: integer("session_count").notNull().default(0),
+  source: varchar("source", { length: 20 }).notNull().default("shift_close"),
+  capturedAt: timestamp("captured_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_pp_plan_snapshots_period_captured").on(t.periodType, t.capturedAt),
+]);
+
+export const insertPpPlanSnapshotSchema = createInsertSchema(ppPlanSnapshots).omit({
+  id: true,
+} as never);
+
+export type PpPlanSnapshot = typeof ppPlanSnapshots.$inferSelect;
+export type InsertPpPlanSnapshot = z.infer<typeof insertPpPlanSnapshotSchema>;
+
+// ─── PP MATERIAL RESERVATIONS (vision 07-pp#30 / EP-PP-068) ────────────────────
+// PP-owned MRP priority-reservation ledger: which production order gets first claim
+// on a scarce material, ranked by priority (1=Shoshilinch..4=Past) then FIFO
+// (reserved_at), with a director-only manual override (priority_overridden_by /
+// override_reason / overridden_at). Distinct from the WMS physical reservation ledger
+// (stock_reservations) — this is the planning decision, not a stock hold. FK columns
+// are plain integers, enforced by the migration
+// pp-material-reservations-priority-fifo-2026-07-11.sql (same circular-import
+// avoidance convention as production_order_components.rawMaterialId above).
+export const ppMaterialReservations = pgTable("pp_material_reservations", {
+  id: serial("id").primaryKey(),
+  productionOrderId: integer("production_order_id").notNull(),
+  materialId: integer("material_id").notNull(),
+  qty: numericMoney("qty").notNull(),
+  // 1=Shoshilinch(urgent) 2=Yuqori(high) 3=Oddiy(normal) 4=Past(low); lower = allocated first.
+  priority: integer("priority").notNull().default(3),
+  reservedAt: timestamp("reserved_at", { withTimezone: true }).notNull().defaultNow(),
+  status: varchar("status", { length: 20 }).notNull().default("reserved"),
+  estimatedAvailableDate: date("estimated_available_date"),
+  priorityOverriddenBy: integer("priority_overridden_by"),
+  overrideReason: text("override_reason"),
+  overriddenAt: timestamp("overridden_at", { withTimezone: true }),
+  releasedAt: timestamp("released_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_pp_material_reservations_alloc").on(t.materialId, t.priority, t.reservedAt),
+  index("idx_pp_material_reservations_order").on(t.productionOrderId),
+  index("idx_pp_material_reservations_status").on(t.status),
+  check("chk_pp_material_reservations_priority", sql`${t.priority} BETWEEN 1 AND 4`),
+  check("chk_pp_material_reservations_status", sql`${t.status} IN ('reserved','waiting','released','issued')`),
+]);
+
+export const insertPpMaterialReservationSchema = createInsertSchema(ppMaterialReservations).omit({
+  id: true,
+  createdAt: true,
+} as never);
+
+export type PpMaterialReservation = typeof ppMaterialReservations.$inferSelect;
+export type InsertPpMaterialReservation = z.infer<typeof insertPpMaterialReservationSchema>;
+

@@ -17,6 +17,8 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { Public } from '@common/decorators/public.decorator';
+import { TabletTokenGuard } from '@common/guards/tablet-token.guard';
 import { LegacyService } from '../services/legacy.service';
 import { LegacyIotService } from '../services/legacy-iot.service';
 import { LmsRepository } from '../../lms/infrastructure/repositories/drizzle-lms.repo';
@@ -52,11 +54,7 @@ export class GeneralLegacyBController {
   ) {}
 
   // ─── Warehouse ─────────────────────────────────────────────────────────
-  @Get('warehouse/orders-by-date')
-  async getOrdersByDate(@Query() _query: Record<string, string | undefined>) {
-    return unwrapOrInternal(await this.svc.getOrdersByDate());
-  }
-
+  // NOTE: GET warehouse/orders-by-date/:date handled by WmsCatalogController (real production_orders JOIN material_kits query)
   // Route warehouse/warehouses moved to WmsWarehouseGatewayController (real DB implementation)
 
   @Get('warehouse/stock')
@@ -156,7 +154,15 @@ export class GeneralLegacyBController {
     return unwrapOrInternal(await this.iotSvc.getIotDowntimeEvents());
   }
 
+  // Third-party audit finding (2026-08-06): this route serves the kiosk tablet's
+  // defect-reason dropdown via x-tablet-token (sharedTabletFetch), not an ERP JWT
+  // cookie/header — the class-level JwtAuthGuard always 401'd it, and the FE
+  // swallows a failed fetch as an empty list, so the dropdown was silently always
+  // empty. Matches the @Public()+TabletTokenGuard pattern used by every other
+  // tablet endpoint in iot-tablet.controller.ts.
   @Get('iot/tablet/defect-reasons')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async getIotTabletDefectReasons() {
     return unwrapOrInternal(await this.iotSvc.getIotTabletDefectReasons());
   }

@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, and, gte, desc, count, sql } from 'drizzle-orm';
 import {
   db, cameras, camera_events, camera_safety_violations,
-  camera_quality_defects, camera_ai_configs,
+  camera_quality_defects, camera_ai_configs, camera_alerts,
 } from '@shared/db';
 import { Ok, Err, Result } from '@common/result';
 
@@ -75,6 +75,7 @@ export interface CameraConfigData {
   cameraName: string | null;
   cameraCode: string | null;
   triggerRules: Record<string, unknown>[];
+  aiPrompt: string | null;
   zone: string | null;
   alertThreshold: string | number;
   isActive: boolean;
@@ -144,7 +145,7 @@ export class DrizzleCameraAiRepo {
         .from(cameras)
         .leftJoin(
           camera_events,
-          and(sql`${cameras.id}::text = ${camera_events.camera_id}`, gte(camera_events.created_at, since)),
+          and(eq(cameras.id, camera_events.camera_id), gte(camera_events.created_at, since)),
         )
         .leftJoin(
           camera_safety_violations,
@@ -168,7 +169,7 @@ export class DrizzleCameraAiRepo {
         active_events: sql<number>`COUNT(*) FILTER (WHERE ${camera_events.event_type} = 'active')`,
       })
         .from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .where(gte(camera_events.created_at, since))
         .groupBy(camera_events.camera_id, cameras.name)
         .orderBy(sql`event_count DESC`);
@@ -190,7 +191,7 @@ export class DrizzleCameraAiRepo {
         location: cameras.location,
       })
         .from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .where(
           sql`${camera_events.severity} = 'high' OR ${camera_events.event_type} = 'anomaly'`,
         )
@@ -227,15 +228,35 @@ export class DrizzleCameraAiRepo {
       const [config] = await db.select()
         .from(camera_ai_configs)
         .where(eq(camera_ai_configs.camera_id, id));
-      const raw = config?.detection_types;
-      const triggerRules: Record<string, unknown>[] = raw
-        ? (typeof raw === 'string' ? JSON.parse(raw) : [])
-        : [];
+      // Audit 2026-08-07: `detection_types` is a live `jsonb` column, but the Drizzle schema
+      // (schema-misc-iot.ts) declares it `text()` — a schema/DB type drift. The pg driver
+      // parses jsonb to a native JS value regardless of what Drizzle thinks the TS type is
+      // (verified live: `SELECT detection_types` returns a real array, not a JSON string), so
+      // the old `typeof raw === 'string'` check was ALWAYS false whenever a row actually had
+      // data — every configured camera silently fell back to the full default mission catalog
+      // (Q-40: looked like "no config yet" when a config existed).
+      //
+      // Two shapes exist in the wild (both written by working code — `updateCameraTriggerRulesFromBody`
+      // writes a plain array, `updateCameraPrompt`/`patchCameraAi` write `{ai_prompt, rules}`
+      // because `camera_ai_configs.ai_prompt` has no dedicated Drizzle column to write to
+      // directly). Both are parsed here so neither write path silently loses the other's data.
+      const raw: unknown = config?.detection_types;
+      const parsed: unknown = typeof raw === 'string' ? this._safeJsonParse(raw) : raw;
+      let triggerRules: Record<string, unknown>[] = [];
+      let aiPrompt: string | null = null;
+      if (Array.isArray(parsed)) {
+        triggerRules = parsed as Record<string, unknown>[];
+      } else if (parsed && typeof parsed === 'object') {
+        const obj = parsed as { rules?: unknown; ai_prompt?: unknown };
+        triggerRules = Array.isArray(obj.rules) ? (obj.rules as Record<string, unknown>[]) : [];
+        aiPrompt = typeof obj.ai_prompt === 'string' ? obj.ai_prompt : null;
+      }
       return Ok({
         cameraId: id,
         cameraName: cam.name,
         cameraCode: cam.code,
         triggerRules,
+        aiPrompt,
         zone: config?.zone ?? null,
         alertThreshold: config?.alert_threshold ?? 0.8,
         isActive: config?.is_active ?? true,
@@ -273,5 +294,93 @@ export class DrizzleCameraAiRepo {
         });
       return Ok(true);
     } catch (e) { return Err((e as Error).message); }
+  }
+
+  /**
+   * 2.11 — persist one real VLM finding from analyze-by-missions as a
+   * `camera_events` row (Q-35: no new table, existing camera_events fits:
+   * event_type/description/severity/ai_confidence). Called only when the
+   * caller opted in via `persist: true` (CameraAnalysisWorkbench.tsx "Bazaga
+   * yozish" switch).
+   */
+  async createCameraEvent(input: {
+    cameraId: string;
+    eventType: string;
+    description: string;
+    severity: string;
+    aiConfidence: number | null;
+  }): Promise<Result<{ id: number }>> {
+    try {
+      const now = _time.now().toISOString();
+      const [row] = await db.insert(camera_events)
+        .values({
+          camera_id: input.cameraId,
+          event_type: input.eventType,
+          // Live DB: event_date/event_time NOT NULL, no default (drift — see
+          // schema-misc-iot.ts comment above camera_events); derived from `now`.
+          event_date: now.slice(0, 10),
+          event_time: now.slice(11, 19),
+          description: input.description,
+          severity: input.severity,
+          status: 'new',
+          ai_confidence: input.aiConfidence !== null ? String(input.aiConfidence) : null,
+        })
+        .returning({ id: camera_events.id });
+      return Ok({ id: row.id });
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  /**
+   * Item #85: AI-detected findings (createCameraEvent) never produced a
+   * camera_alerts row, so the already-built human-confirm (acknowledge/resolve)
+   * UI+API (CameraAlertsRouteController) was permanently empty — a disconnected
+   * half-loop. Links back to the source camera_events row via camera_event_id.
+   */
+  async createCameraAlert(input: {
+    cameraId: string;
+    cameraEventId: number;
+    alertType: string;
+    severity: string;
+    title: string;
+    message: string;
+  }): Promise<Result<{ id: number }>> {
+    try {
+      const [row] = await db.insert(camera_alerts)
+        .values({
+          camera_id: input.cameraId,
+          camera_event_id: String(input.cameraEventId),
+          alert_type: input.alertType,
+          severity: input.severity,
+          title: input.title,
+          message: input.message,
+        })
+        .returning({ id: camera_alerts.id });
+      return Ok({ id: row.id });
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  /**
+   * Audit 2026-08-08 (docs/audit/AI-KAMERALAR-TAHLILI-2026-08-08.md §5): camera_alerts
+   * writes had no notification recipient list at all — this closes that half-loop for
+   * high/critical severity (same SECURITY/HR_MANAGER/HR_DIRECTOR role set territory
+   * .gateway.ts's ROOM_ALERT_NOTIFY_ROLES uses for the analogous hr.room_anomaly path).
+   */
+  async findAlertNotifyUserIds(): Promise<Result<number[]>> {
+    try {
+      const r = await db.execute(sql`
+        SELECT user_id FROM employees
+        WHERE role = ANY(${['SECURITY', 'HR_MANAGER', 'HR_DIRECTOR']}::text[])
+          AND user_id IS NOT NULL
+        LIMIT 50
+      `);
+      const ids = (r.rows as Array<{ user_id: number | null }>)
+        .map((row) => row.user_id)
+        .filter((id): id is number => id != null);
+      return Ok(ids);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  private _safeJsonParse(raw: string): unknown {
+    try { return JSON.parse(raw); } catch { return null; }
   }
 }

@@ -34,11 +34,17 @@ import { GetOrderStatusTool }           from './get-order-status.tool';
 import { GetProductionStatusTool }      from './get-production-status.tool';
 import { GetQualityMetricsTool }        from './get-quality-metrics.tool';
 import { GetTodayBriefingTool }         from './get-today-briefing.tool';
+import { GetTopDebtorsTool }            from './get-top-debtors.tool';
+import { GetSalesLeaderboardTool }      from './get-sales-leaderboard.tool';
 import { ListAvailableCamerasTool }     from './list-available-cameras.tool';
 import { ScheduleMeetingTool }          from './schedule-meeting.tool';
 import { SendEmailTool }                from './send-email.tool';
 import { SendTelegramToTeamTool }       from './send-telegram-to-team.tool';
 import { WhatIfSimulationTool }         from './what-if-simulation.tool';
+import { SearchGraphTool }              from './search-graph.tool';
+import { ReadNodeTool }                 from './read-node.tool';
+import { CreateLinkTool }               from './create-link.tool';
+import { ExecuteErpActionTool }         from './execute-erp-action.tool';
 
 @Injectable()
 export class AishaToolBootstrap implements OnModuleInit {
@@ -46,7 +52,7 @@ export class AishaToolBootstrap implements OnModuleInit {
 
   constructor(
     private readonly registry: ToolRegistry,
-    // 25 tools — order matches the import list above
+    // 31 tools — order matches the import list above
     private readonly t01: AnalyzeCameraFeedTool,
     private readonly t02: AssignTaskTool,
     private readonly t03: ComparePeriodsTool,
@@ -72,6 +78,12 @@ export class AishaToolBootstrap implements OnModuleInit {
     private readonly t23: SendEmailTool,
     private readonly t24: SendTelegramToTeamTool,
     private readonly t25: WhatIfSimulationTool,
+    private readonly t26: GetTopDebtorsTool,
+    private readonly t27: GetSalesLeaderboardTool,
+    private readonly t28: SearchGraphTool,
+    private readonly t29: ReadNodeTool,
+    private readonly t30: CreateLinkTool,
+    private readonly t31: ExecuteErpActionTool,
   ) {}
 
   onModuleInit(): void {
@@ -81,6 +93,7 @@ export class AishaToolBootstrap implements OnModuleInit {
       this.t11, this.t12, this.t13, this.t14, this.t15,
       this.t16, this.t17, this.t18, this.t19, this.t20,
       this.t21, this.t22, this.t23, this.t24, this.t25,
+      this.t26, this.t27, this.t28, this.t29, this.t30, this.t31,
     ]);
     if (!r.ok) {
       this.logger.error(

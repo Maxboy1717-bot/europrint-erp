@@ -26,12 +26,12 @@ interface AutomationStatus {
 }
 
 const MODULE_LABELS: Record<string, string> = {
-  hrRecruitment: "HR Ishga qabul",
-  crmLeads:      "CRM Lidlar",
-  finance:       "Moliya",
-  wms:           "Ombor (WMS)",
-  marketing:     "Marketing",
-  director:      "Direktor paneli",
+  hrRecruitment: tLabel("common.aiCoverageHrRecruitment", "HR Ishga qabul"),
+  crmLeads:      tLabel("common.aiCoverageCrmLeads", "CRM Lidlar"),
+  finance:       tLabel("common.aiCoverageFinance", "Moliya"),
+  wms:           tLabel("common.aiCoverageWms", "Ombor (WMS)"),
+  marketing:     tLabel("common.aiCoverageMarketing", "Marketing"),
+  director:      tLabel("common.aiCoverageDirector", "Direktor paneli"),
 };
 
 const COVERAGE_COLOR = (pct: number) => {
@@ -58,10 +58,10 @@ export default function AiAutomationPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/automation/status"] });
-      toast({ title: tLabel('common.aiIshlarIshgaTushirildi', "AI ishlar ishga tushirildi"), description: "Barcha pending joblar navbatga qo'yildi" });
+      toast({ title: t("aiIshlarIshgaTushirildi"), description: t("barchaPendingJoblarNavbatga") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: tLabel('common.aiIshlarniIshgaTushirishdaXatolik', "AI ishlarni ishga tushirishda xatolik"), variant: "destructive" });
+      toast({ title: t("xatolik"), description: t("aiIshlarniIshgaTushirishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -85,7 +85,7 @@ export default function AiAutomationPage() {
           {runMutation.isPending || hasRunningJobs
             ? <EPLoader className="mr-2" />
             : <Play    className="h-4 w-4 mr-2" />}
-          {hasRunningJobs ? "Ishlamoqda..." : "Barcha ishlarni ishga tushirish"}
+          {hasRunningJobs ? t("ishlamoqdaShort") : t("barchaIshlarniIshgaTushirish")}
         </Button>
       }
     >
@@ -179,7 +179,7 @@ export default function AiAutomationPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Bot className="h-4 w-4" />
-                AI qamrov darajasi
+                {t("aiQamrovDarajasi")}
               </CardTitle>
             </CardHeader>
             <CardContent>

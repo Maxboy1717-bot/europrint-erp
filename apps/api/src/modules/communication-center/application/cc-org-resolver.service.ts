@@ -3,17 +3,27 @@
  *
  * `cc_workflow_steps.approver_position_code` formatlari:
  *   - `CEO`               → org_departments root head_user_id
+ *   - `DIRECTOR`          → Bosh Direktor (har zanjirning OXIRGI bosqichi — egasi qoidasi
+ *                           "HAMMASI OXIRI DIREKTORGA"): position 'Bosh Direktor'
+ *                           (positions.code CEO/ORG-64) → users.role='director' →
+ *                           org tree root head_user_id, shu tartibda
  *   - `MANAGER_OF_SENDER` → sender's employees.manager_id → users.id
  *   - `DEPT_HEAD`         → head of sender's department
  *   - `POSITION:<CODE>`   → faol xodim, positions.code = <CODE>
  *
  * Yana faol delegatsiya tekshiriladi (cc_delegations) — agar bor bo'lsa,
  * delegatsiya egasi qaytariladi.
+ *
+ * BUG FIX (2026-06-19): resolveApprover endi Result<number> qaytaradi —
+ * manager_id NULL/0 bo'lsa THROW qilmaydi, Err(...) qaytaradi va chaqiruvchi
+ * graceful degradation (warn + skip) qiladi. (memory: MANAGER_OF_SENDER throws
+ * when manager_id is NULL/0/30 — crashing escalation flow).
  */
 
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
+import { Result, Ok, Err, AppErr } from '@common/result';
 
 @Injectable()
 export class CcOrgResolverService {
@@ -22,36 +32,101 @@ export class CcOrgResolverService {
   /**
    * Position kod va yuboruvchi ID bo'yicha tasdiqlovchi xodim ID'sini topadi.
    * Faol delegatsiya bo'lsa, o'rinbosar qaytariladi.
+   *
+   * NOTE: throws EMAS — Result<number> qaytaradi. Chaqiruvchi .ok ni tekshirib,
+   * Err holatda warn log + skip qilishi kerak (graceful degradation).
    */
-  async resolveApprover(positionCode: string, senderUserId: number): Promise<number> {
-    const baseUserId = await this.resolveBase(positionCode, senderUserId);
-    const delegated  = await this.checkDelegation(baseUserId);
-    return delegated ?? baseUserId;
+  async resolveApprover(positionCode: string, senderUserId: number): Promise<Result<number>> {
+    try {
+      const baseResult = await this.resolveBase(positionCode, senderUserId);
+      if (!baseResult.ok) return baseResult;
+      const delegated = await this.checkDelegation(baseResult.data);
+      return Ok(delegated ?? baseResult.data);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.logger.warn(`resolveApprover(${positionCode}, sender=${senderUserId}): unexpected error — ${msg}`);
+      return Err(AppErr('INTERNAL', msg));
+    }
   }
 
   // ── ichki: kod bo'yicha asosiy egasi ─────────────────────────────────
-  private async resolveBase(positionCode: string, senderUserId: number): Promise<number> {
+  private async resolveBase(positionCode: string, senderUserId: number): Promise<Result<number>> {
     const code = positionCode.trim().toUpperCase();
     if (code === 'CEO')               return this.resolveCeo();
+    if (code === 'DIRECTOR')          return this.resolveDirector();
     if (code === 'MANAGER_OF_SENDER') return this.resolveManagerOfSender(senderUserId);
     if (code === 'DEPT_HEAD')         return this.resolveDeptHead(senderUserId);
     if (code.startsWith('POSITION:')) return this.resolveByPosition(code);
-    throw new BadRequestException(`Noma'lum tasdiqlash lavozim kodi: ${positionCode}`);
+    return Err(AppErr('BAD_REQUEST', `Noma'lum tasdiqlash lavozim kodi: ${positionCode}`));
   }
 
-  private async resolveCeo(): Promise<number> {
+  /**
+   * Bosh Direktor — har tasdiqlash zanjirining OXIRGI tasdiqlovchisi
+   * (egasi qoidasi: "HAMMASI OXIRI DIREKTORGA"). Yuboruvchidan mustaqil, org bo'ylab yagona.
+   *
+   * Aniqlash tartibi (birinchi topilgani qaytadi):
+   *   1. Lavozimi "Bosh Direktor" bo'lgan faol xodim (positions.code IN CEO/ORG-64,
+   *      yoki nomi 'bosh direktor') → users.id
+   *   2. users.role = 'director' bo'lgan faol xodim → users.id
+   *   3. org tree root bo'lim head_user_id (resolveCeo bilan bir xil) — eng oxirgi fallback
+   */
+  private async resolveDirector(): Promise<Result<number>> {
+    // 1. Lavozim bo'yicha — "Bosh Direktor".
+    const byPos = await runQuery<{ user_id: number | null }>(sql`
+      SELECT e.user_id
+      FROM employees e
+      INNER JOIN positions p ON p.id = e.position_id
+      WHERE (
+              UPPER(COALESCE(p.code, '')) IN ('CEO', 'ORG-64')
+              OR LOWER(COALESCE(p.title, p.name_uz, p.name, '')) LIKE '%bosh direktor%'
+            )
+        AND COALESCE(e.is_active, true) = true
+        AND e.user_id IS NOT NULL
+      ORDER BY e.id ASC
+      LIMIT 1
+    `);
+    const posId = byPos.rows[0]?.user_id ?? null;
+    if (posId) return Ok(posId);
+
+    // 2. Rol bo'yicha — users.role = 'director', faol xodim.
+    const byRole = await runQuery<{ user_id: number | null }>(sql`
+      SELECT u.id AS user_id
+      FROM users u
+      INNER JOIN employees e ON e.user_id = u.id
+      WHERE LOWER(COALESCE(u.role, '')) = 'director'
+        AND COALESCE(e.is_active, true) = true
+      ORDER BY u.id ASC
+      LIMIT 1
+    `);
+    const roleId = byRole.rows[0]?.user_id ?? null;
+    if (roleId) return Ok(roleId);
+
+    // 3. Eng oxirgi fallback — org tree root bo'lim rahbari (CEO bilan bir xil).
+    const ceo = await this.resolveCeo();
+    if (ceo.ok) return ceo;
+
+    this.logger.warn('resolveDirector: Bosh Direktor orgsxemada belgilanmagan — escalation step skip');
+    return Err(AppErr('NOT_FOUND', 'Bosh Direktor orgsxemada belgilanmagan'));
+  }
+
+  private async resolveCeo(): Promise<Result<number>> {
     const r = await runQuery<{ head_user_id: number | null }>(sql`
       SELECT head_user_id FROM org_departments
       WHERE parent_id IS NULL AND head_user_id IS NOT NULL
       ORDER BY id ASC LIMIT 1
     `);
     const id = r.rows[0]?.head_user_id ?? null;
-    if (!id) throw new BadRequestException('CEO orgsxemada belgilanmagan');
-    return id;
+    if (!id) {
+      this.logger.warn('resolveCeo: CEO orgsxemada belgilanmagan — escalation skip');
+      return Err(AppErr('NOT_FOUND', 'CEO orgsxemada belgilanmagan'));
+    }
+    return Ok(id);
   }
 
-  private async resolveManagerOfSender(senderUserId: number): Promise<number> {
+  private async resolveManagerOfSender(senderUserId: number): Promise<Result<number>> {
     // 1. Direct: sender → employee → manager_id → manager.user_id.
+    //    manager_id NULL yoki 0 bo'lsa (0/30 populated case) — bu query 0 qator qaytaradi,
+    //    THROW QILMAYDI — fallback 2 ga o'tadi.
     const direct = await runQuery<{ user_id: number | null }>(sql`
       SELECT m.user_id
       FROM employees e
@@ -60,7 +135,7 @@ export class CcOrgResolverService {
       LIMIT 1
     `);
     const directId = direct.rows[0]?.user_id ?? null;
-    if (directId) return directId;
+    if (directId) return Ok(directId);
 
     // 2. Fallback (employees.manager_id is unset across the org): walk UP the org tree from the
     //    sender's primary department to the nearest department that HAS a head — that head is the
@@ -83,11 +158,17 @@ export class CcOrgResolverService {
       LIMIT 1
     `);
     const headId = walk.rows[0]?.head_user_id ?? null;
-    if (!headId) throw new BadRequestException("Yuboruvchining bo'lim rahbari orgsxemada belgilanmagan");
-    return headId;
+    if (!headId) {
+      this.logger.warn(
+        `resolveManagerOfSender(sender=${senderUserId}): ` +
+        `manager_id NULL/0 va org tree'da bo'lim rahbari yo'q — escalation step skip`,
+      );
+      return Err(AppErr('NOT_FOUND', "Yuboruvchining bo'lim rahbari orgsxemada belgilanmagan"));
+    }
+    return Ok(headId);
   }
 
-  private async resolveDeptHead(senderUserId: number): Promise<number> {
+  private async resolveDeptHead(senderUserId: number): Promise<Result<number>> {
     // sender's department → org_departments.head_user_id (via employee_org_departments)
     const r = await runQuery<{ head_user_id: number | null }>(sql`
       SELECT od.head_user_id
@@ -99,13 +180,18 @@ export class CcOrgResolverService {
       LIMIT 1
     `);
     const id = r.rows[0]?.head_user_id ?? null;
-    if (!id) throw new BadRequestException("Yuboruvchining bo'lim rahbari topilmadi");
-    return id;
+    if (!id) {
+      this.logger.warn(
+        `resolveDeptHead(sender=${senderUserId}): bo'lim rahbari topilmadi — escalation step skip`,
+      );
+      return Err(AppErr('NOT_FOUND', "Yuboruvchining bo'lim rahbari topilmadi"));
+    }
+    return Ok(id);
   }
 
-  private async resolveByPosition(code: string): Promise<number> {
+  private async resolveByPosition(code: string): Promise<Result<number>> {
     const posCode = code.slice('POSITION:'.length).trim();
-    if (!posCode) throw new BadRequestException('POSITION: kod ko\'rsatilmagan');
+    if (!posCode) return Err(AppErr('BAD_REQUEST', "POSITION: kod ko'rsatilmagan"));
     const r = await runQuery<{ user_id: number | null }>(sql`
       SELECT e.user_id
       FROM employees e
@@ -117,12 +203,74 @@ export class CcOrgResolverService {
       LIMIT 1
     `);
     const id = r.rows[0]?.user_id ?? null;
-    if (!id) throw new BadRequestException(`Lavozim ${posCode} bo'sh — orgsxemada xodim biriktirilmagan`);
-    return id;
+    if (!id) {
+      this.logger.warn(
+        `resolveByPosition(${posCode}): orgsxemada xodim biriktirilmagan — escalation step skip`,
+      );
+      return Err(AppErr('NOT_FOUND', `Lavozim ${posCode} bo'sh — orgsxemada xodim biriktirilmagan`));
+    }
+    return Ok(id);
   }
 
-  // ── ichki: faol delegatsiya tekshiruvi ───────────────────────────────
+  /**
+   * CC #3 ambiguous_route detection: how many DISTINCT active employees a
+   * `POSITION:<CODE>` step resolves to. resolveByPosition picks ONE (ORDER BY e.id
+   * ASC LIMIT 1); when this returns >1 the route is structurally ambiguous (e.g. two
+   * uchastka heads sharing one positions.code) and the caller journals 'ambiguous_route'.
+   * Mirrors resolveByPosition's WHERE clause exactly, minus the LIMIT. Read-only.
+   * Accepts the full 'POSITION:<CODE>' code or a bare code; returns Ok(0) for a blank code.
+   */
+  async countActiveByPosition(positionCode: string): Promise<Result<number>> {
+    try {
+      const normalized = positionCode.trim().toUpperCase();
+      const posCode = normalized.startsWith('POSITION:')
+        ? normalized.slice('POSITION:'.length).trim()
+        : normalized;
+      if (!posCode) return Ok(0);
+      const r = await runQuery<{ n: number }>(sql`
+        SELECT COUNT(*)::int AS n
+        FROM employees e
+        INNER JOIN positions p ON p.id = e.position_id
+        WHERE UPPER(p.code) = ${posCode}
+          AND COALESCE(e.is_active, true) = true
+          AND e.user_id IS NOT NULL
+      `);
+      return Ok(r.rows[0]?.n ?? 0);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.logger.warn(`countActiveByPosition(${positionCode}): ${msg}`);
+      return Err(AppErr('INTERNAL', msg));
+    }
+  }
+
+  // CC #33: delegatsiya zanjiri MAKS 3 daraja chuqur (A→B→C→D — 3 delegatsiya hop);
+  // undan chuqur zanjir kesiladi. Cheksiz sikl (A→B→A) `visited` to'plami bilan
+  // uziladi — hal qilish har doim tugaydi.
+  private static readonly MAX_DELEGATION_DEPTH = 3;
+
+  // ── ichki: faol delegatsiya zanjirini kuzatish (MAKS 3 hop, siklsiz) ─────
   private async checkDelegation(userId: number): Promise<number | null> {
+    const visited = new Set<number>([userId]);
+    let current = userId;
+    let resolved: number | null = null;
+    for (let hop = 0; hop < CcOrgResolverService.MAX_DELEGATION_DEPTH; hop++) {
+      const next = await this._activeDelegateOf(current);
+      if (next === null) break;               // bu foydalanuvchida faol delegatsiya yo'q — tugadi
+      if (visited.has(next)) {                // sikl aniqlandi — to'xtatiladi
+        this.logger.warn(
+          `checkDelegation: delegatsiya sikli aniqlandi (foydalanuvchi ${next}, boshi ${userId}) — to'xtatildi`,
+        );
+        break;
+      }
+      visited.add(next);
+      resolved = next;
+      current = next;
+    }
+    return resolved;
+  }
+
+  /** Bitta hop: userId ning joriy faol delegatini qaytaradi (yo'q bo'lsa null). */
+  private async _activeDelegateOf(userId: number): Promise<number | null> {
     const r = await runQuery<{ to_user_id: number }>(sql`
       SELECT to_user_id
       FROM cc_delegations

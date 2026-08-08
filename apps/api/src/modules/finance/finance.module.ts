@@ -3,7 +3,7 @@
  * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
  */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CfoConfigService } from './domain/services/cfo-config.service';
@@ -17,13 +17,13 @@ import { FINANCE_PAYROLL_APP_REPO } from './domain/repositories/i-finance-payrol
 import { FinanceRepository } from './infrastructure/repositories/drizzle-finance.repo';
 import { FinanceInvoiceRepo } from './infrastructure/repositories/drizzle-finance-invoice.repo';
 import { FinanceReportRepo } from './infrastructure/repositories/drizzle-finance-report.repo';
-import { FinanceBudgetRepo } from './infrastructure/repositories/drizzle-finance-budget.repo';
 import { FinanceOpsRepo } from './infrastructure/repositories/drizzle-finance-ops.repo';
 import { FinanceCfoRepo } from './infrastructure/repositories/drizzle-finance-cfo.repo';
 import { FinancePlanningRepo } from './infrastructure/repositories/drizzle-finance-planning.repo';
 import { FinanceCostingRepo } from './infrastructure/repositories/drizzle-finance-costing.repo';
 import { FinanceVarianceRepo } from './infrastructure/repositories/drizzle-finance-variance.repo';
 import { GlPostingService } from './domain/services/gl-posting.service';
+import { IncomeSplitService } from './application/income-split.service';
 import { GL_POSTING_REPO } from './domain/repositories/i-gl-posting.repo';
 import { DrizzleGlPostingRepository } from './infrastructure/repositories/drizzle-gl-posting.repo';
 import { CheckAdvanceHandler } from './application/commands/check-advance.handler';
@@ -33,14 +33,17 @@ import { CreateBudgetHandler } from './application/commands/create-budget.handle
 import { ApproveBudgetHandler } from './application/commands/approve-budget.handler';
 import { SubmitBudgetForApprovalHandler } from './application/commands/submit-budget-for-approval.handler';
 import { ArAgingHandler } from './application/queries/ar-aging.handler';
+import { ApAgingHandler } from './application/queries/ap-aging.handler';
 import { CashFlowHandler } from './application/queries/cash-flow.handler';
 import { GetInvoicesHandler } from './application/queries/get-invoices.handler';
 import { GetPaymentsHandler } from './application/queries/get-payments.handler';
 import { GetGlEntriesHandler } from './application/queries/get-gl-entries.handler';
 import { GetBudgetsHandler } from './application/queries/get-budgets.handler';
+import { GetBudgetByIdHandler } from './application/queries/get-budget-by-id.handler';
 import { GetBudgetVarianceHandler } from './application/queries/get-budget-variance.handler';
 import { GetBudgetStatsHandler } from './application/queries/get-budget-stats.handler';
 import { WmsFgReceivedListener } from './infrastructure/event-handlers/wms-fg-received.listener';
+import { WmsGoodsIssuedListener, WmsFgReceivedGlListener } from './infrastructure/event-handlers/wms-goods-issued.listener';
 import { DeliveryCompletedListener } from './infrastructure/event-handlers/delivery-completed.listener';
 import { TechThreeCheckpointListener } from './infrastructure/event-handlers/tech-three-checkpoint.listener';
 import { FinanceInvoicesController } from './presentation/finance-invoices.controller';
@@ -74,6 +77,11 @@ import { BudgetsService } from './budgets/budgets.service';
 import { FINANCE_PAYROLL_REPO } from './payroll/i-finance-payroll.repo';
 import { DrizzleFinancePayrollRepository } from './payroll/drizzle-finance-payroll.repo';
 import { PayrollService } from './payroll/payroll.service';
+// Moliya-GL-Kassa (2026-07-02): HR's PayrollService.closePeriod is the ONE real
+// payroll-closure implementation (GL journal + ЦКП/LMS gate + domain event).
+// Finance's own PayrollService.close() proxies to it instead of duplicating a
+// bare status flip (forwardRef — HrModule already imports FinanceModule).
+import { HrModule } from '../hr/hr.module';
 // --- New modules ---
 import { FINANCE_EXTENDED_REPO } from './finance-extended/i-finance-extended.repo';
 import { DrizzleFinanceExtendedRepository } from './finance-extended/drizzle-finance-extended.repo';
@@ -84,6 +92,8 @@ import {
   FinanceExtendedIncomeController,
   FinanceExtendedPayrollController,
 } from './presentation/finance-extended.controller';
+// 3.2-brak-ushlanma-zanjiri — payroll_calculations.other_deductions'ga brak-jarima qo'shish uchun
+import { MesBrakLimitRepository } from '@modules/mes/infrastructure/repositories/mes-brak-limit.repo';
 import { CASHFLOW_REPO } from './cashflow/i-cashflow.repo';
 import { DrizzleCashflowRepository } from './cashflow/drizzle-cashflow.repo';
 import { CashflowService } from './cashflow/cashflow.service';
@@ -91,6 +101,7 @@ import { CashflowController } from './presentation/cashflow.controller';
 import { FINANCE_REPORTS_REPO } from './reports/i-reports.repo';
 import { DrizzleFinanceReportsRepository } from './reports/drizzle-reports.repo';
 import { FinanceReportsService } from './reports/reports.service';
+import { TrialBalancePdfService } from './reports/trial-balance-pdf.service';
 import { ReportsController } from './presentation/reports.controller';
 import { ORDER_COSTING_REPO } from './order-costing/i-order-costing.repo';
 import { DrizzleOrderCostingRepository } from './order-costing/drizzle-order-costing.repo';
@@ -127,6 +138,22 @@ import { FinanceCashflowForecastController } from './presentation/finance-cashfl
 import { PricingController } from './presentation/pricing.controller';
 // PA3-17: GeneralTaxService relocated from `modules/fi/tax/`.
 import { GeneralTaxService } from './application/general-tax.service';
+// CASHIER-HUB KAS-1: factory cashier hub (shift open/close + cash movements → canonical GL).
+import { CASHIER_HUB_REPO } from './cashier-hub/i-cashier-hub.repo';
+import { DrizzleCashierHubRepository } from './cashier-hub/drizzle-cashier-hub.repo';
+import { CashierHubService } from './cashier-hub/cashier-hub.service';
+import { CashierHubPdfService } from './cashier-hub/cashier-hub-pdf.service';
+import { CashierHubController } from './cashier-hub/cashier-hub.controller';
+// CASHIER-HUB A7: kun-oxiri (20:00) avto Z-report PDF + kassir/CFO notification cron.
+import { CashierDailyZReportCron } from './cashier-hub/cashier-daily-zreport.cron';
+// EP-FIN-072: har soatlik naqd-limit tekshiruv + oshsa inkassatsiya-eslatma cron (SB0815/SB0829).
+import { CashierCashLimitAlertCron } from './cashier-hub/cashier-cash-limit-alert.cron';
+// CASHIER-HUB Phase 2: KAS-2 salary-payout approval gate + podotchet (advance/debt) cycle.
+import { CASHIER_PAYROLL_REPO } from './cashier-hub/i-cashier-payroll.repo';
+import { DrizzleCashierPayrollRepository } from './cashier-hub/drizzle-cashier-payroll.repo';
+import { CashierPayrollService } from './cashier-hub/cashier-payroll.service';
+import { CashierPodotchetService } from './cashier-hub/cashier-podotchet.service';
+import { CashierPayrollController } from './cashier-hub/cashier-payroll.controller';
 
 const commandHandlers = [
   CheckAdvanceHandler, RecordPaymentHandler, StartRentalTimerHandler,
@@ -134,18 +161,25 @@ const commandHandlers = [
 ];
 
 const queryHandlers = [
-  ArAgingHandler, CashFlowHandler, GetInvoicesHandler, GetPaymentsHandler,
-  GetGlEntriesHandler, GetBudgetsHandler, GetBudgetVarianceHandler, GetBudgetStatsHandler,
+  ArAgingHandler, ApAgingHandler, CashFlowHandler, GetInvoicesHandler, GetPaymentsHandler,
+  GetGlEntriesHandler, GetBudgetsHandler, GetBudgetByIdHandler, GetBudgetVarianceHandler, GetBudgetStatsHandler,
 ];
 
 const eventListeners = [
-  WmsFgReceivedListener,           // Trigger 12
+  WmsFgReceivedListener,           // Trigger 12 (rental timer)
+  WmsGoodsIssuedListener,          // HOP 5 WMS→FIN: goods-issue → Dr COGS / Cr Inventory (entries)
+  WmsFgReceivedGlListener,         // HOP 5 WMS→FIN: FG receipt → Dr Inventory / Cr AP (entries)
   DeliveryCompletedListener,       // Trigger 14
   TechThreeCheckpointListener,     // Trigger 6
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot(), FinancialReportsModule],
+  imports: [
+    CqrsModule, EventEmitterModule.forRoot(), FinancialReportsModule,
+    // forwardRef: HrModule already imports FinanceModule (GlPostingService) —
+    // Finance's payroll.service.ts proxies close() to HR's real closePeriod().
+    forwardRef(() => HrModule),
+  ],
   controllers: [
     FinanceInvoicesController, FinancePaymentsController, FinanceGlController,
     FinanceAdvanceController, FinanceBudgetsController, FinanceAccountingController,
@@ -159,20 +193,29 @@ const eventListeners = [
     // Sprint 1 controllers
     FinanceStandardCostController, FinanceVarianceController, FinanceBreakEvenController,
     FinanceRatiosController, FinanceCashflowForecastController, PricingController,
+    // CASHIER-HUB KAS-1
+    CashierHubController,
+    // CASHIER-HUB Phase 2 (KAS-2 + podotchet)
+    CashierPayrollController,
   ],
   providers: [
-    FinanceInvoiceRepo, FinanceReportRepo, FinanceBudgetRepo,
+    FinanceInvoiceRepo, FinanceReportRepo,
     FinanceOpsRepo, FinanceCfoRepo, FinancePlanningRepo, FinanceCostingRepo, FinanceVarianceRepo,
     { provide: FINANCE_REPO, useClass: FinanceRepository },
     { provide: GL_POSTING_REPO, useClass: DrizzleGlPostingRepository },
     GlPostingService,
+    IncomeSplitService,
     ...commandHandlers, ...queryHandlers, ...eventListeners,
     FpCycleCronRepository,
     { provide: FP_CYCLE_CRON_REPO, useClass: FpCycleCronRepository },
     FpCycleCronService,
     { provide: FINANCE_GL_REPO, useClass: DrizzleFinanceGlRepository },
     GlService,
-    { provide: FINANCE_BUDGETS_REPO, useClass: DrizzleFinanceBudgetsRepository },
+    // Bare class provider so DrizzleFinanceBudgetsRepository can also be injected
+    // directly (by class token) from the FinanceRepository CQRS facade, sharing
+    // the same singleton instance as the FINANCE_BUDGETS_REPO token below.
+    DrizzleFinanceBudgetsRepository,
+    { provide: FINANCE_BUDGETS_REPO, useExisting: DrizzleFinanceBudgetsRepository },
     BudgetsService,
     { provide: FINANCE_PAYROLL_REPO, useClass: DrizzleFinancePayrollRepository },
     PayrollService,
@@ -193,10 +236,12 @@ const eventListeners = [
     { provide: FINANCE_EXTENDED_REPO, useClass: DrizzleFinanceExtendedRepository },
     FinanceExtendedService,
     FinanceExtendedPayrollService,
+    MesBrakLimitRepository,
     { provide: CASHFLOW_REPO, useClass: DrizzleCashflowRepository },
     CashflowService,
     { provide: FINANCE_REPORTS_REPO, useClass: DrizzleFinanceReportsRepository },
     FinanceReportsService,
+    TrialBalancePdfService,
     { provide: ORDER_COSTING_REPO, useClass: DrizzleOrderCostingRepository },
     OrderCostingService,
     { provide: FI_REPO, useClass: DrizzleFiRepository },
@@ -211,6 +256,18 @@ const eventListeners = [
     TieredPricingService, FinancialRatiosService, CashflowForecastService,
     // PA3-17: tax calculator merged from `modules/fi/`
     GeneralTaxService,
+    // CASHIER-HUB KAS-1 (reuses GlPostingService already provided above)
+    { provide: CASHIER_HUB_REPO, useClass: DrizzleCashierHubRepository },
+    CashierHubService,
+    CashierHubPdfService,
+    // A7 — kunlik Z-report avto-PDF cron (20:00 Asia/Tashkent), notification-infra orqali yuboradi
+    CashierDailyZReportCron,
+    // EP-FIN-072 — har soatlik naqd-limit tekshiruv + oshsa inkassatsiya-eslatma (SB0815/SB0829)
+    CashierCashLimitAlertCron,
+    // CASHIER-HUB Phase 2 — KAS-2 approval gate + podotchet (reuse CashierHubService for cash-out + GL)
+    { provide: CASHIER_PAYROLL_REPO, useClass: DrizzleCashierPayrollRepository },
+    CashierPayrollService,
+    CashierPodotchetService,
   ],
   exports: [FINANCE_REPO, GlPostingService, CfoConfigService, GeneralTaxService],
 })

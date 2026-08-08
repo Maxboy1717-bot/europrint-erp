@@ -39,6 +39,8 @@ export async function queryAllAssets(
     ))
     .leftJoin(hrEmployees, eq(sql`${hrEmployees.id}::text`, employee_assets.employee_id))
     .where(and(
+      // Soft-deleted assets (is_active=false, set by execRemoveAsset) never appear in listings.
+      or(isNull(asset_items_ext.is_active), eq(asset_items_ext.is_active, true)),
       search ? or(ilike(asset_items_ext.name, search), ilike(asset_items_ext.serial_number, search)) : sql`TRUE`,
       category ? eq(asset_items_ext.category, category) : sql`TRUE`,
       status ? eq(asset_items_ext.status, status) : sql`TRUE`,
@@ -115,6 +117,8 @@ export async function execUpdateAsset(
   data: Partial<{ name: string; serial_number: string; category: string; status: string; purchase_date: string | null; value: number; notes: string }>,
 ): Promise<void> {
   // NOTE: canonical asset_items has no `notes` column — ignore data.notes on update.
+  // NOTE: asset_items is a VIEW over asset_inventory; neither has an updated_at column
+  // (see schema-business-c-1.ts) — do not set it, ALTER TABLE cannot add it to the view.
   await db.update(asset_items_ext)
     .set({
       name:           sql`COALESCE(${data.name ?? null}, ${asset_items_ext.name})`,
@@ -122,13 +126,17 @@ export async function execUpdateAsset(
       category:       sql`COALESCE(${data.category ?? null}, ${asset_items_ext.category})`,
       status:         sql`COALESCE(${data.status ?? null}, ${asset_items_ext.status})`,
       purchase_price: sql`COALESCE(${data.value != null ? String(data.value) : null}::numeric, ${asset_items_ext.purchase_price})`,
-      updated_at:     sql`NOW()`,
     })
     .where(eq(sql`${asset_items_ext.id}::text`, id));
 }
 
 export async function execRemoveAsset(id: string): Promise<void> {
-  await db.delete(asset_items_ext).where(eq(sql`${asset_items_ext.id}::text`, id));
+  // Soft-delete only (Qoida: hard DELETE taqiqlangan) — flips is_active=false instead of
+  // removing the row, so assignment history (employee_assets FK to asset_id) is preserved
+  // and the asset simply drops out of queryAllAssets' listing (is_active filter above).
+  await db.update(asset_items_ext)
+    .set({ is_active: false })
+    .where(eq(sql`${asset_items_ext.id}::text`, id));
 }
 
 export async function queryAssetsByEmployee(employeeId: string): Promise<Row[]> {
@@ -163,7 +171,7 @@ export async function execAssignAsset(
   data: { employee_id: string; assigned_date: string; condition_on_assign: string; notes?: string },
 ): Promise<void> {
   await db.update(asset_items_ext)
-    .set({ status: 'assigned', assigned_to: Number(data.employee_id), updated_at: sql`NOW()` })
+    .set({ status: 'assigned', assigned_to: Number(data.employee_id) })
     .where(eq(sql`${asset_items_ext.id}::text`, assetId));
 
   await db.insert(employee_assets).values({
@@ -180,7 +188,7 @@ export async function execReturnAsset(
   data: { return_date: string; condition_on_return: string; notes?: string },
 ): Promise<void> {
   await db.update(asset_items_ext)
-    .set({ status: 'available', assigned_to: null, updated_at: sql`NOW()` })
+    .set({ status: 'available', assigned_to: null })
     .where(eq(sql`${asset_items_ext.id}::text`, assetId));
 
   await db.update(employee_assets)
@@ -202,7 +210,7 @@ export async function execReportAssetIssue(
   // NOTE: canonical asset_items has no notes column — write description to the
   // status field via raw SQL or drop it. Preserving status only here.
   await db.update(asset_items_ext)
-    .set({ status: data.report_type, updated_at: sql`NOW()` })
+    .set({ status: data.report_type })
     .where(eq(sql`${asset_items_ext.id}::text`, assetId));
   void data.description;
 }

@@ -111,4 +111,26 @@ describe('UpdateMaterialHandler', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('DB_ERROR');
   });
+
+  // B14 (2026-07-05): material_cards.updated_by existed but was never populated,
+  // and the original creator's createdBy must survive an update untouched.
+  it('threads command.updatedBy while preserving the original createdBy', async () => {
+    const f = materialFactory({ name: 'Old', currentStock: 25 });
+    const m = new Material(
+      f.id, f.materialCode, f.name, f.category, f.unitOfMeasure,
+      f.minStock, f.maxStock, f.unitCost, f.currentStock, true,
+      new Date('2026-01-01'), new Date('2026-01-01'), 0, 7,
+    );
+    repo.findById.mockResolvedValueOnce(Ok(m));
+
+    const r = await handler.execute(
+      new UpdateMaterialCommand(m.id, 'Brand-new name', undefined, undefined, undefined, undefined, undefined, undefined, 99),
+    );
+
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.createdBy).toBe(7);
+      expect(r.data.updatedBy).toBe(99);
+    }
+  });
 });

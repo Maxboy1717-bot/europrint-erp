@@ -30,9 +30,11 @@ import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { isOk } from '@common/result';
 import { AiRouterCallService } from '../../ai/application/services/ai-router-call.service';
+import type { AiRequest } from '../../ai/domain/types/ai.types';
 import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documents.repo';
 import type { TemplateRow } from '../infrastructure/repositories/cc-documents/types';
 import { CcDocumentNumberService } from './cc-document-number.service';
+import { CcKanbanBridgeService } from './cc-kanban-bridge.service';
 import type { Language } from '../domain/types';
 import { AiQuestion, SessionRow, buildFinalizePrompts, extractSubject } from './cc-ai-interview.types';
 import { validateAnswer } from './cc-ai-interview.helpers';
@@ -49,6 +51,7 @@ export class CcAiInterviewService {
     private readonly docs:    CcDocumentsRepository,
     private readonly numbers: CcDocumentNumberService,
     private readonly i18n:    I18nService,
+    private readonly kanban:  CcKanbanBridgeService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────
@@ -101,7 +104,7 @@ export class CcAiInterviewService {
       RETURNING id::text AS id
     `);
     const row = r.rows[0];
-    if (!row) throw new InternalServerErrorException('Sessiya yaratilmadi');
+    if (!row) throw new InternalServerErrorException(await this.i18n.t('errors.sessionCreationFailed'));
     return { sessionId: row.id, questionIdx: 0 };
   }
 
@@ -118,9 +121,9 @@ export class CcAiInterviewService {
 
     const questions = await this.loadQuestions(sess.template_id);
     const cur = questions[sess.current_question_idx];
-    if (!cur) throw new InternalServerErrorException('Joriy savol topilmadi');
+    if (!cur) throw new InternalServerErrorException(await this.i18n.t('errors.currentQuestionNotFound'));
 
-    validateAnswer(cur, args.value);
+    await validateAnswer(cur, args.value, this.i18n);
 
     const newAnswers = { ...sess.answers, [cur.key]: args.value };
     const newIdx     = sess.current_question_idx + 1;
@@ -210,14 +213,21 @@ export class CcAiInterviewService {
     if (tmpl.numberFormat.includes('TEST') || (tmpl as { testMode?: boolean }).testMode) {
       return `MAVZU: TEST — ${tmpl.nameUz}\n\n[Test rejimida AI chaqirilmadi]\n\nJavoblar:\n${answersList}`;
     }
-    const r = await this.ai.callClaude({
+    const docReq: AiRequest = {
       taskType:    'cc.generate_document',
       systemPrompt, prompt: userPrompt,
       temperature: 0.4, maxTokens: 1500,
       userId:      args.userId, sessionId: sess.id,
       metadata:    { templateCode: tmpl.code, language },
-    });
-    if (!isOk(r)) throw new InternalServerErrorException(`Claude xatosi: ${r.error.message}`);
+    };
+    const r = await this.ai.callClaude(docReq);
+    if (!isOk(r)) {
+      throw new InternalServerErrorException(
+        await this.i18n.t('errors.claudeError', { args: { message: r.error.message } }),
+      );
+    }
+    // 20-agent audit 2026-08-06: logUsage() must be called explicitly.
+    await this.ai.logUsage('claude', docReq, r.data);
     return r.data.text.trim();
   }
 
@@ -228,7 +238,11 @@ export class CcAiInterviewService {
     body: string,
   ): Promise<string> {
     const docNumR = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
-    if (!isOk(docNumR)) throw new InternalServerErrorException(`Hujjat raqami xatosi: ${docNumR.error.message}`);
+    if (!isOk(docNumR)) {
+      throw new InternalServerErrorException(
+        await this.i18n.t('errors.documentNumberError', { args: { message: docNumR.error.message } }),
+      );
+    }
     const documentNumber = docNumR.data;
     const draftRes = await this.docs.createDraft({
       templateId:      tmpl.id,
@@ -241,7 +255,9 @@ export class CcAiInterviewService {
       senderComment:   null,
       priority:        tmpl.defaultPriority,
       language:        sess.language,
+      parentDocumentId: null,
       documentNumber,
+      aiDraft: true,
     });
     if (!isOk(draftRes)) throw new InternalServerErrorException(draftRes.error.message);
 
@@ -250,6 +266,20 @@ export class CcAiInterviewService {
       SET draft_document_id = ${draftRes.data.id}, completed_at = NOW()
       WHERE id = ${sess.id}
     `);
+
+    // VAZIFA (2.9-cc-kanban-e2e): asosiy foydalanuvchi UI oqimi (NewDocumentModal →
+    // AI-intervyu → finalize) oldin CC→Kanban ko'prigini chaqirmasdi — faqat
+    // CcSpawnRequestedEvent orqali (boshqa modullardan) yaratilgan hujjatlar karta olardi.
+    // Xato bo'lsa ignore — kanban qo'shimcha funksiya (task management), hujjat yaratish
+    // bloklanmaydi (mantiq CcKanbanBridgeService ichida try/catch bilan himoyalangan).
+    await this.kanban.createCardForDocument({
+      documentId:   draftRes.data.id,
+      subject,
+      body,
+      senderUserId: sess.user_id,
+      priority:     tmpl.defaultPriority,
+    });
+
     return draftRes.data.id;
   }
 

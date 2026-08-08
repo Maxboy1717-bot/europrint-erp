@@ -10,6 +10,7 @@ import {
   Body, Controller, Delete, Get, Logger, NotFoundException,
   Param, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -32,7 +33,7 @@ const HR_ROLES = ['hr_manager', 'hr_specialist', 'director', 'super_admin'];
 export class ApplicationsController {
   private readonly logger = new Logger(ApplicationsController.name);
 
-  constructor(private readonly svc: ApplicationsService) {}
+  constructor(private readonly svc: ApplicationsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -58,7 +59,7 @@ export class ApplicationsController {
     const r = await this.svc.getById(safeInt(id, 0));
     assertOk(r);
     const data = r.data as Record<string, unknown>;
-    assertFound(data, 'Application not found');
+    assertFound(data, await this.i18n.t('errors.applicationNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return data;
   }
 
@@ -81,7 +82,7 @@ export class ApplicationsController {
     const r = await this.svc.update(safeInt(id, 0), body);
     assertOk(r);
     const data = r.data as Record<string, unknown>;
-    assertFound(data, 'Application not found');
+    assertFound(data, await this.i18n.t('errors.applicationNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return data;
   }
 

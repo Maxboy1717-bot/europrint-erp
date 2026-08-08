@@ -19,18 +19,24 @@ export class DrizzleFinanceReportsRepository implements IFinanceReportsRepositor
     try {
       const year = fiscalYear ?? _time.now().getFullYear();
       const rows = await db.select({
-        code: accounts.accountCode,
-        name: accounts.accountName,
-        type: accounts.accountType,
-        debit: sql<number>`COALESCE(SUM(CASE WHEN ${entries.debitAccountId} = ${accounts.id}::varchar THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
-        credit: sql<number>`COALESCE(SUM(CASE WHEN ${entries.creditAccountId} = ${accounts.id}::varchar THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
+        accountCode: accounts.accountCode,
+        accountName: accounts.accountName,
+        accountType: accounts.accountType,
+        debitBalance: sql<number>`COALESCE(SUM(CASE WHEN ${entries.debitAccountId} = ${accounts.id} THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
+        creditBalance: sql<number>`COALESCE(SUM(CASE WHEN ${entries.creditAccountId} = ${accounts.id} THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
       })
         .from(accounts)
         .leftJoin(entries, sql`EXTRACT(YEAR FROM ${entries.createdAt}) = ${year}`)
         .where(eq(accounts.isActive, true))
         .groupBy(accounts.id, accounts.accountCode, accounts.accountName, accounts.accountType)
         .orderBy(accounts.accountCode);
-      return Ok(rows);
+      const totalDebit = rows.reduce((s, r) => s + Number(r.debitBalance), 0);
+      const totalCredit = rows.reduce((s, r) => s + Number(r.creditBalance), 0);
+      return Ok({
+        accounts: rows,
+        totals: { debitBalance: totalDebit, creditBalance: totalCredit },
+        asOfDate: _time.now().toISOString(),
+      } as unknown as object[]);
     } catch (e: unknown) { return Err((e as Error).message || 'Sinov balansi topilmadi'); }
   }
 
@@ -38,19 +44,38 @@ export class DrizzleFinanceReportsRepository implements IFinanceReportsRepositor
     try {
       const fromDate = from ?? `${_time.now().getFullYear()}-01-01`;
       const toDate = to ?? _time.now().toISOString().slice(0, 10);
-      const [revenue, expense] = await Promise.all([
-        db.select({ total: sum(entries.amount) })
+      // FIX 1: UPPER(account_type) to handle DB stores 'REVENUE'/'EXPENSE' (uppercase)
+      // FIX 2: GROUP BY account to return per-account rows for FE shape
+      const [revenueRows, expenseRows] = await Promise.all([
+        db.select({ accountName: accounts.accountName, total: sum(entries.amount) })
           .from(entries)
           .leftJoin(accounts, eq(entries.debitAccountId, accounts.id))
-          .where(sql`${accounts.accountType} = 'revenue' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`),
-        db.select({ total: sum(entries.amount) })
+          .where(sql`UPPER(${accounts.accountType}) = 'REVENUE' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`)
+          .groupBy(accounts.accountName),
+        db.select({ accountName: accounts.accountName, total: sum(entries.amount) })
           .from(entries)
           .leftJoin(accounts, eq(entries.debitAccountId, accounts.id))
-          .where(sql`${accounts.accountType} = 'expense' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`),
+          .where(sql`UPPER(${accounts.accountType}) = 'EXPENSE' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`)
+          .groupBy(accounts.accountName),
       ]);
-      const totalRevenue = Number(revenue[0]?.total || 0);
-      const totalExpense = Number(expense[0]?.total || 0);
-      return Ok({ from: fromDate, to: toDate, totalRevenue, totalExpense, netProfit: totalRevenue - totalExpense });
+      const revenues = revenueRows
+        .filter(r => r.accountName != null)
+        .map(r => ({ accountName: r.accountName as string, amount: Number(r.total || 0) }));
+      const expenses = expenseRows
+        .filter(r => r.accountName != null)
+        .map(r => ({ accountName: r.accountName as string, amount: Number(r.total || 0) }));
+      const totalRevenue = revenues.reduce((s, r) => s + r.amount, 0);
+      const totalExpense = expenses.reduce((s, r) => s + r.amount, 0);
+      return Ok({
+        period: { startDate: fromDate, endDate: toDate },
+        revenues,
+        expenses,
+        totalRevenue,
+        totalExpense,
+        netProfit: totalRevenue - totalExpense,
+        from: fromDate,
+        to: toDate,
+      });
     } catch (e: unknown) { return Err((e as Error).message || 'Foyda-zarar topilmadi'); }
   }
 

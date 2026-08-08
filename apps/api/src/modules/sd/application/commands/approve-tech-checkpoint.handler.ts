@@ -9,6 +9,7 @@ import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
+import { TechThreeCheckpointEvent } from '../../../finance/domain/events/tech-three-checkpoint.event';
 
 export class ApproveTechCheckpointCommand {
   private readonly logger = new Logger(ApproveTechCheckpointCommand.name);
@@ -50,17 +51,16 @@ export class ApproveTechCheckpointHandler implements ICommandHandler<ApproveTech
       timestamp: _time.now(),
     });
 
-    // If all 3 checkpoints passed → Trigger 5: emit DesignAndLabCompleted → PP signal
+    // Trigger 6→7: all 3 tech checkpoints (BOM+Routing+Card) passed → publish the TYPED
+    // TechThreeCheckpointEvent so the finance @EventsHandler(TechThreeCheckpointEvent) fires
+    // (advance check → master_status='ready_for_planning' → AdvanceApprovedEvent → PP unlock).
+    // Was a plain {eventName:'DesignAndLabCompleted'} object that the CQRS bus could not route
+    // to any handler (no listener consumed that name) — the tech→advance→PP chain was dead.
     if (order.isThreeCheckpointPassed()) {
-      this.eventBus.publish({
-        aggregateId: order.getId(),
-        eventName: 'DesignAndLabCompleted',
-        timestamp: _time.now(),
-        data: { orderId: order.getId() },
-      });
+      this.eventBus.publish(new TechThreeCheckpointEvent({ orderId: order.getId() }));
 
       this.logger.log({
-        msg: '3-checkpoint completed, signaling PP module',
+        msg: '3-checkpoint completed → TechThreeCheckpointEvent published (Trigger 6→7)',
         orderId: order.getId(),
       });
     }

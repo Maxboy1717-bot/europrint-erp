@@ -14,6 +14,7 @@
  */
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -24,6 +25,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class EmployeesCompatProfileRawService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getCareer(id: string): Promise<Result<{ history: Row[]; goals: Row[] }, AppError>> {
     return safeCall(async () => {
@@ -120,7 +122,7 @@ export class EmployeesCompatProfileRawService {
       const r = await rawSql(sql`
         SELECT sh.id, sh.employee_id, sh.salary_period_start, sh.salary_period_end,
                sh.base_salary, sh.salary_earned, sh.total_bonuses, sh.other_bonuses, sh.created_at
-        FROM salary_history sh
+        FROM payroll_period_record sh
         WHERE sh.employee_id = ${si(id)}
         ORDER BY sh.salary_period_start DESC LIMIT 50
       `);
@@ -150,7 +152,7 @@ export class EmployeesCompatProfileRawService {
         RETURNING id, employee_id, current_position_id, target_position_id, estimated_months, progress_percent, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Career path creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.careerPathCreationFailed'));
       return item;
     });
   }
@@ -163,39 +165,58 @@ export class EmployeesCompatProfileRawService {
         RETURNING id, employee_id, skill_name, skill_category, proficiency_level, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Skill creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.skillCreationFailed'));
       return item;
     });
   }
 
   async createEmergencyContact(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
+      // FIX (iter-77 drift catalog #19): the INSERT wrote nonexistent column `phone` (real col is
+      // phone_number) → 42703, and omitted NOT-NULL user_id + phone_number → 23502. Also the FE
+      // (EmergencyContactCard) sends camelCase phoneNumber/contactName, not `phone`. user_id is the
+      // canonical NOT-NULL FK (users table) — resolve it from the employee via INSERT..SELECT.
+      const contactName = body['contactName'] ?? body['contact_name'] ?? body['name'] ?? '';
+      const relationship = body['relationship'] ?? '';
+      const phoneNumber = body['phoneNumber'] ?? body['phone_number'] ?? body['phone'] ?? '';
+      const altPhone    = body['alternativePhone'] ?? body['alternative_phone'] ?? null;
       const r = await rawSql(sql`
-        INSERT INTO employee_emergency_contacts (employee_id, contact_name, relationship, phone)
-        VALUES (${si(employeeId)}, ${body['contact_name'] ?? body['contactName'] ?? body['name'] ?? ''}, ${body['relationship'] ?? null}, ${body['phone'] ?? null})
-        RETURNING id, employee_id, contact_name, relationship, phone, created_at
+        INSERT INTO employee_emergency_contacts (user_id, employee_id, contact_name, relationship, phone_number, alternative_phone)
+        SELECT u.id, ${si(employeeId)}, ${contactName}, ${relationship}, ${phoneNumber}, ${altPhone}
+        FROM users u WHERE u.employee_id = ${si(employeeId)} LIMIT 1
+        RETURNING id, user_id, employee_id, contact_name, relationship, phone_number, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Emergency contact creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.emergencyContactCreationFailedNoUser'));
       return item;
     });
   }
 
   async createPassport(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
+      // audit 2026-08-06 T29: the FE passport form collected issue/expiry dates and
+      // national-id but this write silently dropped them (Q-43 fake-save) even though
+      // the employees columns exist. Accept both FE camelCase names (issuedDate/
+      // expiryDate — profile-types.ts) and canonical snake_case.
+      const issueDate  = body['passport_issue_date']  ?? body['passportIssueDate']  ?? body['issuedDate'] ?? null;
+      const expiryDate = body['passport_expiry_date'] ?? body['passportExpiryDate'] ?? body['expiryDate'] ?? null;
+      const nationalId = body['national_id'] ?? body['nationalId'] ?? null;
       const r = await rawSql(sql`
         UPDATE employees SET passport_series = COALESCE(${body['passport_series'] ?? body['passportSeries'] ?? null}, passport_series),
           passport_number = COALESCE(${body['passport_number'] ?? body['passportNumber'] ?? null}, passport_number),
+          passport_issue_date  = COALESCE(${issueDate}::date, passport_issue_date),
+          passport_expiry_date = COALESCE(${expiryDate}::date, passport_expiry_date),
+          national_id = COALESCE(${nationalId}, national_id),
           updated_at = NOW()
         WHERE id = ${si(employeeId)}
-        RETURNING id, passport_series, passport_number, updated_at
+        RETURNING id, passport_series, passport_number, passport_issue_date, passport_expiry_date, national_id, updated_at
       `);
       return (dbRows(r)[0] as Row | undefined) ?? { id: employeeId, updated: true };
     });
   }
 
   /**
-   * Payroll summary — salary_history dan agregat (so'nggi 12 oy).
+   * Payroll summary — payroll_period_record dan agregat (so'nggi 12 oy).
    * Frontend payroll-summary'ni xodim profilida ko'rsatadi.
    */
   async getPayrollSummary(id: string): Promise<Result<Row | null, AppError>> {
@@ -229,7 +250,7 @@ export class EmployeesCompatProfileRawService {
         COALESCE(AVG(salary_earned), 0)::numeric(15,2) AS avg_earned,
         MIN(salary_period_start)                     AS first_period,
         MAX(salary_period_end)                       AS last_period
-      FROM salary_history
+      FROM payroll_period_record
       WHERE employee_id = ${si(id)}
         AND salary_period_start >= NOW() - INTERVAL '12 months'
     `);
@@ -239,7 +260,7 @@ export class EmployeesCompatProfileRawService {
     return rawSql(sql`
       SELECT id, employee_id, salary_period_start, salary_period_end,
              base_salary, salary_earned, total_bonuses, other_bonuses
-      FROM salary_history
+      FROM payroll_period_record
       WHERE employee_id = ${si(id)}
       ORDER BY salary_period_start DESC NULLS LAST, created_at DESC
       LIMIT 1
@@ -249,12 +270,12 @@ export class EmployeesCompatProfileRawService {
   async createSalaryHistory(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const r = await rawSql(sql`
-        INSERT INTO salary_history (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, total_bonuses, other_bonuses)
+        INSERT INTO payroll_period_record (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, total_bonuses, other_bonuses)
         VALUES (${si(employeeId)}, ${body['salary_period_start'] ?? body['salaryPeriodStart'] ?? body['period'] ?? new Date().toISOString().slice(0,7) + '-01'}, ${body['salary_period_end'] ?? body['salaryPeriodEnd'] ?? null}, ${body['base_salary'] ?? body['baseSalary'] ?? 0}, ${body['salary_earned'] ?? body['salaryEarned'] ?? 0}, ${body['total_bonuses'] ?? body['totalBonuses'] ?? 0}, ${body['other_bonuses'] ?? body['otherBonuses'] ?? 0})
         RETURNING id, employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Salary history creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.salaryHistoryCreationFailed'));
       return item;
     });
   }

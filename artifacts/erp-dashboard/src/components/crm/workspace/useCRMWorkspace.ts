@@ -165,6 +165,13 @@ export function useCRMWorkspace() {
       if (activeEntity === "leads") {
         return apiRequest<MoveResult>("PATCH", `/api/crm/leads/${itemId}/stage`, { stage_id: stageId });
       } else if (activeEntity === "deals") {
+        // SD-CRM audit §5.4 item 4: dragging to "won" must hit the dedicated /won
+        // endpoint (fires DealWonEvent → SD auto-creates the sales order) — the
+        // generic /stage PATCH only writes stage_id and never publishes the event,
+        // so the CRM->SD golden thread never fired.
+        if (stageId === "won") {
+          return apiRequest<MoveResult>("PATCH", `/api/crm/deals/${itemId}/won`, {});
+        }
         return apiRequest<MoveResult>("PATCH", `/api/crm/deals/${itemId}/stage`, { stage_id: stageId });
       } else if (activeEntity === "proposals") {
         return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/proposals/${itemId}/stage`, { stage_id: stageId });

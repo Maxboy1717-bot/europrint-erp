@@ -23,6 +23,11 @@ export class PpEquipmentService {
     return this.repo.findById(id);
   }
 
+  /** Equipment 360 — full live machine view (status, OEE, sessions, downtime, maintenance, operator). */
+  async getEquipment360(id: number) {
+    return this.repo.getEquipment360(id);
+  }
+
   async createEquipment(body: Record<string, unknown>) {
     return this.repo.create(body);
   }

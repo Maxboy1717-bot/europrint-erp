@@ -8,6 +8,7 @@
 
 import { DefectsService } from '../../src/modules/qc/defects/defects.service';
 import type { IDefectsRepository } from '../../src/modules/qc/defects/i-defects.repo';
+import type { I18nService } from 'nestjs-i18n';
 
 function buildRepo(overrides: Partial<jest.Mocked<IDefectsRepository>> = {}): jest.Mocked<IDefectsRepository> {
   return {
@@ -21,12 +22,18 @@ function buildRepo(overrides: Partial<jest.Mocked<IDefectsRepository>> = {}): je
   };
 }
 
+function buildI18n(): jest.Mocked<I18nService> {
+  return {
+    t: jest.fn().mockResolvedValue('Brak topilmadi'),
+  } as unknown as jest.Mocked<I18nService>;
+}
+
 describe('DefectsService', () => {
   it('findAllBraks computes totalPages from count and limit', async () => {
     const repo = buildRepo({
       findAllBraks: jest.fn().mockResolvedValue({ ok: true, data: { data: [{ id: 1 }], count: 47 } }),
     });
-    const svc = new DefectsService(repo);
+    const svc = new DefectsService(repo, buildI18n());
 
     const r = await svc.findAllBraks({ page: 1, limit: 10 });
 
@@ -37,7 +44,7 @@ describe('DefectsService', () => {
 
   it('findAllBraks uses default page=1 limit=10 when query empty', async () => {
     const repo = buildRepo();
-    const svc = new DefectsService(repo);
+    const svc = new DefectsService(repo, buildI18n());
 
     await svc.findAllBraks();
 
@@ -48,7 +55,7 @@ describe('DefectsService', () => {
     const repo = buildRepo({
       findBrakById: jest.fn().mockResolvedValue({ ok: true, data: { id: 7, reason: 'misprint' } }),
     });
-    const svc = new DefectsService(repo);
+    const svc = new DefectsService(repo, buildI18n());
 
     const r = await svc.findOneBrak(7);
 
@@ -61,7 +68,7 @@ describe('DefectsService', () => {
     const repo = buildRepo({
       findBrakById: jest.fn().mockResolvedValue({ ok: true, data: null }),
     });
-    const svc = new DefectsService(repo);
+    const svc = new DefectsService(repo, buildI18n());
 
     const r = await svc.findOneBrak(999);
 
@@ -77,7 +84,7 @@ describe('DefectsService', () => {
         data: { byStage: [{ stage: 'printing', count: 5 }], topReasons: [], pendingRework: 2 },
       }),
     });
-    const svc = new DefectsService(repo);
+    const svc = new DefectsService(repo, buildI18n());
 
     const r = await svc.getBrakStats();
 
@@ -90,7 +97,7 @@ describe('DefectsService', () => {
     const repo = buildRepo({
       createReclamation: jest.fn().mockResolvedValue({ ok: true, data: { id: 33 } }),
     });
-    const svc = new DefectsService(repo);
+    const svc = new DefectsService(repo, buildI18n());
 
     const r = await svc.createReclamation({ orderId: 100, reason: 'damage' });
 

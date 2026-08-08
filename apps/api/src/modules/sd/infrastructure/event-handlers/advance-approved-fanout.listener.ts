@@ -11,8 +11,9 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { EventsHandler, IEventHandler, EventBus } from '@nestjs/cqrs';
 import { AdvanceApprovedEvent } from '@modules/finance/domain/events/advance-approved.event';
+import { OrderMaterialWaitingEvent } from '../../domain/events/order-material-waiting.event';
 import { SdOrderDepartmentsRepository } from '../../orders/drizzle-sd-order-departments.repo';
 
 @Injectable()
@@ -20,7 +21,10 @@ import { SdOrderDepartmentsRepository } from '../../orders/drizzle-sd-order-depa
 export class AdvanceApprovedFanoutListener implements IEventHandler<AdvanceApprovedEvent> {
   private readonly logger = new Logger(AdvanceApprovedFanoutListener.name);
 
-  constructor(private readonly deptRepo: SdOrderDepartmentsRepository) {}
+  constructor(
+    private readonly deptRepo: SdOrderDepartmentsRepository,
+    private readonly eventBus: EventBus,
+  ) {}
 
   async handle(event: AdvanceApprovedEvent): Promise<void> {
     const orderId = Number(event?.orderId);
@@ -75,6 +79,17 @@ export class AdvanceApprovedFanoutListener implements IEventHandler<AdvanceAppro
         if (created.ok) {
           await this.deptRepo.markStatus(orderId, 'warehouse', 'started');
           this.logger.log({ msg: 'Fan-out: warehouse material requirement dispatched', orderId, newlyCreated: created.data.created });
+          // SD→MM material-waiting signal (T8-07, golden-thread extension): the order now
+          // carries an ow_material_requirements row in status 'NEEDED'. Publish on the CQRS
+          // EventBus so (a) the OutboxEventWriter persists it atomically to domain_events
+          // (golden-thread durability) and (b) MM's OrderMaterialWaitingListener raises the
+          // procurement signal. Best-effort — a signal failure must not break the fan-out.
+          const cntResult = await this.deptRepo.countMaterialRequirements(orderId);
+          const requirementCount = cntResult.ok ? cntResult.data : 1;
+          if (requirementCount > 0) {
+            this.eventBus.publish(new OrderMaterialWaitingEvent(orderId, requirementCount));
+            this.logger.log({ msg: 'SD→MM material-waiting signal published', orderId, requirementCount });
+          }
         } else {
           this.logger.warn({ msg: 'Fan-out: warehouse dispatch failed', orderId, error: created.error?.message });
         }

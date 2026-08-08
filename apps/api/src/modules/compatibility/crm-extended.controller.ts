@@ -14,11 +14,6 @@ import { CrmExtendedCompatService } from './crm-extended.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CrmCreateTaskDto, CrmChatDto, CrmAutoTasksDto, CrmChurnDto, CrmVoiceDto } from './dto/crm.dto';
 import { unwrapOrInternal } from '@common/http-result';
-import {
-  CrmInvoiceAclTranslator,
-  type LegacyCrmInvoiceRow,
-  type CrmInvoiceDto,
-} from './acl/crm-invoice-acl';
 
 @ApiTags('CRM Extended (Compat)')
 @ApiBearerAuth()
@@ -28,40 +23,11 @@ import {
 @UseGuards(JwtAuthGuard)
 @Controller('crm')
 export class CrmExtendedCompatController {
-  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
-  private readonly invoiceAcl = new CrmInvoiceAclTranslator();
-
   constructor(private readonly svc: CrmExtendedCompatService) {}
 
   @Get('invoices')
   async getCrmInvoices(@Query('page') page?: string, @Query('limit') limit?: string) {
     return unwrapOrInternal(await this.svc.getCrmInvoices(page, limit));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant of CRM invoices. Envelope-preserving:
-   * the legacy `{data, total, page}` shape is kept, but `data` is
-   * narrowed to typed `CrmInvoiceDto[]`. New BC-8 (Sales / CRM) consumers
-   * should target this route; `/invoices` stays for backwards-compat.
-   */
-  @Get('invoices/v2')
-  async getCrmInvoicesV2(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ): Promise<{ data: CrmInvoiceDto[]; total: number; page: number }> {
-    const envelope = unwrapOrInternal(await this.svc.getCrmInvoices(page, limit)) as unknown as {
-      data?: LegacyCrmInvoiceRow[];
-      total?: unknown;
-      page?: unknown;
-    };
-    const rawRows = Array.isArray(envelope?.data) ? envelope.data : [];
-    const translated = rawRows
-      .map((row) => this.invoiceAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: CrmInvoiceDto } => r.ok)
-      .map((r) => r.data);
-    const total = typeof envelope?.total === 'number' ? envelope.total : Number(envelope?.total ?? 0) || 0;
-    const pageNum = typeof envelope?.page === 'number' ? envelope.page : Number(envelope?.page ?? 1) || 1;
-    return { data: translated, total, page: pageNum };
   }
 
   @Get('ai/dashboard-analysis')
@@ -99,13 +65,18 @@ export class CrmExtendedCompatController {
     return unwrapOrInternal(await this.svc.createTask(body));
   }
 
-  @Post(['chat', 'ai/extended/chat/respond'])
+  // Alias 'ai/extended/chat/respond' removed — it collided with the canonical
+  // crm/ai controller (crm-ai-extended.controller.ts:231), which owns that path and
+  // returns the honest 501 (Q-40). The collision crashed Fastify at boot.
+  @Post('chat')
   @HttpCode(HttpStatus.OK)
   async processChat(@Body() body: CrmChatDto) {
     return unwrapOrInternal(await this.svc.processChat(body));
   }
 
-  @Post(['auto-tasks', 'ai/extended/auto-tasks/create'])
+  // Alias 'ai/extended/auto-tasks/create' removed — collided with the canonical
+  // crm/ai controller (crm-ai-extended.controller.ts:119).
+  @Post('auto-tasks')
   @HttpCode(HttpStatus.OK)
   async runAutoTasks(@Body() body: CrmAutoTasksDto) {
     return unwrapOrInternal(await this.svc.runAutoTasks(body));
@@ -117,7 +88,9 @@ export class CrmExtendedCompatController {
     return unwrapOrInternal(await this.svc.churnAnalysis(body));
   }
 
-  @Post(['ai/voice', 'ai/extended/voice/analyze-call'])
+  // Alias 'ai/extended/voice/analyze-call' removed — collided with the canonical
+  // crm/ai controller (crm-ai-extended.controller.ts:223).
+  @Post('ai/voice')
   @HttpCode(HttpStatus.OK)
   async processVoice(@Body() body: CrmVoiceDto) {
     return unwrapOrInternal(await this.svc.processVoice(body));

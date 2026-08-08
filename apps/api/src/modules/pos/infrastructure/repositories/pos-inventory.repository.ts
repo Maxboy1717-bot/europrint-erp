@@ -6,12 +6,15 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { posMovementTypes, posMovements, posMovementLines, inventoryPassports, inventoryBarcodeAssignments, posPdfTemplates, db, eq, and, isNull, desc, sql } from '@workspace/db';
 import { CreateInventoryPassportDto, AssignBarcodeDto, CreatePdfTemplateDto } from '../../dto/pos.dto';
 import { safeCall, Result } from '@common/result';
 
 @Injectable()
 export class PosInventoryRepository {
+  constructor(private readonly i18n: I18nService) {}
+
   async getPassports(warehouseId?: string) : Promise<Result<(typeof inventoryPassports.$inferSelect)[]>>{
     return safeCall(async () => {
       if (warehouseId) {
@@ -28,7 +31,7 @@ export class PosInventoryRepository {
   async getPassportById(id: number) : Promise<Result<Record<string, unknown>>>{
     return safeCall(async () => {
       const [passport] = await db.select().from(inventoryPassports).where(eq(inventoryPassports.id, id));
-      if (!passport) throw new NotFoundException(`Pasport #${id} topilmadi`);
+      if (!passport) throw new NotFoundException(await this.i18n.t('errors.passportNotFoundWithId', { args: { id } }));
       const barcodes = await db.select().from(inventoryBarcodeAssignments)
         .where(and(eq(inventoryBarcodeAssignments.passportId, id), eq(inventoryBarcodeAssignments.isActive, true)));
       return { ...passport, barcodes };
@@ -106,7 +109,7 @@ export class PosInventoryRepository {
     return safeCall(async () => {
       const [assignment] = await db.select().from(inventoryBarcodeAssignments)
         .where(and(eq(inventoryBarcodeAssignments.barcode, barcode), eq(inventoryBarcodeAssignments.isActive, true)));
-      if (!assignment) throw new NotFoundException(`Barkod "${barcode}" topilmadi`);
+      if (!assignment) throw new NotFoundException(await this.i18n.t('errors.barcodeNotFoundWithValue', { args: { barcode } }));
       const [passport] = await db.select().from(inventoryPassports)
         .where(eq(inventoryPassports.id, assignment.passportId));
       return { assignment, passport };
@@ -124,7 +127,7 @@ export class PosInventoryRepository {
   async getPdfTemplateById(id: number) : Promise<Result<Record<string, unknown>>>{
     return safeCall(async () => {
       const [template] = await db.select().from(posPdfTemplates).where(eq(posPdfTemplates.id, id));
-      if (!template) throw new NotFoundException(`Shablon #${id} topilmadi`);
+      if (!template) throw new NotFoundException(await this.i18n.t('errors.templateNotFoundWithId', { args: { id } }));
       return template;
       }, 'DB_ERROR');
   }

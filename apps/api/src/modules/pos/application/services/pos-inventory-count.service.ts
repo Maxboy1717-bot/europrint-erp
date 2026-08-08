@@ -18,7 +18,8 @@ const _time = new TashkentTimeService();
 
 import {
   Injectable, Logger, BadRequestException, NotFoundException,
-} from '@nestjs/common'; 
+} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, AppError, safeCall } from '@common/result';
 import { PosInventoryCountRepository } from '../../infrastructure/repositories/pos-inventory-count.repository';
@@ -26,6 +27,7 @@ import { PosInventoryCountRepository } from '../../infrastructure/repositories/p
 import { PosMovementService } from './pos-movement.service';
 import { PosAuditService }    from './pos-audit.service';
 import { PosInventoryCountQueryService } from './pos-inventory-count-query.service';
+import { PosVarianceConfigService } from './pos-variance-config.service';
 
 import {
   CreateInventoryCountDto,
@@ -47,7 +49,48 @@ export class PosInventoryCountService {
     private readonly eventEmitter:    EventEmitter2,
     private readonly queryService:    PosInventoryCountQueryService,
     private readonly inventoryRepo:   PosInventoryCountRepository,
+    private readonly varianceConfig:  PosVarianceConfigService,
+    private readonly i18n:            I18nService,
   ) {}
+
+  // ─── P4: Farq avto-tasdiq / eskalatsiya qarori ────────────────────────────
+  //
+  // ADDITIVE (Q-46): mavjud `approveCount` o'zgarmaydi. Bu metod farqlarni
+  // chegaraga solishtirib AUTO_APPROVE (chegara ichida) yoki ESCALATE (oshdi —
+  // menejer-tasdiq) qaroriga keladi. FE/controller bu qarorga qarab avto-tasdiq
+  // tugmasini ko'rsatadi yoki menejer-tasdiqqa yo'naltiradi.
+
+  async evaluateVarianceDecision(countId: number): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const invCountR = await this.inventoryRepo.findById(countId);
+      if (!invCountR.ok || !invCountR.data) throw new NotFoundException(await this.i18n.t('errors.inventoryCountNotFound', { args: { id: countId } }));
+      const invCount = invCountR.data as Record<string, unknown>;
+
+      const warehouseRaw = invCount['warehouseId'] ?? invCount['warehouse_id'];
+      const warehouseId = warehouseRaw != null && Number.isFinite(Number(warehouseRaw))
+        ? Number(warehouseRaw)
+        : null;
+
+      const varLinesR = await this.inventoryRepo.getVarianceLines(countId);
+      const varLines = varLinesR.ok && Array.isArray(varLinesR.data) ? varLinesR.data : [];
+
+      const lines = varLines.map((l) => ({
+        systemQty:     Number(l['system_qty'] ?? l['system_quantity'] ?? 0),
+        varianceQty:   Number(l['variance_qty'] ?? l['variance'] ?? 0),
+        varianceValue: Number(l['variance_value'] ?? l['value_variance'] ?? 0),
+      }));
+
+      const decisionR = await this.varianceConfig.decideForCount(warehouseId, lines);
+      if (!decisionR.ok) throw new BadRequestException(decisionR.error.message);
+
+      return {
+        countId,
+        warehouseId,
+        varianceLineCount: lines.length,
+        ...decisionR.data,
+      };
+    });
+  }
 
   // ─── Inventarizatsiya Yaratish ────────────────────────────────────────────
 
@@ -59,15 +102,15 @@ export class PosInventoryCountService {
     return safeCall(async () => {
       // Ombor mavjudligini tekshirish
       const whR = await this.inventoryRepo.getWarehouseById(dto.warehouseId);
-      if (!whR.ok) throw new NotFoundException(`Ombor topilmadi: ${dto.warehouseId}`);
-  
+      if (!whR.ok) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id: dto.warehouseId } }));
+
       // Faol count bormi tekshirish
       const activeCountR = await this.inventoryRepo.findActiveCountForWarehouse(dto.warehouseId);
 
       if (activeCountR.ok && activeCountR.data) {
         const activeData = activeCountR.data as { countNumber: string };
         throw new BadRequestException(
-          `Bu omborda allaqachon faol inventarizatsiya mavjud: ${activeData.countNumber}`,
+          await this.i18n.t('errors.warehouseHasActiveInventoryCount', { args: { countNumber: activeData.countNumber } }),
         );
       }
   
@@ -80,12 +123,19 @@ export class PosInventoryCountService {
       const inventoryCountR = await this.inventoryRepo.createCount({
         countNumber,
         warehouseId:       dto.warehouseId,
+        // FAZA E (Inventarizatsiya, 2026-07-01) — kanonik ustun NOT NULL; avval Drizzle
+        // sxemasida umuman yo'q edi → INSERT doim `count_type` NOT NULL xatosi bilan
+        // yiqilardi (pre-existing bug, shu funksiya ichida — Q-46 bo'yicha to'g'irlandi).
+        countType:         'cycle',
         status:            'DRAFT',
         countDate:         dto.countDate ? new Date(dto.countDate) : _time.now(),
         categoryFilter:    dto.categoryFilter,
         binLocationFilter: dto.binLocationFilter,
         conductedBy:       createdById,
         notes:             dto.notes,
+        // "Davriy (rejalashtirilgan)" sana endi saqlanadi (ilgari FE "New Plan" formasidagi
+        // scheduledFor DTO'da yo'q edi — jim tashlab yuborilardi).
+        scheduledFor:      dto.scheduledFor ?? null,
       } as Parameters<typeof this.inventoryRepo.createCount>[0]);
       const inventoryCount = inventoryCountR.ok ? (inventoryCountR.data as { id: number }) : { id: 0 };
   
@@ -127,10 +177,10 @@ export class PosInventoryCountService {
     ipAddress?: string,
   ) {
     const invCountR = await this.inventoryRepo.findById(dto.countId);
-    if (!invCountR.ok) throw new NotFoundException(`Inventarizatsiya topilmadi: ${dto.countId}`);
+    if (!invCountR.ok) throw new NotFoundException(await this.i18n.t('errors.inventoryCountNotFound', { args: { id: dto.countId } }));
     const invCount = invCountR.data as Record<string, unknown>;
     if (invCount.status !== 'IN_PROGRESS' && invCount.status !== 'COMPLETED') {
-      throw new BadRequestException(`Inventarizatsiya tasdiqlab bo'lmaydi: ${invCount.status}`);
+      throw new BadRequestException(await this.i18n.t('errors.inventoryCountCannotBeApproved', { args: { status: invCount.status } }));
     }
 
     // Barcha satrlar kiritilganmi tekshirish
@@ -138,7 +188,7 @@ export class PosInventoryCountService {
 
     if ((nullCount.ok ? nullCount.data as number : 0) > 0) {
       throw new BadRequestException(
-        `${nullCount.ok ? nullCount.data : 0} ta satr hali kiritilmagan. Barchasini kiriting.`,
+        await this.i18n.t('errors.inventoryCountLinesNotFilled', { args: { count: nullCount.ok ? nullCount.data : 0 } }),
       );
     }
 
@@ -191,7 +241,7 @@ export class PosInventoryCountService {
       const adjTypeCode = isPlus ? 'INVENTORY_ADJ_PLUS' : 'INVENTORY_ADJ_MINUS';
 
       const adjType = await this.inventoryRepo.getMovementTypeByCode(adjTypeCode);
-      if (!adjType || !adjType.ok || adjType.data === null) throw new BadRequestException(`Harakat turi topilmadi: ${adjTypeCode}`);
+      if (!adjType || !adjType.ok || adjType.data === null) throw new BadRequestException(await this.i18n.t('errors.movementTypeNotFoundWithCode', { args: { code: adjTypeCode } }));
 
       await this.movementService.createMovement(
         {

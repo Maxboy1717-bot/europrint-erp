@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
-import { useUndoDelete } from "@/components/undo-toast";
 import type { PapkaOrder } from "@shared/schema";
 import {
   formSchema, FormData, Lang, DEFAULT_FORM_VALUES, TRANSLATIONS,
@@ -53,8 +53,13 @@ function normalizePapkaOrder(r: Record<string, unknown>): PapkaOrder {
 export default function PapkaOrders() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
-  const { showUndoToast } = useUndoDelete();
+  const [, setLocation] = useLocation();
   const [lang, setLang] = useState<Lang>("uz");
+  const tr = TRANSLATIONS[lang];
+  // Backend error payloads only ever carry {uz, ru} (no uz-cyr variant) - fall
+  // Cyrillic users through to the Latin Uzbek text rather than Russian, since
+  // that is the correct language just the wrong script (closer than Russian).
+  const errorDetailsLang: "uz" | "ru" = lang === "ru" ? "ru" : "uz";
   const [showDialog, setShowDialog] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PapkaOrder | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,17 +102,17 @@ export default function PapkaOrders() {
       queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
       setShowDialog(false);
       form.reset(DEFAULT_FORM_VALUES);
-      toast({ title: lang === "uz" ? "Buyurtma yaratildi" : "Заказ создан" });
+      toast({ title: tr.orderCreated });
     },
     onError: (error: Error & { errorDetails?: { uz: string; ru: string } }) => {
-      let errorMessage = lang === "uz" ? "Xatolik" : "Ошибка";
+      let errorMessage: string = tr.error;
       if (error.errorDetails) {
-        errorMessage = lang === "uz" ? error.errorDetails.uz : error.errorDetails.ru;
+        errorMessage = error.errorDetails[errorDetailsLang];
         if (errorMessage.toLowerCase().includes("papka raqami") || errorMessage.toLowerCase().includes("номер папки")) {
           form.setError("papkaNo", { type: "manual", message: errorMessage });
         }
       }
-      toast({ variant: "destructive", title: lang === "uz" ? "Xatolik" : "Ошибка", description: errorMessage });
+      toast({ variant: "destructive", title: tr.error, description: errorMessage });
     },
   });
 
@@ -119,7 +124,10 @@ export default function PapkaOrders() {
       setShowDialog(false);
       setEditingOrder(null);
       form.reset(DEFAULT_FORM_VALUES);
-      toast({ title: lang === "uz" ? "Buyurtma yangilandi" : "Заказ обновлен" });
+      toast({ title: tr.orderUpdated });
+    },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: tr.error, description: error.message || tr.error });
     },
   });
 
@@ -128,12 +136,12 @@ export default function PapkaOrders() {
       await apiRequest("PATCH", `/api/papka-orders/${id}`, { status: "cancelled" });
       return id;
     },
-    onSuccess: (id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
-      const order = allOrders.find(o => o.id === id);
-      showUndoToast("papka_orders", id, order?.papkaNo || id, () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
-      });
+      toast({ title: tr.orderCancelled });
+    },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: tr.error, description: error.message || tr.error });
     },
   });
 
@@ -156,10 +164,14 @@ export default function PapkaOrders() {
     setShowDialog(true);
   };
 
+  // Owner decision 2026-07-13 (chat) — "buyurtma 1 ta joydan yaratilishi kerak": new orders
+  // are created ONLY at /order-create (the wizard, wired to the real sales_orders chain).
+  // This page's own create-dialog posted to /api/papka-orders, a legacy table with zero
+  // link into Design/QC/Technologist/production-planning — kept for editing/managing
+  // existing papka_orders rows (handleEdit below, untouched) but no longer offered for
+  // creating new ones.
   const handleNewOrder = () => {
-    setEditingOrder(null);
-    form.reset({ ...DEFAULT_FORM_VALUES, sana: new Date().toISOString().split("T")[0] });
-    setShowDialog(true);
+    setLocation("/order-create");
   };
 
   const onSubmit = (data: FormData) => {
@@ -172,8 +184,6 @@ export default function PapkaOrders() {
 
   const activeCount = allOrders.filter(o => ["new", "planning", "production"].includes(o.status)).length;
   const completedCount = allOrders.filter(o => o.status === "completed").length;
-
-  const tr = TRANSLATIONS[lang];
 
   if (isLoading) {
     return (

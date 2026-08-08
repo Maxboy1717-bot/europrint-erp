@@ -42,8 +42,8 @@ export class QcExtendedRepository implements IQcExtendedRepo {
   listFinalInspections(status: string | undefined, oid: number | null, lim: number, off: number): Promise<Result<Row[]>> {
     return this.finalInspections.listFinalInspections(status, oid, lim, off);
   }
-  createFinalInspection(order_id: number | null, inspector_id: number | null, status: string | null, notes: string | null, passed: boolean | null): Promise<Result<Row>> {
-    return this.finalInspections.createFinalInspection(order_id, inspector_id, status, notes, passed);
+  createFinalInspection(order_id: number | null, inspector_id: number | null, status: string | null, notes: string | null, passed: boolean | null, sampleSize: number, defectCount: number, passedCount: number, defectRate: number | null): Promise<Result<Row>> {
+    return this.finalInspections.createFinalInspection(order_id, inspector_id, status, notes, passed, sampleSize, defectCount, passedCount, defectRate);
   }
   updateFinalInspection(id: number, status: string | null, notes: string | null, passed: boolean | null): Promise<Result<Row[]>> {
     return this.finalInspections.updateFinalInspection(id, status, notes, passed);
@@ -51,8 +51,8 @@ export class QcExtendedRepository implements IQcExtendedRepo {
   getFinalOrders(lim: number): Promise<Result<Row[]>> {
     return this.finalInspections.getFinalOrders(lim);
   }
-  completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean): Promise<Result<Row[]>> {
-    return this.finalInspections.completeFinalInspection(id, inspResult, notes, defect_count, passed);
+  completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean, parentOrderId: number | null = null, reworkCost: number | null = null): Promise<Result<Row[]>> {
+    return this.finalInspections.completeFinalInspection(id, inspResult, notes, defect_count, passed, parentOrderId, reworkCost);
   }
 
   listInProcess(sid: number | null, status: string | undefined, lim: number): Promise<Result<Row[]>> {

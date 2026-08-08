@@ -23,6 +23,7 @@ export interface PriceResult {
   dieCost?: number;
   processingCost?: number;
   extrasCost?: number;
+  productionCost?: number;
   deliveryCost?: number;
   totalCostPrice?: number;
   markupPercent?: number;

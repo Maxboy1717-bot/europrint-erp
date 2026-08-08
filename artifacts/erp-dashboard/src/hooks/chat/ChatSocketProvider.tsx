@@ -11,6 +11,17 @@ import { setSharedSocket } from "./useChatSocket";
 
 const ChatSocketContext = createContext<{ connected: boolean }>({ connected: false });
 
+// WS reconnect transport defaults. Unbounded attempts with exponential backoff
+// between the initial delay and the cap (socket.io randomizes between the two)
+// so a dropped connection keeps retrying forever instead of giving up — a
+// prod-messenger never silently stops reconnecting.
+// NOTE (owner): sourcing these two values from `business_settings` (CRUD) is an
+// open sub-decision — the settings read endpoint is role-gated (READ excludes
+// plain operators → 403), so a per-user pre-connect fetch would break the very
+// connect path we just fixed. Flagged for the Phase-1 report.
+const WS_RECONNECT_DELAY_MS = 2000;      // initial backoff
+const WS_RECONNECT_DELAY_MAX_MS = 30000; // exponential-backoff cap
+
 export function ChatSocketProvider({ children }: { children: ReactNode }) {
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const [connected, setConnected] = useState(false);
@@ -19,23 +30,26 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    // Auth: this app authenticates via an httpOnly `access_token` COOKIE
+    // (auth-refresh.ts: "source of truth is the cookie"; jwt-auth.guard reads
+    // request.cookies['access_token']). JS cannot read that cookie, so
+    // `withCredentials: true` makes the browser attach it to the WS handshake;
+    // ChatGateway.handleConnection parses `access_token` out of the cookie
+    // header. (A prior fix wrongly read a NON-EXISTENT localStorage
+    // "access_token" → `if(!token) return` → the socket was never created →
+    // messages never sent. That is the bug this restores.)
     const wsUrl = `${window.location.protocol}//${window.location.host}`;
     const basePath = (import.meta.env.BASE_URL ?? "/erp-dashboard/").replace(/\/$/, "");
     const socketPath = `${basePath}/socket.io`;
 
-    // Socket.io: auth is delivered via the httpOnly access_token cookie
-    // attached to the WebSocket handshake when `withCredentials: true`.
-    // The server gateway extracts it via @WsCookies() (or equivalent) and
-    // performs the same JWT verification as REST routes. We keep the
-    // `auth` callback as a forward-compat hook for clients still passing
-    // a token — both flows are valid during the migration.
     const s = io(`${wsUrl}/chat`, {
       withCredentials: true,
       transports: ["websocket", "polling"],
       path: socketPath,
       reconnection: true,
-      reconnectionDelay: 5000,
-      reconnectionAttempts: 3,
+      reconnectionDelay: WS_RECONNECT_DELAY_MS,
+      reconnectionDelayMax: WS_RECONNECT_DELAY_MAX_MS,
+      reconnectionAttempts: Infinity,
     });
 
     setSharedSocket(s);
@@ -43,6 +57,17 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
     s.on("connect", () => {
       setConnected(true);
       s.emit("get_rooms");
+      // Reconnect catch-up: this handler fires on the initial connect AND on
+      // every reconnect. If a room is open, re-fetch its recent messages so
+      // anything that arrived during a disconnect window is pulled in (the
+      // `messages_list` handler replaces the room list with fresh server
+      // state — no gap, no duplicates) and re-mark it read.
+      const activeRoomId = useChatStore.getState().activeRoomId;
+      if (activeRoomId) {
+        const rId = Number(activeRoomId) || activeRoomId;
+        s.emit("get_messages", { roomId: rId });
+        s.emit("mark_read", { roomId: rId });
+      }
     });
 
     s.on("disconnect", () => {
@@ -53,10 +78,21 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
       setConnected(false);
     });
 
-    s.on("reconnect_failed", () => {
-      setConnected(false);
-      s.disconnect();
+    // Server-side send rejection (membership, etc.) — mark the optimistic
+    // bubble failed so the user sees a retry affordance instead of a bubble
+    // stuck forever in "sending".
+    s.on("error", (payload: { message?: string; clientMsgId?: string; roomId?: string }) => {
+      const cmid = payload?.clientMsgId;
+      if (!cmid) return;
+      const st = useChatStore.getState();
+      const roomId = payload.roomId
+        ?? Object.keys(st.messages).find((rid) => st.messages[rid]?.some((m) => m.clientMsgId === cmid));
+      if (roomId) st.markMessageFailed(String(roomId), cmid);
     });
+
+    // No `reconnect_failed` handler: with unbounded `reconnectionAttempts`
+    // it never fires, and calling `disconnect()` there would defeat the
+    // never-give-up reconnect policy this phase installs.
 
     const normalizeRooms = (rooms: Array<Record<string, unknown>>): ChatRoom[] =>
       (Array.isArray(rooms) ? rooms : []).map((r) => ({ ...r, id: String(r.id) } as ChatRoom));
@@ -124,6 +160,8 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
         messageType: (rawMsg.messageType ?? rawMsg.message_type ?? "text") as ChatMessage["messageType"],
         isDeleted: Boolean(rawMsg.isDeleted ?? rawMsg.is_deleted ?? false),
         senderName: String(rawMsg.senderName ?? rawMsg.sender_name ?? ""),
+        clientMsgId: (rawMsg.clientMsgId ?? rawMsg.client_msg_id) ? String(rawMsg.clientMsgId ?? rawMsg.client_msg_id) : undefined,
+        status: "sent",
       };
       const roomId = msg.roomId;
       if (msg.threadRootId) {
@@ -132,7 +170,13 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
         st.updateThreadCount(roomId, threadRootId, (st.threadMessages[threadRootId]?.length ?? 0) + 1);
         return;
       }
-      st.addMessage(msg);
+      // If this echo carries a clientMsgId, reconcile the optimistic bubble this
+      // sender rendered on send (replace in place, no duplicate); otherwise add.
+      if (msg.clientMsgId) {
+        st.reconcileMessage(roomId, msg.clientMsgId, msg);
+      } else {
+        st.addMessage(msg);
+      }
       st.updateRoom(roomId, {
         lastMessage: {
           id: msg.id,
@@ -162,12 +206,18 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
       s.emit("get_rooms");
     });
 
-    s.on("message:edited", ({ id, roomId, content }: { id: string; roomId: string; content: string }) => {
-      useChatStore.getState().editMessage(roomId, id, content, true);
+    s.on("message:edited", ({ id, roomId, content, isEdited }: { id: string; roomId: string; content: string; isEdited?: boolean }) => {
+      useChatStore.getState().editMessage(roomId, id, content, isEdited ?? true);
     });
 
     s.on("message:deleted", ({ id, roomId }: { id: string; roomId: string }) => {
       useChatStore.getState().deleteMessage(roomId, id);
+    });
+
+    // "Delete for me" echo (only to the requesting user's own sockets) —
+    // drop the message from this client's view without a placeholder.
+    s.on("message:hidden", ({ id, roomId }: { id: string; roomId: string }) => {
+      useChatStore.getState().removeMessage(String(roomId), String(id));
     });
 
     s.on("reaction:updated", ({

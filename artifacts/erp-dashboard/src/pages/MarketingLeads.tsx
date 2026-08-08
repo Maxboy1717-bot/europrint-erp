@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,15 +59,16 @@ export default function MarketingLeads() {
 
   // ── Queries ─────────────────────────────────────────────────────────────────
   const { data: leads = [], isLoading, isError, error, refetch } =
-    useQuery<MarketingLead[]>({ queryKey: ["/api/marketing/leads"] });
+    useQuery<MarketingLead[]>({ queryKey: ["/api/marketing/leads"], select: selectArray<MarketingLead> });
 
   const { data: overdue = [] } =
     useQuery<MarketingLead[]>({ queryKey: ["/api/marketing/leads/automation/overdue-leads"] });
 
-  const { data: funnelData = [] } = useQuery<FunnelStage[]>({
+  const { data: funnelRaw } = useQuery<{ stages: FunnelStage[]; total: number; conversionRate: number }>({
     queryKey: ["/api/marketing/funnel"],
     enabled: funnelOpen,
   });
+  const funnelData = selectArray<FunnelStage>(funnelRaw?.stages, "stages");
 
   const { data: contacts = [] } = useQuery<ContactLog[]>({
     queryKey: ["/api/marketing/leads", contactLeadId, "contacts"],
@@ -88,9 +89,9 @@ export default function MarketingLeads() {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] });
       setOpen(false);
       resetForm();
-      toast({ title: "Lid qo'shildi" });
+      toast({ title: t("lidQoshildi") });
     },
-    onError: (e: Error) => toast({ title: "Xatolik", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: t("xatolik"), description: e.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -100,7 +101,7 @@ export default function MarketingLeads() {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
       setOpen(false);
       resetForm();
-      toast({ title: "Lid yangilandi" });
+      toast({ title: t("lidYangilandi") });
     },
   });
 
@@ -109,7 +110,7 @@ export default function MarketingLeads() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] });
-      toast({ title: "Lid o'chirildi" });
+      toast({ title: t("lidOchirildi") });
     },
   });
 
@@ -118,17 +119,17 @@ export default function MarketingLeads() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] });
-      toast({ title: "CRM ga yuborildi" });
+      toast({ title: t("crmGaYuborildi") });
     },
     onError: (e: Error) =>
-      toast({ title: "Xatolik", description: e.message || "CRM ga o'tkazishda xatolik", variant: "destructive" }),
+      toast({ title: t("xatolik"), description: e.message || t("crmGaOtkazishdaXatolik"), variant: "destructive" }),
   });
 
   const recalcScoreMutation = useMutation({
     mutationFn: () => apiRequest<{ updated: number }>("POST", "/api/marketing/leads/recalculate-scores", {}),
     onSuccess: (d) => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
-      toast({ title: `${d.updated} ta lid bali yangilandi` });
+      toast({ title: t("lidBaliYangilandi", { count: d.updated }) });
     },
   });
 
@@ -141,7 +142,7 @@ export default function MarketingLeads() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads", contactLeadId, "contacts"] });
       setContactForm({ type: "call", summary: "", outcome: "interested", nextFollowUp: "" });
-      toast({ title: "Aloqa qayd etildi" });
+      toast({ title: t("aloqaQaydEtildi") });
     },
   });
 

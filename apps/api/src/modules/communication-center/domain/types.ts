@@ -33,6 +33,7 @@ export interface BasketCardRow {
   senderUserId:      number;
   senderName:        string | null;
   basketOwnerUserId: number | null;
+  sensitivityTier:   string | null; // Doc Control tier (oddiy|maxfiy|juda-maxfiy) — drives FE watermark
   createdAt:         string;
   updatedAt:         string;
 }

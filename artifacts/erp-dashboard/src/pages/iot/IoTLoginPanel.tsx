@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { User, Languages } from "lucide-react";
 import { IotLang } from "./iot-types";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 interface IoTLoginPanelProps {
   lang: IotLang;
@@ -22,7 +23,7 @@ interface IoTLoginPanelProps {
 }
 
 export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, workerPassword, setWorkerPassword, handleLogin }: IoTLoginPanelProps) {
-  const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
+  const { t } = useTranslation("iot");
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6 font-inter" data-testid="iot-tablet-login">
@@ -32,18 +33,18 @@ export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, work
             <User className="h-10 w-10 text-primary" />
           </div>
           <EPPageHeader
-        breadcrumb={<>{t("Boshqaruv paneli", "Панель управления")}<b className="text-foreground">{t("Operator kirishi", "Вход оператора")}</b></>}
-        title={t("Operator kirishi", "Вход оператора")}
-        subtitle={t("Tabel raqami va parol bilan kiring", "Войдите с табельным номером и паролем")}
+        breadcrumb={<>{t("dashboard1")}<b className="text-foreground">{t("loginTitle")}</b></>}
+        title={t("loginTitle")}
+        subtitle={t("loginSubtitle")}
       />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
-          <Label className="text-muted-foreground uppercase tracking-wider text-xs font-semibold">{t("Tabel raqami", "Табельный номер")}</Label>
+          <Label className="text-muted-foreground uppercase tracking-wider text-xs font-semibold">{t("tabelNumberLabel")}</Label>
             <Input
               type="text"
               inputMode="numeric"
-              placeholder={t("Masalan: 001", "Например: 001")}
+              placeholder={t("tabelNumberPlaceholder")}
               value={tabelNumber}
               onChange={e => setTabelNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
               className="text-center text-2xl h-14 bg-background border-border text-foreground focus-visible:ring-primary"
@@ -51,7 +52,7 @@ export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, work
             />
           </div>
           <div className="space-y-1">
-          <Label className="text-muted-foreground uppercase tracking-wider text-xs font-semibold">{t("Parol", "Пароль")}</Label>
+          <Label className="text-muted-foreground uppercase tracking-wider text-xs font-semibold">{t("passwordLabel")}</Label>
             <Input
               type="password"
               placeholder="••••"
@@ -67,13 +68,13 @@ export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, work
             disabled={tabelNumber.length < 3 || workerPassword.length < 4}
             data-testid="button-login"
           >
-            {t("KIRISH", "ВОЙТИ")}
+            {t("loginButton")}
           </Button>
           <div className="flex justify-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setLang(lang === "uz" ? "ru" : "uz")} 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLang(lang === "uz" ? "ru" : "uz")}
               data-testid="button-lang-login"
               className="text-muted-foreground hover:bg-muted"
             >
@@ -82,7 +83,7 @@ export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, work
             </Button>
           </div>
           <p className="text-xs text-center text-muted-foreground">
-            {t("Tabel raqami va PIN kodingizni kiriting", "Введите табельный номер и PIN-код")}
+            {t("loginHelpText")}
           </p>
         </CardContent>
       </Card>

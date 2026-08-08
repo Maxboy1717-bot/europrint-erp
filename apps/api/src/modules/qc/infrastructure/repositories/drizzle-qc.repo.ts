@@ -13,6 +13,7 @@ import {
   IQcComputeRepository,
   SpcReading,
   ProcessDpmoData,
+  StageFtqRow,
   JobSpoilageRow,
   JobCostRow,
   InkInventoryRow,
@@ -38,13 +39,23 @@ export class DrizzleQcComputeRepository implements IQcComputeRepository {
   }
 
   async findProcessDpmoData(processId: string): Promise<ProcessDpmoData> {
+    // GOLDEN-THREAD FIX (2026-06-22): real qc_inspections rows link to the production
+    // order via the INTEGER `order_id` column (writers — mes-completed.listener,
+    // create-inspection.handler — set order_id and leave the uuid `reference_id` NULL
+    // to avoid an int→uuid cast error). The previous filter
+    // `reference_id::text = processId AND reference_type = 'production_order'` therefore
+    // matched ZERO real rows, so this returned the empty fallback (defects=0, checked=1)
+    // for every real production order — a silent Q-40 fail. Match on order_id (the column
+    // real rows actually use); keep backward-compat with reference_id when present. Both
+    // columns are cast to text so a uuid-shaped processId can't crash the order_id branch
+    // with "invalid input syntax for integer".
     const rows = await runQuery<{ defects: number; items_checked: number }>(sql`
       SELECT
         COALESCE(SUM(i.items_failed), 0)::int AS defects,
         COALESCE(SUM(i.items_checked), 1)::int AS items_checked
       FROM qc_inspections i
-      WHERE i.reference_id::text = ${processId}
-        AND i.reference_type = 'production_order'
+      WHERE i.order_id::text = ${processId}
+         OR i.reference_id::text = ${processId}
     `);
     return {
       defects:      safeNum(rows[0]?.defects ?? 0),
@@ -52,14 +63,44 @@ export class DrizzleQcComputeRepository implements IQcComputeRepository {
     };
   }
 
+  async findStageFtq(orderId: number | null): Promise<StageFtqRow[]> {
+    // 09-qc #34 — per-stage FTQ aggregate. Groups qc_inspections by the `stage`
+    // classifier (only classified rows); optional order filter uses the same bind
+    // param twice: when orderId is null the `$::int IS NULL` branch returns all rows.
+    const rows = await runQuery<{ stage: string; items_passed: number; items_checked: number; items_failed: number }>(sql`
+      SELECT
+        COALESCE(stage, 'unclassified')     AS stage,
+        COALESCE(SUM(items_passed), 0)::int  AS items_passed,
+        COALESCE(SUM(items_checked), 0)::int AS items_checked,
+        COALESCE(SUM(items_failed), 0)::int  AS items_failed
+      FROM qc_inspections
+      WHERE stage IS NOT NULL
+        AND (${orderId}::int IS NULL OR order_id = ${orderId}::int)
+      GROUP BY stage
+      ORDER BY stage
+    `);
+    return (Array.isArray(rows) ? rows : []).map(r => ({
+      stage:        r.stage,
+      itemsChecked: safeNum(r.items_checked),
+      itemsPassed:  safeNum(r.items_passed),
+      itemsFailed:  safeNum(r.items_failed),
+    }));
+  }
+
   async findJobSpoilageRow(jobId: string): Promise<JobSpoilageRow> {
+    // GOLDEN-THREAD FIX (2026-06-22): same mismatch as findProcessDpmoData — real rows link
+    // the job via the INTEGER `order_id` (reference_id uuid is left NULL by every writer),
+    // so the old `reference_id::text = jobId AND reference_type IN (...)` filter matched zero
+    // real rows and spoilage was silently empty. Match on order_id (the column real rows use);
+    // keep backward-compat with reference_id when present. Both cast to text so a uuid-shaped
+    // jobId can't crash the order_id branch.
     const rows = await runQuery<{ defective_sheets: number; total_sheets: number }>(sql`
       SELECT
         COALESCE(SUM(i.items_failed), 0)::int  AS defective_sheets,
         COALESCE(SUM(i.items_checked), 1)::int AS total_sheets
       FROM qc_inspections i
-      WHERE i.reference_id::text = ${jobId}
-        AND i.reference_type IN ('print_job', 'production_order')
+      WHERE i.order_id::text = ${jobId}
+         OR i.reference_id::text = ${jobId}
     `);
     const row = rows[0] ?? { defective_sheets: 0, total_sheets: 1 };
     return {

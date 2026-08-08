@@ -26,6 +26,7 @@ import { createWriteStream } from 'node:fs';
 import { createGzip } from 'node:zlib';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
+import { CronStatusService } from './cron-status.service';
 
 const DEFAULT_BACKUP_DIR = '/var/backups/europrint';
 const DEFAULT_RETENTION_DAYS = 30;
@@ -36,13 +37,20 @@ const MS_PER_SECOND = 1_000;
 export class BackupDatabaseCron {
   private readonly logger = new Logger(BackupDatabaseCron.name);
 
+  constructor(private readonly cronStatus: CronStatusService) {}
+
   /** Daily at 03:00 server time. */
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async run(): Promise<void> {
+    // Item #123: this cron never called CronStatusService, so the admin dashboard's cron_status
+    // registry showed BackupDatabaseCron as lastResult:'never' forever — success or failure was
+    // invisible. jobName matches the registry entry (cron-status.service.ts:119).
+    const jobName = 'BackupDatabaseCron';
     const startedAt = Date.now();
     const dbUrl = process.env['NEON_DATABASE_URL'] || process.env['DATABASE_URL'];
     if (!dbUrl) {
       this.logger.error('Backup skipped — DATABASE_URL not set');
+      this.cronStatus.recordFailure(jobName, 'DATABASE_URL/NEON_DATABASE_URL o\'rnatilmagan — backup skip qilindi');
       return;
     }
 
@@ -66,8 +74,10 @@ export class BackupDatabaseCron {
 
       const deleted = await this.deleteOldBackups(backupDir, retentionDays);
       if (deleted > 0) this.logger.log(`Pruned ${deleted} old backup(s) > ${retentionDays} days`);
+      this.cronStatus.recordSuccess(jobName);
     } catch (err) {
       this.logger.error(`❌ Backup failed: ${String(err)}`);
+      this.cronStatus.recordFailure(jobName, String(err));
       // In production: emit metric / page on-call here.
     }
   }

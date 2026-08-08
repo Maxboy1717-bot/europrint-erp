@@ -18,6 +18,16 @@ export interface IMmRepository {
   getPurchaseOrder(id: number, tx?: DrizzleExecutor): Promise<Result<PurchaseOrder>>;
   getAllPoByStatus(status: string): Promise<Result<PurchaseOrder[]>>;
 
+  /**
+   * §11-MM #23 — Material reference narxi: supplier price-list (supplier_price_tiers)
+   * bo'lsa shundan, aks holda oxirgi PO satr narxidan (purchase_order_items, id DESC —
+   * created_at jonli ma'lumotda NULL). Ikkalasi ham yo'q bo'lsa null (yangi material).
+   * Read-only; hech narsa yozilmaydi.
+   */
+  getMaterialReferencePrice(
+    materialId: number,
+  ): Promise<Result<{ price: number; source: 'price_list' | 'last_po' } | null>>;
+
   recordGoodsReceipt(poId: number, quantity: number): Promise<Result<void>>;
   recordInvoice(poId: number, quantity: number): Promise<Result<void>>;
 
@@ -26,6 +36,26 @@ export interface IMmRepository {
     tx?: DrizzleExecutor,
   ): Promise<Result<{ matched: boolean; difference: number }>>;
   updateVendorRating(supplierId: number, newRating: number): Promise<Result<void>>;
+
+  /**
+   * §11.8 — On PO creation, appends each line's unit price to material_price_history
+   * (append-only) and upserts the supplier→material base tier in supplier_price_tiers.
+   * Best-effort: callers must NOT roll back the PO if this fails.
+   */
+  recordPurchasePrices(
+    supplierId: number,
+    items: { materialId: number; unitPrice: number }[],
+  ): Promise<Result<void>>;
+
+  /**
+   * Reads a vendor's persisted supplier-rating signal (vendors.rating +
+   * rating_low_flag). rating_low_flag is set by the WMS supplier-rating pipeline
+   * when the 4-factor rating drops below the low threshold (2.5). Used by the
+   * create-PO handler to route low-rated-vendor POs into the director-HITL path.
+   */
+  getVendorRating(
+    supplierId: number,
+  ): Promise<Result<{ rating: number | null; ratingLowFlag: boolean }>>;
 
   /**
    * Runs the supplied work inside a Drizzle transaction. Lets callers keep the

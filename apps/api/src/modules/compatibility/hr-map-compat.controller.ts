@@ -13,11 +13,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { HrMapCompatService } from './hr-map-compat.service';
 import { CompatBodyDto } from './dto/compat-body.dto';
 import { unwrapOrDefault, unwrapOrInternal } from '@common/http-result';
-import {
-  HrMapEmployeeAclTranslator,
-  type LegacyHrMapEmployeeRow,
-  type HrMapEmployeeDto,
-} from './acl/hr-map-employee-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
@@ -27,9 +22,6 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @Roles(...HR_ROLES)
 @Controller('hr-map')
 export class HrMapCompatController {
-  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
-  private readonly empAcl = new HrMapEmployeeAclTranslator();
-
   constructor(private readonly svc: HrMapCompatService) {}
 
   @Get('employees')
@@ -41,24 +33,6 @@ export class HrMapCompatController {
     // Accept both 'departmentId' and 'orgDepartmentId' query params (FE uses orgDepartmentId)
     const deptId = departmentId ?? orgDepartmentId;
     return unwrapOrDefault(await this.svc.getMapEmployees(deptId, status), []);
-  }
-
-  /**
-   * PA2-14 ACL-translated variant of hr-map employees. New BC-3 (HR / Map)
-   * consumers should target this route; `/employees` stays for
-   * backwards-compat.
-   */
-  @Get('employees/v2')
-  async getMapEmployeesV2(
-    @Query('departmentId') departmentId?: string,
-    @Query('status') status?: string,
-  ): Promise<HrMapEmployeeDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getMapEmployees(departmentId, status)) as unknown as LegacyHrMapEmployeeRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.empAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: HrMapEmployeeDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Get('departments')
@@ -83,16 +57,20 @@ export class HrMapCompatController {
 
   @Get('transport-groups')
   async getTransportGroups() {
-    const r = await this.svc.getTransportGroups();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows, total: rows.length };
+    // Audit 2026-08-08: was `{ items, total }` — FE (TransportResult) reads the response
+    // itself as `{groups, summary, factoryLat, factoryLng, generatedAt}`, so `groups` was
+    // always undefined regardless of what the service computed. Return service data as-is.
+    return unwrapOrDefault(
+      await this.svc.getTransportGroups(),
+      { groups: [], summary: '', factoryLat: 0, factoryLng: 0, generatedAt: new Date().toISOString() },
+    );
   }
 
   @Get('stats')
   async getMapStats() {
     return unwrapOrDefault(
       await this.svc.getMapStats(),
-      { totalEmployees: 0, activeEmployees: 0, totalDepartments: 0, byDepartment: [] },
+      { total: { employees: 0 }, activeEmployees: 0, totalDepartments: 0, byDepartment: [] },
     );
   }
 

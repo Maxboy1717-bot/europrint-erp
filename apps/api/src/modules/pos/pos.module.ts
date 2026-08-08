@@ -8,21 +8,29 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { ProcurementApprovalChainService } from './application/services/procurement-approval-chain.service';
 import { ProcurementController } from './presentation/procurement.controller';
 import { WarehouseConfigController } from './presentation/warehouse-config.controller';
+// Batch 3 Item B, Gate 2 — DELIVERY_REQUEST zayavka fulfillment shadow capture (stock'siz).
+import { DeliveryRequestFulfillmentController } from './presentation/delivery-request-fulfillment.controller';
+import { DeliveryRequestFulfillmentService } from './application/services/delivery-request-fulfillment.service';
 import { ProcurementRequestService } from './application/services/procurement-request.service';
 import { WarehouseConfigService } from './application/services/warehouse-config.service';
+import { NotificationRoutingRepository } from '../notifications/infrastructure/notification-routing.repository';
 import {
   PosGateway,
   // Controllers
-  PosStubController, CashRegisterController, PosPrinterConfigV2Controller,
-  MovementsController, BarcodeController, RequestsController, InventoryCountController,
+  PosStubController, PosPrinterConfigV2Controller,
+  MovementsController, ShiftHandoverController, BarcodeController, RequestsController, InventoryCountController,
+  PosShiftHandoverService, PosShiftHandoverRepository,
   EmployeeController, ReportsController, MiniAppController, MiniAppHistoryController,
   PrinterConfigController, StockController, GlController, SyncController,
-  PosNotificationsController, PosAuthController, InventoryPassportController,
+  PosNotificationsController, PosAnomaliesController, MaterialNormsController, PosAuthController, InventoryPassportController,
   PosWmsController, WarehouseFeaturesController, PosOperationsController,
+  WarehouseOpenController, WarehouseOpenService, WarehouseOpenRepository,
+  // BE-T2-BARCODE-RESERV — KIRIM barkod-gen + CHIQIM bron-blok
+  StockIssuableController, PosStockIssuableService, PosStockIssuableRepository,
   // Repos & services
   PosInventoryPassportRepository, PosInventoryPassportService, PosFifoService,
   PosLowStockJob, PosQuarantineCheckJob, PosFifoRecalculateJob, PosInactiveMaterialsJob,
-  CashRegisterService, CashRegisterRepository, PosAuthService, PosAuthRepository,
+  PosAuthService, PosAuthRepository,
   PosMovementService, PosMovementRepository, PosMovementStatusService, PosMovementStatusRepository,
   PosMovementQueryService, PosBarcodeService, PosBarcodeRepository, PosBarcodeExtService, PosBarcodeExtRepository,
   PosInventoryCountQueryService, PosInventoryCountQueryRepository,
@@ -42,30 +50,37 @@ import {
   EmployeeLedgerService, EmployeeLedgerRepository,
   EmployeeWriteOffService, EmployeeWriteOffRepository,
   PosInventoryService, PosInventoryRepository,
-  PosService, DrizzlePosSvcRepository, POS_SVC_REPO,
   PosEventHandler, PosSecondaryEventsHandler, PosEventRepository, PosDepartmentGuard,
   PosWmsSyncCreatedListener,
+  PosAnomalyService, PosAnomalyRepository, PosAnomalyListener,
+  MaterialNormsService, MaterialNormsRepository,
   PosRequisitionWorkflowService, PosEmployeeBalanceService,
   PosWmsSyncService, PosWmsQueryService,
   WarehouseEmployeesService, AutoBarcodeService, Material360Service, AutoGlPostingService,
   WarehouseKpiService, GoodsReceiptService, QuarantineWorkflowService, ThreeWayMatchService,
-  SmsService, EmailService, TelegramBotService, QueueService,
+  SmsService, EmailService, QueueService,
   WarehouseEmployeesRepository, GoodsReceiptRepository, AutoBarcodeRepository, WarehouseKpiRepository,
   QuarantineWorkflowRepository, ThreeWayMatchRepository, AutoGlPostingRepository, PosEmployeeBalanceRepository,
 } from './pos.module-imports';
-import { CASH_REGISTER_REPO } from './domain/repositories/i-cash-register.repo';
+// P4-TECHCARD-VARIANCE — texkarta-gate (WMS solishtirish mantig'i REUSE) + variance config.
+import { PosTechCardGateService } from './application/services/pos-techcard-gate.service';
+import { PosVarianceConfigService } from './application/services/pos-variance-config.service';
+import { OutboundEnforcementService } from '../wms/application/outbound-enforcement.service';
 import { POS_MOVEMENT_REPO } from './domain/repositories/i-pos-movement.repo';
 import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notifications.repo';
+// SB0817: AutoGlPostingService now also posts to the canonical `entries` ledger via
+// GlPostingService (mirrors sd.module.ts's `FinanceModule` import for the same reason).
+import { FinanceModule } from '@modules/finance/finance.module';
 
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, FinanceModule],
   controllers: [
     ProcurementController,
     WarehouseConfigController,
     PosStubController,
-    CashRegisterController,
     PosPrinterConfigV2Controller,
     MovementsController,
+    ShiftHandoverController,
     BarcodeController,
     RequestsController,
     InventoryCountController,
@@ -78,27 +93,36 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     GlController,
     SyncController,
     PosNotificationsController,
+    PosAnomaliesController,
+    MaterialNormsController,
     PosAuthController,
     InventoryPassportController,
     PosWmsController,
     WarehouseFeaturesController,
     PosOperationsController,
+    WarehouseOpenController,
+    StockIssuableController,
+    DeliveryRequestFulfillmentController,
   ],
   providers: [
-    { provide: POS_SVC_REPO, useClass: DrizzlePosSvcRepository },
-    CashRegisterRepository,
-    { provide: CASH_REGISTER_REPO, useExisting: CashRegisterRepository },
-    CashRegisterService,
-    PosService,
+
     PosMovementRepository,
     { provide: POS_MOVEMENT_REPO, useExisting: PosMovementRepository },
+    // P4-TECHCARD-VARIANCE: WMS solishtirish servisini POS DI'ga REUSE qilamiz
+    // (klass konstruktor-bog'liqliksiz; dublikat mantiq YO'Q) + POS wrapper + config.
+    OutboundEnforcementService,
+    PosTechCardGateService,
+    PosVarianceConfigService,
     PosMovementService,
     PosMovementStatusRepository,
     PosMovementStatusService,
     PosMovementQueryService,
+    PosShiftHandoverRepository,
+    PosShiftHandoverService,
     ProcurementApprovalChainService,
     ProcurementRequestService,
     WarehouseConfigService,
+    DeliveryRequestFulfillmentService,
     PosBarcodeRepository,
     PosBarcodeService,
     PosBarcodeExtRepository,
@@ -162,6 +186,8 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosInventoryPassportRepository,
     PosInventoryPassportService,
     PosFifoService,
+    // Standalone (runQuery, no other-module deps) — config-driven event->target routing (FAZA Bildirishnoma)
+    NotificationRoutingRepository,
     PosLowStockJob,
     PosQuarantineCheckJob,
     PosFifoRecalculateJob,
@@ -171,6 +197,13 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosWmsQueryService,
     // Wave 4 round-4 — completed listener removed 2026-06-06 (dead duplicate of inline path)
     PosWmsSyncCreatedListener,
+    // P2-ANOMALY — qoida-asosli anomaliya aniqlash
+    PosAnomalyRepository,
+    PosAnomalyService,
+    PosAnomalyListener,
+    // FAZA J — material_norms CRUD + AI-norma (bo'lim ombori iste'mol-nazorati)
+    MaterialNormsRepository,
+    MaterialNormsService,
     PosInactiveMaterialsJob,
     // Warehouse features — repositories (Sprint B)
     WarehouseEmployeesRepository,
@@ -181,6 +214,12 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     ThreeWayMatchRepository,
     AutoGlPostingRepository,
     PosEmployeeBalanceRepository,
+    // POS Terminal — kirgach ombor AUTO-OPEN + etiket config (BE-T1-WAREHOUSE-OPEN)
+    WarehouseOpenRepository,
+    WarehouseOpenService,
+    // POS Terminal — KIRIM barkod-gen + CHIQIM bron-blok (BE-T2-BARCODE-RESERV)
+    PosStockIssuableRepository,
+    PosStockIssuableService,
     // Warehouse features — services
     WarehouseEmployeesService,
     AutoBarcodeService,
@@ -192,12 +231,9 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     ThreeWayMatchService,
     SmsService,
     EmailService,
-    TelegramBotService,
     QueueService,
   ],
   exports: [
-    POS_SVC_REPO,
-    PosService,
     PosMovementService,
     PosMovementStatusService,
     PosMovementQueryService,

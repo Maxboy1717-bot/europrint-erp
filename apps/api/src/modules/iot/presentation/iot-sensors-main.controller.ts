@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
@@ -31,7 +32,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   OeeQuerySchema,
   SensorHistoryQuerySchema,
@@ -41,7 +41,7 @@ import {
   SensorTrendsQuerySchema,
 } from './dto/iot-camera.dto';
 
-const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
+const IOT_READ = ['super_admin', 'director', 'production_manager', 'technologist'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -50,7 +50,10 @@ const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER'
 @ApiBearerAuth()
 @Controller('iot-sensors')
 export class IotSensorsMainController {
-  constructor(private readonly svc: IotSensorsExtendedService) {}
+  constructor(
+    private readonly svc: IotSensorsExtendedService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get dashboard' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -166,7 +169,7 @@ export class IotSensorsMainController {
   async postResolveAlert(@Param('alertId') alertId: string, @Body() body: unknown) {
     ResolveAlertSchema.parse(body ?? {});
     const id = parseInt(alertId, 10);
-    if (!Number.isFinite(id)) throw new HttpException('alertId must be numeric', HttpStatus.BAD_REQUEST);
+    if (!Number.isFinite(id)) throw new HttpException(await this.i18n.t('errors.alertIdMustBeNumeric'), HttpStatus.BAD_REQUEST);
     await db.execute(sql`
       UPDATE iot_alerts
          SET is_resolved = TRUE, resolved_at = COALESCE(resolved_at, NOW())

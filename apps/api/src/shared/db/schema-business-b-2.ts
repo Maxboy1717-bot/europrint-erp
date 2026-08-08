@@ -109,6 +109,7 @@ export const crm_activities = pgTable('crm_activities', {
   subject:     text('subject'),
   notes:       text('notes'),
   outcome:     text('outcome'),
+  communication_data: jsonb('communication_data'),
   scheduled_at: timestamp('scheduled_at'),
   completed_at: timestamp('completed_at'),
   due_date:    timestamp('due_date'),
@@ -197,6 +198,8 @@ export const crm_proposals = pgTable('crm_proposals', {
   valid_until: date('valid_until'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
+  // CRM-13#5: KP email-pixel birinchi ochilgan vaqt (idempotent — CC #47 markViewed naqshi).
+  viewed_at:  timestamp('viewed_at'),
 });
 
 export const crm_invoices = pgTable('crm_invoices', {
@@ -209,13 +212,11 @@ export const crm_invoices = pgTable('crm_invoices', {
   updated_at:  timestamp('updated_at').defaultNow(),
 });
 
-export const sd_customers = pgTable('sd_customers', {
-  id:         serial('id').primaryKey(),
-  full_name:  text('full_name'),
-  email:      text('email'),
-  phone:      text('phone'),
-  company:    text('company'),
-  status:     text('status').default('active'),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-});
+// sd_customers: canonical Drizzle declaration lives in lib/db (@workspace/db `sdCustomers`,
+// exported here under the snake_case alias this package's callers already use). This used to be
+// a SECOND, divergent pgTable('sd_customers', ...) declaration (id/full_name/email/phone/company/
+// status only) — a two-world drift vs. the richer `sdCustomers` used by drizzle-marketing-ext.repo.ts
+// (id/name/... 25+ cols). DB-proof (2026-07-02): `name` is populated on 15/15 live rows and is the
+// column read/written by ~20 SD/CRM/Director repositories; `full_name` was always NULL and unused —
+// see `fullName` deprecation note on the canonical table. Merged to the single source of truth.
+export { sdCustomers as sd_customers } from '@workspace/db';

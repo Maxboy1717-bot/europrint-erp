@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, BarChart3, History } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { invalidateOrderCascade } from "@/lib/cache-invalidation";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -90,6 +91,8 @@ export default function OrderApprovalWorkflow() {
       setApprovalDialogOpen(false);
       approvalForm.reset();
       queryClient.invalidateQueries({ queryKey: ["/api/approval-workflow"] });
+      // Final-stage approval fans out to production_orders (PP) → MES/QC; refresh those too (F22).
+      invalidateOrderCascade(queryClient);
     },
     onError: (error: Error) => toast({ title: "Xatolik / Ошибка", description: error.message, variant: "destructive" }),
   });

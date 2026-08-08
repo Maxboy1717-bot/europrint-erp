@@ -7,12 +7,13 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   User, Building2, X, DollarSign, Sparkles,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queueCrmLead } from "@/lib/erp-offline-db";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 import type { QuickCreateModalProps, EntityType } from "./crm-types";
@@ -50,6 +51,8 @@ function buildPayload(entityType: EntityType, form: QuickCreateFormState, force:
       title: form.title,
       opportunity: parseFloat(form.amount) || 0,
       currencyId: form.currency,
+      // CRM-FK-01 (QuickDealSchema.companyId required) — see QuickCreateModalTypes.ts note.
+      companyId: form.companyId ? Number(form.companyId) : undefined,
       ...(form.description ? { comments: form.description } : {}),
     },
     contacts: { name: form.title, phones, emails, force },
@@ -72,6 +75,16 @@ const ENDPOINTS: Partial<Record<EntityType, string>> = {
   companies: "/api/crm/companies",
 };
 
+// SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3 §2.1 (2026-08-06 fix): the strict root
+// POST /api/crm/deals (CreateDealDtoSchema — leadId/totalAmount/expectedClosureDate/
+// assignedTo all required) rejected every payload this lightweight modal could ever send.
+// POST /api/crm/deals/quick (QuickDealSchema) is the purpose-built lenient counterpart —
+// it already existed, nothing called it. Only "deals" needs a distinct create-vs-list URL;
+// every other entity type creates and lists at the same path.
+const CREATE_ENDPOINTS: Partial<Record<EntityType, string>> = {
+  deals: "/api/crm/deals/quick",
+};
+
 export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps) {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -79,13 +92,37 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
   const [duplicates, setDuplicates] = useState<DuplicateEntry[]>([]);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
+  // Company picker source for the "deals" entity type only (CRM-FK-01 — see note above).
+  const { data: companiesData } = useQuery<unknown>({
+    queryKey: ["/api/crm/companies", "quick-create"],
+    queryFn: () => apiRequest("GET", "/api/crm/companies?limit=200"),
+    enabled: entityType === "deals",
+  });
+  const _co = companiesData as { id: number; title?: string; name?: string }[] | { data?: { id: number; title?: string; name?: string }[] } | null | undefined;
+  const companies: { id: number; title?: string; name?: string }[] = Array.isArray(_co)
+    ? _co
+    : Array.isArray((_co as { data?: unknown[] })?.data)
+    ? (_co as { data: { id: number; title?: string; name?: string }[] }).data
+    : [];
+
   const createMutation = useMutation<unknown, Error, boolean>({
     mutationFn: async (force: boolean) => {
-      const endpoint = ENDPOINTS[entityType];
+      const endpoint = CREATE_ENDPOINTS[entityType] ?? ENDPOINTS[entityType];
       if (!endpoint) throw new Error("Unknown entity type");
+      // vision 13-crm#50: lead capture works offline (queued + auto-synced on
+      // reconnect, server-wins). Deals/contacts/companies stay online-only.
+      if (entityType === "leads" && !navigator.onLine) {
+        await queueCrmLead(buildPayload("leads", form, force));
+        return { __offlineQueued: true };
+      }
       return apiRequest("POST", endpoint, buildPayload(entityType, form, force));
     },
-    onSuccess: () => {
+    onSuccess: (res: unknown) => {
+      if ((res as { __offlineQueued?: boolean } | null)?.__offlineQueued) {
+        toast({ title: "📵 Oflayn saqlandi", description: "Tarmoq tiklanganda avtomatik yuboriladi" });
+        onClose();
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: [`/api/crm/${entityType}`] });
       toast({ title: "Yaratildi" });
       onClose();
@@ -112,6 +149,10 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
     e.preventDefault();
     if (!form.title.trim()) {
       toast({ title: "Nom kerak", variant: "destructive" });
+      return;
+    }
+    if (entityType === "deals" && !form.companyId) {
+      toast({ title: "Kompaniya kerak", variant: "destructive" });
       return;
     }
     setDuplicates([]);
@@ -183,6 +224,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                 onSubmit={handleSubmit}
                 onCancel={onClose}
                 isPending={createMutation.isPending}
+                companies={companies}
               />
             )}
           </div>

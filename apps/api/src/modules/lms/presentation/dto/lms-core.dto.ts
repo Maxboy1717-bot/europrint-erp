@@ -13,7 +13,13 @@ export const CreateExamSchema = z.object({
 });
 export type CreateExamDto = z.infer<typeof CreateExamSchema>;
 
+/** Each answer entry: which question + which option the user chose. */
+export const AnswerItemSchema = z.object({
+  questionId: z.number().int().positive(),
+  selectedOption: z.number().int().min(0),
+});
+
 export const SubmitExamSchema = z.object({
-  answers: z.array(z.unknown()).default([]),
+  answers: z.array(AnswerItemSchema).default([]),
 });
 export type SubmitExamDto = z.infer<typeof SubmitExamSchema>;

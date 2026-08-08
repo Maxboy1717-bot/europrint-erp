@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger, NotImplementedException } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -73,15 +73,29 @@ export class PpRoutingController {
   @Post()
   @Roles(Role.SUPER_ADMIN)
   async create(@Body() dto: z.infer<typeof CreateRoutingDtoSchema>){
-    CreateRoutingDtoSchema.parse(dto);
-    // 501: routing creation depends on the production world, which is empty/deferred. Composite
-    // create (routings header + operations[]); routing_operations.work_center_id FK-references
-    // work_centers (RESTRICT) and the live production world is empty (work_centers=0, routings=0,
-    // routing_operations=0). The existing RoutingsService/repo create is also incomplete — it only
-    // inserts the header into `routings` and never writes operations[]. productId depends on a
-    // product catalog (Phase 4 production deferred). Wiring would create an orphan/broken routing
-    // or FK-fail. Tracked for Stage 0.0 (two-order-worlds) + production-world setup.
-    throw new NotImplementedException('Routing creation requires production-world setup (work centers + product catalog) - not yet configured. Tracked for Stage 0.0.');
+    const parsed = CreateRoutingDtoSchema.parse(dto);
+    // Wave 2: REAL composite create — routings header + operations[] (non-linear graph cols carried
+    // when provided). FK types align live (integer) + work_centers exist (12); repo uses raw
+    // parameterized SQL against live cols. Was 501 (production-world claimed empty — now wired).
+    return unwrapOrThrow(await this.routingsService.create(parsed as Record<string, unknown>));
+  }
+
+  @ApiOperation({ summary: 'Add operation to routing' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @Post(':routingId/operations')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNOLOGIST)
+  async addOperation(@Param('routingId') routingId: string, @Body() dto: Record<string, unknown>) {
+    return unwrapOrThrow(await this.routingsService.addOperation(Number(routingId), dto));
+  }
+
+  @ApiOperation({ summary: 'Remove operation from routing' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete(':routingId/operations/:opId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.SUPER_ADMIN)
+  async removeOperation(@Param('routingId') _routingId: string, @Param('opId') opId: string) {
+    return unwrapOrThrow(await this.routingsService.removeOperation(Number(opId)));
   }
 
   @ApiOperation({ summary: 'Update routing' })

@@ -11,6 +11,7 @@ Body, Controller, Delete, Get, HttpCode, HttpStatus, Logger, NotFoundException,
   Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -38,7 +39,10 @@ const SAP_ROLES = ['super_admin', 'director', 'sales_manager'];
 export class SapController {
   private readonly logger = new Logger(SapController.name);
 
-  constructor(private readonly svc: SapService) {}
+  constructor(
+    private readonly svc: SapService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'List sales orders' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -63,7 +67,7 @@ export class SapController {
     const _rGetSalesOrder = await this.svc.getSalesOrder(safeInt(id, 0));
     assertOk(_rGetSalesOrder);
     const r = _rGetSalesOrder.data as Record<string, unknown>;
-    assertFound(r, 'SAP Sales order not found');
+    assertFound(r, await this.i18n.t('errors.salesOrderNotFoundWithId', { args: { id } }));
     return r;
   }
 
@@ -105,7 +109,7 @@ export class SapController {
   async deleteSalesOrder(@Param('id') id: string) {
     const result = await this.svc.deleteSalesOrder(safeInt(id, 0));
     const row = unwrapOrThrow(result);
-    if (!row) throw new NotFoundException(`Sales order ${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.salesOrderNotFoundWithId', { args: { id } }));
     return { id: safeInt(id, 0), deleted: true };
   }
 }

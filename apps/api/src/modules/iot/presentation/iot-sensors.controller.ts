@@ -19,6 +19,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -33,7 +34,11 @@ import { GetReadingsQuery } from '../application/queries/get-readings.query';
 import { GetAnomaliesQuery } from '../application/queries/get-anomalies.query';
 import { RegisterDeviceDtoSchema, RecordReadingDtoSchema, UpdateThresholdsDtoSchema } from '../presentation/dto/iot.dto';
 import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
+// NOTE: iot_devices has no barrel export in @shared/db (schema-compat-* index) —
+// it exists only as a local pgTable definition in schema-db-only-generated.ts.
+// Imported directly from that file (same pattern used in iot-main.controller.ts).
+import { iotDevices } from '@shared/db/schema-db-only-generated';
 
 enum Role {
   OPERATOR = 'operator',
@@ -52,6 +57,7 @@ export class IotSensorsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get devices' })
@@ -75,9 +81,8 @@ export class IotSensorsController {
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getDevice(@Param('id') deviceId: string) {
     this.logger.log('Get device');
-    const r = await db.execute(sql`SELECT * FROM iot_devices WHERE id=${parseInt(deviceId, 10)} LIMIT 1`);
-    const rows = (r as unknown as { rows: unknown[] }).rows ?? [];
-    if (!rows[0]) throw new NotFoundException(`Device #${deviceId} topilmadi`);
+    const rows = await db.select().from(iotDevices).where(eq(iotDevices.id, parseInt(deviceId, 10))).limit(1);
+    if (!rows[0]) throw new NotFoundException(await this.i18n.t('errors.deviceNotFoundWithId', { args: { id: deviceId } }));
     return { statusCode: HttpStatus.OK, data: rows[0] };
   }
 
@@ -169,12 +174,37 @@ export class IotSensorsController {
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getOEE(@Param('id') sensorId: string) {
     this.logger.log('Get OEE');
+    const machineId = parseInt(sensorId, 10);
+
+    // 1. Try oee_records first (persisted historical OEE)
     const r = await db.execute(sql`
       SELECT availability, performance, quality, oee, date, shift_number
-      FROM oee_records WHERE machine_id=${parseInt(sensorId, 10)}
+      FROM oee_records WHERE machine_id=${machineId}
       ORDER BY date DESC, shift_number DESC LIMIT 1
     `);
     const row = ((r as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
-    return { statusCode: HttpStatus.OK, data: row ?? { oee: 0, availability: 0, performance: 0, quality: 0 } };
+    if (row) {
+      return { statusCode: HttpStatus.OK, data: row };
+    }
+
+    // 2. Fallback: aggregate from production_sessions (real live data)
+    const ps = await db.execute(sql`
+      SELECT AVG(availability)::numeric(6,2) AS availability,
+             AVG(performance)::numeric(6,2)  AS performance,
+             AVG(quality)::numeric(6,2)      AS quality,
+             AVG(oee)::numeric(6,2)          AS oee,
+             COUNT(*)::int                   AS sample_size
+      FROM production_sessions
+      WHERE machine_id=${machineId}
+        AND deleted_at IS NULL
+        AND availability IS NOT NULL
+    `);
+    const psRow = ((ps as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+    if (psRow && psRow['sample_size'] && Number(psRow['sample_size']) > 0) {
+      return { statusCode: HttpStatus.OK, data: { ...psRow, source: 'production_sessions' } };
+    }
+
+    // 3. No data at all — 404 instead of fake zeros
+    throw new NotFoundException(await this.i18n.t('errors.sensorOeeDataNotFoundWithId', { args: { id: sensorId } }));
   }
 }

@@ -38,6 +38,11 @@ interface CustomerItem {
   title?: string;
 }
 
+interface OrderOption {
+  id: string;
+  documentNumber: string;
+}
+
 const STATUS_LABELS: Record<string, string> = {
   draft: "Qoralama",
   sent: "Yuborildi",
@@ -60,6 +65,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
 
 const EMPTY_FORM = {
   customerId: "",
+  orderId: "",
   startDate: "",
   endDate: "",
   totalAmount: "",
@@ -103,6 +109,21 @@ export default function SDContracts() {
     ? ((_cd as Record<string, unknown>)["data"] as CustomerItem[])
     : [];
 
+  // sd_contracts.order_id is NOT NULL live (SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3
+  // §2.1) — the create form never sent it, so every manual contract-create attempt failed
+  // with a NOT NULL violation. Fetch the selected customer's orders so one can be picked.
+  const { data: customerOrdersData } = useQuery<unknown>({
+    queryKey: ["/api/sd/orders", "for-contract", form.customerId],
+    queryFn: () => apiRequest("GET", `/api/sd/orders?companyId=${form.customerId}&limit=100`),
+    enabled: !!form.customerId,
+  });
+  const _od = customerOrdersData as { data?: OrderOption[] } | OrderOption[] | null | undefined;
+  const customerOrders: OrderOption[] = Array.isArray(_od)
+    ? _od
+    : Array.isArray((_od as { data?: OrderOption[] })?.data)
+    ? (_od as { data: OrderOption[] }).data
+    : [];
+
   const signMut = useMutation({
     mutationFn: (id: string) =>
       apiRequest("PATCH", `/api/sd/contracts/${id}/sign`, {}),
@@ -117,6 +138,7 @@ export default function SDContracts() {
   const createMutation = useMutation({
     mutationFn: (data: typeof EMPTY_FORM) =>
       apiRequest("POST", "/api/sd/contracts", {
+        order_id: Number(data.orderId),
         customer_id: Number(data.customerId),
         start_date: data.startDate,
         end_date: data.endDate,
@@ -213,7 +235,7 @@ export default function SDContracts() {
         emptyTitle="Shartnomalar topilmadi"
         emptyDescription="Taklifnoma tasdiqlanganida avtomatik yaratiladi."
       >
-        <div className="bg-card rounded-xl overflow-hidden border-none">
+        <div className="bg-card rounded-xl overflow-hidden border border-[var(--ep-border)]">
           <table className="w-full text-left">
             <thead>
               <tr>
@@ -368,7 +390,7 @@ export default function SDContracts() {
           <div className="space-y-3">
             <div>
               <Label>{tLabel("sd.contracts.mijoz", "Mijoz")}</Label>
-              <Select value={form.customerId} onValueChange={v => setForm(f => ({ ...f, customerId: v }))}>
+              <Select value={form.customerId} onValueChange={v => setForm(f => ({ ...f, customerId: v, orderId: "" }))}>
                 <SelectTrigger className="h-9" data-testid="select-contract-customer">
                   <SelectValue placeholder={tLabel("sd.contracts.mijozniTanlang", "Mijozni tanlang")} />
                 </SelectTrigger>
@@ -378,6 +400,35 @@ export default function SDContracts() {
                       {c.name || c.title || `Mijoz #${c.id}`}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{tLabel("sd.contracts.buyurtma", "Buyurtma")}</Label>
+              <Select
+                value={form.orderId}
+                onValueChange={v => setForm(f => ({ ...f, orderId: v }))}
+                disabled={!form.customerId}
+              >
+                <SelectTrigger className="h-9" data-testid="select-contract-order">
+                  <SelectValue placeholder={
+                    form.customerId
+                      ? tLabel("sd.contracts.buyurtmaniTanlang", "Buyurtmani tanlang")
+                      : tLabel("sd.contracts.avvalMijozniTanlang", "Avval mijozni tanlang")
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  {customerOrders.length === 0 ? (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      {tLabel("sd.contracts.buyurtmaTopilmadi", "Bu mijozda buyurtma topilmadi")}
+                    </div>
+                  ) : (
+                    customerOrders.map((o) => (
+                      <SelectItem key={o.id} value={String(o.id)}>
+                        {o.documentNumber || `#${o.id}`}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -436,7 +487,7 @@ export default function SDContracts() {
               <Button
                 className="flex-1"
                 onClick={() => createMutation.mutate(form)}
-                disabled={!form.customerId || createMutation.isPending}
+                disabled={!form.customerId || !form.orderId || createMutation.isPending}
                 data-testid="btn-create-contract"
               >
                 {createMutation.isPending ? "Saqlanmoqda..." : tLabel("sd.contracts.saqlash", "Saqlash")}

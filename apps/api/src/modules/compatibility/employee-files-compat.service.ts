@@ -11,6 +11,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -21,6 +22,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class EmployeeFilesCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async listFiles(employeeId?: string, type?: string) {
     return safeCall(async () => {
@@ -42,7 +44,7 @@ export class EmployeeFilesCompatService {
   async createFile(body: Record<string, unknown>, userId: number | null) {
     return safeCall(async () => {
       const { employee_id, file_name, file_type, file_url, file_size } = body;
-      if (!employee_id || !file_name) throw new BadRequestException('employee_id va file_name majburiy');
+      if (!employee_id || !file_name) throw new BadRequestException(await this.i18n.t('validation.employeeIdAndFileNameRequired'));
       const r = await rawSql(sql`
         INSERT INTO employee_files (employee_id, file_name, file_type, file_url, file_size, uploaded_by)
         VALUES (${employee_id ?? null}, ${file_name ?? ''}, ${file_type ?? 'document'},
@@ -64,7 +66,7 @@ export class EmployeeFilesCompatService {
         WHERE ef.id = ${si(fileId)} AND ef.deleted_at IS NULL
       `);
       const found = dbRows(r)[0];
-      if (!found) throw new NotFoundException(`Fayl #${fileId} topilmadi`);
+      if (!found) throw new NotFoundException(await this.i18n.t('errors.fileNotFoundWithId', { args: { id: fileId } }));
       return found;
     });
   }
@@ -74,7 +76,7 @@ export class EmployeeFilesCompatService {
       const check = await rawSql(sql`
         SELECT id FROM employee_files WHERE id = ${si(fileId)} AND deleted_at IS NULL
       `);
-      if (!dbRows(check)[0]) throw new NotFoundException(`Fayl #${fileId} topilmadi`);
+      if (!dbRows(check)[0]) throw new NotFoundException(await this.i18n.t('errors.fileNotFoundWithId', { args: { id: fileId } }));
       const { file_name, file_type, file_url, file_size } = body;
       const r = await rawSql(sql`
         UPDATE employee_files
@@ -95,7 +97,7 @@ export class EmployeeFilesCompatService {
       const check = await rawSql(sql`
         SELECT id FROM employee_files WHERE id = ${si(fileId)} AND deleted_at IS NULL
       `);
-      if (!dbRows(check)[0]) throw new NotFoundException(`Fayl #${fileId} topilmadi`);
+      if (!dbRows(check)[0]) throw new NotFoundException(await this.i18n.t('errors.fileNotFoundWithId', { args: { id: fileId } }));
       await rawSql(sql`
         UPDATE employee_files SET deleted_at = NOW() WHERE id = ${si(fileId)}
       `);

@@ -12,13 +12,25 @@
   --pos-danger:        #EF4444;
   --pos-text:          #1E293B;
   --pos-text-muted:    #64748B;
-  --pos-sidebar-w:     240px;
-  --pos-sidebar-mini:  64px;
 
   /* Neumorphic shadows (CRM bilan bir xil) */
   --pos-shadow-card:    4px 4px 12px rgba(163,177,198,0.32), -2px -2px 8px rgba(255,255,255,0.80);
   --pos-shadow-card-hover: 6px 6px 18px rgba(163,177,198,0.45), -3px -3px 10px rgba(255,255,255,0.90);
-  --pos-shadow-sidebar: 2px 0 12px rgba(163,177,198,0.18);
+
+  /* ── Bosh-ekran amal-tugma ranglari (egasi spec 2026-06-27) ──
+     KIRIM=yashil · CHIQIM=qizil · KO'CHIRISH=ko'k · QAYTARISH=sariq · ZARAR=to'q-sariq · INVENTAR=binafsha */
+  --pos-action-kirim:        #10B981;  /* yashil  — KIRIM */
+  --pos-action-kirim-dark:   #059669;
+  --pos-action-chiqim:       #EF4444;  /* qizil   — CHIQIM */
+  --pos-action-chiqim-dark:  #DC2626;
+  --pos-action-transfer:     #3B82F6;  /* ko'k    — KO'CHIRISH */
+  --pos-action-transfer-dark:#2563EB;
+  --pos-action-return:       #F59E0B;  /* sariq   — QAYTARISH */
+  --pos-action-return-dark:  #D97706;
+  --pos-action-damage:       #EA580C;  /* to'q-sariq — ZARAR */
+  --pos-action-damage-dark:  #C2410C;
+  --pos-action-inventory:      #8B5CF6;  /* binafsha — INVENTAR */
+  --pos-action-inventory-dark: #7C3AED;
 }
 
 .pos-root {
@@ -142,23 +154,7 @@
 .pos-input:focus { border-color: var(--pos-accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.10); }
 .pos-input::placeholder { color: rgba(100,116,139,0.6); }
 
-/* Sidebar */
-.pos-sidebar {
-  width: var(--pos-sidebar-w);
-  background: var(--pos-card);
-  border-right: 1px solid var(--pos-border);
-  box-shadow: var(--pos-shadow-sidebar);
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s;
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  z-index: 100;
-  overflow: hidden;
-}
-.pos-sidebar.mini { width: var(--pos-sidebar-mini); }
+/* Reusable list-item style (in-page section pickers — PosReports/PosAdmin) */
 .pos-sidebar-item {
   display: flex;
   align-items: center;
@@ -194,12 +190,10 @@
   position: fixed;
   top: 0;
   right: 0;
-  left: var(--pos-sidebar-w);
+  left: 0;
   z-index: 99;
-  transition: left 0.3s;
   box-shadow: 0 1px 3px rgba(163,177,198,0.10);
 }
-.pos-topbar.mini { left: var(--pos-sidebar-mini); }
 
 /* Subtle background grid (optional, can disable) */
 .pos-grid-bg {
@@ -355,16 +349,127 @@
 .pos-slide-in { animation: slideIn 0.3s ease forwards; }
 
 /* Responsive */
-.pos-main { margin-left: var(--pos-sidebar-w); padding-top: 56px; min-height: 100vh; transition: margin-left 0.3s; background: var(--pos-bg); }
-.pos-main.mini { margin-left: var(--pos-sidebar-mini); }
+.pos-main { padding-top: 56px; min-height: 100vh; background: var(--pos-bg); }
 .pos-content { padding: 24px; }
 
-@media (max-width: 1024px) {
-  :root { --pos-sidebar-w: 200px; }
+/* ── Bosh-ekran: katta sensorli amal-tugmalari (do'kon-kassasi/POS uslubi) ──
+   Egasi spec 2026-06-27 — KATTA RANGLI amal-tugmalari grid. */
+.pos-home {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 8px 4px 32px;
 }
-@media (max-width: 768px) {
-  .pos-sidebar { transform: translateX(-100%); }
-  .pos-sidebar.open { transform: translateX(0); }
-  .pos-main { margin-left: 0; }
-  .pos-topbar { left: 0; }
+.pos-home-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--pos-card);
+  border: 1px solid var(--pos-border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: var(--pos-shadow-card);
+  margin-bottom: 24px;
 }
+
+.pos-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 860px) { .pos-action-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .pos-action-grid { grid-template-columns: 1fr; } }
+
+/* Katta sensorli amal-tugma — katta ikona + nom, rang = amal turi */
+.pos-action-btn {
+  --action-color:      var(--pos-accent);
+  --action-color-dark: var(--pos-accent);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 168px;
+  padding: 28px 18px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  color: #FFFFFF;
+  font-family: inherit;
+  text-align: center;
+  background: linear-gradient(150deg, var(--action-color), var(--action-color-dark));
+  box-shadow: 0 8px 22px -8px var(--action-color), inset 0 1px 0 rgba(255,255,255,0.20);
+  transition: transform 0.14s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+.pos-action-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 34px -10px var(--action-color), inset 0 1px 0 rgba(255,255,255,0.25);
+  filter: brightness(1.04);
+}
+.pos-action-btn:active { transform: translateY(0) scale(0.985); filter: brightness(0.97); }
+.pos-action-btn:focus-visible { outline: 3px solid var(--action-color-dark); outline-offset: 3px; }
+.pos-action-btn .pos-action-icon {
+  font-size: 52px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+}
+.pos-action-btn .pos-action-name {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+.pos-action-btn .pos-action-sub {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.92;
+  line-height: 1.3;
+}
+
+/* Amal-rang variantlari (token-driven) */
+.pos-action-kirim     { --action-color: var(--pos-action-kirim);     --action-color-dark: var(--pos-action-kirim-dark); }
+.pos-action-chiqim    { --action-color: var(--pos-action-chiqim);    --action-color-dark: var(--pos-action-chiqim-dark); }
+.pos-action-transfer  { --action-color: var(--pos-action-transfer);  --action-color-dark: var(--pos-action-transfer-dark); }
+.pos-action-return    { --action-color: var(--pos-action-return);    --action-color-dark: var(--pos-action-return-dark); }
+.pos-action-damage    { --action-color: var(--pos-action-damage);    --action-color-dark: var(--pos-action-damage-dark); }
+.pos-action-inventory { --action-color: var(--pos-action-inventory); --action-color-dark: var(--pos-action-inventory-dark); }
+
+/* Ikkinchi-daraja tugmalar — sidebar o'rniga bosh-ekrandan ochiladigan qo'shimcha sahifalar */
+.pos-quicklink-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pos-text-muted);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin: 28px 4px 12px;
+}
+.pos-quicklink-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+@media (max-width: 860px) { .pos-quicklink-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 520px) { .pos-quicklink-grid { grid-template-columns: repeat(2, 1fr); } }
+.pos-quicklink-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 84px;
+  padding: 14px 10px;
+  border: 1px solid var(--pos-border);
+  border-radius: 14px;
+  background: var(--pos-card);
+  box-shadow: var(--pos-shadow-card);
+  color: var(--pos-text);
+  cursor: pointer;
+  text-align: center;
+  transition: box-shadow 0.18s, transform 0.14s, border-color 0.18s;
+}
+.pos-quicklink-btn:hover { box-shadow: var(--pos-shadow-card-hover); border-color: var(--pos-accent); transform: translateY(-2px); }
+.pos-quicklink-btn .pos-quicklink-icon { font-size: 24px; line-height: 1; }
+.pos-quicklink-btn .pos-quicklink-name { font-size: 11.5px; font-weight: 700; }

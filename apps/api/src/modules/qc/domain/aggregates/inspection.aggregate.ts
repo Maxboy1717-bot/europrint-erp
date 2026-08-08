@@ -9,7 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { InspectionStatus } from '../enums/inspection-status.enum';
 import { Defect } from './defect.aggregate';
-import { QcPassedEvent, QcFailedEvent } from '../events';
+import { QcPassedEvent, QcFailedEvent, QcReworkEvent } from '../events';
 
 export class Inspection extends AggregateRoot {
   id: string;
@@ -64,9 +64,10 @@ export class Inspection extends AggregateRoot {
     this.addDomainEvent(new QcFailedEvent(this.id, this.orderId, reason));
   }
 
-  rework(): void {
+  rework(reason: string = ''): void {
     this.status = InspectionStatus.REWORK;
     this.updatedAt = _time.now();
+    this.addDomainEvent(new QcReworkEvent(this.id, this.orderId, reason));
   }
 
   static create(

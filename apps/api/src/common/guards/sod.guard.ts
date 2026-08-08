@@ -4,6 +4,7 @@
  */
 
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common'
+import { I18nService } from 'nestjs-i18n'
 import { PermissionSet } from '../cache/permission-set.interface'
 
 /**
@@ -26,7 +27,9 @@ import { PermissionSet } from '../cache/permission-set.interface'
 export class SodGuard implements CanActivate {
   private readonly logger = new Logger(SodGuard.name)
 
-  canActivate(context: ExecutionContext): boolean {
+  constructor(private readonly i18n: I18nService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
     const user = request.user
     const method = request.method
@@ -42,7 +45,7 @@ export class SodGuard implements CanActivate {
       this.logger.warn(
         `SoD violation detected: userId=${(user as { id?: unknown }).id} path=${path} method=${method} violations=${violations.join(', ')}`,
       )
-      throw new ForbiddenException('This action violates Separation of Duties policy')
+      throw new ForbiddenException(await this.i18n.t('errors.sodPolicyViolation'))
     }
 
     return true

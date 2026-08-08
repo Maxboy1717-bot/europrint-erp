@@ -5,7 +5,7 @@
 
 import { useState, type ElementType } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
-const statusLabels: Record<string, string> = { draft: "Qoralama", scheduled: "Rejalashtirilgan", published: "Nashr qilingan", failed: "Xatolik" };
 const statusIcons: Record<string, ElementType> = { draft: FileText, scheduled: Clock, published: Send, failed: Archive };
 const platformLabels: Record<string, string> = { telegram: "Telegram", instagram: "Instagram", facebook: "Facebook", website: "Veb-sayt", linkedin: "LinkedIn" };
 const platformColors: Record<string, string> = { telegram: "text-[var(--ep-blue)]", instagram: "text-pink-500", facebook: "text-[var(--ep-blue)]", website: "text-[var(--ep-green)]", linkedin: "text-[var(--ep-blue)]" };
@@ -47,6 +46,7 @@ interface ContentPost {
 
 export default function MarketingContent() {
   const { t } = useTranslation("common");
+  const statusLabels: Record<string, string> = { draft: t("qoralamaHolat"), scheduled: t("kontentRejalashtirilgan"), published: t("kontentNashrQilingan"), failed: t("kontentXatolik") };
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -61,6 +61,7 @@ export default function MarketingContent() {
 
   const { data: contentList = [], isLoading, isError, error, refetch} = useQuery<ContentPost[]>({
     queryKey: ["/api/marketing/content/posts"],
+    select: selectArray<ContentPost>,
   });
 
   const createMutation = useMutation({
@@ -68,9 +69,9 @@ export default function MarketingContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/content/posts"] });
       setOpen(false); resetForm();
-      toast({ title: "Kontent yaratildi" });
+      toast({ title: t("kontentYaratildi") });
     },
-    onError: (e: unknown) => toast({ title: "Xatolik", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: t("xatolik"), description: (e as Error).message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -78,7 +79,7 @@ export default function MarketingContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/content/posts"] });
       setOpen(false); resetForm();
-      toast({ title: "Kontent yangilandi" });
+      toast({ title: t("kontentYangilandi") });
     },
   });
 
@@ -86,7 +87,7 @@ export default function MarketingContent() {
     mutationFn: (id: string) => apiRequest("DELETE", `/api/marketing/content/posts/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/content/posts"] });
-      toast({ title: "Kontent o'chirildi" });
+      toast({ title: t("kontentOchirildi") });
     },
   });
 
@@ -94,9 +95,9 @@ export default function MarketingContent() {
     mutationFn: (id: string) => apiRequest("POST", `/api/marketing/content/posts/${id}/publish`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/content/posts"] });
-      toast({ title: "Kontent nashr qilindi" });
+      toast({ title: t("kontentNashrQilindi") });
     },
-    onError: (e: unknown) => toast({ title: "Nashr xatolik", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: t("nashrXatolik"), description: (e as Error).message, variant: "destructive" }),
   });
 
   const aiMutation = useMutation({
@@ -108,9 +109,9 @@ export default function MarketingContent() {
         body: (data.body as string) || prev.body,
         hashtags: Array.isArray(data.hashtags) ? (data.hashtags as string[]).join(", ") : prev.hashtags,
       }));
-      toast({ title: "AI kontent tayyor" });
+      toast({ title: t("aiKontentTayyor") });
     },
-    onError: () => toast({ title: "AI xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("aiXatolik"), variant: "destructive" }),
   });
 
   const resetForm = () => {
@@ -175,7 +176,7 @@ export default function MarketingContent() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto bg-card border-none p-6">
-            <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "Kontentni tahrirlash" : "Yangi Kontent"}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? t("kontentniTahrirlash") : t("yangiKontentSarlavha")}</DialogTitle></DialogHeader>
             <Tabs defaultValue="content" className="mt-4">
               <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 bg-muted/40 p-1 rounded-lg">
                 <TabsTrigger value="content" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("kontent")}</TabsTrigger>
@@ -206,12 +207,12 @@ export default function MarketingContent() {
               <TabsContent value="ai" className="space-y-4 mt-4">
                 <div className="space-y-1.5"><Label className="text-muted-foreground">{t("aiPrompt")}</Label><Textarea className="bg-background border-border min-h-[100px]" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder={t("qadoqlashSifatiHaqidaPostYozing")} /></div>
                 <Button onClick={() => aiMutation.mutate({ prompt: aiPrompt, platform: form.platform })} disabled={!aiPrompt || aiMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-ai-generate">
-                  <Sparkles className="h-4 w-4 mr-2" />{aiMutation.isPending ? "Yaratilmoqda..." : "AI bilan yaratish"}
+                  <Sparkles className="h-4 w-4 mr-2" />{aiMutation.isPending ? t("yaratilmoqda") : t("aiBilanYaratish")}
                 </Button>
               </TabsContent>
             </Tabs>
             <Button onClick={handleSubmit} disabled={!form.title || !form.body || createMutation.isPending || updateMutation.isPending} className="w-full mt-6 bg-primary text-white font-bold h-11" data-testid="button-submit-content">
-              {editId ? "Saqlash" : "Yaratish"}
+              {editId ? t("saqlash") : t("yaratishAmal")}
             </Button>
           </DialogContent>
         </Dialog>
@@ -299,7 +300,7 @@ export default function MarketingContent() {
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
         title={t("kontentniOchirish")}
         description={t("ushbuKontentPostniOchirishniTasdiqlaysizmi")}
-        confirmText="O'chirish"
+        confirmText={t("ochirishAmal")}
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}
       />

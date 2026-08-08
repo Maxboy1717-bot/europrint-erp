@@ -6,6 +6,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FormSectionProps } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
@@ -113,6 +114,28 @@ export function HouseholdSection({ form }: FormSectionProps) {
           )}
         />
       </div>
+      <FormField
+        control={form.control}
+        name="geoConsent"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-start gap-2 space-y-0 pt-1">
+            <FormControl>
+              <Checkbox
+                checked={field.value ?? false}
+                onCheckedChange={field.onChange}
+                data-testid="checkbox-geo-consent"
+              />
+            </FormControl>
+            <div className="space-y-1 leading-none">
+              <FormLabel>{t("geoRozilikLabel")}</FormLabel>
+              <p className="text-xs text-muted-foreground">
+                {t("geoRozilikTavsif")}
+              </p>
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

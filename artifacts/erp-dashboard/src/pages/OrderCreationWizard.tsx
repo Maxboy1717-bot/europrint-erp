@@ -26,15 +26,12 @@ export default function OrderCreationWizard() {
     currentStep,
     customerOpen,
     setCustomerOpen,
-    productOpen,
-    setProductOpen,
     formData,
     setFormData,
     t,
     companies,
     companiesError,
     refetchCompanies,
-    products,
     filteredBoms,
     selectedBom,
     materialCalculations,
@@ -45,7 +42,6 @@ export default function OrderCreationWizard() {
     handleNext,
     handleBack,
     handleSubmit,
-    handleProductSelect,
   } = useWizardState();
 
   if (companiesError) {
@@ -76,17 +72,13 @@ export default function OrderCreationWizard() {
           
           <CardContent className="p-8">
             {currentStep === 1 && (
-              <CustomerStep 
-                formData={formData} 
-                setFormData={setFormData} 
-                t={t} 
-                companies={companies} 
-                products={products}
+              <CustomerStep
+                formData={formData}
+                setFormData={setFormData}
+                t={t}
+                companies={companies}
                 customerOpen={customerOpen}
                 setCustomerOpen={setCustomerOpen}
-                productOpen={productOpen}
-                setProductOpen={setProductOpen}
-                handleProductSelect={handleProductSelect}
               />
             )}
             {currentStep === 2 && (

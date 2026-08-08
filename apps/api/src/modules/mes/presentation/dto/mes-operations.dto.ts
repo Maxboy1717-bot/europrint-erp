@@ -4,13 +4,14 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 import { DOWNTIME_REASON_CODES } from '../../domain/aggregates/downtime-event.aggregate';
 
 import { MAX_NOTES_LENGTH } from '@common/constants/app.constants';
 const reasonCodes = DOWNTIME_REASON_CODES.map((r) => r.code);
 
 export const CreateDowntimeDtoSchema = z.object({
-  sessionId: z.string().uuid(),
+  sessionId: IntegerIdSchema,
   workCenterId: z.string().uuid().nullable().optional(),
   eventType: z.enum(['planned', 'unplanned', 'breakdown']),
   reasonCode: z.enum(reasonCodes as [string, ...string[]]),
@@ -26,7 +27,7 @@ export const EndDowntimeDtoSchema = z.object({
 export type EndDowntimeDto = z.infer<typeof EndDowntimeDtoSchema>;
 
 export const GetDowntimeDtoSchema = z.object({
-  sessionId: z.string().uuid().optional(),
+  sessionId: IntegerIdSchema.optional(),
   workCenterId: z.string().uuid().optional(),
   eventType: z.string().optional(),
   from: z.date().optional(),

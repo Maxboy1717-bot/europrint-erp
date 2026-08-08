@@ -199,12 +199,25 @@ export class AiMesMonitorService implements OnModuleInit, OnModuleDestroy {
     this.stoppedMachines.set(machineId, { stoppedAt: new Date(), reason });
     this.logger.error({ msg: 'Mashina avto-to\'xtatish', machineId, zScore, value });
     this.events.emit('mes.machine.emergency_stop', { machineId, reason, timestamp: new Date() });
-    await db.execute(sql`
-      UPDATE mes_work_orders
-      SET status = 'PAUSED', paused_at = NOW(), pause_reason = ${`AI_AUTO_STOP: ${reason}`}
-      WHERE machine_id = ${machineId} AND status = 'IN_PROGRESS'
-    `).catch((err: unknown) => {
-      this.logger.error({ msg: 'Failed to persist auto-stop state', machineId, err });
+    // Audit 2026-08-07: bu yerda 'mes_work_orders' jadvaliga UPDATE bor edi — bunday jadval
+    // bazada YO'Q, ya'ni so'rov HAR SAFAR yiqilardi va avto-to'xtatish holati faqat yuqoridagi
+    // xotiradagi 'stoppedMachines' Map'da qolardi (server qayta ishga tushsa yo'qoladi).
+    //
+    // Uni boshqa jadvalga ko'chirib bo'lmadi (Q-29 tekshiruvi):
+    //   * production_orders / production_order_operations da 'machine_id', 'paused_at',
+    //     'pause_reason' ustunlarining BIRORTASI yo'q;
+    //   * downtime_events 'session_id' NOT NULL talab qiladi — bu yerda sessiya ma'lum emas,
+    //     ustiga uning 'work_center_id' ustuni uuid, qolgan sxemada esa integer.
+    // Ya'ni mos keladigan saqlash joyi umuman mavjud emas -> yangi ustun/jadval kerak, bu esa
+    // Q-35 (egasi ruxsati). Kafolatlangan yiqiladigan so'rovni saqlab qo'yish Q-46 buzilishi
+    // bo'lardi, shuning uchun olib tashlandi va o'rniga aniq ogohlantirish yoziladi.
+    //
+    // Hozircha ishlaydigan qism: 'mes.machine.emergency_stop' hodisasi yuqorida chiqarildi va
+    // xotiradagi holat yangilandi — ya'ni tinglovchilar ishlaydi, faqat DAVOMLI saqlash yo'q.
+    this.logger.warn({
+      msg: "Avto-to'xtatish DAVOMLI saqlanmadi — MES ish-buyurtmasi uchun pauza ustunlari sxemada yo'q (Q-35: egasi qarori kerak)",
+      machineId,
+      reason,
     });
   }
 

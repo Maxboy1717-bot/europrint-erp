@@ -20,10 +20,12 @@ export interface Customer360Inputs {
   competitorsRows: Row[];
   paymentsRows: Row[];
   npsRows: Row[];
+  /** SB0611 — per-product order history (sales_order_items joined to this customer's orders). Optional for callers that don't need it yet. */
+  productsRows?: Row[];
 }
 
 export function buildCustomer360View(inp: Customer360Inputs): Record<string, unknown> {
-  const { customerRows, ordersRows, contactsRows, documentsRows, interactionsRows, competitorsRows, paymentsRows, npsRows } = inp;
+  const { customerRows, ordersRows, contactsRows, documentsRows, interactionsRows, competitorsRows, paymentsRows, npsRows, productsRows = [] } = inp;
   const cust = customerRows[0] as Row | undefined;
   const orders = ordersRows;
   const payments = paymentsRows;
@@ -189,8 +191,10 @@ export function buildCustomer360View(inp: Customer360Inputs): Record<string, unk
       totalPaid: payments.reduce((sum, x) => sum + Number(x.amount ?? 0), 0),
       openDebt: b.totalRevenue - payments.reduce((sum, x) => sum + Number(x.amount ?? 0), 0),
       payments: payments.map(x => ({
+        // sd_payments has no payment_date column — paid_date is the real "when paid" field
+        // (matches the ORDER BY fix in drizzle-sd-customers.repo.ts's get360View query).
         id: x.id, amount: Number(x.amount ?? 0),
-        paymentDate: x.payment_date, method: x.payment_method ?? x.method, status: x.status,
+        paymentDate: x.paid_date, method: x.payment_method ?? x.method, status: x.status,
       })),
     },
     ltv: {
@@ -238,5 +242,14 @@ export function buildCustomer360View(inp: Customer360Inputs): Record<string, unk
     },
     recent_orders: orders.slice(0, 10),
     documents: documentsRows,
+    // SB0611 — "Mahsulotlar arxivi" tab: every product line this customer has ordered,
+    // most recent order first (decisions/06-sd.md:470 — sana/tiraj/narx/dizayn link).
+    productsArchive: productsRows.map(p => ({
+      id: p.id, salesOrderId: p.sales_order_id, orderNumber: p.order_number,
+      productName: p.product_name, materialNumber: p.material_number,
+      quantity: Number(p.order_quantity ?? 0), unit: p.unit,
+      unitPrice: Number(p.net_price ?? 0), totalPrice: Number(p.total_price ?? 0),
+      orderDate: p.order_date, deliveryDate: p.delivery_date, orderStatus: p.order_status,
+    })),
   };
 }

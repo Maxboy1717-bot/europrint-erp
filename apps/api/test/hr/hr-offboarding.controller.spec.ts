@@ -14,6 +14,7 @@
  */
 
 import { NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { HrOffboardingController } from '../../src/modules/hr/offboarding/hr-offboarding.controller';
 import { HrOffboardingService } from '../../src/modules/hr/offboarding/hr-offboarding.service';
 import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
@@ -21,6 +22,7 @@ import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
 describe('HrOffboardingController', () => {
   let controller: HrOffboardingController;
   let svc: jest.Mocked<HrOffboardingService>;
+  const i18n = { t: jest.fn((key: string) => key) } as unknown as I18nService;
 
   beforeEach(() => {
     svc = {
@@ -33,7 +35,7 @@ describe('HrOffboardingController', () => {
       finalizeCase:         jest.fn(),
       cancelCase:           jest.fn(),
     } as unknown as jest.Mocked<HrOffboardingService>;
-    controller = new HrOffboardingController(svc);
+    controller = new HrOffboardingController(svc, i18n);
   });
 
   // ─── listCases ────────────────────────────────────────────────────────────
@@ -48,8 +50,9 @@ describe('HrOffboardingController', () => {
       // @Query() q: DTO — pass the DTO-shaped object directly
       const out = await controller.listCases({ status: 'active' } as never);
 
+      // P1.18: controller returns { items, total } (not { data })
       expect(svc.listCases).toHaveBeenCalledWith({ status: 'active', employeeId: undefined });
-      expect(out).toEqual({ data: rows });
+      expect(out).toEqual({ items: rows, total: rows.length });
     });
 
     it('passes employee_id filter through', async () => {
@@ -58,45 +61,56 @@ describe('HrOffboardingController', () => {
       expect(svc.listCases).toHaveBeenCalledWith({ status: undefined, employeeId: 5 });
     });
 
-    it('returns empty data array on empty result', async () => {
+    it('returns empty items array on empty result', async () => {
       svc.listCases.mockResolvedValue(ok([]));
       const out = await controller.listCases({} as never);
-      expect(out).toEqual({ data: [] });
+      // P1.18: returns { items: [], total: 0 }
+      expect(out).toEqual({ items: [], total: 0 });
     });
 
-    it('propagates repository errors as HTTP exceptions', async () => {
+    it('returns empty items on repository error (does not throw)', async () => {
+      // P1.18: on Err, controller returns { items: [], total: 0 } instead of throwing
       svc.listCases.mockResolvedValue(err(AppErr('INTERNAL', 'boom')));
-      await expect(controller.listCases({} as never)).rejects.toThrow();
+      const out = await controller.listCases({} as never);
+      expect(out).toEqual({ items: [], total: 0 });
     });
   });
 
   // ─── getStats ─────────────────────────────────────────────────────────────
   describe('getStats', () => {
-    it('returns aggregate counts wrapped in data field', async () => {
+    it('returns stats object directly (P1.18: FE accesses stats.active/completed/total)', async () => {
       const stats = { active: 3, completed: 5, cancelled: 0 };
       svc.getStats.mockResolvedValue(ok(stats));
 
       const out = await controller.getStats();
 
-      expect(out).toEqual({ data: stats });
+      // P1.18: controller returns the stats object directly, not { data: stats }
+      expect(out).toEqual(stats);
     });
 
-    it('propagates failures with HTTP exception', async () => {
+    it('returns fallback stats shape on error (does not throw)', async () => {
+      // P1.18: on Err, returns { active:0, completed:0, cancelled:0, total:0 } fallback
       svc.getStats.mockResolvedValue(err(AppErr('INTERNAL', 'db down')));
-      await expect(controller.getStats()).rejects.toThrow();
+      const out = await controller.getStats();
+      expect(out).toEqual({ active: 0, completed: 0, cancelled: 0, total: 0 });
     });
   });
 
   // ─── getCase ──────────────────────────────────────────────────────────────
   describe('getCase', () => {
-    it('returns the case row with checklist_items wrapped in data', async () => {
-      const row = { id: 7, employee_id: 42, status: 'active', checklist_items: [{ id: 1, done: false }] };
+    // 2026-07-13 fix: the frontend's universal unwrapper (api-request.ts) only
+    // auto-unwraps `{ ok, data }` / `{ isSuccess, value }` shapes — a bare
+    // `{ data }` envelope (no `ok` key) falls through untouched, so every
+    // consumer's `caseDetail.full_name` / `.checklist` / `.status` read
+    // `undefined`. The controller must return the payload UNWRAPPED.
+    it('returns the case row directly (no extra { data } envelope)', async () => {
+      const row = { id: 7, employee_id: 42, status: 'active', checklist: [{ id: 1, done: false }] };
       svc.getCaseDetail.mockResolvedValue(ok(row));
 
       const out = await controller.getCase(7);
 
       expect(svc.getCaseDetail).toHaveBeenCalledWith(7);
-      expect(out).toEqual({ data: row });
+      expect(out).toEqual(row);
     });
 
     it('throws NotFound when case does not exist (getCaseDetail returns Ok(null))', async () => {
@@ -129,7 +143,8 @@ describe('HrOffboardingController', () => {
         dismissalType:  'resignation',
         lastWorkingDay: '2026-06-01',
       });
-      expect(out).toEqual({ data: created });
+      // 2026-07-13 fix: no extra { data } envelope — see getCase test above for rationale.
+      expect(out).toEqual(created);
     });
 
     it('passes null lastWorkingDay through to service unchanged', async () => {

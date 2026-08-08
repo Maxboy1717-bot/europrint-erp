@@ -41,7 +41,7 @@ export function KpiSection({stats, loading, passColor, passRate }: KpiSectionPro
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
         {t("hozirgiHolat")}
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <KpiCard
           title={t("jamiTestlar1")}
           value={stats?.tests?.total || 0}

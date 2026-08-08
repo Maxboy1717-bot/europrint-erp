@@ -25,7 +25,9 @@ export interface MovementLineForBarcode {
   materialCardId:   number;
   materialCode:     string | null;
   batchNumber:      string | null;
-  quantity:         number;
+  // NOTE: pos_movement_lines.quantity NUMERIC — pg drayveri string qaytaradi
+  // ("1.0000"), shuning uchun turi number bilan cheklanmaydi (§2.7 fix).
+  quantity:         number | string;
   unit:             string | null;
 }
 
@@ -58,7 +60,12 @@ export class AutoBarcodeRepository {
           pml.quantity,
           pml.unit
         FROM pos_movement_lines pml
-        LEFT JOIN material_cards mc ON mc.id = pml.material_id
+        -- C6.5 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): a soft-deleted/deactivated material must
+        -- not surface its code/name onto a printed barcode. Filtering in the JOIN condition (not
+        -- WHERE) preserves the movement line row — materialCode simply comes back NULL, which
+        -- generateBarcode() already falls back to 'MAT' for — instead of silently dropping the
+        -- whole line from the barcode-generation batch.
+        LEFT JOIN material_cards mc ON mc.id = pml.material_id AND mc.deleted_at IS NULL AND mc.is_active = true
         WHERE pml.movement_id = ${movementId}
       `);
       return Ok(rows);
@@ -73,25 +80,38 @@ export class AutoBarcodeRepository {
     materialCardId: number;
     warehouseId:    number | null;
     batchNumber:    string | null;
-    quantity:       number;
+    quantity:       number | string;
     unit:           string | null;
     barcode:        string;
   }): Promise<Result<void, AppError>> {
     try {
       // MUHIM: barcode_print_queue.barcode_data NOT NULL — barcode_data/barcode_value ham yoziladi,
       // aks holda kirimda barkod generatsiya jonli NOT NULL xatosi bilan yiqiladi (jonli tasdiqlandi).
+      //
+      // MUHIM 2 (2026-07-03, §2.7): pos_barcode_print_queue.quantity ustuni INTEGER,
+      // lekin manba pos_movement_lines.quantity NUMERIC — pg drayveri buni STRING
+      // ("1.0000") qaytaradi va to'g'ridan-to'g'ri integer ustunga bog'lansa
+      // "invalid input syntax for type integer" bilan yiqiladi (jonli tasdiqlandi:
+      // shuning uchun pos_barcode_print_queue doim bo'sh qolgan edi). Yaqin butun
+      // songa yaxlitlab, xavfsiz butun songa aylantiriladi.
+      const rawQty = Number(dto.quantity);
+      const safeQty = Number.isFinite(rawQty) ? Math.round(rawQty) : 0;
       await db.execute(sql`
         INSERT INTO pos_barcode_print_queue
           (movement_id, movement_line_id, material_id, warehouse_id,
            batch_number, quantity, unit, barcode, barcode_data, barcode_value, barcode_type, status, created_at)
         VALUES
           (${dto.movementId}, ${dto.movementLineId}, ${dto.materialCardId}, ${dto.warehouseId},
-           ${dto.batchNumber}, ${dto.quantity}, ${dto.unit ?? null},
+           ${dto.batchNumber}, ${safeQty}, ${dto.unit ?? null},
            ${dto.barcode}, ${dto.barcode}, ${dto.barcode}, 'CODE128', 'QUEUED', NOW())
       `);
       return Ok(undefined);
     } catch (e) {
-      return Err({ message: String(e), code: 'DB_ERROR' });
+      // C8.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): surface the Postgres error code so the
+      // caller can tell a unique-violation (23505, barcode collision — retry with a fresh
+      // barcode) apart from any other DB failure (log and give up, don't loop forever).
+      const pgCode = (e as { code?: string } | null)?.code;
+      return Err({ message: String(e), code: 'DB_ERROR', details: { pgCode } });
     }
   }
 

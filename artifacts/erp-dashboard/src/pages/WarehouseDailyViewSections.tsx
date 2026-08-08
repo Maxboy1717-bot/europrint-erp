@@ -30,7 +30,7 @@ interface DateNavigatorProps {
   orders: DailyOrder[];
   totalKits: number;
   readyKits: number;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function DateNavigator({
@@ -66,15 +66,15 @@ export function DateNavigator({
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 text-sm">
           <EPStatusPill tone="neutral">{orders.length}</EPStatusPill>
-          <span className="text-muted-foreground">{t("buyurtma", "заказов")}</span>
+          <span className="text-muted-foreground">{t("WarehouseDailyView.ordersUnit")}</span>
         </div>
         <div className="flex items-center gap-2 text-sm">
           <EPStatusPill tone="neutral">{totalKits}</EPStatusPill>
-          <span className="text-muted-foreground">{t("komplekt", "комплектов")}</span>
+          <span className="text-muted-foreground">{t("WarehouseDailyView.kitsUnit")}</span>
         </div>
         <div className="flex items-center gap-2 text-sm">
           <EPStatusPill tone="success">{readyKits}</EPStatusPill>
-          <span className="text-muted-foreground">{t("tayyor", "готово")}</span>
+          <span className="text-muted-foreground">{t("WarehouseDailyView.readyUnit")}</span>
         </div>
       </div>
     </div>
@@ -86,7 +86,7 @@ interface OrderCardProps {
   onCreateKit: (order: DailyOrder) => void;
   onOpenKitDetails: (kit: MaterialKit) => void;
   onUpdateKitStatus: (kitId: string, status: string) => void;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitStatus, t }: OrderCardProps) {
@@ -105,7 +105,7 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
           </div>
           <div className="flex items-center gap-2">
             <div className="text-right text-sm">
-              <div className="font-medium">{order.tiraj?.toLocaleString()} {t("dona", "шт")}</div>
+              <div className="font-medium">{order.tiraj?.toLocaleString()} {t("WarehouseDailyView.unitDona")}</div>
               <div className="text-muted-foreground">{order.formatA} × {order.formatB} mm</div>
             </div>
           </div>
@@ -116,7 +116,7 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
           <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)]" />
-              <span className="text-sm">{t("Material komplekti yaratilmagan", "Комплект материалов не создан")}</span>
+              <span className="text-sm">{t("WarehouseDailyView.kitNotCreated")}</span>
             </div>
             <Button
               size="sm"
@@ -124,7 +124,7 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
               data-testid={`button-create-kit-${order.id}`}
             >
               <PackagePlus className="h-4 w-4 mr-2" />
-              {t("Komplekt yaratish", "Создать комплект")}
+              {t("WarehouseDailyView.createKitButton")}
             </Button>
           </div>
         ) : (
@@ -150,29 +150,19 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className={`${statusInfo.bg} ${statusInfo.text}`}>
-                        {t(statusInfo.label, statusInfo.labelRu)}
+                        {t(statusInfo.labelKey)}
                       </Badge>
                       {kit.status === 'pending' && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={(e) => { e.stopPropagation(); onUpdateKitStatus(kit.id, 'preparing'); }}
+                          onClick={(e) => { e.stopPropagation(); onUpdateKitStatus(kit.id, 'prepared'); }}
                           data-testid={`button-start-preparing-${kit.id}`}
                         >
-                          {t("Tayyorlashni boshlash", "Начать подготовку")}
+                          {t("WarehouseDailyView.startPreparingButton")}
                         </Button>
                       )}
-                      {kit.status === 'preparing' && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); onUpdateKitStatus(kit.id, 'ready'); }}
-                          data-testid={`button-mark-ready-${kit.id}`}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          {t("Tayyor", "Готов")}
-                        </Button>
-                      )}
-                      {kit.status === 'ready' && (
+                      {kit.status === 'prepared' && (
                         <Button
                           size="sm"
                           variant="secondary"
@@ -180,7 +170,17 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
                           data-testid={`button-deliver-${kit.id}`}
                         >
                           <Truck className="h-4 w-4 mr-2" />
-                          {t("Yetkazish", "Доставить")}
+                          {t("WarehouseDailyView.deliverButton")}
+                        </Button>
+                      )}
+                      {kit.status === 'delivered' && (
+                        <Button
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); onUpdateKitStatus(kit.id, 'confirmed'); }}
+                          data-testid={`button-confirm-${kit.id}`}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          {t("WarehouseDailyView.confirmButton")}
                         </Button>
                       )}
                     </div>
@@ -196,7 +196,7 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
               data-testid={`button-add-kit-${order.id}`}
             >
               <PackagePlus className="h-4 w-4 mr-2" />
-              {t("Qo'shimcha komplekt", "Добавить комплект")}
+              {t("WarehouseDailyView.addKitButton")}
             </Button>
           </div>
         )}
@@ -206,7 +206,7 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
           <div className="flex items-center gap-4 w-full">
             <div className="flex-1">
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-muted-foreground">{t("Material tayyor", "Материалы готовы")}</span>
+                <span className="text-muted-foreground">{t("WarehouseDailyView.materialsReadyLabel")}</span>
                 <span className="font-medium">{order.preparedMaterials} / {order.totalMaterials}</span>
               </div>
               <Progress
@@ -227,7 +227,7 @@ interface OrdersListProps {
   onCreateKit: (order: DailyOrder) => void;
   onOpenKitDetails: (kit: MaterialKit) => void;
   onUpdateKitStatus: (kitId: string, status: string) => void;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function OrdersList({ orders, ordersLoading, onCreateKit, onOpenKitDetails, onUpdateKitStatus, t }: OrdersListProps) {
@@ -243,9 +243,9 @@ export function OrdersList({ orders, ordersLoading, onCreateKit, onOpenKitDetail
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-20">
           <Box className="h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium">{t("Bu kunga buyurtmalar yo'q", "Нет заказов на этот день")}</p>
+          <p className="text-lg font-medium">{t("WarehouseDailyView.noOrdersToday")}</p>
           <p className="text-sm text-muted-foreground">
-            {t("Boshqa sanani tanlang yoki yangi komplekt yarating", "Выберите другую дату или создайте новый комплект")}
+            {t("WarehouseDailyView.noOrdersHint")}
           </p>
         </CardContent>
       </Card>

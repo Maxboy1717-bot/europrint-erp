@@ -15,26 +15,77 @@ import { SalesOrder } from '../aggregates/sales-order.aggregate';
  */
 export type DrizzleTxExecutor = unknown;
 
-/** One order line — binds to a finished-good product (owner 2026-06-05). */
+/**
+ * One order line — EITHER binds to a finished-good product (owner 2026-06-05, `productId`
+ * set) OR, when `productId` is omitted, describes a bespoke print job by physical spec
+ * (owner decision 2026-07-13, chat — "Mahsulot vs Buyurtma zanjiri"). Mirrors the same
+ * optional-productId + custom-spec shape already used by the quotation-conversion paths
+ * (approveQuotation()/convertQuotationToOrder() in the sd infrastructure layer).
+ */
 export interface SalesOrderLineInput {
-  productId: number;
+  productId?: number;
   description: string;
   orderQuantity: number;
   unit?: string;
   netPrice: number;
+  productType?: string;
+  paperType?: string;
+  thicknessMm?: number;
+  lengthMm?: number;
+  widthMm?: number;
+  heightMm?: number;
+  printColors?: number;
+  lamination?: boolean;
+  perforation?: boolean;
+  specialCoating?: boolean;
+  isNewDie?: boolean;
+  printingMethod?: string;
+  machineFormat?: string;
+}
+
+/**
+ * One persisted order line as read back from sales_order_items (VISION-3340 #53
+ * "Takrorlash"/clone enabler). `productId` is the canonical finished-good binding
+ * the create flow writes (FK → products); `materialId` is the legacy/unused column
+ * kept only so a clone of an older row is not silently dropped (see drizzle-sd-atp.repo).
+ */
+export interface SalesOrderItemView {
+  id: number;
+  itemNumber: string;
+  productId: number | null;
+  materialId: number | null;
+  materialNumber: string | null;
+  description: string;
+  orderQuantity: number;
+  unit: string;
+  netPrice: number;
+  totalPrice: number;
 }
 
 export interface ISalesOrderRepository {
-  save(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<SalesOrder>>;
+  /**
+   * @param crmLeadId 2.6 golden-thread: originating CRM lead id (crm_leads.id), when
+   * known (e.g. Deal that came from a Lead). Not part of the SalesOrder aggregate —
+   * passed through like `customerId` since it is a cross-module provenance link, not
+   * order-domain state.
+   */
+  save(order: SalesOrder, tx?: DrizzleTxExecutor, crmLeadId?: number | null): Promise<Result<SalesOrder>>;
   /** Persist order line-items into sales_order_items (product_id-bound). Runs in the create tx. */
   saveItems(orderId: number, items: SalesOrderLineInput[], tx?: DrizzleTxExecutor): Promise<Result<number>>;
+  /** Read an order's persisted line-items from sales_order_items, ordered by item_number (clone/Takrorlash enabler). */
+  findItemsByOrderId(orderId: number): Promise<Result<SalesOrderItemView[]>>;
   findById(id: number): Promise<Result<SalesOrder | null>>;
   findByOrderNumber(orderNumber: string): Promise<Result<SalesOrder | null>>;
   findByCompanyId(companyId: number, limit: number, offset: number): Promise<Result<SalesOrder[]>>;
   findByStatus(status: string, limit: number, offset: number): Promise<Result<SalesOrder[]>>;
   findAll(limit: number, offset: number): Promise<Result<SalesOrder[]>>;
   findPendingAdvanceOrders(limit: number, offset: number): Promise<Result<SalesOrder[]>>;
-  update(order: SalesOrder): Promise<Result<void>>;
+  /**
+   * Persist the order's mutated state (status + advance status). Pass `tx` to run
+   * inside an existing transaction so a status change and its golden-thread outbox
+   * event commit atomically (PA0-6, mirrors `save`).
+   */
+  update(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<void>>;
   updateAdvancePaidWithLock(
     id: number,
     newAdvancePaid: number,
@@ -48,6 +99,13 @@ export interface ISalesOrderRepository {
     expectedVersion: number,
     idempotencyKey: string,
   ): Promise<Result<{ updated: boolean; newVersion: number; duplicate: boolean }>>;
+  /**
+   * 06-sd #100 — Ojd.Syryo (Ожд.Сырьё). Flag the order as awaiting raw material
+   * (status -> 'pending_material') + stamp the signal columns on the canonical
+   * sales_orders base table. Pass `tx` so the flip commits atomically with the
+   * durable outbox 'sd.order.pending_material' event. Returns the signal timestamp.
+   */
+  markPendingMaterial(orderId: number, reason: string | null, tx?: DrizzleTxExecutor): Promise<Result<{ signaledAt: string }>>;
   delete(id: number): Promise<Result<void>>;
   count(): Promise<Result<number>>;
 }

@@ -16,6 +16,21 @@ export class QcFailedEvent {
   ) {}
 }
 
+/**
+ * Emitted when an inspector's third QC decision is REWORK (Qayta ishlash) —
+ * the batch is neither accepted (pass) nor scrapped (fail) but sent back to
+ * production for rework. Carries the optional inspector reason so downstream
+ * MES/PP listeners can re-open the job. Mirrors the WMS quarantine REWORK
+ * decision but on the qc_inspections aggregate path.
+ */
+export class QcReworkEvent {
+  constructor(
+    readonly inspectionId: string,
+    readonly orderId: number,
+    readonly reason: string,
+  ) {}
+}
+
 export class SupplierQualityFailEvent {
   constructor(
     readonly supplierId: number,
@@ -42,5 +57,27 @@ export class LabTestPassedEvent {
     readonly orderId: number,
     readonly inspectionId?: number,
     readonly passedAt?: string,
+  ) {}
+}
+
+/**
+ * Owner decision 2026-07-13 (chat): a QC defect marked "customer fault" must
+ * auto-notify the sales manager who owns the linked order's customer.
+ * Published by SetFaultAttributionHandler after qc_defects.is_customer_fault
+ * is persisted as TRUE. Consumed cross-module by
+ * sd/infrastructure/event-handlers/qc-customer-fault-sd.listener.ts, which
+ * walks qc_inspections -> production_orders -> sales_orders -> sd_customers
+ * -> employees to resolve the recipient (mirrors QcFailedEvent's shape/flow —
+ * qc-failed-sd.listener.ts — one hop further to the customer's manager).
+ * `inspectionId` is nullable: a defect reported without a linked inspection
+ * has no join path to a sales order, so the listener no-ops (Q-40, no
+ * fabricated recipient) rather than guessing.
+ */
+export class QcDefectCustomerFaultEvent {
+  constructor(
+    readonly defectId: string,
+    readonly inspectionId: number | null,
+    readonly defectCode: string,
+    readonly markedBy: string,
   ) {}
 }

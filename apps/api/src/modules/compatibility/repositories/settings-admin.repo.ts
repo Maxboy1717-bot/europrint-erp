@@ -11,10 +11,11 @@ import {
   systemSettings as sysTable,
   adminFilters as filtersTable,
 } from '@shared/db/europrint-compat';
-import { eq } from 'drizzle-orm';
+import { orgFunctions } from '@workspace/db';
+import { eq, isNull } from 'drizzle-orm';
 import { safeCall } from '@common/result';
 
-type GuidelineInsert  = { title: string; content: string; category: string; isActive: boolean; createdBy?: string };
+type GuidelineInsert  = { title?: string; content?: string; category: string; isActive: boolean; createdBy?: string; orgFunctionId: number; filePath: string; version: string };
 type GuidelineUpdate  = Partial<GuidelineInsert> & { updatedAt: Date };
 type FilterInsert     = { name: string; filterType: string; config: Record<string, unknown>; isActive: boolean };
 type FilterUpdate     = Partial<FilterInsert> & { updatedAt: Date };
@@ -24,31 +25,60 @@ type SystemUpdate     = { companyName?: string; timezone?: string; language?: st
 @Injectable()
 export class SettingsAdminRepo {
   findAllGuidelines() {
-    return safeCall(() => db.select().from(guidelinesTable).orderBy(guidelinesTable.createdAt), 'DB_ERROR');
+    // Item #119: deletedAt/deletedBy exist on the table (soft-delete intent) but were
+    // never read — excluding soft-deleted rows here, not changing deleteGuideline's
+    // existing hard-delete behavior (out of this fix's scope).
+    // FE (SettingsTabGuidelines.tsx) renders guideline.positionName — join org_functions
+    // so the list shows which position each guideline belongs to, not just filePath/version.
+    return safeCall(() => db
+      .select({
+        id:            guidelinesTable.id,
+        title:         guidelinesTable.title,
+        content:       guidelinesTable.content,
+        category:      guidelinesTable.category,
+        isActive:      guidelinesTable.isActive,
+        createdBy:     guidelinesTable.createdBy,
+        createdAt:     guidelinesTable.createdAt,
+        updatedAt:     guidelinesTable.updatedAt,
+        filePath:      guidelinesTable.filePath,
+        version:       guidelinesTable.version,
+        orgFunctionId: guidelinesTable.orgFunctionId,
+        positionName:  orgFunctions.positionName,
+      })
+      .from(guidelinesTable)
+      .leftJoin(orgFunctions, eq(guidelinesTable.orgFunctionId, orgFunctions.id))
+      .where(isNull(guidelinesTable.deletedAt))
+      .orderBy(guidelinesTable.createdAt), 'DB_ERROR');
   }
 
   insertGuideline(data: GuidelineInsert) {
     return safeCall(() => db.insert(guidelinesTable).values({
-      title:     data.title,
-      content:   data.content,
-      category:  data.category,
-      isActive:  data.isActive,
-      createdBy: data.createdBy ?? null,
+      title:         data.title ?? null,
+      content:       data.content ?? null,
+      category:      data.category,
+      isActive:      data.isActive,
+      createdBy:     data.createdBy ?? null,
+      orgFunctionId: data.orgFunctionId,
+      filePath:      data.filePath,
+      version:       data.version,
     }).returning(), 'DB_ERROR');
   }
 
-  updateGuideline(id: string, data: GuidelineUpdate) {
+  updateGuideline(id: number, data: GuidelineUpdate) {
     return safeCall(() => db.update(guidelinesTable).set({
-      title:     data.title,
-      content:   data.content,
-      category:  data.category,
-      isActive:  data.isActive,
-      createdBy: data.createdBy,
-      updatedAt: data.updatedAt,
+      title:         data.title,
+      content:       data.content,
+      category:      data.category,
+      isActive:      data.isActive,
+      createdBy:     data.createdBy,
+      orgFunctionId: data.orgFunctionId,
+      filePath:      data.filePath,
+      version:       data.version,
+      updatedAt:     data.updatedAt,
     }).where(eq(guidelinesTable.id, id)).returning(), 'DB_ERROR');
   }
 
-  deleteGuideline(id: string) {
+  deleteGuideline(id: number) {
     return safeCall(() => db.delete(guidelinesTable).where(eq(guidelinesTable.id, id)).returning(), 'DB_ERROR');
   }
 

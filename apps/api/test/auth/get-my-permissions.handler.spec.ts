@@ -42,7 +42,7 @@ function makeCache(connected = false): Partial<RbacCacheService> {
 function makeUser(over: Partial<UserPositionRow> = {}): UserPositionRow {
   return {
     userId: 1, username: 'alice', role: 'employee',
-    positionId: 42, positionCode: 'OP', positionNameUz: 'Operator', positionNameRu: 'Оператор',
+    positionId: 42, orgFunctionId: null, positionCode: 'OP', positionNameUz: 'Operator', positionNameRu: 'Оператор',
     departmentCode: 'PROD', departmentNameUz: 'Ishlab chiqarish',
     rbacTier: 'specialist', ...over,
   };
@@ -96,8 +96,10 @@ describe('GetMyPermissionsService', () => {
     expect(repo.findModulePermissions).not.toHaveBeenCalled();
   });
 
-  it('returns empty permissions when user has no positionId', async () => {
-    repo.findUserWithPosition.mockResolvedValue(Ok(makeUser({ role: 'employee', positionId: null })));
+  it('returns empty permissions when user has no card (orgFunctionId) and no positionId', async () => {
+    repo.findUserWithPosition.mockResolvedValue(
+      Ok(makeUser({ role: 'employee', positionId: null, orgFunctionId: null })),
+    );
 
     const r = await handler.execute({ userId: 1 });
 
@@ -124,8 +126,23 @@ describe('GetMyPermissionsService', () => {
       expect(r.data.featureFlags).toEqual(['discount.override']);
       expect(r.data.isAdmin).toBe(false);
     }
-    expect(repo.findModulePermissions).toHaveBeenCalledWith(42);
-    expect(repo.findFeatureFlags).toHaveBeenCalledWith(42);
+    // Karta-birinchi imzo: (positionId, orgFunctionId). Bu user kartasiz (orgFunctionId=null)
+    // → position fallback yo'li.
+    expect(repo.findModulePermissions).toHaveBeenCalledWith(42, null);
+    expect(repo.findFeatureFlags).toHaveBeenCalledWith(42, null);
+  });
+
+  it('derives module permissions CARD-FIRST via orgFunctionId when present', async () => {
+    repo.findUserWithPosition.mockResolvedValue(Ok(makeUser({ positionId: 12, orgFunctionId: 17 })));
+    repo.findModulePermissions.mockResolvedValue(Ok([{ module: 'PP', level: 'FULL' }]));
+    repo.findFeatureFlags.mockResolvedValue(Ok([]));
+
+    const r = await handler.execute({ userId: 1 });
+
+    expect(r.ok).toBe(true);
+    // Card-first: both keys passed; repo prefers org_function_id, falls back to position_id.
+    expect(repo.findModulePermissions).toHaveBeenCalledWith(12, 17);
+    expect(repo.findFeatureFlags).toHaveBeenCalledWith(12, 17);
   });
 
   it('returns INTERNAL when module permissions query fails', async () => {

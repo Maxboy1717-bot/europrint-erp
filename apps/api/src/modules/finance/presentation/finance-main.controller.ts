@@ -9,7 +9,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, HttpException, HttpStatus, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus, Logger, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -20,9 +20,11 @@ import { GlService } from '../gl/gl.service';
 import { FinanceAccountingService } from '../application/finance-accounting.service';
 import { CashflowService } from '../cashflow/cashflow.service';
 import { BudgetsService } from '../budgets/budgets.service';
-import { RATE_USD_UZS, RATE_EUR_UZS, RATE_CNY_UZS } from '@common/constants/app.constants';
+import { RATE_USD_UZS, RATE_EUR_UZS, RATE_RUB_UZS, RATE_CNY_UZS } from '@common/constants/app.constants';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 export { FinanceMainActionsController } from './finance-main-actions.controller';
 
@@ -38,6 +40,8 @@ const FINANCE_ROLES = ['FINANCE_MANAGER', 'ACCOUNTANT', 'SUPER_ADMIN', 'DIRECTOR
 @UseInterceptors(AuditInterceptor)
 @Roles(...FINANCE_ROLES)
 export class FinanceMainController {
+  private readonly logger = new Logger(FinanceMainController.name);
+
   constructor(
     private readonly glSvc: GlService,
     private readonly accountingSvc: FinanceAccountingService,
@@ -69,11 +73,36 @@ export class FinanceMainController {
   @ApiOperation({ summary: 'Get exchange rates' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('exchange-rates')
-  getExchangeRates() {
+  async getExchangeRates() {
+    try {
+      const r = await rawSql(sql`
+        SELECT UPPER(from_currency) AS cur, rate::numeric AS rate, rate_date
+        FROM exchange_rates
+        WHERE UPPER(to_currency) = 'UZS'
+        ORDER BY created_at DESC LIMIT 10
+      `);
+      const rows = (r as { rows?: Record<string, unknown>[] }).rows ?? [];
+      if (rows.length > 0) {
+        const rates: Record<string, number> = {};
+        let rateDate = _time.now().toISOString().slice(0, 10);
+        for (const row of rows) {
+          const cur = String(row['cur'] ?? '');
+          if (cur && rates[cur] === undefined) {
+            rates[cur] = Number(row['rate']);
+            if (row['rate_date']) rateDate = String(row['rate_date']).slice(0, 10);
+          }
+        }
+        return { base: 'UZS', date: rateDate, rates, source: 'db' };
+      }
+    } catch (e) {
+      this.logger.warn(`exchange_rates so'rovi muvaffaqiyatsiz, zaxira kurslarga o'tildi: ${e}`);
+    }
+    this.logger.warn("exchange_rates jadvalida qator topilmadi — zaxira (hardcoded) kurslar qaytarilmoqda");
     return {
       base: 'UZS',
       date: _time.now().toISOString().slice(0, 10),
-      rates: { USD: RATE_USD_UZS, EUR: RATE_EUR_UZS, RUB: 140, CNY: RATE_CNY_UZS },
+      rates: { USD: RATE_USD_UZS, EUR: RATE_EUR_UZS, RUB: RATE_RUB_UZS, CNY: RATE_CNY_UZS },
+      source: 'default',
     };
   }
 

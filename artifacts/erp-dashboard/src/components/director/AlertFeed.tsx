@@ -1,12 +1,14 @@
 /**
  * AlertFeed — agent alertlari real-time (30s polling).
- * Har biri uchun "Hal qilish" tugmasi (markRead).
+ * Har biri uchun "Hal qilish" tugmasi (markRead) + alert.actions amal-tugmalari
+ * (dispatchAlertAction — real navigatsiya/scroll, Q-40: fabrikatsiya yo'q).
  */
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertTriangle, AlertCircle, Info, Check, RefreshCw } from "lucide-react";
 import { useAgentAlerts, type AgentAlert } from "@/hooks/useAgentAlerts";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -30,6 +32,34 @@ const SEVERITY_TEXT = {
   warning:  'text-[var(--ep-yellow)]',
   info:     'text-[var(--ep-blue)]',
 };
+
+/**
+ * Alert-amal tugmasi dispatch — nomlangan `act.action`ni real UI-amalga bog'laydi.
+ * Faqat FE-navigatsiya/scroll (backend-yozuvsiz) — chunki alert payload'da
+ * material/miqdor kabi biznes-ma'lumot yo'q (Q-40: fabrikatsiya taqiq; POST
+ * /api/mm/purchase-requisitions title+items talab qiladi, alert bunday
+ * ma'lumotni tashimaydi — shuning uchun avtomatik yaratish o'rniga real
+ * sahifaga yo'naltiradi).
+ * - open_dashboard          → dashboard tepasiga scroll (AlertFeed shu sahifada, DirectorDashboard.tsx)
+ * - open_advisor            → AIAdvisor panelga scroll (DirectorDashboard.tsx:155, yonma-yon joylashgan)
+ * - create_purchase_request → /planning (MRP + xarid-so'rovlari real sahifasi, PlanningBoard.tsx)
+ * Noma'lum/kelajakdagi action — no-op (avvalgi "faqat Hal qildim" xatti-harakati saqlanadi, regress emas).
+ */
+function dispatchAlertAction(action: string, setLocation: (path: string) => void): void {
+  switch (action) {
+    case 'open_dashboard':
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      break;
+    case 'open_advisor':
+      document.getElementById('ai-advisor-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      break;
+    case 'create_purchase_request':
+      setLocation('/planning');
+      break;
+    default:
+      break;
+  }
+}
 
 export function AlertFeed({ limit = 15 }: { limit?: number }) {
   const { t } = useTranslation("common");
@@ -71,6 +101,7 @@ export function AlertFeed({ limit = 15 }: { limit?: number }) {
 
 function AlertRow({ alert, onResolve }: { alert: AgentAlert; onResolve: () => void }) {
   const { t } = useTranslation("common");
+  const [, setLocation] = useLocation();
   return (
     <div className={cn('rounded-lg p-3 transition-opacity', SEVERITY_TONE[alert.severity], alert.isRead && 'opacity-60')}>
       <div className="flex items-start gap-2">
@@ -93,7 +124,7 @@ function AlertRow({ alert, onResolve }: { alert: AgentAlert; onResolve: () => vo
           {alert.actionRequired && alert.actions && alert.actions.length > 0 ? (
             alert.actions.map((act) => (
               <Button key={act.action} size="sm" variant="outline" className="h-7 text-xs"
-                      onClick={() => { /* future: dispatch act.action */ onResolve(); }}>
+                      onClick={() => { dispatchAlertAction(act.action, setLocation); onResolve(); }}>
                 {act.label}
               </Button>
             ))

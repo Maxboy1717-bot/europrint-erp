@@ -4,6 +4,7 @@
  */
 
 import { makeDbChain } from '../_setup/db-mock';
+import { PgDialect } from 'drizzle-orm/pg-core';
 
 const dbStub = makeDbChain([]);
 
@@ -53,21 +54,21 @@ describe('LeadsRepository', () => {
   describe('findOne', () => {
     it('returns Ok with row when found', async () => {
       dbStub.__setResolved([{ id: 1, status: 'new' }]);
-      const r = await repo.findOne(1);
+      const r = await repo.findOne('demo-lead-1');
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.data).toEqual({ id: 1, status: 'new' });
     });
 
     it('returns Ok with null when missing', async () => {
       dbStub.__setResolved([]);
-      const r = await repo.findOne(99);
+      const r = await repo.findOne('missing-id');
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.data).toBeNull();
     });
 
     it('returns Err when DB throws', async () => {
       dbStub.__setRejected(new Error('boom'));
-      const r = await repo.findOne(1);
+      const r = await repo.findOne('demo-lead-1');
       expect(r.ok).toBe(false);
     });
   });
@@ -96,40 +97,60 @@ describe('LeadsRepository', () => {
   describe('update', () => {
     it('returns Ok with updated row when match', async () => {
       dbStub.__setResolved([{ id: 1, status: 'qualified' }]);
-      const r = await repo.update(1, { status: 'qualified' });
+      const r = await repo.update('demo-lead-1', { status: 'qualified' });
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.data).toEqual({ id: 1, status: 'qualified' });
     });
 
     it('returns Ok when nothing updated', async () => {
       dbStub.__setResolved([]);
-      const r = await repo.update(99, {});
+      const r = await repo.update('missing-id', {});
       expect(r.ok).toBe(true);
     });
 
     it('returns Err when DB throws', async () => {
       dbStub.__setRejected(new Error('conflict'));
-      const r = await repo.update(1, {});
+      const r = await repo.update('demo-lead-1', {});
       expect(r.ok).toBe(false);
+    });
+
+    // Regression: the old db.update(marketingLeads).set() silently dropped
+    // name/company/source/channel/notes/score because the @europrint/schemas def omits
+    // them. The fix uses raw SQL naming the real columns. This renders the emitted SQL
+    // and asserts all 6 formerly-dropped columns are written — the assertion the earlier
+    // "result.ok" tests lacked, which let the fake-save hide.
+    it('emits an UPDATE that writes all 6 previously-dropped columns (fake-save regression)', async () => {
+      (dbStub.execute as jest.Mock).mockClear();
+      dbStub.__setResolved([{ id: 1 }]);
+      await repo.update('demo-lead-1', {
+        name: 'N', company: 'C', source: 'S', channel: 'CH', notes: 'NT', score: 5,
+      });
+      const call = (dbStub.execute as jest.Mock).mock.calls[0];
+      expect(call).toBeDefined();
+      const rendered = new PgDialect().sqlToQuery(call[0]).sql;
+      expect(rendered).toMatch(/update\s+marketing_leads/i);
+      for (const col of ['name', 'company', 'source', 'channel', 'notes', 'score']) {
+        expect(rendered).toContain(col);
+      }
     });
   });
 
   describe('softDelete', () => {
     it('returns Ok when update succeeds', async () => {
       dbStub.__setResolved(undefined);
-      const r = await repo.softDelete(1);
+      const r = await repo.softDelete('demo-lead-1');
       expect(r.ok).toBe(true);
     });
 
     it('returns Ok when no rows match', async () => {
       dbStub.__setResolved([]);
-      const r = await repo.softDelete(999);
+      const r = await repo.softDelete('missing-id');
       expect(r.ok).toBe(true);
     });
 
     it('returns Err when DB throws', async () => {
       dbStub.__setRejected(new Error('boom'));
-      const r = await repo.softDelete(1);
+      const r = await repo.softDelete('demo-lead-1');
       expect(r.ok).toBe(false);
     });
   });

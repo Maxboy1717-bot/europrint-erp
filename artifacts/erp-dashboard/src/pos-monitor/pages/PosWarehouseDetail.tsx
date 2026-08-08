@@ -143,8 +143,8 @@ export default function PosWarehouseDetail() {
             className="pos-btn"
             style={{
               padding: "6px 12px",
-              background: "#10B981",
-              color: "#FFF",
+              background: "var(--pos-success)",
+              color: "var(--pos-card)",
               border: "none",
               borderRadius: 8,
               fontWeight: 600,
@@ -159,8 +159,8 @@ export default function PosWarehouseDetail() {
             className="pos-btn"
             style={{
               padding: "6px 12px",
-              background: "#F59E0B",
-              color: "#FFF",
+              background: "var(--pos-warning)",
+              color: "var(--pos-card)",
               border: "none",
               borderRadius: 8,
               fontWeight: 600,
@@ -183,13 +183,13 @@ export default function PosWarehouseDetail() {
           </div>
           <div>
             <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("kirim2")}</div>
-            <div className="pos-mono" style={{ fontWeight: 700, color: "#10B981" }}>
+            <div className="pos-mono" style={{ fontWeight: 700, color: "var(--pos-success)" }}>
               {inflowMovements.length}
             </div>
           </div>
           <div>
             <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("chiqim2")}</div>
-            <div className="pos-mono" style={{ fontWeight: 700, color: "#EF4444" }}>
+            <div className="pos-mono" style={{ fontWeight: 700, color: "var(--pos-danger)" }}>
               {outflowMovements.length}
             </div>
           </div>
@@ -243,7 +243,7 @@ export default function PosWarehouseDetail() {
         <MovementsTable
           movements={inflowMovements}
           title={t("buOmborgaKirimlar")}
-          color="#10B981"
+          color="var(--pos-success)"
           onClick={(id) => navigate(`/pos-monitor/movements/${id}`)}
           emptyMessage="Bu omborga kirimlar yo'q"
         />
@@ -253,7 +253,7 @@ export default function PosWarehouseDetail() {
         <MovementsTable
           movements={outflowMovements}
           title={t("buOmbordanChiqimlar")}
-          color="#EF4444"
+          color="var(--pos-danger)"
           onClick={(id) => navigate(`/pos-monitor/movements/${id}`)}
           emptyMessage="Bu ombordan chiqimlar yo'q"
         />
@@ -263,7 +263,7 @@ export default function PosWarehouseDetail() {
         <MovementsTable
           movements={quarantineMovements}
           title={t("karantinVaQcKutmoqda")}
-          color="#F59E0B"
+          color="var(--pos-warning)"
           onClick={(id) => navigate(`/pos-monitor/movements/${id}`)}
           emptyMessage="Karantinda hozir hech narsa yo'q"
         />

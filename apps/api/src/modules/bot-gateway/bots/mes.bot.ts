@@ -4,7 +4,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { execSql, helpReply, deniedReply, hasBotPermission, sql } from './bot.helpers';
+import { execSql, helpReply, keyboardReply, deniedReply, hasBotPermission, sql } from './bot.helpers';
 import type { BotMessage, BotReply } from './bot.helpers';
 
 
@@ -21,7 +21,13 @@ export class MesBotService {
     if (cmd === '/shift'  || msg.text.toLowerCase().includes('smena'))  return this.getShiftStats();
     if (cmd === '/tasks'  || msg.text.toLowerCase().includes('vazifa')) return this.getPendingTasks();
 
-    return helpReply('🏭 MES Bot:\n/shift — Joriy smena statistikasi\n/tasks — Kutayotgan vazifalar');
+    return keyboardReply(
+      '🏭 MES Bot:\n/shift — Joriy smena statistikasi\n/tasks — Kutayotgan vazifalar',
+      [[
+        { text: '🏭 Smena statistikasi', callback_data: 'smena' },
+        { text: '⚡ Vazifalar',          callback_data: 'vazifa' },
+      ]],
+    );
   }
 
   private async getShiftStats(): Promise<BotReply> {

@@ -12,6 +12,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -24,6 +25,7 @@ const IMPORT_CODE_PREFIX = 'IMP';
 
 @Injectable()
 export class EmployeesCompatSubService {
+  constructor(private readonly i18n: I18nService) {}
   async importEmployees(employees: Record<string, unknown>[]): Promise<Result<{ imported: number; total: number; errors: string[] }, AppError>> {
     return safeCall(async () => {
       let imported = 0;
@@ -69,7 +71,7 @@ export class EmployeesCompatSubService {
         RETURNING id, asset_name, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Asset assignment failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.assetAssignmentFailed'));
       return item;
     });
   }
@@ -113,13 +115,19 @@ export class EmployeesCompatSubService {
 
   async createComplaint(employeeId: string, body: Record<string, unknown>): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
+      // C8.4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): the old COUNT(*)+1 was a TOCTOU read-max
+      // race (id is the PRIMARY KEY, so a collision already failed loudly rather than silently
+      // duplicating — same "crash under concurrent load" class as 1.7/8.3). nextval() is atomic.
       const r = await rawSql(sql`
-        INSERT INTO hr_conflict_reports (party1, party2, description, severity, status)
-        VALUES (${employeeId}, ${body['party2'] ?? ''}, ${body['description'] ?? null}, ${body['severity'] ?? 'low'}, 'open')
+        INSERT INTO hr_conflict_reports (id, party1, party2, description, severity, status)
+        VALUES (
+          'CR-' || LPAD(nextval('hr_conflict_report_seq')::text, 3, '0'),
+          ${employeeId}, ${body['party2'] ?? ''}, ${body['description'] ?? null}, ${body['severity'] ?? 'low'}, 'open'
+        )
         RETURNING id, severity, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Complaint creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.complaintCreationFailed'));
       return item;
     });
   }

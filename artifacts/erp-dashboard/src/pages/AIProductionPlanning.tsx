@@ -69,7 +69,7 @@ export default function AIProductionPlanning() {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/dashboard"] });
       toast({ title: tLabel('common.aiRejaYaratildi', "AI Reja yaratildi"), description: tLabel('common.yangiRejaMuvaffaqiyatliYaratildi', "Yangi reja muvaffaqiyatli yaratildi") });
     },
-    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("xatolik"), description: err.message, variant: "destructive" }),
   });
 
   const approveMutation = useMutation({
@@ -79,7 +79,7 @@ export default function AIProductionPlanning() {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/plans"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/dashboard"] });
       setShowDetail(false); setShowOverride(false);
-      toast({ title: "Tasdiqlandi", description: tLabel('common.rejaTasdiqlandiVaTelegramYuborildi', "Reja tasdiqlandi va Telegram yuborildi") });
+      toast({ title: t("tasdiqlandi"), description: tLabel('common.rejaTasdiqlandiVaTelegramYuborildi', "Reja tasdiqlandi va Telegram yuborildi") });
     },
   });
 
@@ -99,7 +99,7 @@ export default function AIProductionPlanning() {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/plans"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/dashboard"] });
       setShowDetail(false);
-      toast({ title: "Bajarilmoqda", description: tLabel('common.machineTasksYaratildiVaTelegramYuborildi', "Machine tasks yaratildi va Telegram yuborildi") });
+      toast({ title: t("bajarilmoqda"), description: tLabel('common.machineTasksYaratildiVaTelegramYuborildi', "Machine tasks yaratildi va Telegram yuborildi") });
     },
   });
 
@@ -119,7 +119,7 @@ export default function AIProductionPlanning() {
       setShowReschedule(false); setRescheduleReason("");
       toast({ title: tLabel('common.qaytaRejalashtirildi', "Qayta rejalashtirildi"), description: tLabel('common.barchaBuyurtmalar2SoatKechiktirildi', "Barcha buyurtmalar 2 soat kechiktirildi") });
     },
-    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("xatolik"), description: err.message, variant: "destructive" }),
   });
 
   const blockMaterialMutation = useMutation({
@@ -127,9 +127,9 @@ export default function AIProductionPlanning() {
       apiRequest<{ purchaseRequisitionNumber?: string }>("POST", `/api/ai-planning/orders/${orderId}/block-material`, { materialName, reason, requiredQuantity: 1 }),
     onSuccess: (data) => {
       setShowBlockMaterial(false); setBlockMaterial(""); setBlockOrderId(""); setBlockReason("");
-      toast({ title: "Bloklandi", description: data.purchaseRequisitionNumber ? `Xarid talabi: ${data.purchaseRequisitionNumber}` : "MM ga xabar yuborildi" });
+      toast({ title: t("bloklandi"), description: data.purchaseRequisitionNumber ? `${t("xaridTalabi")}: ${data.purchaseRequisitionNumber}` : t("mmGaXabarYuborildi") });
     },
-    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("xatolik"), description: err.message, variant: "destructive" }),
   });
 
   const saveConfigMutation = useMutation({
@@ -153,7 +153,7 @@ export default function AIProductionPlanning() {
 
   const stats = [
     { label: tLabel('common.faolRejalar', "Faol rejalar"),              value: dashboard?.activePlans ?? 0,           icon: Zap },
-    { label: "O'rtacha ishonch",           value: `${dashboard?.avgConfidence ?? 0}%`,   icon: Target },
+    { label: t("oRtachaIshonch"),           value: `${dashboard?.avgConfidence ?? 0}%`,   icon: Target },
     { label: tLabel('common.avtoTasdiqlangan', "Avto-tasdiqlangan"),          value: `${dashboard?.autoApprovedPct ?? 0}%`, icon: ShieldCheck },
     { label: tLabel('common.rejalashtirilganBuyurtmalar', "Rejalashtirilgan buyurtmalar"), value: dashboard?.totalOrdersScheduled ?? 0, icon: BarChart3 },
   ];

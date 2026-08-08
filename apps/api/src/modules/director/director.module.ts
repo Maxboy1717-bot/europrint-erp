@@ -7,10 +7,12 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthModule } from '../auth/auth.module';
+import { TelegramModule } from '../../telegram/telegram.module';
 
 import { APPROVAL_REPO } from './domain/repositories/i-approval.repo';
 import { DrizzleApprovalRepo } from './infrastructure/repositories/drizzle-approval.repo';
 import { DrizzleApprovalWriteRepo } from './infrastructure/repositories/drizzle-approval-write.repo';
+import { ApprovalStepsRepository } from './infrastructure/repositories/approval-steps.repository';
 import { DashboardService } from './dashboard/dashboard.service';
 import { DrizzleDashboardSvcRepository } from './dashboard/drizzle-dashboard-svc.repo';
 import { DASHBOARD_SVC_REPO } from './dashboard/i-dashboard-svc.repo';
@@ -27,6 +29,8 @@ import { ApprovalsController } from './presentation/approvals.controller';
 import { DashboardController } from './presentation/dashboard.controller';
 import { DirectorRootController } from './presentation/director-root.controller';
 import { DirectorExtendedController } from './presentation/director-extended.controller';
+import { OwnerSummaryService } from './application/owner-summary.service';
+import { OwnerSummaryRepository } from './infrastructure/repositories/owner-summary.repository';
 import { DashboardQueryService } from './application/dashboard-query.service';
 import { DashboardQueryRepository } from './infrastructure/repositories/dashboard-query.repository';
 import { DirectorDataService } from './application/director-data.service';
@@ -44,6 +48,9 @@ import { CoordinationRepository } from './infrastructure/repositories/coordinati
 import { KaizenService } from './application/kaizen.service';
 import { OkrService } from './application/okr.service';
 import { OkrRepository } from './infrastructure/repositories/okr.repository';
+import { WorkflowRulesController } from './presentation/workflow-rules.controller';
+import { WorkflowRulesService } from './application/workflow-rules.service';
+import { WorkflowRulesRepository } from './infrastructure/repositories/workflow-rules.repository';
 import { StrategicService } from './application/strategic.service';
 import { StrategicRepository } from './infrastructure/repositories/strategic.repository';
 import { ZnoService } from './application/zno.service';
@@ -51,7 +58,9 @@ import { ZnoRepository } from './infrastructure/repositories/zno.repository';
 import { ZvsService } from './application/zvs.service';
 import { ZvsRepository } from './infrastructure/repositories/zvs.repository';
 import { KaizenRepository } from './infrastructure/repositories/kaizen.repository';
+import { DirectorHolatService } from './application/director-holat.service';
 import { AdvanceBypassApprovedListener } from './infrastructure/event-handlers/advance-bypass-approved.listener';
+import { RasporyazhenieStatusChangedListener } from './infrastructure/event-handlers/rasporyazhenie-status.listener';
 // PA3-17 Wave 6: merged from former modules/analytics/ (route prefix '/analytics' preserved)
 import { AnalyticsController } from './analytics/analytics.controller';
 import { AnalyticsExtendedController } from './analytics/analytics-extended.controller';
@@ -61,6 +70,19 @@ import { AnalyticsRepository } from './analytics/analytics.repository';
 import { AnalyticsExtendedRepository } from './analytics/analytics-extended.repository';
 import { COORDINATION_REPO } from './domain/repositories/i-coordination.repo';
 import { DASHBOARD_QUERY_REPO } from './domain/repositories/i-dashboard-query.repo';
+// P30 Wave 3: stat-regulation + diary + monthly-plan
+import { StatRegulationController } from './presentation/stat-regulation.controller';
+import { StatRegulationService } from './application/stat-regulation.service';
+import { StatRegulationRepository } from './infrastructure/repositories/stat-regulation.repository';
+import { STAT_REGULATION_REPO } from './domain/repositories/i-stat-regulation.repo';
+import { DiaryController } from './presentation/diary.controller';
+import { DiaryService } from './application/diary.service';
+import { DiaryRepository } from './infrastructure/repositories/diary.repository';
+import { DIARY_REPO } from './domain/repositories/i-diary.repo';
+import { MonthlyPlanController } from './presentation/monthly-plan.controller';
+import { MonthlyPlanService } from './application/monthly-plan.service';
+import { MonthlyPlanRepository } from './infrastructure/repositories/monthly-plan.repository';
+import { MONTHLY_PLAN_REPO } from './domain/repositories/i-monthly-plan.repo';
 import { DIRECTOR_DATA_REPO } from './domain/repositories/i-director-data.repo';
 import { DIRECTOR_STATE_REPO } from './domain/repositories/i-director-state.repo';
 import { KAIZEN_REPO } from './domain/repositories/i-kaizen.repo';
@@ -68,6 +90,19 @@ import { OKR_REPO } from './domain/repositories/i-okr.repo';
 import { STRATEGIC_REPO } from './domain/repositories/i-strategic.repo';
 import { ZNO_REPO } from './domain/repositories/i-zno.repo';
 import { ZVS_REPO } from './domain/repositories/i-zvs.repo';
+// 06-30 to'lqin: Coordination — prikaz/protokol/kengash a'zoligi + farmoyish eskalatsiya cron
+import { PrikazController, ProtocolController } from './presentation/coordination-docs.controller';
+import { CouncilMembersController } from './presentation/council-members.controller';
+import { PrikazRepository } from './infrastructure/repositories/prikaz.repository';
+import { ProtocolRepository } from './infrastructure/repositories/protocol.repository';
+import { CouncilMembersRepository } from './infrastructure/repositories/council-members.repository';
+import { CouncilQuorumService } from './application/council-quorum.service';
+import { CouncilVotesRepository } from './infrastructure/repositories/council-votes.repository';
+import { RasporyazhenieEscalationCron } from './infrastructure/cron/rasporyazhenie-escalation.cron';
+// 07-03 to'lqin: ZNO/ZVS SLA eskalatsiya cron (vizyon 3.7)
+import { ZnoZvsSlaEscalationCron } from './infrastructure/cron/zno-zvs-sla-escalation.cron';
+// 07-04 to'lqin: egasi kunlik hisoboti — avtomatik Telegram digest (SB0379)
+import { OwnerSummaryDailyCron } from './infrastructure/cron/owner-summary-daily.cron';
 
 const CommandHandlers = [
   CreateApprovalRequestHandler,
@@ -91,7 +126,7 @@ const Repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule, TelegramModule],
   controllers: [
     ApprovalsController,
     DashboardController,
@@ -106,6 +141,16 @@ const Repositories = [
     // PA3-17 Wave 6: merged from modules/analytics/
     AnalyticsController,
     AnalyticsExtendedController,
+    // P30 Wave 3
+    StatRegulationController,
+    DiaryController,
+    MonthlyPlanController,
+    // Vysotskiy-7 GORIZONTAL: cross-department workflow routing config
+    WorkflowRulesController,
+    // 06-30 to'lqin: Coordination — prikaz/protokol/kengash a'zoligi
+    PrikazController,
+    ProtocolController,
+    CouncilMembersController,
   ],
   providers: [
     ...CommandHandlers, ...QueryHandlers, ...Repositories,
@@ -124,6 +169,9 @@ const Repositories = [
     OkrRepository,
     { provide: OKR_REPO, useClass: OkrRepository },
     OkrService,
+    WorkflowRulesRepository,
+    WorkflowRulesService,
+    ApprovalStepsRepository,
     StrategicRepository,
     { provide: STRATEGIC_REPO, useClass: StrategicRepository },
     StrategicService,
@@ -133,14 +181,42 @@ const Repositories = [
     ZvsRepository,
     { provide: ZVS_REPO, useClass: ZvsRepository },
     ZvsService,
+    // EP-DIR-001/EP-DIR-029: pure holat formula service
+    DirectorHolatService,
     // PA0 Trigger 20 — advance bypass audit listener
     AdvanceBypassApprovedListener,
+    // 04-coordination #4 — rasporyazhenie status o'zgarishida COR % qayta hisoblash listeneri
+    RasporyazhenieStatusChangedListener,
     // PA3-17 Wave 6: merged from modules/analytics/
     AnalyticsService,
     AnalyticsExtendedService,
     AnalyticsRepository,
     AnalyticsExtendedRepository,
+    // P30 Wave 3: stat-regulation + diary + monthly-plan
+    StatRegulationRepository,
+    { provide: STAT_REGULATION_REPO, useClass: StatRegulationRepository },
+    StatRegulationService,
+    DiaryRepository,
+    { provide: DIARY_REPO, useClass: DiaryRepository },
+    DiaryService,
+    MonthlyPlanRepository,
+    { provide: MONTHLY_PLAN_REPO, useClass: MonthlyPlanRepository },
+    MonthlyPlanService,
+    // T21-B1 #27/#28: owner daily digest (5 owner numbers + Telegram, config-gated)
+    OwnerSummaryRepository,
+    OwnerSummaryService,
+    // 07-04 to'lqin: egasi kunlik hisoboti — avtomatik Telegram digest (SB0379)
+    OwnerSummaryDailyCron,
+    // 06-30 to'lqin: Coordination — prikaz/protokol/kengash a'zoligi + farmoyish eskalatsiya cron
+    PrikazRepository,
+    ProtocolRepository,
+    CouncilMembersRepository,
+    CouncilQuorumService,
+    CouncilVotesRepository,
+    RasporyazhenieEscalationCron,
+    // 07-03 to'lqin: ZNO/ZVS SLA eskalatsiya cron (vizyon 3.7)
+    ZnoZvsSlaEscalationCron,
   ],
-  exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService],
+  exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService, DirectorHolatService],
 })
 export class DirectorModule {}

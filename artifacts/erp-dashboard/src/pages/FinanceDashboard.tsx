@@ -12,7 +12,6 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -187,13 +186,13 @@ export default function FinanceDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">{t('periodOpen')}</Badge>;
+        return <EPStatusPill tone="brand">{t('periodOpen')}</EPStatusPill>;
       case "processing":
-        return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{tCommon('inProgress')}</Badge>;
+        return <EPStatusPill tone="warning">{tCommon('inProgress')}</EPStatusPill>;
       case "closed":
         return <EPStatusPill tone="success">{t('periodClosed')}</EPStatusPill>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <EPStatusPill tone="neutral">{status}</EPStatusPill>;
     }
   };
 
@@ -207,15 +206,11 @@ export default function FinanceDashboard() {
 
   return (
     <div className="space-y-6" data-testid="finance-dashboard">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <EPPageHeader
+      <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Moliya {t('dashboard1')}</b></>}
         title={`Moliya ${t('dashboard1')}`}
-      />
-          <p className="text-muted-foreground mt-1">{t('financialReport')}</p>
-        </div>
-        <div className="flex items-center gap-2">
+        subtitle={t('financialReport')}
+        actions={
           <Dialog open={taxCalcOpen} onOpenChange={setTaxCalcOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" data-testid="button-tax-calc">
@@ -268,8 +263,8 @@ export default function FinanceDashboard() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
+        }
+      />
 
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>

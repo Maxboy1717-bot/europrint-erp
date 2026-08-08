@@ -55,7 +55,7 @@ export function KaizenCard({suggestion, onStatusChange }: KaizenCardProps) {
 
 export function KaizenStats({ stats }: { stats: { stats: Record<string, number>; total: number } }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       {(Array.isArray(KANBAN_COLUMNS) ? KANBAN_COLUMNS : []).map((s) => {
         const cfg = STATUS_CONFIG[s];
         const Icon = cfg.icon;

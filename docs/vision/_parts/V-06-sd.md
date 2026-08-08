@@ -1,0 +1,26 @@
+## [V/VERIFY] SD/Sotuv (06) — cross-ref hal qilindi
+
+| # | Savol (qisqa) | Oldingi | Hal qilingan status | Dalil (fayl:satr / jadval / grep) |
+|---|---|---|---|---|
+| 4 | FIFO unit_cost_snapshot + inventory_variance GL | cross-ref kerak | **Yo'q** | SD modulida `unit_cost_snapshot`/`inventory_variance` yo'q. grep `unit_cost_snapshot\|cost_snapshot` → faqat docs + pos-schema (POS konteksti), SD confirm-freeze yo'q |
+| 6 | Davalche material owner_type='client' (warehouse_stock) | cross-ref kerak | **Yo'q** | grep `owner_type` lib/db/src/schema → faqat `crm-deal-products.ts:79` (D=Deal). warehouse_stock.owner_type='client' yo'q |
+| 10 | HR EmployeeDeactivated→mijoz reassign menejer | cross-ref kerak | **Yo'q** | `drizzle-sd-order-departments.repo.ts:43,88` reassign = mold/cliché dept ish qayta-biriktirish, mijoz emas. EmployeeDeactivated→customer listener yo'q |
+| 15 | Mavsum-oldi 8 hafta cron + AI tavsiya | cross-ref kerak | **Yo'q** | grep `season\|mavsum\|pre.?order\|seasonal` apps/api/src/modules/sd → No files found |
+| 17 | Har rang: bo'yoq=rang×qoplama%×yuza | cross-ref kerak | **Yo'q** | grep `rang\|coverage\|coating\|qoplama\|colorCost` modules/sd → No files found. Rang sarf-normasi bog'lash yo'q |
+| 18 | Shared klishe/forma avto-aniqlash + audit | cross-ref kerak | **Yo'q** | grep `cliche\|klishe\|shared_form\|auto.?detect` apps/api/src → No files found |
+| 19 | CRP va'da → delay_risk_days, urgent flag, AI xavf | cross-ref kerak | **Qisman** | urgent flag REAL: `pp-production.ts:409` `isUrgent boolean is_urgent` + index:447; lekin `delay_risk`/`delayRisk` grep apps/api/src → No matches; AI xavf yo'q |
+| 25 | Bildirishnoma fallback notification_channel | cross-ref kerak | **Yo'q** | grep `notification_channel\|fallbackChannel` → faqat docs (FULL-VISION, vision-1000), kod yo'q |
+| 27 | Nofaol mijoz cron + crm_inactivity_rules | cross-ref kerak | **Yo'q** | grep `crm_inactivity_rules\|inactivity` → jadval/cron yo'q; faqat `crm-lead-scoring.constants.ts` (churn threshold const), SD-cron yo'q |
+| 28 | AI Офсет vs Флексо tavsiya | cross-ref kerak | **Yo'q** | grep `flexo\|flekso\|ofset\|Офсет\|Флексо` apps/api/src → pp-sex-taxonomy + wms-roll + positions (bosma-turi taksonomiyasi), SD AI tavsiya yo'q |
+| 30 | 1C INN/telefon match, sd-customers-import.service | cross-ref kerak | **Yo'q** | glob `apps/api/src/**/*import*.ts` → No files found; grep `customers-import\|matchByInn` → faqat docs. Import service yo'q |
+| 32 | Папка № folder_number unique; papka_orders VIEW | cross-ref kerak | **Qisman** | `pp-papka.ts:16-18` `papkaOrders pgTable`, `papka_no ...unique()`; N-buyurtma FK links (papkaOrderId:171,188,228,273). GAP: bu jadval, VIEW emas; rowcount data-check kerak (papka_orders) |
+| 35 | Davalche QC karantin, QC_HOLD status | cross-ref kerak | **Qisman** | `wms/domain/services/quarantine-gate.service.ts:44 QuarantineGateService` mavjud (umumiy karantin). GAP: client-material (owner='client'/davalche) scoped QC_HOLD oqimi yo'q — davalche/owner_type='client' grep bo'sh |
+| 36 | Mijoz AI-ga qarshi marka, client_override_log JSONB | cross-ref kerak | **Yo'q** | grep `client_override_log\|override_log` → faqat docs (FULL-VISION, vision-1000). Kod/maydon yo'q |
+| 39 | INN/telefon dublikat QATTIQ BLOK + qo'lda merge | cross-ref kerak | **Yo'q** | `sd-customers.schemas.ts:25` `inn` faqat optional maydon; grep dublikat/hardBlock/merge modules/sd → blok/merge logikasi yo'q |
+| 40 | Кашировка predecessor_order_id + MES hard constraint | cross-ref kerak | **Yo'q** | grep `predecessor_order_id\|predecessorOrderId` apps/api/src → No matches. Faqat operatsiya-darajali `predecessorOperationId` (pp-production.ts:359), order-darajali sinxron link yo'q |
+| 42 | NDS BE service (price_with_vat), tax_rates jadval | cross-ref kerak | **Ha** | BE VAT hisob REAL: `sd-quotations.service.ts:113-115` `vatRate=cfg.vat_rate; totalPrice=priceBeforeVat*(1+vatRate/100)` + `sd-europrint-schema.ts:208` `vatRate numeric vat_rate default 12`. (tax_rates = config vat_rate ustuni, alohida jadval emas) |
+| 43 | Margin @Roles guard; SdOrderProjection::forRole | cross-ref kerak | **Yo'q** | grep `SdOrderProjection\|forRole\|marginVisible\|hideMargin` apps/api/src → No files found. Query-darajali margin filtri yo'q |
+| 45 | Etiketka рulon; unit_conversion_rules jadval | cross-ref kerak | **Yo'q** | grep `unit_conversion_rules\|conversion_rules` → faqat FE i18n key + `RushOrderPage.tsx`; DB jadval yo'q |
+| 47 | PP AI navbat: queue_position, estimated_start | cross-ref kerak | **Qisman** | PP AI planning mavjud (`pp/application/services/pp-ai-planning.service.ts`); lekin `queue_position`/`estimated_start` grep apps/api/src → No matches. SD kartada maydon yo'q |
+| 48 | Muzlatilgan zona ~3 kun; urgent_order_surcharge | cross-ref kerak | **Yo'q** | grep `urgent_order_surcharge\|surcharge\|frozen_zone\|frozenZone` → faqat docs (MASSIV-50, MUSLIMBEK-PROMT, vision). Kod yo'q |
+| 49 | AI haftalik pattern → Director+QC signal, QC CAPA avto | cross-ref kerak | **Qisman** | QC CAPA infra mavjud: `qc/infrastructure/repositories/qc-extended-root-causes.repository.ts` + `qc/domain/services/spc.service.ts`. GAP: SD-specific haftalik-pattern→Director+QC signal trigger topilmadi |

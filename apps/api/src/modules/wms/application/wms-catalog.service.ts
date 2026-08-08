@@ -27,7 +27,7 @@ export class WmsCatalogService {
   getAging        = (days: number) => this.abc.getAging(days);
   getExpiry       = (days: number) => this.abc.getExpiry(days);
   getStockBalance = (wh?: string, cat?: string, low = false) => this.stock.getStockBalance(wh, cat, low);
-  getTurnover     = () => this.stock.getTurnover();
+  getTurnover     = (dateFrom?: string, dateTo?: string) => this.stock.getTurnover(dateFrom, dateTo);
   getTopMaterials = (limit: number) => this.stock.getTopMaterials(limit);
 
   // ── STATS / DASHBOARD ───────────────────────────────────────────────────

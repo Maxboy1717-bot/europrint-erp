@@ -221,4 +221,12 @@ export class FiController {
   async deleteProfitCenter(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.deleteProfitCenter(id));
   }
+
+  /** GET /api/fi/tax-summary — current-month tax aggregate from fi_invoices */
+  @ApiOperation({ summary: 'Get current-month tax summary from fi_invoices' })
+  @ApiResponse({ status: 200, description: 'totalThisMonth, paid, pending, overdue' })
+  @Get('tax-summary')
+  async getTaxSummary() {
+    return unwrapOrInternal(await this.svc.getTaxSummary());
+  }
 }

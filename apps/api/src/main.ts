@@ -15,6 +15,7 @@ import 'dotenv/config';
 import 'module-alias/register';
 import 'reflect-metadata';
 import { initSentry } from './common/monitoring/sentry.config';
+import { configureDownloadBlock } from './common/document-control/download-block.hook';
 import { NestFactory } from '@nestjs/core';
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
 import { Logger } from '@nestjs/common';
@@ -50,7 +51,11 @@ initSentry();
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: process.env.NODE_ENV === 'development', trustProxy: true, ignoreTrailingSlash: true }),
+    // bodyLimit: Fastify default = 1 MB → chat fayl-yuklash (storage MAX_UPLOAD_BYTES
+    // = 25 MB) 1 MB'dan katta faylda 413 "Request body is too large" berardi. 30 MB
+    // ga ko'taramiz (25 MB fayl + kodlash overhead) — storage controller o'zi 25 MB
+    // cheklovini yakuniy tekshiradi (toza "File too large" 400).
+    new FastifyAdapter({ logger: process.env.NODE_ENV === 'development', trustProxy: true, ignoreTrailingSlash: true, bodyLimit: 30 * 1024 * 1024 }),
     { logger: ['error', 'warn', 'log', 'debug'] },
   );
   app.useWebSocketAdapter(new IoAdapter(app));
@@ -87,8 +92,12 @@ async function bootstrap(): Promise<void> {
   configureLoginRateLimit(app);
   configureAppMiddleware(app);
   const fastify = app.getHttpAdapter().getInstance() as RawFastify;
+  // Document Control (#1/#10): block Content-Disposition:attachment by default; client-facing
+  // export routes (#8) + the reason-gated storage download stay allowed. onSend hook = runs on
+  // every response incl. @Res() handlers, un-bypassable at the Fastify layer.
+  configureDownloadBlock(fastify as unknown as import('fastify').FastifyInstance);
   configureSwagger(app, fastify, port, logger);
-  configureHealthRoutes(fastify);
+  configureHealthRoutes(fastify, app);
 
   // TZ-D06: SD schema additions (version column, idempotency table)
   try {

@@ -25,6 +25,7 @@ import {
   IntegrationsTab,
 } from "./CRMSettingsPlaceholders";
 import { FieldDialog } from "./CRMSettingsDialogs";
+import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 export default function CRMSettings() {
@@ -41,7 +42,7 @@ export default function CRMSettings() {
   const [newOption, setNewOption] = useState("");
 
   // -- Queries
-  const { data: fields = [], isLoading } = useQuery<CustomField[]>({
+  const { data: fields = [], isLoading, isError, error, refetch } = useQuery<CustomField[]>({
     queryKey: ["/api/crm/custom-fields", entityType],
     queryFn: async () => {
       return await apiRequest('GET', `/api/crm/custom-fields/${entityType}`);
@@ -186,6 +187,9 @@ export default function CRMSettings() {
   const renderContent = () => {
     switch (activeMenu) {
       case "custom-fields":
+        if (isError) {
+          return <EPErrorState onRetry={() => refetch()} error={error} />;
+        }
         return (
           <CustomFieldsTab
             entityType={entityType}

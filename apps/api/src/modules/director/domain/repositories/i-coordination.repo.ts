@@ -26,7 +26,7 @@ export interface ICoordinationRepo {
   listDokla(): Promise<Result<Row[]>>;
   getDoklaById(id: number): Promise<Result<unknown[]>>;
   updateDokla(id: number, status: string | null): Promise<Result<Row>>;
-  deleteDokla(id: number): Promise<void>;
+  deleteDokla(id: number, deletedBy?: number): Promise<void>;
   createRasporyazhenie(
     userId: number,
     toUser: string | null,
@@ -36,12 +36,29 @@ export interface ICoordinationRepo {
   ): Promise<Result<Row>>;
   listRasporyazhenie(): Promise<Result<Row[]>>;
   getRaspById(id: number): Promise<Result<unknown[]>>;
+  /**
+   * Batch 5 Item 11 — dokla (hisobot) 'resolved' bo'lganda undan avtomatik rasporyazhenie
+   * (ko'rsatma) yaratish. Idempotent: shu dokla uchun rasp allaqachon bo'lsa null qaytaradi.
+   * task = dokla.proposal (bo'lmasa subject); to_user = dokla muallifi; auto_generated=true.
+   */
+  createRaspFromDokla(doklaId: number, issuedBy: number): Promise<Result<Row | null>>;
   markRaspDone(id: number, userId: number, note: string | null): Promise<Result<Row>>;
   updateRasp(id: number, status: string | null): Promise<Result<Row>>;
-  deleteRasp(id: number): Promise<void>;
+  deleteRasp(id: number, deletedBy?: number): Promise<void>;
   getStatsDokla(): Promise<Result<DoklaStats>>;
   listBaskets(): Promise<Result<Row[]>>;
   getStatsRasp(): Promise<Result<RaspStats>>;
+  getCouncilById(id: number): Promise<Result<unknown[]>>;
+  updateCouncil(
+    id: number,
+    chairpersonId: number | null,
+    description: string | null,
+    meetingSchedule: string | null,
+    quorumNumerator: number | null,
+    quorumDenominator: number | null,
+  ): Promise<Result<Row>>;
+  listCouncils(): Promise<Result<unknown[]>>;
+  listUsersForSelect(): Promise<Result<unknown[]>>;
 }
 
 export const COORDINATION_REPO = Symbol('COORDINATION_REPO');

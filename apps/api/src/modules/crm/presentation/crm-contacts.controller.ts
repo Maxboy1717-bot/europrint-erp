@@ -12,6 +12,7 @@ import {
   Param, Patch, Post, Query, UseGuards,
   UseInterceptors, InternalServerErrorException, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -23,7 +24,8 @@ import {
   CreateContactDtoSchema, CreateContactDto,
 } from './dto/crm-contacts.dto';
 
-const CRM_WRITE_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manager'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_WRITE_ROLES = ['sales_manager', 'manager', 'super_admin', 'director', 'crm_manager'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -34,7 +36,7 @@ const CRM_WRITE_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manage
 export class CrmContactsController {
   private readonly logger = new Logger(CrmContactsController.name);
 
-  constructor(private readonly svc: CrmContactsService) {}
+  constructor(private readonly svc: CrmContactsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List contacts' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -51,7 +53,7 @@ export class CrmContactsController {
     const _rGetContact = await this.svc.getContact(safeInt(id, 0));
     assertOk(_rGetContact);
     const r = _rGetContact.data as Record<string, unknown>;
-    assertFound(r, 'Contact not found');
+    assertFound(r, await this.i18n.t('errors.contactNotFound'));
     return r;
   }
 
@@ -72,7 +74,7 @@ export class CrmContactsController {
   @Roles(...CRM_WRITE_ROLES)
   @UsePipes(new ZodValidationPipe(CreateContactDtoSchema))
   async createContact(@Body() body: CreateContactDto) {
-    assertRequired(body.first_name, 'first_name required');
+    assertRequired(body.first_name, await this.i18n.t('validation.firstNameRequired'));
     return unwrapOrThrow(await this.svc.createContact(body));
   }
 
@@ -88,7 +90,7 @@ export class CrmContactsController {
     const _rUpdateContact = await this.svc.updateContact(safeInt(id, 0), body);
     assertOk(_rUpdateContact);
     const r = _rUpdateContact.data as Record<string, unknown>;
-    assertFound(r, 'Contact not found');
+    assertFound(r, await this.i18n.t('errors.contactNotFound'));
     return r;
   }
 

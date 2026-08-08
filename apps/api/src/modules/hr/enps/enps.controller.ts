@@ -25,6 +25,7 @@ const CreateEnpsSchema = z.object({
 class CreateEnpsDto extends createZodDto(CreateEnpsSchema) {}
 
 const RespondSchema = z.object({
+  survey_id:   z.number().int().positive(),
   employee_id: z.number().int().positive(),
   score:       z.number().int().min(0).max(10),
   comment:     z.string().optional(),
@@ -86,7 +87,7 @@ export class EnpsController {
   @HttpCode(HttpStatus.CREATED)
   async respond(@Body() body: RespondDto) {
     return unwrapOrInternal(await this.repo.respond({
-      surveyId: 0,  // passed via body if needed — placeholder for now
+      surveyId: body.survey_id,
       employeeId: body.employee_id,
       score: body.score,
       comment: body.comment,

@@ -4,7 +4,8 @@
  *   Yangi toza per-tur ombor sahifalari shu config'dan generatsiya qilinadi (eski rasvo WMS'ni almashtirish).
  */
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { rawSql } from '@shared/db';
+import { I18nService } from 'nestjs-i18n';
+import { rawSql, db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../../../hr/common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
@@ -17,9 +18,16 @@ export interface IssueStockInput {
   notes?: string;
 }
 
+/** `db.transaction(async (tx) => ...)` callback param type — same convention as
+ *  pos-warehouse-integration-movement.service.ts's `Tx` alias. */
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 @Injectable()
 export class WarehouseConfigService {
   private readonly logger = new Logger(WarehouseConfigService.name);
+
+  constructor(private readonly i18n: I18nService) {}
+
   /** Faol ombor turlari (sort_order bo'yicha) + har turdagi omborlar soni. */
   async listTypes(): Promise<Result<Record<string, unknown>[], AppError>> {
     return safeCall(async () => {
@@ -28,7 +36,7 @@ export class WarehouseConfigService {
                wt.inbound_flow AS "inboundFlow", wt.outbound_flow AS "outboundFlow",
                wt.needs_quarantine AS "needsQuarantine", wt.needs_qc AS "needsQc",
                wt.unit_basis AS "unitBasis", wt.label_template AS "labelTemplate", wt.sort_order AS "sortOrder",
-               (SELECT COUNT(*)::int FROM warehouses w WHERE w.type = wt.code AND w.is_active) AS "warehouseCount"
+               (SELECT COUNT(*)::int FROM warehouses w WHERE w.type = wt.code AND w.is_active AND w.deleted_at IS NULL) AS "warehouseCount"
         FROM warehouse_types wt
         WHERE wt.is_active = true
         ORDER BY wt.sort_order
@@ -44,7 +52,7 @@ export class WarehouseConfigService {
       const rows = await rawSql(sql`
         SELECT id, code, name, name_ru AS "nameRu", type, location, is_active AS "isActive"
         FROM warehouses
-        WHERE is_active = true AND (${t}::text IS NULL OR type = ${t})
+        WHERE is_active = true AND deleted_at IS NULL AND (${t}::text IS NULL OR type = ${t})
         ORDER BY name
       `);
       return dbRows(rows);
@@ -60,7 +68,7 @@ export class WarehouseConfigService {
       const wh = dbRows(await rawSql(sql`
         SELECT id, code, name, name_ru AS "nameRu", type, location FROM warehouses WHERE id = ${warehouseId}
       `))[0];
-      if (!wh) throw new NotFoundException(`Ombor topilmadi: ${warehouseId}`);
+      if (!wh) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id: warehouseId } }));
       const typeConfig = dbRows(await rawSql(sql`
         SELECT code, name_uz AS "nameUz", category, needs_quarantine AS "needsQuarantine", needs_qc AS "needsQc",
                unit_basis AS "unitBasis", label_template AS "labelTemplate",
@@ -87,6 +95,35 @@ export class WarehouseConfigService {
   }
 
   /**
+   * DECISION 2 — Tayyor-mahsulot ombori qoldig'i: warehouse_stock_fg (products.id-kalitli) + products
+   * (kod/nom/birlik) + warehouses (ombor nomi). Xom-ashyo warehouse_stock'dan ALOHIDA (Variant-2 split) —
+   * bu faqat tayyor mahsulot qoldig'ini ko'rsatadi, xom-ashyo qatorlari bu yerda chiqmaydi.
+   */
+  async getFinishedGoodsStock(): Promise<Result<Record<string, unknown>, AppError>> {
+    return safeCall(async () => {
+      const stock = dbRows(await rawSql(sql`
+        SELECT fg.id, fg.product_id AS "productId", p.code AS "code",
+               COALESCE(p.name, '—') AS "name",
+               COALESCE(p.unit, 'dona') AS "unit",
+               fg.warehouse_id AS "warehouseId", w.name AS "warehouseName",
+               COALESCE(fg.quantity, 0) AS quantity,
+               COALESCE(fg.reserved_quantity, 0) AS reserved,
+               COALESCE(fg.available_quantity, 0) AS available,
+               fg.last_updated_at AS "lastUpdatedAt"
+        FROM warehouse_stock_fg fg
+        LEFT JOIN products p ON p.id = fg.product_id
+        LEFT JOIN warehouses w ON w.id = fg.warehouse_id
+        ORDER BY p.name NULLS LAST, w.name NULLS LAST, fg.id
+        LIMIT 500
+      `));
+      const rows = Array.isArray(stock) ? stock : [];
+      const totalQuantity = rows.reduce((s, r) => s + Number(r['quantity'] ?? 0), 0);
+      const totalAvailable = rows.reduce((s, r) => s + Number(r['available'] ?? 0), 0);
+      return { stock: rows, lineCount: rows.length, totalQuantity, totalAvailable };
+    });
+  }
+
+  /**
    * Ombordan material CHIQIM (iste'mol/sarf) — warehouse_stock atomik kamaytiriladi (faqat mavjud
    * qoldiq yetsa), material_cards.current_stock yangilanadi va material_movements ('ISSUE') jurnaliga
    * yoziladi. Qoldiq yetmasa BadRequest. performedBy = amalni bajargan foydalanuvchi.
@@ -98,13 +135,13 @@ export class WarehouseConfigService {
   ): Promise<Result<Record<string, unknown>, AppError>> {
     return safeCall(async () => {
       const qty = Number(input.quantity);
-      if (!input.materialId) throw new BadRequestException('materialId majburiy');
-      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException("quantity musbat bo'lishi kerak");
+      if (!input.materialId) throw new BadRequestException(await this.i18n.t('validation.materialIdRequired'));
+      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException(await this.i18n.t('validation.quantityMustBePositive'));
 
       const mat = dbRows(await rawSql(sql`
         SELECT id, kod, xom_ashyo, unit_of_measure FROM material_cards WHERE id = ${input.materialId}
       `))[0];
-      if (!mat) throw new NotFoundException(`Material topilmadi: ${input.materialId}`);
+      if (!mat) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: input.materialId } }));
       const unit = input.unit ?? String(mat['unit_of_measure'] ?? 'dona');
       const materialName = String(mat['xom_ashyo'] ?? mat['kod'] ?? `#${input.materialId}`);
 
@@ -115,7 +152,7 @@ export class WarehouseConfigService {
         WHERE warehouse_id = ${warehouseId} AND material_id = ${input.materialId} AND available_quantity >= ${qty}
         RETURNING quantity, available_quantity
       `))[0];
-      if (!updated) throw new BadRequestException("Yetarli mavjud qoldiq yo'q yoki material bu omborda mavjud emas");
+      if (!updated) throw new BadRequestException(await this.i18n.t('errors.insufficientStockOrMaterialNotInWarehouse'));
 
       await rawSql(sql`
         UPDATE material_cards SET current_stock = GREATEST(0, COALESCE(current_stock, 0) - ${qty}) WHERE id = ${input.materialId}
@@ -140,8 +177,9 @@ export class WarehouseConfigService {
   }
 
   /**
-   * Ombor KIRIM (qo'lda / tuzatish) — warehouse_stock qoldig'i oshiriladi (UPDATE→INSERT upsert),
-   * material_cards.current_stock yangilanadi va material_movements ('RECEIVE') jurnaliga yoziladi.
+   * Ombor KIRIM (qo'lda / tuzatish) — warehouse_stock qoldig'i atomik ON CONFLICT upsert bilan
+   * oshiriladi, material_cards.current_stock yangilanadi va material_movements ('RECEIVE')
+   * jurnaliga yoziladi — uchalasi bitta db.transaction ichida (hammasi yoki hech biri).
    * Inventarizatsiya tuzatishi yoki P2P'siz qo'lda kirim uchun (korreksiya). performedBy = bajaruvchi.
    */
   async receiveStock(
@@ -151,52 +189,54 @@ export class WarehouseConfigService {
   ): Promise<Result<Record<string, unknown>, AppError>> {
     return safeCall(async () => {
       const qty = Number(input.quantity);
-      if (!input.materialId) throw new BadRequestException('materialId majburiy');
-      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException("quantity musbat bo'lishi kerak");
+      if (!input.materialId) throw new BadRequestException(await this.i18n.t('validation.materialIdRequired'));
+      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException(await this.i18n.t('validation.quantityMustBePositive'));
 
       const wh = dbRows(await rawSql(sql`SELECT id, code FROM warehouses WHERE id = ${warehouseId}`))[0];
-      if (!wh) throw new NotFoundException(`Ombor topilmadi: ${warehouseId}`);
+      if (!wh) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id: warehouseId } }));
       const mat = dbRows(await rawSql(sql`
         SELECT id, kod, xom_ashyo, unit_of_measure FROM material_cards WHERE id = ${input.materialId}
       `))[0];
-      if (!mat) throw new NotFoundException(`Material topilmadi: ${input.materialId}`);
+      if (!mat) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: input.materialId } }));
       const unit = input.unit ?? String(mat['unit_of_measure'] ?? 'dona');
       const materialName = String(mat['xom_ashyo'] ?? mat['kod'] ?? `#${input.materialId}`);
 
-      // warehouse_stock upsert (oshirish)
-      const updated = dbRows(await rawSql(sql`
-        UPDATE warehouse_stock
-        SET quantity = quantity + ${qty}, available_quantity = available_quantity + ${qty}, last_updated_at = NOW()
-        WHERE warehouse_id = ${warehouseId} AND material_id = ${input.materialId}
-        RETURNING quantity, available_quantity
-      `))[0];
-      let newQuantity: number;
-      let newAvailable: number;
-      if (updated) {
-        newQuantity = Number(updated['quantity']);
-        newAvailable = Number(updated['available_quantity']);
-      } else {
-        const ins = dbRows(await rawSql(sql`
+      // C-5.4 (CRITICAL-CORRECTNESS-AUDIT): warehouse_stock upsert + material_cards.current_stock
+      // + material_movements — bitta db.transaction ichida, hammasi birga commit yoki hammasi
+      // rollback (avval 3 mustaqil rawSql chaqiruv edi — yarim yozilish xavfi bor edi). Upsert
+      // endi UPDATE→fallback-INSERT emas, balki atomik INSERT ... ON CONFLICT DO UPDATE — xuddi
+      // pos-warehouse-integration-movement.service.ts#increaseToWarehouseStock bilan bir xil
+      // naqsh/ustun ro'yxati (warehouse_id, material_id ustidagi UNIQUE'ga ON CONFLICT).
+      const { newQuantity, newAvailable, movementId } = await db.transaction(async (tx: Tx) => {
+        const upserted = dbRows(await tx.execute(sql`
           INSERT INTO warehouse_stock (warehouse_id, material_id, quantity, reserved_quantity, available_quantity)
           VALUES (${warehouseId}, ${input.materialId}, ${qty}, 0, ${qty})
+          ON CONFLICT (warehouse_id, material_id) DO UPDATE
+          SET quantity = warehouse_stock.quantity + EXCLUDED.quantity,
+              available_quantity = warehouse_stock.available_quantity + EXCLUDED.quantity,
+              last_updated_at = NOW()
           RETURNING quantity, available_quantity
         `))[0];
-        newQuantity = Number(ins?.['quantity'] ?? qty);
-        newAvailable = Number(ins?.['available_quantity'] ?? qty);
-      }
 
-      await rawSql(sql`
-        UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${qty} WHERE id = ${input.materialId}
-      `);
+        await tx.execute(sql`
+          UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${qty} WHERE id = ${input.materialId}
+        `);
 
-      const mv = dbRows(await rawSql(sql`
-        INSERT INTO material_movements (material_id, material_name, movement_type, quantity, unit, performed_by, reason)
-        VALUES (${input.materialId}, ${materialName}, 'RECEIVE', ${qty}, ${unit}, ${performedBy}, ${input.reason ?? "Qo'lda kirim"})
-        RETURNING id
-      `))[0];
+        const mv = dbRows(await tx.execute(sql`
+          INSERT INTO material_movements (material_id, material_name, movement_type, quantity, unit, performed_by, reason)
+          VALUES (${input.materialId}, ${materialName}, 'RECEIVE', ${qty}, ${unit}, ${performedBy}, ${input.reason ?? "Qo'lda kirim"})
+          RETURNING id
+        `))[0];
 
-      this.logger.log(`[WMS] Ombor #${warehouseId} kirim: material ${input.materialId} +${qty} ${unit} (movement #${mv?.['id'] ?? '?'})`);
-      return { warehouseId, materialId: input.materialId, received: qty, newQuantity, newAvailable, movementId: mv?.['id'] ?? null };
+        return {
+          newQuantity: Number(upserted?.['quantity'] ?? qty),
+          newAvailable: Number(upserted?.['available_quantity'] ?? qty),
+          movementId: mv?.['id'] ?? null,
+        };
+      });
+
+      this.logger.log(`[WMS] Ombor #${warehouseId} kirim: material ${input.materialId} +${qty} ${unit} (movement #${movementId ?? '?'})`);
+      return { warehouseId, materialId: input.materialId, received: qty, newQuantity, newAvailable, movementId };
     });
   }
 
@@ -234,7 +274,7 @@ export class WarehouseConfigService {
         FROM warehouses w
         LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
         LEFT JOIN material_cards mc ON mc.id = ws.material_id
-        WHERE w.is_active = true
+        WHERE w.is_active = true AND w.deleted_at IS NULL
         GROUP BY w.id, w.code, w.name, w.type
         ORDER BY "totalValue" DESC
       `));
@@ -257,7 +297,7 @@ export class WarehouseConfigService {
         FROM warehouse_stock ws
         JOIN material_cards mc ON mc.id = ws.material_id
         JOIN warehouses w ON w.id = ws.warehouse_id
-        WHERE w.is_active = true
+        WHERE w.is_active = true AND w.deleted_at IS NULL
           AND COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0) > 0
           AND ws.available_quantity < COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0)
         ORDER BY (COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0) - ws.available_quantity) DESC

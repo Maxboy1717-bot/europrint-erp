@@ -78,3 +78,33 @@ export const CreateInventoryAdjustmentSchema = z.object({
   inventoryCountId: z.number().int().optional(),
 });
 export class CreateInventoryAdjustmentDto extends createZodDto(CreateInventoryAdjustmentSchema) {}
+
+// ─── Movement Context (yangi harakat turlari uchun qo'shimcha) ────────────────
+//
+// ADDITIVE (2026-06-27): WASTE_IN / LAB_SAMPLE_OUT / PARTIAL_RECEIPT /
+// CUSTOMER_MATERIAL harakatlari uchun ixtiyoriy kontekst. `pos_movement_context`
+// jadvaliga 1:1 saqlanadi. Barcha maydonlar optional — fabrikatsiya YO'Q (Q-40):
+// foydalanuvchi kiritmasa, NULL saqlanadi (graceful).
+export const MovementContextSchema = z.object({
+  // LAB_SAMPLE_OUT
+  labSampleReason: z.string().max(MAX_SHORT_TEXT).optional(),
+  labTestRef:      z.string().max(100).optional(),
+  // PARTIAL_RECEIPT (kam/buzuq qabul)
+  orderedQty:      z.number().min(0).optional(),
+  acceptedQty:     z.number().min(0).optional(),
+  rejectedQty:     z.number().min(0).optional(),
+  partialReason:   z.string().max(MAX_SHORT_TEXT).optional(),
+  // CUSTOMER_MATERIAL (davalcheskoe)
+  customerId:      z.string().max(50).optional(),
+  customerName:    z.string().max(255).optional(),
+  isCustomerOwned: z.boolean().optional(),
+  // WASTE_IN (makulatura/chiqindi)
+  wasteSource:     z.string().max(100).optional(),
+  // P4-TECHCARD-VARIANCE (2026-06-27): chiqim qaysi texkartaga xizmat qiladi.
+  // Berilsa → CHIQIMDAN OLDIN texkarta-material gate (EP-WMS-084/085) ishlaydi.
+  // Berilmasa → gate no-op (mavjud chiqim oqimi o'zgarmaydi, regress YO'Q).
+  technologyCardId: z.number().int().positive().optional(),
+  // Chiqarilayotgan material gofra qavati (EP-WMS-085) — ixtiyoriy.
+  issuedLayer:      z.number().int().positive().optional(),
+});
+export class MovementContextDto extends createZodDto(MovementContextSchema) {}

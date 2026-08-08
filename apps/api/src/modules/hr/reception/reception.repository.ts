@@ -37,6 +37,11 @@ export class ReceptionRepository {
     return safeCall(async () => {
       const rows = await db.update(visitor_log).set({
         check_out_at: _time.now(),
+        // Consistency fix: `autoCheckoutOverdue()` below already sets status='left' when the
+        // 23:00 cron force-closes a visit; a manual checkout left `status` untouched (still
+        // 'active' from check-in), so the same visitor ended up in a different `status` value
+        // depending only on which path closed the visit. Both paths now agree.
+        status:       'left',
         notes:        notes ?? null,
       }).where(sql`${visitor_log.id} = ${visitorId} AND ${visitor_log.check_out_at} IS NULL`).returning();
       return castTo<Row | null>((rows[0] ?? null));
@@ -83,12 +88,20 @@ export class ReceptionRepository {
 
   async getStats(): Promise<Result<Row>> {
     return safeCall(async () => {
+      // Bug fixed: without `.as(<key>)`, Drizzle emits each COUNT(*) expression with NO SQL
+      // alias at all. Postgres then names every one of them "count" (its own default name
+      // for an unaliased aggregate) — four same-named output columns collapse into a single
+      // `count` key on the result row, so `raw['currently_inside']` / `raw['today_visitors']`
+      // / `raw['this_week']` were always undefined -> 0 on the FE, regardless of real data
+      // (verified live: `db.select({...}).from(visitor_log).toSQL()` produced
+      // `select COUNT(*) FILTER (...), COUNT(*) FILTER (...), ... from "visitor_log"` with
+      // zero `AS` clauses). Adding `.as()` makes Drizzle emit `... AS "currently_inside"` etc.
       const r = await db.select({
         // P1.25.1: compute all 4 counters FE expects
-        currently_inside: sql<number>`COUNT(*) FILTER (WHERE ${visitor_log.check_out_at} IS NULL)`,
-        today_visitors:   sql<number>`COUNT(*) FILTER (WHERE DATE(${visitor_log.check_in_at}) = CURRENT_DATE)`,
-        this_week:        sql<number>`COUNT(*) FILTER (WHERE ${visitor_log.check_in_at} >= DATE_TRUNC('week', CURRENT_DATE))`,
-        total_all_time:   sql<number>`COUNT(*)`,
+        currently_inside: sql<number>`COUNT(*) FILTER (WHERE ${visitor_log.check_out_at} IS NULL)`.as('currently_inside'),
+        today_visitors:   sql<number>`COUNT(*) FILTER (WHERE DATE(${visitor_log.check_in_at}) = CURRENT_DATE)`.as('today_visitors'),
+        this_week:        sql<number>`COUNT(*) FILTER (WHERE ${visitor_log.check_in_at} >= DATE_TRUNC('week', CURRENT_DATE))`.as('this_week'),
+        total_all_time:   sql<number>`COUNT(*)`.as('total_all_time'),
       }).from(visitor_log);
       return (r[0] ?? {}) as Row;
       }, 'DB_ERROR');

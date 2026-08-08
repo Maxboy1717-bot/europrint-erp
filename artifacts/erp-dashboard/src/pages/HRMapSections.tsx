@@ -122,7 +122,7 @@ export function RoutesLayer({
     return (
       <>
         {transportData.groups?.flatMap((group, gi) => {
-          const color = group.color || GROUP_COLORS[gi % GROUP_COLORS.length];
+          const color = GROUP_COLORS[gi % GROUP_COLORS.length];
           return group.employees?.flatMap(emp => [
             <Polyline
               key={`line-${emp.id}`}
@@ -137,11 +137,8 @@ export function RoutesLayer({
                 <div className="space-y-1 min-w-[180px]">
                   <div className="font-semibold">{emp.fullName}</div>
                   <div className="text-sm" style={{ color }}>{group.name}</div>
-                  <div className="text-xs text-gray-600">{emp.address}</div>
-                  <div className="text-xs text-gray-500">
-                    {emp.distanceKm} km • ~{emp.travelMinutes} daqiqa
-                  </div>
-                  <div className="text-xs font-medium">Chiqish: {group.departureTime}</div>
+                  {emp.address && <div className="text-xs text-gray-600">{emp.address}</div>}
+                  <div className="text-xs text-gray-500">{emp.distanceKm} km (zavoddan)</div>
                 </div>
               </Popup>
             </Marker>,

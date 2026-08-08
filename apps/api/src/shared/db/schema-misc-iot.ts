@@ -9,6 +9,28 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 
+// APPROVED: egasi vizyon-qurish 2026-07-01, FAZA Q — jadval allaqachon DB'da mavjud
+// (apps/api/src/shared/db/migrations/ai-p36-violation-block-schema.sql:67-78, CREATE
+// TABLE IF NOT EXISTS). Bu yerda faqat Drizzle mapping qo'shilmoqda — YANGI CREATE
+// TABLE migratsiyasi EMAS, faqat mavjud jadvalga typed ORM kirish (ustunlar live
+// information_schema bilan tekshirildi: id/employee_id/shift_id/expected_location/
+// detected_location/match_score/anomaly_detected/camera_source/checked_at/created_at).
+export const ai_camera_cross_check = pgTable('ai_camera_cross_check', {
+  id: serial('id').primaryKey(),
+  employee_id: integer('employee_id').notNull(),
+  shift_id: integer('shift_id'),
+  expected_location: text('expected_location'),
+  detected_location: text('detected_location'),
+  match_score: decimal('match_score', { precision: 5, scale: 2 }),
+  anomaly_detected: boolean('anomaly_detected').notNull().default(false),
+  camera_source: text('camera_source'),
+  checked_at: timestamp('checked_at', { withTimezone: true }).defaultNow().notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('ai_camera_cross_check_employee_id_idx').on(table.employee_id),
+  index('ai_camera_cross_check_anomaly_idx').on(table.anomaly_detected),
+]);
+
 export const sensor_devices = pgTable('sensor_devices', {
   id: uuid('id').primaryKey().$defaultFn(() => createId()),
   device_code: text('device_code').notNull().unique(),
@@ -16,6 +38,8 @@ export const sensor_devices = pgTable('sensor_devices', {
   location: text('location'),
   type: text('type').notNull(),
   status: text('status').notNull().default('active'),
+  // install_status = CAPEX o'qi (needed/planned/installed) — `status` dan ALOHIDA. (Batch 5 Item 2)
+  install_status: varchar('install_status', { length: 20 }).notNull().default('installed'),
   last_reading_at: timestamp('last_reading_at', { withTimezone: true }),
   thresholds: text('thresholds').default('{}'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -70,10 +94,19 @@ export const camera_zones = pgTable('camera_zones', {
   index('camera_zones_camera_id_idx').on(table.camera_id),
 ]);
 
+// APPROVED: 2.11-soxta-vlm-endpoint (MASTER-REJA-VIZYON-2026-07-02.md §5.2) — jadval
+// allaqachon DB'da mavjud; bu yerda faqat qo'shimcha Drizzle mapping qo'shilmoqda
+// (YANGI CREATE TABLE EMAS). `event_date`/`event_time` live DB'da NOT NULL, DEFAULT
+// yo'q (information_schema bilan 2026-07-03 tekshirildi, _audit/q.cjs) — avval
+// Drizzle sxemasida umuman e'lon qilinmagan edi (drift); shu tekshiruv paytida
+// analyze-by-missions persist-yo'li uchun INSERT kerak bo'lgani sababli aniqlandi
+// va qo'shildi, aks holda NOT NULL buzilishi bilan runtime xato beradi.
 export const camera_events = pgTable('camera_events', {
   id: serial('id').primaryKey(),
   camera_id: varchar('camera_id', { length: 50 }),
   event_type: varchar('event_type', { length: 100 }).notNull(),
+  event_date: varchar('event_date', { length: 10 }).notNull(),
+  event_time: varchar('event_time', { length: 8 }).notNull(),
   description: text('description').default(''),
   severity: varchar('severity', { length: 20 }).default('medium'),
   status: varchar('status', { length: 20 }).default('new'),

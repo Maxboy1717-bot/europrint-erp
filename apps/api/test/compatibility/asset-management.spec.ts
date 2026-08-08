@@ -27,6 +27,8 @@ describe('AssetManagementController', () => {
       getDisposals: jest.fn(), createDisposal: jest.fn(),
       getTransfers: jest.fn(), createTransfer: jest.fn(),
       getInsurance: jest.fn(), getInsuranceExpiringSoon: jest.fn(),
+      // depreciate route now delegates to svc.depreciateAsset (not a local stub)
+      depreciateAsset: jest.fn(),
     };
     const mod = await Test.createTestingModule({
       controllers: [AssetManagementController],
@@ -93,7 +95,11 @@ describe('AssetManagementController', () => {
     expect(await ctrl.getInsurance({})).toEqual({ items: [], total: 0 });
   });
 
-  it('depreciate stub returns id+body merge', () => {
-    expect(ctrl.depreciate('a1', { rate: 0.1 })).toEqual({ id: 'a1', depreciated: true, rate: 0.1 });
+  it('depreciate delegates to svc.depreciateAsset and returns service payload', async () => {
+    // Controller now calls svc.depreciateAsset(id) — no longer a local stub.
+    (svc.depreciateAsset as jest.Mock).mockResolvedValue(ok({ id: 'a1', depreciated: true }));
+    const result = await ctrl.depreciate('a1');
+    expect(svc.depreciateAsset).toHaveBeenCalledWith('a1');
+    expect(result).toEqual({ id: 'a1', depreciated: true });
   });
 });

@@ -190,21 +190,6 @@ export const hrCandidateFunnels = pgTable("hr_candidate_funnels", {
   recruiterIdx: index("hr_candidate_funnels_recruiter_idx").on(t.assignedRecruiterId),
 }));
 
-// Funnel bosqich o'tish tarixi
-export const hrFunnelHistory = pgTable("hr_funnel_history", {
-  id: serial("id").primaryKey(),
-  funnelId: integer("funnel_id").notNull().references(() => hrCandidateFunnels.id, { onDelete: "cascade" }),
-  fromStage: recruitmentFunnelStageEnum("from_stage"),
-  toStage: recruitmentFunnelStageEnum("to_stage").notNull(),
-  changedById: integer("changed_by_id").references(() => users.id, { onDelete: "set null" }),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  // Convergence additions (live-DB superset)
-  stage: varchar("stage", { length: 50 }),
-  changedBy: varchar("changed_by", { length: 100 }),
-  candidateId: integer("candidate_id"),
-});
-
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. TOOL TEST — HR CAPITAL: A-J 10 ta shaxsiyat ko'rsatkichi
 //    (Material #15, #20, #25, #35)
@@ -247,156 +232,6 @@ export const hrToolTestResults = pgTable("hr_tool_test_results", {
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. PRODUCTIVITY INTERVIEW — HR CAPITAL: Produktivlik intervyusi (5-qadam)
-//    (Material #55: Интервью на продуктивность + Наведение справок)
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const hrProductivityInterviews = pgTable("hr_productivity_interviews", {
-  id: serial("id").primaryKey(),
-  candidateId: integer("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
-  funnelId: integer("funnel_id").references(() => hrCandidateFunnels.id, { onDelete: "set null" }),
-  interviewerId: integer("interviewer_id").references(() => users.id, { onDelete: "set null" }),
-
-  // 1-qism: Produktivlik intervyusi (Интервью на продуктивность)
-  productivityInterview: jsonb("productivity_interview").$type<{
-    // Aniq natijalar bor yoki yo'q
-    hasConcreteResults: boolean;
-    concreteResultsExamples: string[]; // Aniq raqamli natijalar misollari
-    // Mustaqil ishlash qobiliyati
-    canWorkIndependently: boolean;
-    independenceExamples: string[];
-    // Muammolarni hal qilish
-    problemSolvingExamples: string[];
-    // Muvaffaqiyatlari
-    achievements: Array<{ description: string; measurable: boolean; metric?: string }>;
-    // Ish tarixi (oxirgi 3 ish joyi)
-    workHistory: Array<{
-      company: string;
-      position: string;
-      duration: string;
-      mainResult: string;
-      leftReason: string;
-    }>;
-    // Umumiy baho
-    overallScore: number; // 1-10
-    interviewerNotes: string;
-  }>(),
-
-  // 2-qism: Navedenie spravok (Наведение справок - Reference Check)
-  referenceCheck: jsonb("reference_check").$type<{
-    references: Array<{
-      name: string;
-      position: string;
-      company: string;
-      phone: string;
-      relationship: string;  // "sobiq rahbar", "hamkasb"
-      contactedAt?: string;
-      feedback?: string;
-      rating?: number; // 1-10
-    }>;
-    overallReferenceScore: number; // 1-10
-    redFlags: string[];
-    isCleared: boolean;
-  }>(),
-
-  // Yakuniy baho
-  finalDecision: varchar("final_decision", { length: 20 }), // 'APPROVE' | 'REJECT' | 'HOLD'
-  finalNotes: text("final_notes"),
-  conductedAt: timestamp("conducted_at").notNull().defaultNow(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. ONBOARDING PLANS — HR CAPITAL: "Путь сотрудника" (6-qadam, Session 5)
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const hrOnboardingPlans = pgTable("hr_onboarding_plans", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 200 }).notNull(),
-  nameRu: varchar("name_ru", { length: 200 }),
-  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }),
-  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
-
-  // Haftalik reja (6 hafta — HR Manager uchun HR CAPITAL standarti)
-  weeklyPlan: jsonb("weekly_plan").$type<Array<{
-    week: number;          // 1-6
-    title: string;
-    titleRu?: string;
-    goals: string[];
-    tasks: Array<{
-      day: number;         // 1-5 (dushanba-juma)
-      title: string;
-      type: "COURSE" | "TASK" | "MEETING" | "SHADOWING" | "TEST";
-      description?: string;
-      durationHours?: number;
-      lmsCourseId?: string; // LMS bilan integratsiya
-      isRequired: boolean;
-    }>;
-    weeklyCheckpoint: string; // Hafta oxirida tekshiriladigan narsa
-  }>>(),
-
-  // Probation davri (odatda 90 kun)
-  probationDays: integer("probation_days").notNull().default(90),
-
-  // Muvaffaqiyat mezonlari (KPI-lar)
-  successCriteria: jsonb("success_criteria").$type<Array<{
-    name: string;
-    target: string;
-    evaluationDate: string; // "30-kun", "60-kun", "90-kun"
-  }>>(),
-
-  isActive: boolean("is_active").notNull().default(true),
-  createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  // Convergence additions (live-DB superset)
-  title: varchar("title", { length: 200 }),
-  tasks: jsonb("tasks"),
-  durationDays: integer("duration_days"),
-  orgDepartmentId: integer("org_department_id"),
-  orgFunctionId: integer("org_function_id"),
-});
-
-// Xodim onboardingi (individual kuzatuv)
-export const hrEmployeeOnboardings = pgTable("hr_employee_onboardings", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  planId: integer("plan_id").notNull().references(() => hrOnboardingPlans.id, { onDelete: "cascade" }),
-  mentorId: integer("mentor_id").references(() => users.id, { onDelete: "set null" }), // Mentor xodim
-
-  startDate: timestamp("start_date").notNull(),
-  expectedEndDate: timestamp("expected_end_date"),
-  actualEndDate: timestamp("actual_end_date"),
-
-  // Joriy holat
-  status: varchar("status", { length: 20 }).notNull().default("IN_PROGRESS"),
-  // IN_PROGRESS | COMPLETED | EXTENDED | FAILED
-
-  // Haftalik progress (har hafta yangilanadi)
-  weeklyProgress: jsonb("weekly_progress").$type<Array<{
-    week: number;
-    completedTasks: number;
-    totalTasks: number;
-    checkpointPassed: boolean;
-    notes?: string;
-    evaluatedAt?: string;
-    evaluatedById?: number;
-  }>>(),
-
-  // Probation yakuniy bahosi
-  probationScore: integer("probation_score"), // 1-100
-  probationNotes: text("probation_notes"),
-  isProbationPassed: boolean("is_probation_passed"),
-
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  // Convergence additions (live-DB superset)
-  progress: integer("progress").default(0),
-}, (t) => ({
-  employeeIdx: index("hr_employee_onboardings_emp_idx").on(t.employeeId),
-}));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 6. JOB DESCRIPTIONS — HR CAPITAL: Должностные инструкции (Session 5)
@@ -478,52 +313,6 @@ export const hrJobDescriptions = pgTable("hr_job_descriptions", {
   orgFunctionId: integer("org_function_id"),
 }, (t) => ({
   positionVersionIdx: index("hr_job_desc_position_version_idx").on(t.positionId, t.version),
-}));
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 7. MOTIVATION PLANS — HR CAPITAL: Motivatsiya (Session 2, Tone Scale)
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const hrMotivationPlans = pgTable("hr_motivation_plans", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
-
-  // Шкала тонов (Tone Scale) bahosi
-  toneScaleLevel: integer("tone_scale_level"), // Masalan: 2.0, 3.5, 4.0 (10 ga ko'paytirilgan: 20, 35, 40)
-  toneScaleDescription: varchar("tone_scale_description", { length: 100 }), // "Ishonch", "Entuziazm" va h.k.
-
-  // Orientatsiya
-  orientationType: varchar("orientation_type", { length: 20 }), // "INCOMING" | "OUTGOING"
-  orientationNotes: text("orientation_notes"),
-
-  // Motivatsiya vositalari (HR CAPITAL: Material #10 — 4 asosiy omil)
-  motivationFactors: jsonb("motivation_factors").$type<{
-    productivity: { score: number; notes: string };   // Produktivlik
-    motivation: { score: number; notes: string };     // Motivatsiya
-    knowledge: { score: number; notes: string };      // Bilim
-    personalQualities: { score: number; notes: string }; // Shaxsiy sifatlar
-  }>(),
-
-  // Amaliy motivatsiya rejasi
-  actionPlan: jsonb("action_plan").$type<Array<{
-    action: string;
-    targetDate: string;
-    responsibleId?: number;
-    status: "PLANNED" | "IN_PROGRESS" | "DONE";
-  }>>(),
-
-  // Keyingi ko'rib chiqish sanasi
-  nextReviewDate: timestamp("next_review_date"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  // Convergence additions (live-DB superset)
-  title: varchar("title", { length: 200 }),
-  targets: jsonb("targets"),
-  status: varchar("status", { length: 20 }),
-}, (t) => ({
-  employeeIdx: index("hr_motivation_plans_emp_idx").on(t.employeeId),
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -663,20 +452,14 @@ export const insertHrToolTestResultSchema = createInsertSchema(hrToolTestResults
   pointJ: z.number().min(-100).max(100).optional(),
 });
 
-export const insertHrOnboardingPlanSchema = createInsertSchema(hrOnboardingPlans);
 export const insertHrJobDescriptionSchema = createInsertSchema(hrJobDescriptions);
-export const insertHrMotivationPlanSchema = createInsertSchema(hrMotivationPlans);
 
 // Type exports
 export type HrCandidateFunnel = typeof hrCandidateFunnels.$inferSelect;
 export type InsertHrCandidateFunnel = typeof hrCandidateFunnels.$inferInsert;
 export type HrToolTestResult = typeof hrToolTestResults.$inferSelect;
 export type InsertHrToolTestResult = typeof hrToolTestResults.$inferInsert;
-export type HrProductivityInterview = typeof hrProductivityInterviews.$inferSelect;
-export type HrOnboardingPlan = typeof hrOnboardingPlans.$inferSelect;
-export type HrEmployeeOnboarding = typeof hrEmployeeOnboardings.$inferSelect;
 export type HrJobDescription = typeof hrJobDescriptions.$inferSelect;
-export type HrMotivationPlan = typeof hrMotivationPlans.$inferSelect;
 export type HrWeeklyStatistic = typeof hrWeeklyStatistics.$inferSelect;
 export type HrVacancyProfile = typeof hrVacancyProfiles.$inferSelect;
 export type FunnelStage = typeof recruitmentFunnelStageEnum.enumValues[number];

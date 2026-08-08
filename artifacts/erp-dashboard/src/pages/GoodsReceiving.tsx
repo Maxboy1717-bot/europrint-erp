@@ -28,7 +28,7 @@ import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 export default function GoodsReceiving() {
   const { language, setLanguage } = useLanguage();
-  const t = useGoodsReceivingTranslations() as ReturnType<typeof useGoodsReceivingTranslations> & ((key: string) => string);
+  const t = useGoodsReceivingTranslations();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -106,7 +106,7 @@ export default function GoodsReceiving() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="error-state">
         <AlertCircle className="h-8 w-8 text-destructive" />
-        <p className="text-muted-foreground">{t("malumotlarniYuklashdaXatolikYuzBerdi")}</p>
+        <p className="text-muted-foreground">{t.errorLoadingData}</p>
       </div>
     );
   }
@@ -116,8 +116,8 @@ export default function GoodsReceiving() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("tovarlarQabuli")}</b></>}
-        title={t("tovarlarQabuli")}
+        breadcrumb={<>{t.dashboardBreadcrumb}<b className="text-foreground">{t.pageTitle}</b></>}
+        title={t.pageTitle}
       />
           <p className="text-muted-foreground">{t.subtitle}</p>
         </div>

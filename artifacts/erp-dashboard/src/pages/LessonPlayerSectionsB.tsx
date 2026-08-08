@@ -195,7 +195,7 @@ export function LessonContentArea({
                 className="bg-primary text-white gap-2"
               >
                 <CheckCircle className="h-4 w-4" />
-                {isPending ? "Saqlanmoqda..." : "Darsni yakunlash"}
+                {isPending ? t("saqlanmoqda") : t("darsniYakunlash")}
               </Button>
             ) : (
               <div className="flex items-center gap-2 text-[var(--ep-green)]">
@@ -205,7 +205,7 @@ export function LessonContentArea({
             )}
             {nextLesson && (
               <Button variant="outline" onClick={onNextLesson}>
-                Keyingi: {nextLesson.title}
+                {t("keyingiLabel")} {nextLesson.title}
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             )}

@@ -85,13 +85,21 @@ export function CostCentersTab({ costCenters, profitCenters, glDocuments, ccLoad
 interface ProfitCentersTabProps {
   profitCenters: ProfitCenter[];
   pcLoading: boolean;
+  onAddClick?: () => void;
 }
 
-export function ProfitCentersTab({ profitCenters, pcLoading }: ProfitCentersTabProps) {
+export function ProfitCentersTab({ profitCenters, pcLoading, onAddClick }: ProfitCentersTabProps) {
   const { t } = useTranslation("common");
   return (
     <TabsContent value="profitcenters" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">{t("foydaMarkazlari")}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{t("foydaMarkazlari")}</h2>
+        {onAddClick && (
+          <Button size="sm" onClick={onAddClick} data-testid="button-add-profit-center">
+            <Plus className="h-4 w-4 mr-1" />{t("qoshish", "Qo'shish")}
+          </Button>
+        )}
+      </div>
       <Card>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
@@ -131,17 +139,25 @@ export function ProfitCentersTab({ profitCenters, pcLoading }: ProfitCentersTabP
 interface PaymentsTabProps {
   payments: FinPayment[];
   paymentsLoading: boolean;
+  onAddClick?: () => void;
 }
 
-export function PaymentsTab({ payments, paymentsLoading }: PaymentsTabProps) {
+export function PaymentsTab({ payments, paymentsLoading, onAddClick }: PaymentsTabProps) {
   const { t } = useTranslation("common");
   return (
     <TabsContent value="payments" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{t("tolovlarJurnali")}</h2>
-        <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/fi/payments"] })}>
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
-        </Button>
+        <div className="flex gap-2">
+          {onAddClick && (
+            <Button size="sm" onClick={onAddClick} data-testid="button-add-payment">
+              <Plus className="h-4 w-4 mr-1" />{t("qoshish", "Qo'shish")}
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/fi/payments"] })}>
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
+          </Button>
+        </div>
       </div>
       <Card>
         <CardContent className="p-0">

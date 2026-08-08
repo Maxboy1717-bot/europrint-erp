@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { PosInventoryRepository } from '../../infrastructure/repositories/pos-inventory.repository';
 import { CreateInventoryPassportDto, AssignBarcodeDto, CreatePdfTemplateDto } from '../../dto/pos.dto';
@@ -12,7 +13,10 @@ import { CreateInventoryPassportDto, AssignBarcodeDto, CreatePdfTemplateDto } fr
 export class PosInventoryService {
   private readonly logger = new Logger(PosInventoryService.name);
 
-  constructor(private readonly repo: PosInventoryRepository) {}
+  constructor(
+    private readonly repo: PosInventoryRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async getPassports(warehouseId?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => this.repo.getPassports(warehouseId));
@@ -25,7 +29,7 @@ export class PosInventoryService {
   async createPassport(dto: CreateInventoryPassportDto, createdBy: number) {
     return safeCall(async () => {
       const existing = await this.repo.findPassportByNumber(dto.passportNumber);
-      if (existing) throw new BadRequestException(`Pasport raqami "${dto.passportNumber}" allaqachon mavjud`);
+      if (existing) throw new BadRequestException(await this.i18n.t('errors.passportNumberAlreadyExists', { args: { number: dto.passportNumber } }));
       const created = await this.repo.createPassport(dto, createdBy);
       this.logger.log(`[POS] Pasport yaratildi: ${dto.passportNumber}`);
       return created;
@@ -36,7 +40,7 @@ export class PosInventoryService {
     return safeCall(async () => {
       await this.repo.findPassportForBarcode(dto.passportId);
       const existing = await this.repo.findBarcodeByValue(dto.barcode);
-      if (existing) throw new BadRequestException(`Barkod "${dto.barcode}" allaqachon mavjud`);
+      if (existing) throw new BadRequestException(await this.i18n.t('errors.barcodeAlreadyExists', { args: { barcode: dto.barcode } }));
       if (dto.isPrimary) {
         await this.repo.clearPrimaryBarcode(dto.passportId);
       }
@@ -59,7 +63,7 @@ export class PosInventoryService {
   async createPdfTemplate(dto: CreatePdfTemplateDto, createdBy: number) {
     return safeCall(async () => {
       const existing = await this.repo.findTemplateByCode(dto.code);
-      if (existing) throw new BadRequestException(`Shablon kodi "${dto.code}" allaqachon mavjud`);
+      if (existing) throw new BadRequestException(await this.i18n.t('errors.templateCodeAlreadyExists', { args: { code: dto.code } }));
       const created = await this.repo.createPdfTemplate(dto, createdBy);
       this.logger.log(`[POS] PDF shablon yaratildi: ${dto.code}`);
       return created;

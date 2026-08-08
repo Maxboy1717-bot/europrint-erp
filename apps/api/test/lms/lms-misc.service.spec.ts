@@ -12,6 +12,7 @@ describe('LmsMiscService', () => {
     saveVideoProgress:     jest.fn().mockResolvedValue(Ok({ id: 'p1' })),
     findAchievements:      jest.fn().mockResolvedValue(Ok([])),
     findMentors:           jest.fn().mockResolvedValue(Ok([])),
+    rateCardMentor:        jest.fn().mockResolvedValue(Ok({ id: 1, rating: '4.5' })),
   };
 
   it('class is defined', () => {
@@ -44,5 +45,12 @@ describe('LmsMiscService', () => {
     const svc = new LmsMiscService(repoStub as never);
     await svc.listMentors('printing');
     expect(repoStub.findMentors).toHaveBeenCalledWith('printing');
+  });
+
+  it('rateCardMentor delegates to repo.rateCardMentor with the id and payload', async () => {
+    const svc = new LmsMiscService(repoStub as never);
+    const res = await svc.rateCardMentor('7', { rating: 4.5, qualificationVerified: true, verifiedBy: 3 });
+    expect(res.ok).toBe(true);
+    expect(repoStub.rateCardMentor).toHaveBeenCalledWith('7', { rating: 4.5, qualificationVerified: true, verifiedBy: 3 });
   });
 });

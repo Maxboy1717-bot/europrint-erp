@@ -2,9 +2,9 @@
  * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
  *   CTE (WITH movements_12m AS ..., last_move AS ...) used to pre-aggregate
  *   inventory movements, correlated subqueries in SELECT for requisition lookup
- *   (EXISTS, scalar-subquery SELECT pr.id ... LIMIT 1), regex predicate
- *   ~ '^[0-9]+$' on text product_id, JOIN on type-cast id::varchar = product_id,
+ *   (EXISTS, scalar-subquery SELECT pr.id ... LIMIT 1),
  *   and EXTRACT(DAY FROM NOW() - ...) for days-since-movement computation.
+ *   Source tables: pos_movement_lines JOIN pos_movements (pos_inventory_movements does not exist).
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 /**
@@ -62,16 +62,16 @@ export class WmsAnalyticsService {
     try {
       const rows = await runQuery(sql`
         WITH movements_12m AS (
-          SELECT pim.product_id::integer AS mat_id,
+          SELECT pml.material_id AS mat_id,
                  -- COGS: cost of actual outflows (negative quantity = issued/consumed)
-                 SUM(GREATEST(0, -COALESCE(pim.quantity, 0)) * COALESCE(mc.unit_price, 0)) AS cogs_12m,
+                 SUM(GREATEST(0, -COALESCE(pml.quantity, 0)) * COALESCE(mc.unit_price, 0)) AS cogs_12m,
                  -- Net movement: positive = net inflow, negative = net outflow
-                 SUM(COALESCE(pim.quantity, 0)) AS net_qty_12m
-          FROM pos_inventory_movements pim
-          JOIN material_cards mc ON mc.id::varchar = pim.product_id
-          WHERE pim.product_id ~ '^[0-9]+$'
-            AND pim.created_at >= NOW() - INTERVAL '1 year'
-          GROUP BY pim.product_id::integer
+                 SUM(COALESCE(pml.quantity, 0)) AS net_qty_12m
+          FROM pos_movement_lines pml
+          JOIN pos_movements pm ON pm.id = pml.movement_id
+          JOIN material_cards mc ON mc.id = pml.material_id
+          WHERE pm.created_at >= NOW() - INTERVAL '1 year'
+          GROUP BY pml.material_id
         )
         SELECT mc.id AS material_id,
                COALESCE(mc.xom_ashyo, mc.xom_ashyo_ru, 'N/A') AS material_name,
@@ -126,11 +126,11 @@ export class WmsAnalyticsService {
     try {
       const rows = await runQuery(sql`
         WITH last_move AS (
-          SELECT product_id::integer AS mat_id,
-                 MAX(created_at) AS last_at
-          FROM pos_inventory_movements
-          WHERE product_id ~ '^[0-9]+$'
-          GROUP BY product_id::integer
+          SELECT pml.material_id AS mat_id,
+                 MAX(pm.created_at) AS last_at
+          FROM pos_movement_lines pml
+          JOIN pos_movements pm ON pm.id = pml.movement_id
+          GROUP BY pml.material_id
         )
         SELECT mc.id AS material_id,
                COALESCE(mc.xom_ashyo, mc.xom_ashyo_ru, 'N/A') AS material_name,

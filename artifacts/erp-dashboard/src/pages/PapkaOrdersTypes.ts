@@ -5,8 +5,8 @@
  */
 
 import { z } from "zod";
-
 import { tLabel } from '@/lib/i18n/tLabel';
+
 export const formSchema = z.object({
   papkaNo: z.string().min(1, "Papka raqami kiritilishi kerak"),
   mijozNomi: z.string().min(1, "Mijoz nomi kiritilishi kerak"),
@@ -26,12 +26,12 @@ export type FormData = z.infer<typeof formSchema>;
 
 export type Lang = "uz" | "uz-cyr" | "ru";
 
-export const STATUS_CONFIG: Record<string, { label: string; labelRu: string; className: string }> = {
-  new: { label: tLabel('common.PapkaOrders.yangi', "Yangi"), labelRu: "Новый", className: "bg-primary/10 text-primary" },
-  planning: { label: tLabel('common.PapkaOrders.rejalashtirish', "Rejalashtirish"), labelRu: "Планирование", className: "bg-amber-100 text-amber-800" },
-  production: { label: tLabel('common.PapkaOrders.ishlabChiqarish', "Ishlab chiqarish"), labelRu: "Производство", className: "bg-blue-100 text-blue-800" },
-  completed: { label: "Bajarildi", labelRu: "Завершен", className: "bg-green-100 text-green-800" },
-  cancelled: { label: tLabel('common.PapkaOrders.bekorQilindi', "Bekor qilindi"), labelRu: "Отменен", className: "bg-red-100 text-red-800" },
+export const STATUS_CONFIG: Record<string, { labelUz: string; labelCyr: string; labelRu: string; className: string }> = {
+  new: { labelUz: "Yangi", labelCyr: "Янги", labelRu: "Новый", className: "bg-primary/10 text-primary" },
+  planning: { labelUz: "Rejalashtirish", labelCyr: "Режалаштириш", labelRu: "Планирование", className: "bg-amber-100 text-amber-800" },
+  production: { labelUz: "Ishlab chiqarish", labelCyr: "Ишлаб чиқариш", labelRu: "Производство", className: "bg-blue-100 text-blue-800" },
+  completed: { labelUz: "Bajarildi", labelCyr: "Бажарилди", labelRu: "Завершен", className: "bg-green-100 text-green-800" },
+  cancelled: { labelUz: "Bekor qilindi", labelCyr: "Бекор қилинди", labelRu: "Отменен", className: "bg-red-100 text-red-800" },
 };
 
 export const TRANSLATIONS = {
@@ -64,6 +64,10 @@ export const TRANSLATIONS = {
     totalOrders: "Jami Buyurtmalar",
     activeOrders: "Faol Buyurtmalar",
     completedOrders: "Bajarilgan",
+    orderCreated: "Buyurtma yaratildi",
+    orderUpdated: "Buyurtma yangilandi",
+    orderCancelled: "Buyurtma bekor qilindi",
+    error: "Xatolik",
   },
   'uz-cyr': {
     title: "Папка Буюртмалари",
@@ -94,6 +98,10 @@ export const TRANSLATIONS = {
     totalOrders: "Жами Буюртмалар",
     activeOrders: "Фаол Буюртмалар",
     completedOrders: "Бажарилган",
+    orderCreated: "Буюртма яратилди",
+    orderUpdated: "Буюртма янгиланди",
+    orderCancelled: "Буюртма бекор қилинди",
+    error: "Хатолик",
   },
   ru: {
     title: tLabel('common.PapkaOrders.untitled', "Заказы Папок"),
@@ -124,6 +132,10 @@ export const TRANSLATIONS = {
     totalOrders: "Всего Заказов",
     activeOrders: "Активных",
     completedOrders: "Завершенных",
+    orderCreated: "Заказ создан",
+    orderUpdated: "Заказ обновлен",
+    orderCancelled: "Заказ отменён",
+    error: "Ошибка",
   },
 } as const;
 

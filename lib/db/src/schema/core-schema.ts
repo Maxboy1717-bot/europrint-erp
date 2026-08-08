@@ -81,37 +81,6 @@ export const meetingRooms = pgTable("meeting_rooms", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const calendarEvents = pgTable("calendar_events", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  titleRu: text("title_ru"),
-  description: text("description"),
-  descriptionRu: text("description_ru"),
-  type: varchar("type", { length: 20 }).notNull(),
-  courseId: integer("course_id").references(() => courses.id, { onDelete: "cascade" }),
-  trainerId: integer("trainer_id").references(() => users.id, { onDelete: 'set null' }),
-  roomId: integer("room_id").references(() => meetingRooms.id, { onDelete: 'set null' }),
-  startDate: varchar("start_date", { length: 10 }).notNull(),
-  startTime: varchar("start_time", { length: 8 }).notNull(),
-  endDate: varchar("end_date", { length: 10 }).notNull(),
-  endTime: varchar("end_time", { length: 8 }).notNull(),
-  maxParticipants: integer("max_participants"),
-  targetDepartments: text("target_departments").array(),
-  targetPositions: text("target_positions").array(),
-  status: varchar("status", { length: 20 }).notNull().default("scheduled"),
-  createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: "restrict" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-  // ─── live-DB superset columns (ADD-ONLY) ───
-  allDay: boolean("all_day").default(false),
-  eventType: varchar("event_type", { length: 50 }),
-  location: text("location"),
-  attendees: jsonb("attendees"),
-});
-
-
 export const reminders = pgTable("reminders", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -128,13 +97,10 @@ export const reminders = pgTable("reminders", {
 });
 
 export const insertMeetingRoomSchema = createInsertSchema(meetingRooms).omit({ id: true, createdAt: true } as never);
-export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({ id: true, createdAt: true } as never);
 export const insertReminderSchema = createInsertSchema(reminders).omit({ id: true, createdAt: true } as never);
 
 export type MeetingRoom = typeof meetingRooms.$inferSelect;
 export type InsertMeetingRoom = z.infer<typeof insertMeetingRoomSchema>;
-export type CalendarEvent = typeof calendarEvents.$inferSelect;
-export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
 export type Reminder = typeof reminders.$inferSelect;
 export type InsertReminder = z.infer<typeof insertReminderSchema>;
 
@@ -333,6 +299,20 @@ export const orgFunctions = pgTable("org_functions", {
   displayOrder: integer("display_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // Phase-1 card columns (EP-ORG-2026-06-08 migration — org-phase1-canonical-card)
+  status:         text("status").default("active"),
+  deletedAt:      timestamp("deleted_at"),
+  razryadLevelId: integer("razryad_level_id"),
+  salaryType:     text("salary_type"),
+  code:           text("code"),
+  level:          integer("level"),
+  rbacTier:       text("rbac_tier"),
+  minSalary:      numericMoney("min_salary"),
+  maxSalary:      numericMoney("max_salary"),
+  aiExamEnabled:  boolean("ai_exam_enabled").default(false),
+  statisticsType: text("statistics_type"),
+  managerId:      integer("manager_id"),
+  updatedAt:      timestamp("updated_at").defaultNow(),
 });
 
 export const insertOrgFunctionSchema = createInsertSchema(orgFunctions, {
@@ -410,22 +390,9 @@ export const insertHrAlumniSchema = createInsertSchema(hrAlumni).omit({ id: true
 export type HrAlumni = typeof hrAlumni.$inferSelect;
 export type InsertHrAlumni = z.infer<typeof insertHrAlumniSchema>;
 
-// ========== HR HEALTH CHECKUPS ==========
-export const hrHealthCheckups = pgTable("hr_health_checkups", {
-  id: serial("id").primaryKey(),
-  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
-  departmentName: varchar("department_name", { length: 200 }).notNull(),
-  totalEmployees: integer("total_employees").default(0),
-  examinedCount: integer("examined_count").default(0),
-  lastCheckupDate: varchar("last_checkup_date", { length: 10 }),
-  nextCheckupDate: varchar("next_checkup_date", { length: 10 }),
-  status: varchar("status", { length: 50 }).default("scheduled"),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const insertHrHealthCheckupSchema = createInsertSchema(hrHealthCheckups).omit({ id: true, updatedAt: true } as never);
-export type HrHealthCheckup = typeof hrHealthCheckups.$inferSelect;
-export type InsertHrHealthCheckup = z.infer<typeof insertHrHealthCheckupSchema>;
+// ORFAN CLEANUP (2026-07-02): hrHealthCheckups pgTable removed — dead lib/db
+// duplicate, Q-29 verified: never imported via @workspace/db anywhere in apps/.
+// Canonical live snake_case stub is apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts.
 
 // ========== HR ONBOARDING/OFFBOARDING CHECKLISTS ==========
 export const hrOnboardingChecklists = pgTable("hr_onboarding_checklists", {

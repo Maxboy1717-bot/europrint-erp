@@ -6,7 +6,16 @@
  *   defects/total > 5%  → failed
  *   otherwise           → conditional
  * Plus pure passthrough to QcExtendedRepository.
+ *
+ * MN-1 (Magic-Numbers Independent Verification 2026-07-07, M6 2/4 gap):
+ * createInProcessInspection() now reads the 5% fail-ratio threshold from
+ * settings.'qc_lot_defect_fail_ratio' (getConfigNumber), falling back to 0.05.
  */
+
+const mockGetConfigNumber = jest.fn().mockResolvedValue(0.05);
+jest.mock('@common/config/business-config.helper', () => ({
+  getConfigNumber: (...args: unknown[]) => mockGetConfigNumber(...args),
+}));
 
 import { QcExtendedService } from '../../src/modules/qc/application/qc-extended.service';
 import { QcExtendedRepository } from '../../src/modules/qc/application/qc-extended.repository';
@@ -52,6 +61,39 @@ describe('QcExtendedService.deriveInspectionStatus', () => {
 
   it("returns 'conditional' for total=0 with defects>0 (boundary case)", () => {
     expect(svc.deriveInspectionStatus(0, 1)).toBe('conditional');
+  });
+});
+
+describe('QcExtendedService.createInProcessInspection — MN-1 config-driven threshold', () => {
+  beforeEach(() => {
+    mockGetConfigNumber.mockReset();
+  });
+
+  it('uses the configured threshold from settings, not the hardcoded 0.05 default', async () => {
+    // A 15% defect ratio would FAIL under the 0.05 default, but PASSES as
+    // 'conditional' when settings raises the threshold to 0.20.
+    mockGetConfigNumber.mockResolvedValue(0.20);
+    const repo = buildRepo();
+    const svc = new QcExtendedService(repo);
+
+    await svc.createInProcessInspection(3, 5, 'station-C', 100, 15, null);
+
+    expect(mockGetConfigNumber).toHaveBeenCalledWith('qc_lot_defect_fail_ratio', 0.05);
+    expect(repo.createInProcessInspection).toHaveBeenCalledWith(
+      3, 5, 'station-C', 100, 15, 'conditional', null,
+    );
+  });
+
+  it('falls back to the 0.05 default when settings has no row (getConfigNumber resolves fallback)', async () => {
+    mockGetConfigNumber.mockResolvedValue(0.05);
+    const repo = buildRepo();
+    const svc = new QcExtendedService(repo);
+
+    await svc.createInProcessInspection(4, 5, 'station-D', 100, 15, null);
+
+    expect(repo.createInProcessInspection).toHaveBeenCalledWith(
+      4, 5, 'station-D', 100, 15, 'failed', null,
+    );
   });
 });
 

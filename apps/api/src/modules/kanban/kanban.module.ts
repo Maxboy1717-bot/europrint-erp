@@ -5,13 +5,8 @@
 
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { BullModule } from '@nestjs/bullmq';
 import { AuthModule } from '../auth/auth.module';
-import { CreateTaskHandler } from './application/commands/create-task.handler';
-import { UpdateTaskHandler } from './application/commands/update-task.handler';
-import { DeleteTaskHandler } from './application/commands/delete-task.handler';
-import { GetTasksHandler } from './application/queries/get-tasks.handler';
-import { GetTaskHandler } from './application/queries/get-task.handler';
-import { KanbanService } from './application/kanban.service';
 import { KanbanBoardsService } from './application/kanban-boards.service';
 import { KanbanExtService } from './application/kanban-ext.service';
 import { KanbanExtFlowService } from './application/kanban-ext-flow.service';
@@ -19,6 +14,11 @@ import { KanbanExtCardService } from './application/kanban-ext-card.service';
 import { KanbanRobotService } from './application/kanban-robot.service';
 import { OrderCreatedKanbanHandler } from './application/event-handlers/order-created-kanban.handler';
 import { OrderCancelledKanbanHandler } from './application/event-handlers/order-cancelled-kanban.handler';
+import { OrderStatusChangedKanbanHandler } from './application/event-handlers/order-status-changed-kanban.handler';
+import { QcFailedKanbanHandler } from './application/event-handlers/qc-failed-kanban.handler';
+import { MesCompletedKanbanHandler } from './application/event-handlers/mes-completed-kanban.handler';
+import { MesBreakdownKanbanHandler } from './application/event-handlers/mes-breakdown-kanban.handler';
+import { DesignRequestedKanbanHandler } from './application/event-handlers/design-requested-kanban.handler';
 import { DrizzleKanbanExtRepository } from './infrastructure/repositories/drizzle-kanban-ext.repo';
 import { DrizzleKanbanCoreRepository } from './infrastructure/repositories/drizzle-kanban-core.repo';
 import { DrizzleKanbanFlowsRobotsRepository } from './infrastructure/repositories/drizzle-kanban-flows-robots.repo';
@@ -30,28 +30,62 @@ import { DrizzleKanbanStatsRepository } from './infrastructure/repositories/driz
 import { KanbanBoardsRepository } from './infrastructure/repositories/kanban-boards.repo';
 import { KanbanColumnsRepository } from './infrastructure/repositories/kanban-columns.repo';
 import { KanbanCardsRepository } from './infrastructure/repositories/kanban-cards.repo';
-import { KanbanController } from './presentation/kanban.controller';
+import { KanbanStatusColumnMapRepository } from './infrastructure/repositories/kanban-status-column-map.repo';
+import { KanbanStatusColumnMapService } from './application/kanban-status-column-map.service';
 import { KanbanBoardsController } from './presentation/kanban-boards.controller';
 import { KanbanCoreController } from './presentation/kanban-core.controller';
 import { KanbanReportsController } from './presentation/kanban-reports.controller';
 import { KanbanCardsController, KanbanCardFilesController } from './presentation/kanban-cards.controller';
 import { KanbanChecklistController } from './presentation/kanban-checklist.controller';
-import { KANBAN_REPO } from './domain/repositories/i-kanban.repo';
+import { KanbanStatusColumnMapController } from './presentation/kanban-status-column-map.controller';
 import { KANBAN_BOARDS_REPO } from './domain/repositories/i-kanban-boards.repo';
-import { DrizzleKanbanRepository } from './infrastructure/repositories/drizzle-kanban.repo';
 import { KanbanRepository } from './infrastructure/kanban.repository';
+// 2026-07-13 — Kanban davriy vazifalar BullMQ'ga ko'chirildi (durability/offline-resistance,
+// owner qarori): @nestjs/schedule @Cron o'rniga Redis-backed repeatable job. Ilgari shu joyda
+// KanbanOverdueEscalationCron (@Cron) edi — endi KanbanCronProcessor (BullMQ) bitta navbatda
+// OVERDUE_ESCALATION (avval shu yerda) + RECURRING_CARDS (avval apps/api/src/cron/kanban-recurring.cron.ts)
+// ikkalasini ham bajaradi.
+import { KanbanCronProcessor } from './infrastructure/cron/kanban-cron.processor';
+import { QUEUE_NAMES } from '../queue/queue.constants';
 
-const commandHandlers = [CreateTaskHandler, UpdateTaskHandler, DeleteTaskHandler];
-const queryHandlers   = [GetTasksHandler, GetTaskHandler];
-const eventHandlers   = [OrderCreatedKanbanHandler, OrderCancelledKanbanHandler];
+const eventHandlers   = [
+  OrderCreatedKanbanHandler,
+  OrderCancelledKanbanHandler,
+  OrderStatusChangedKanbanHandler,
+  // QC/MES/Design Kanban fan-out (owner decision 2026-07-13): every source module that
+  // already emits a real domain event gets a matching Kanban-card trigger, mirroring the
+  // 3 SD order handlers above. waste-tracking (apps/api/src/modules/remaining/waste.*)
+  // was evaluated too but has no domain-event emission at all (plain CRUD service) — not
+  // fabricated here per Q-40.
+  QcFailedKanbanHandler,
+  MesCompletedKanbanHandler,
+  MesBreakdownKanbanHandler,
+  DesignRequestedKanbanHandler,
+];
 
 const repositories = [
-  { provide: KANBAN_REPO,        useClass: DrizzleKanbanRepository  },
   { provide: KANBAN_BOARDS_REPO, useClass: KanbanBoardsRepository   },
 ];
 
+/**
+ * kanban-cron BullMQ navbat uchun standart job parametrlari — queue.module.ts'dagi
+ * umumiy defaultJobOptions bilan bir xil shakl (attempts=10, exponential backoff
+ * t0=1000ms, removeOnComplete/Fail). Mahalliy nusxa: bu navbat markaziy queue.module.ts
+ * ro'yxatida emas, shu yerda (kanban.module.ts) registerQueue qilinadi.
+ */
+const kanbanCronJobOptions = {
+  attempts: 10,
+  removeOnComplete: { count: 100 },
+  removeOnFail: { count: 50 },
+  backoff: { type: 'exponential' as const, delay: 1000 },
+};
+
 @Module({
-  imports:     [CqrsModule, AuthModule],
+  imports:     [
+    CqrsModule,
+    AuthModule,
+    BullModule.registerQueue({ name: QUEUE_NAMES.KANBAN_CRON, defaultJobOptions: kanbanCronJobOptions }),
+  ],
   controllers: [
     KanbanBoardsController,
     KanbanCoreController,
@@ -59,13 +93,11 @@ const repositories = [
     KanbanCardsController,
     KanbanCardFilesController,
     KanbanChecklistController,
+    KanbanStatusColumnMapController,
   ],
   providers: [
-    ...commandHandlers,
-    ...queryHandlers,
     ...eventHandlers,
     ...repositories,
-    KanbanService,
     KanbanBoardsService,
     KanbanExtService,
     KanbanExtFlowService,
@@ -82,7 +114,12 @@ const repositories = [
     DrizzleKanbanExtRepository,
     KanbanColumnsRepository,
     KanbanCardsRepository,
+    KanbanStatusColumnMapRepository,
+    KanbanStatusColumnMapService,
+    // 2026-07-13 — Kanban davriy vazifalar (eskalatsiya 09:00 + takrorlanuvchi kartalar 07:00)
+    // BullMQ repeatable job orqali; qarang infrastructure/cron/kanban-cron.processor.ts
+    KanbanCronProcessor,
   ],
-  exports: [KANBAN_REPO, KanbanService, KanbanExtService],
+  exports: [KanbanExtService],
 })
 export class KanbanModule {}

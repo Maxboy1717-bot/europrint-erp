@@ -68,37 +68,39 @@ export type ContactFormState = {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+// NOTE: values are i18n keys (common ns) resolved with t() at render site.
+// Brand names (Email/WhatsApp/Telegram) stay literal — not translatable UI text.
 export const statusLabels: Record<string, string> = {
-  new: "Yangi",
-  contacted: "Aloqa qilingan",
-  qualified: "Malakali",
-  converted: "Konversiya",
-  lost: "Yo'qolgan",
+  new: "leadStatusNew",
+  contacted: "leadStatusContacted",
+  qualified: "leadStatusQualified",
+  converted: "leadStatusConverted",
+  lost: "leadStatusLost",
 };
 
 export const sourceLabels: Record<string, string> = {
-  website: "Veb-sayt",
-  referral: "Tavsiya",
-  social: "Ijtimoiy tarmoq",
-  exhibition: "Ko'rgazma",
-  cold_call: "Sovuq qo'ng'iroq",
-  other: "Boshqa",
+  website: "leadSourceWebsite",
+  referral: "leadSourceReferral",
+  social: "leadSourceSocial",
+  exhibition: "leadSourceExhibition",
+  cold_call: "leadSourceColdCall",
+  other: "leadSourceOther",
 };
 
 export const contactTypeLabels: Record<string, string> = {
-  call: "Qo'ng'iroq",
-  meeting: "Uchrashuv",
+  call: "contactTypeCall",
+  meeting: "contactTypeMeeting",
   email: "Email",
   whatsapp: "WhatsApp",
   telegram: "Telegram",
 };
 
 export const outcomeLabels: Record<string, string> = {
-  interested: "Qiziqish bildirdi",
-  not_interested: "Qiziqmadi",
-  callback: "Qayta qo'ng'iroq",
-  no_answer: "Javob bermadi",
-  converted: "Konvertatsiya",
+  interested: "outcomeInterested",
+  not_interested: "outcomeNotInterested",
+  callback: "outcomeCallback",
+  no_answer: "outcomeNoAnswer",
+  converted: "outcomeConverted",
 };
 
 export const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;

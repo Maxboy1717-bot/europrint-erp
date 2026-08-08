@@ -39,7 +39,7 @@ export class ChatMessageExtService {
     const origResult = await this.msgRepo.findMessageForForward(msgIdStr);
     if (!origResult.ok) throw new InternalServerErrorException(origResult.error.message);
     const orig = origResult.data as Record<string, unknown> | null;
-    if (!orig) throw new InternalServerErrorException('Message not found');
+    if (!orig) throw new InternalServerErrorException(await this.i18n.t('errors.messageNotFound'));
     return orig;
   }
 

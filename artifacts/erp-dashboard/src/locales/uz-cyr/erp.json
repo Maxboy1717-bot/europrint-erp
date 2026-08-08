@@ -1,1 +1,8 @@
-{}
+{
+  "title": "ERP Тизими",
+  "loading": "Юкланмоқда...",
+  "error": "Хатолик юз берди",
+  "ERPDowntimeTab.1Smena": "1-смена",
+  "ERPDowntimeTab.2Smena": "2-смена",
+  "ERPDowntimeTab.3Smena": "3-смена"
+}

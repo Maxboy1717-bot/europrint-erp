@@ -6,12 +6,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Archive, Layers, CalendarClock, Brain } from "lucide-react";
-import { DashboardData, Translations } from "./types";
+import { DashboardData, TFunc } from "./types";
 
 interface StatusCardsProps {
   dashboard: DashboardData | undefined;
   isLoading: boolean;
-  t: Translations;
+  t: TFunc;
 }
 
 export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
@@ -21,7 +21,7 @@ export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-muted-foreground">{t.dashboard.totalStock}</p>
+              <p className="text-sm text-muted-foreground">{t("Reservation.dashboardTotalStock")}</p>
               {isLoading ? (
                 <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
               ) : (
@@ -39,7 +39,7 @@ export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-muted-foreground">{t.dashboard.reservedPct}</p>
+              <p className="text-sm text-muted-foreground">{t("Reservation.dashboardReservedPct")}</p>
               {isLoading ? (
                 <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
               ) : (
@@ -57,7 +57,7 @@ export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-muted-foreground">{t.dashboard.expiringSoon}</p>
+              <p className="text-sm text-muted-foreground">{t("Reservation.dashboardExpiringSoon")}</p>
               {isLoading ? (
                 <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
               ) : (
@@ -75,7 +75,7 @@ export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-muted-foreground">{t.dashboard.aiConfidence}</p>
+              <p className="text-sm text-muted-foreground">{t("Reservation.dashboardAiConfidence")}</p>
               {isLoading ? (
                 <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
               ) : (

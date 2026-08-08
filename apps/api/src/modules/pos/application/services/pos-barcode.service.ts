@@ -19,6 +19,7 @@ import {
   Injectable, Logger, NotFoundException, BadRequestException,
   OnModuleInit, OnModuleDestroy,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ConfigService } from '@nestjs/config';
 import { safeCall, Ok, Err, AppErr, Result, AppError } from '@common/result';
 import { PosBarcodeRepository, type BarcodeLookupRow } from '../../infrastructure/repositories/pos-barcode.repository';
@@ -63,6 +64,7 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
     private readonly auditService:  PosAuditService,
     private readonly extSvc:        PosBarcodeExtService,
     private readonly barcodeRepo:   PosBarcodeRepository,
+    private readonly i18n:          I18nService,
   ) {}
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[pos-barcode.service] init failed: ' + e)); }
@@ -244,12 +246,12 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
       .from(materialCards)
       .where(eq(materialCards.id, dto.materialCardId));
 
-    if (!card) throw new NotFoundException(`Material topilmadi: ${dto.materialCardId}`);
+    if (!card) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: dto.materialCardId } }));
 
     const barcodeExists = await this.barcodeRepo.checkBarcodeExists(dto.barcode);
 
     if (barcodeExists) {
-      throw new BadRequestException(`Barcode allaqachon ishlatilgan: ${dto.barcode}`);
+      throw new BadRequestException(await this.i18n.t('errors.barcodeAlreadyExists', { args: { barcode: dto.barcode } }));
     }
 
     if (dto.isPrimary) {
@@ -295,9 +297,15 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
     return this.extSvc.reviewAiSuggestion(dto, reviewerId);
   }
 
+  // ─── Kutilayotgan AI Takliflar (delegate) ─────────────────────────────────
+
+  async getPendingSuggestions() {
+    return this.extSvc.getPendingSuggestions();
+  }
+
   // ─── EAN-13 Generatsiya (delegate) ───────────────────────────────────────
 
-  generateEan13(dto: GenerateEan13Dto): string {
+  async generateEan13(dto: GenerateEan13Dto): Promise<string> {
     return this.extSvc.generateEan13(dto);
   }
 }

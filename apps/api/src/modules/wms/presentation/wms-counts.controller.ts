@@ -9,11 +9,14 @@ BadRequestException, Body, Controller, Delete, Get, NotFoundException,
   Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, Logger, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
   WmsCreateInventoryCountSchema, WmsCreateInventoryCountDto,
   WmsCreateInternalRequestSchema, WmsCreateInternalRequestDto,
   WmsUpdateInternalRequestSchema, WmsUpdateInternalRequestDto,
+  WmsCountLineSchema, WmsCountLineDto,
+  WmsFreezeZoneSchema, WmsFreezeZoneDto,
 } from './dto/wms-counts.dto';
 import { assertOk, throwFromError, unwrapOrInternal, unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -25,9 +28,10 @@ import { AuthenticatedUser } from '@common/types/user.types';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { WmsCountsService } from '../application/wms-counts.service';
 import { WmsCrudService } from '../application/wms-crud.service';
+import { InventoryFreezeService } from '../application/inventory-freeze.service';
 
-const WMS_WRITE_ROLES = ['warehouse_manager', 'ERP_MANAGER', 'mm_manager', 'super_admin', 'director'];
-const WMS_FLOOR_ROLES = ['WAREHOUSE_WORKER', 'warehouse_manager', 'ERP_MANAGER', 'mm_manager', 'super_admin', 'director'];
+const WMS_WRITE_ROLES = ['warehouse_manager', 'mm_manager', 'super_admin', 'director'];
+const WMS_FLOOR_ROLES = ['WAREHOUSE_WORKER', 'warehouse_manager', 'mm_manager', 'super_admin', 'director'];
 
 @ApiThrottle()
 @ApiTags('Wms Counts')
@@ -41,6 +45,8 @@ export class WmsCountsController {
   constructor(
     private readonly svc: WmsCountsService,
     private readonly crudSvc: WmsCrudService,
+    private readonly freezeSvc: InventoryFreezeService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List inventory counts' })
@@ -50,10 +56,107 @@ export class WmsCountsController {
     @Query('warehouseId') warehouseId?: string,
     @Query('status') status?: string,
     @Query('limit') limit?: string,
+    @Query('blind') blind?: string,
   ) {
-    const r = await this.svc.listInventoryCounts(warehouseId, status, safeInt(limit, 20));
+    // KO'R-SANOQ (blind count): blind=true → tizim-miqdori sanoqchidan yashiriladi.
+    const isBlind = blind === 'true' || blind === '1';
+    const r = await this.svc.listInventoryCounts(warehouseId, status, safeInt(limit, 20), isBlind);
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length, blind_mode: isBlind };
+  }
+
+  // Vision 10-warehouse#12 — sanoq aniqlik% KPI (farqsiz poz / jami poz × 100).
+  // NB: statik 'accuracy' segmenti :id yo'nalishlaridan OLDIN e'lon qilinadi (marshrut ustuvorligi).
+  @ApiOperation({ summary: 'Inventory count accuracy % (variance-free positions / total × 100)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('inventory-counts/accuracy')
+  async getCountAccuracy(@Query('warehouseId') warehouseId?: string) {
+    const r = await this.svc.getCountAccuracy(warehouseId);
+    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
+    return rows[0] ?? { total_positions: 0, variance_positions: 0, accurate_positions: 0, accuracy_pct: 0 };
+  }
+
+  // Batch 5 Item 10 — bitta inventarizatsiyaning tafovutlari (inson tasdig'i uchun ko'rib chiqiladi).
+  @ApiOperation({ summary: 'List variance lines of a count (for human confirmation)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('inventory-counts/:id/variances')
+  async listCountVariances(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.getCountVariances(id);
     const items = r.ok && Array.isArray(r.data) ? r.data : [];
     return { items, total: items.length };
+  }
+
+  // Batch 5 Item 10 — inventarizatsiyani INSON tasdig'i bilan yopish. Egasi qarori: foiz-chegara
+  // bo'yicha avto-tasdiq YO'Q; approved_by har doim jonli foydalanuvchi (@CurrentUser).
+  @ApiOperation({ summary: 'Approve (human-confirm) an inventory count — no auto-approval' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Variance without reason' })
+  @ApiResponse({ status: 403, description: 'No authenticated user' })
+  @Patch('inventory-counts/:id/approve')
+  async approveInventoryCount(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
+    const r = await this.svc.approveInventoryCount(id, user?.id ?? null);
+    if (!r.ok) throwFromError(r.error);
+    return r.data;
+  }
+
+  @ApiOperation({ summary: 'List count deviation reasons (catalog)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('count-deviation-reasons')
+  @Roles(...WMS_FLOOR_ROLES)
+  async listDeviationReasons() {
+    const r = await this.freezeSvc.listDeviationReasons();
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Record a count line (deviation reason required when system != counted)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request / deviation reason required' })
+  @Post('count-lines')
+  @UsePipes(new ZodValidationPipe(WmsCountLineSchema))
+  @Roles(...WMS_FLOOR_ROLES)
+  async recordCountLine(@Body() body: WmsCountLineDto, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.recordCountLine({
+      countId: safeInt(body.count_id, 0),
+      materialId: safeInt(body.material_id, 0),
+      systemQty: Number(body.system_qty),
+      countedQty: Number(body.counted_qty),
+      deviationReasonCode: body.deviation_reason_code != null ? String(body.deviation_reason_code) : null,
+      notes: body.notes != null ? String(body.notes) : null,
+      countedBy: user?.id ?? null,
+    }));
+  }
+
+  @ApiOperation({ summary: 'List inventory freeze zones' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('freeze-zones')
+  async listFreezeZones(@Query('status') status?: string, @Query('warehouseId') warehouseId?: string) {
+    const r = await this.freezeSvc.listFreezes(status, warehouseId ? safeInt(warehouseId, 0) : undefined);
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Freeze a zone/material for inventory count' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('freeze-zones')
+  @UsePipes(new ZodValidationPipe(WmsFreezeZoneSchema))
+  async freezeZone(@Body() body: WmsFreezeZoneDto, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.freezeSvc.freezeZone({
+      warehouseId: safeInt(body.warehouse_id, 0),
+      materialId: body.material_id != null ? safeInt(body.material_id, 0) : null,
+      countId: body.count_id != null ? safeInt(body.count_id, 0) : null,
+      reason: body.reason != null ? String(body.reason) : null,
+      frozenBy: user?.id ?? null,
+    }));
+  }
+
+  @ApiOperation({ summary: 'Release an inventory freeze zone' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found / already released' })
+  @Patch('freeze-zones/:id/release')
+  async releaseFreezeZone(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrNotFound(await this.freezeSvc.releaseZone(id, user?.id ?? null));
   }
 
   @ApiOperation({ summary: 'Create inventory count' })
@@ -63,7 +166,7 @@ export class WmsCountsController {
   @UsePipes(new ZodValidationPipe(WmsCreateInventoryCountSchema))
   async createInventoryCount(@Body() body: WmsCreateInventoryCountDto) {
     const { warehouse_id, counted_by, notes } = body;
-    assertRequired(warehouse_id, 'warehouse_id required');
+    assertRequired(warehouse_id, await this.i18n.t('validation.warehouseIdRequired'));
     return unwrapOrThrow(await this.svc.createInventoryCount(safeInt(warehouse_id, 0), counted_by != null ? safeInt(counted_by, 0) : null, notes != null ? String(notes) : null));
   }
 
@@ -95,8 +198,9 @@ export class WmsCountsController {
   @Roles(...WMS_FLOOR_ROLES)
   async createInternalRequest(@Body() body: WmsCreateInternalRequestDto, @CurrentUser() user: AuthenticatedUser) {
     const { from_warehouse_id, to_warehouse_id, material_id, quantity, notes } = body;
-    assertRequired(material_id, 'material_id and quantity required');
-    assertRequired(quantity, 'material_id and quantity required');
+    const materialQuantityMsg = await this.i18n.t('validation.materialIdAndQuantityRequired');
+    assertRequired(material_id, materialQuantityMsg);
+    assertRequired(quantity, materialQuantityMsg);
     return unwrapOrThrow(await this.svc.createInternalRequest(user?.id ?? null, from_warehouse_id != null ? safeInt(from_warehouse_id, 0) : null, to_warehouse_id != null ? safeInt(to_warehouse_id, 0) : null, safeInt(material_id, 0), safeInt(quantity, 0), notes != null ? String(notes) : null));
   }
 
@@ -111,7 +215,7 @@ export class WmsCountsController {
     const _rR = await this.svc.updateInternalRequest(safeInt(id, 0), status != null ? String(status) : null, notes != null ? String(notes) : null);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Request not found');
+    assertFound(r, await this.i18n.t('errors.requestNotFound', { args: { id } }));
     const items = Array.isArray(r) ? r : [];
     return items[0];
   }

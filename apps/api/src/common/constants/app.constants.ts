@@ -99,12 +99,13 @@ export const DECIMAL_PLACES = 2;
 // ─── AI — token chegaralari ───────────────────────────────────────────────────
 export const AI_MAX_TOKENS_STANDARD = 400;  // standart qisqa AI javob tokenlari
 export const AI_MAX_TOKENS_MEDIUM = 1_200;  // o'rtacha AI javob tokenlari
-export const AI_DAILY_LIMIT_HIGH = 2_000;   // kunlik so'rovlar chegarasi (yuqori)
-
-// ─── AI — provayder byudjetlari (USD, oylik) ─────────────────────────────────
-export const AI_BUDGET_OPENAI_MONTHLY  = 100;   // OpenAI oylik byudjet (USD)
-export const AI_BUDGET_GEMINI_MONTHLY  = 50;    // Gemini oylik byudjet (USD)
-export const AI_BUDGET_CLAUDE_MONTHLY  = 80;    // Claude oylik byudjet (USD)
+// AI_DAILY_LIMIT_HIGH / AI_BUDGET_OPENAI_MONTHLY / AI_BUDGET_GEMINI_MONTHLY /
+// AI_BUDGET_CLAUDE_MONTHLY removed 2026-07-13: these were only consumed by
+// ai-hr-new.service.ts's PROVIDER_BUDGETS array, which now reads the same numbers
+// (as owner-tunable defaults) from business_settings via getBusinessSettingNumber() —
+// see DEFAULT_* constants in that file + migration
+// ai-hr-dashboard-budgets-2026-07-13.sql. Removing rather than leaving as dead exports
+// (Q-46: fix-or-remove, no half-state).
 
 // ─── Foiz hisoblash ──────────────────────────────────────────────────────────
 export const PERCENT_BASIS = 10_000;        // 10000/100 → foiz ikki kasr bilan
@@ -118,9 +119,12 @@ export const BUDGET_YEAR_MIN = 2_020;       // byudjet yil oralig'i, minimum
 export const BUDGET_YEAR_MAX = 2_030;       // byudjet yil oralig'i, maksimum
 
 // ─── Moliya: Valyuta kurslari (so'm) ─────────────────────────────────────────
-export const RATE_USD_UZS = 12_700;         // 1 USD → UZS (taxminiy kurs)
-export const RATE_EUR_UZS = 13_800;         // 1 EUR → UZS (taxminiy kurs)
-export const RATE_CNY_UZS = 1_750;          // 1 CNY → UZS (taxminiy kurs)
+// Bu qiymatlar faqat `exchange_rates` jadvalida shu valyuta uchun qator
+// topilmaganda ishlatiladigan ZAXIRA (fallback) kurslar — kanonik manba jadval.
+export const RATE_USD_UZS = 12_700;         // 1 USD → UZS (zaxira, taxminiy kurs)
+export const RATE_EUR_UZS = 13_800;         // 1 EUR → UZS (zaxira, taxminiy kurs)
+export const RATE_RUB_UZS = 140;            // 1 RUB → UZS (zaxira, taxminiy kurs)
+export const RATE_CNY_UZS = 1_750;          // 1 CNY → UZS (zaxira, taxminiy kurs)
 
 // ─── Biznes: Miqdor chegaralari ──────────────────────────────────────────────
 export const PO_MAX_AMOUNT_UZS = 50_000_000;          // Buyurtma max summasi
@@ -128,7 +132,6 @@ export const HR_SALARY_MEDIUM_UZS = 3_000_000;        // O'rtacha maosh chegaras
 export const DELIVERY_FREE_THRESHOLD_UZS = 500_000;   // Bepul yetkazib berish
 export const DELIVERY_FEE_UZS = 25_000;               // Standart yetkazib berish
 export const SENSOR_MAX_FETCH = 9_999;                // IoT sensor so'rovi limiti
-export const QUOTATION_BASE_NUMBER = 100_000;         // SD taklifnoma bazaviy raqam
 export const SIDECAR_PORT = 1_106;                    // Replit object storage port
 export const MM_TO_PT_RATIO = 2.83_46;               // Millimetr → PostScript nuqta
 
@@ -137,6 +140,15 @@ export const MAX_USERS_DEFAULT = 400;       // standart foydalanuvchilar soni li
 
 // ─── Kanban standartlari ─────────────────────────────────────────────────────
 export const KANBAN_BATCH_FETCH = 1_000; // status bo'yicha kanban kartalar limiti
+
+// ─── Etiket / Termal printer (ZPL/EPL/QR) ────────────────────────────────────
+export const THERMAL_PRINTER_DPI = 203;        // standart termal printer dot-per-inch
+export const MM_PER_INCH = 25.4;               // millimetr → dyuym konversiya
+export const QR_QUIET_ZONE_MODULES = 4;        // QR atrofidagi "jim zona" modul soni (ISO/IEC 18004 §5.3.2)
+export const QR_EPL_MODULE_SCALE = 4;          // EPL GW bitmap: modul → piksel (katta etiket, masalan tayyor-mahsulot/rulon)
+export const QR_EPL_MODULE_SCALE_COMPACT = 2;  // EPL GW bitmap: modul → piksel (standart kichik etiket)
+export const QR_ZPL_MAGNIFICATION = 3;         // ZPL ^BQ magnifikatsiya darajasi (1-10)
+export const LABEL_QR_MODULE_PT = 1.6;         // PDF: QR modul o'lchami (pt), vektor to'rtburchak
 export const KANBAN_FLOWS_LIMIT = 100;   // oqimlar ro'yxati sahifalash limiti
 
 // ─── Rekrutment standartlari ─────────────────────────────────────────────────

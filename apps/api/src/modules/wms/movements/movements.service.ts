@@ -3,7 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IWmsMovementsRepository, WMS_MOVEMENTS_REPO } from './i-wms-movements.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class MovementsService {
   private readonly logger = new Logger(MovementsService.name);
 
-  constructor(@Inject(WMS_MOVEMENTS_REPO) private readonly wmsMovementsRepo: IWmsMovementsRepository) {}
+  constructor(
+    @Inject(WMS_MOVEMENTS_REPO) private readonly wmsMovementsRepo: IWmsMovementsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -29,7 +33,7 @@ export class MovementsService {
   async findOne(id: number) {
     const result = await this.wmsMovementsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Ko'chirish #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id } }));
     const linesResult = await this.wmsMovementsRepo.findLinesByTransferId(id);
     if (!linesResult.ok) throw new InternalServerErrorException(linesResult.error);
     return { ...result.data, lines: linesResult.data };

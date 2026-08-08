@@ -145,7 +145,7 @@ export function CustomerFilterBar({
           <SelectItem value="all">{t("barchaHolat")}</SelectItem>
           <SelectItem value="active">{t("aktiv")}</SelectItem>
           <SelectItem value="inactive">{t("inactive")}</SelectItem>
-          <SelectItem value="blacklist">{t("qoraRoyxat")}</SelectItem>
+          <SelectItem value="blacklisted">{t("qoraRoyxat")}</SelectItem>
         </SelectContent>
       </Select>
       {hasFilters && (

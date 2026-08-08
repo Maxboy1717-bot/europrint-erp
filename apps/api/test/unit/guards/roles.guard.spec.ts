@@ -8,6 +8,7 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RolesGuard } from '../../../src/common/guards/roles.guard';
+import { IS_PUBLIC_KEY } from '../../../src/common/decorators/public.decorator';
 
 interface RequestShape {
   user?: { role?: string };
@@ -25,7 +26,11 @@ function buildContext(
   user: RequestShape['user'],
 ): { ctx: ExecutionContext; reflector: Reflector } {
   const reflector = {
-    getAllAndOverride: jest.fn().mockReturnValue(requiredRoles),
+    // Real Reflector differentiates by metadata key — mock must too, since
+    // RolesGuard now checks IS_PUBLIC_KEY before 'roles' (@Public() bypass).
+    getAllAndOverride: jest.fn().mockImplementation((key: string) =>
+      key === IS_PUBLIC_KEY ? undefined : requiredRoles,
+    ),
   } as unknown as Reflector;
   const request: RequestShape = { user };
   const ctx = {

@@ -6,8 +6,10 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertFound, assertRequired } from '@common/assertions';
+import { z } from 'zod';
 import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -17,7 +19,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { OkrService } from '../application/okr.service';
 import {
-  OkrCreateObjectiveSchema, OkrCreateObjectiveDto,
+  OkrCreateObjectiveSchema,
   OkrUpdateObjectiveSchema, OkrUpdateObjectiveDto,
   OkrCreateKeyResultSchema, OkrCreateKeyResultDto,
   OkrUpdateKeyResultSchema, OkrUpdateKeyResultDto,
@@ -25,6 +27,14 @@ import {
 
 const MANAGER_ROLES = ['manager', 'director', 'super_admin'];
 const DIRECTOR_ROLES = ['director', 'super_admin'];
+
+// P30 EP-DIR-015/016: OkrCreateObjectiveSchema (director.dto.ts — not owned)
+// extended with cascade fields. Parsed inline so unknown keys are not stripped
+// by the shared ZodValidationPipe before reaching the handler.
+const OkrCreateObjectiveP30Schema = OkrCreateObjectiveSchema.extend({
+  parent_goal_id: z.coerce.number().int().positive().nullish(),
+  owner_card_id:  z.coerce.number().int().positive().nullish(),
+});
 
 @ApiThrottle()
 @ApiTags('Okr')
@@ -35,7 +45,10 @@ const DIRECTOR_ROLES = ['director', 'super_admin'];
 export class OkrController {
   private readonly logger = new Logger(OkrController.name);
 
-  constructor(private readonly svc: OkrService) {}
+  constructor(
+    private readonly svc: OkrService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'List objectives' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -45,8 +58,15 @@ export class OkrController {
     @Query('year') year?: string,
     @Query('quarter') quarter?: string,
     @Query('status') status?: string,
+    @Query('parent_goal_id') parentGoalId?: string,
   ) {
-    return unwrapOrInternal(await this.svc.listObjectives(type ?? null, year ? parseInt(year, 10) : null, quarter ?? null, status ?? null));
+    return unwrapOrInternal(await this.svc.listObjectives(
+      type ?? null,
+      year ? parseInt(year, 10) : null,
+      quarter ?? null,
+      status ?? null,
+      parentGoalId ? parseInt(parentGoalId, 10) : null,
+    ));
   }
 
   @ApiOperation({ summary: 'Get objective' })
@@ -57,7 +77,7 @@ export class OkrController {
     const _rData = await this.svc.getObjective(parseInt(id, 10));
     assertOk(_rData);
     const data = _rData.data;
-    assertFound(data, 'Topilmadi');
+    assertFound(data, await this.i18n.t('errors.notFound'));
     return data[0];
   }
 
@@ -65,17 +85,18 @@ export class OkrController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('objectives')
-  @UsePipes(new ZodValidationPipe(OkrCreateObjectiveSchema))
   async createObjective(
-    @Body() body: OkrCreateObjectiveDto,
+    @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
-    const { title, type, year, quarter, description } = body;
-    assertRequired(title, 'title majburiy');
+    const dto = OkrCreateObjectiveP30Schema.parse(body);
+    const { title, type, year, quarter, description, parent_goal_id, owner_card_id } = dto;
+    assertRequired(title, await this.i18n.t('errors.titleRequired'));
     return unwrapOrInternal(await this.svc.createObjective(
       title, type ?? 'company',
       year ? Number(year) : _time.now().getFullYear(),
       quarter ?? 'Q1', description ?? null, user.id,
+      parent_goal_id ?? null, owner_card_id ?? null,
     ));
   }
 
@@ -85,9 +106,9 @@ export class OkrController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('objectives/:id')
   @UsePipes(new ZodValidationPipe(OkrUpdateObjectiveSchema))
-  async updateObjective(@Param('id') id: string, @Body() body: OkrUpdateObjectiveDto) {
+  async updateObjective(@Param('id') id: string, @Body() body: OkrUpdateObjectiveDto, @CurrentUser() user: { id: number }) {
     const { title, status, description } = body;
-    return unwrapOrInternal(await this.svc.updateObjective(parseInt(id, 10), title ?? null, status ?? null, description ?? null));
+    return unwrapOrInternal(await this.svc.updateObjective(parseInt(id, 10), title ?? null, status ?? null, description ?? null, user?.id ?? null));
   }
 
   @ApiOperation({ summary: 'Delete objective' })
@@ -118,8 +139,9 @@ export class OkrController {
     @CurrentUser() user: { id: number },
   ) {
     const { objective_id, title, target_value, unit, current_value } = body;
-    assertRequired(objective_id, 'objective_id va title majburiy');
-    assertRequired(title, 'objective_id va title majburiy');
+    const objectiveIdAndTitleMsg = await this.i18n.t('validation.objectiveIdAndTitleRequired');
+    assertRequired(objective_id, objectiveIdAndTitleMsg);
+    assertRequired(title, objectiveIdAndTitleMsg);
     return unwrapOrInternal(await this.svc.createKeyResult(
       Number(objective_id), title as string,
       target_value ? Number(target_value) : 100,
@@ -134,13 +156,14 @@ export class OkrController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('key-results/:id')
   @UsePipes(new ZodValidationPipe(OkrUpdateKeyResultSchema))
-  async updateKeyResult(@Param('id') id: string, @Body() body: OkrUpdateKeyResultDto) {
+  async updateKeyResult(@Param('id') id: string, @Body() body: OkrUpdateKeyResultDto, @CurrentUser() user: { id: number }) {
     const { current_value, status, title } = body;
     return unwrapOrInternal(await this.svc.updateKeyResult(
       parseInt(id, 10),
       current_value != null ? Number(current_value) : null,
       (status as string) ?? null,
       (title as string) ?? null,
+      user?.id ?? null,
     ));
   }
 
@@ -160,5 +183,13 @@ export class OkrController {
   @Get('dashboard')
   async getDashboard() {
     return unwrapOrInternal(await this.svc.getDashboard());
+  }
+
+  // EP-DIR-016: OKR kaskad daraxti — kompaniya→bo'lim→karta, rolled-up progress.
+  @ApiOperation({ summary: 'OKR cascade tree with rolled-up progress' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('cascade')
+  async getCascade(@Query('year') year?: string) {
+    return unwrapOrInternal(await this.svc.getCascade(year ? parseInt(year, 10) : null));
   }
 }

@@ -13,6 +13,7 @@ import { db } from '@shared/db';
 import { payrollContracts, payrollCalculations, users } from '@workspace/db';
 import { and, eq, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
+import { MesBrakLimitRepository } from '@modules/mes/infrastructure/repositories/mes-brak-limit.repo';
 
 // ERP is gross-only: tax (INPS/JSHD) and the statutory min-wage guarantee are
 // computed in 1C, NOT here. This service handles gross + NON-TAX deductions only.
@@ -73,6 +74,8 @@ interface AiRecommendation {
 
 @Injectable()
 export class FinanceExtendedPayrollService {
+  constructor(private readonly brakLimitRepo: MesBrakLimitRepository) {}
+
   /** Earnings/deductions engine — byte-for-byte parity with FE calculatePreview. */
   private compute(contract: ContractRow, i: ComputeInput): ComputeParts {
     let basePay = 0;
@@ -107,6 +110,46 @@ export class FinanceExtendedPayrollService {
 
   private mapCalc(r: CalcRow) {
     return { ...r, id: String(r.id), employeeId: String(r.employeeId) };
+  }
+
+  async createContract(dto: {
+    employeeId: number;
+    contractNumber: string;
+    payType: 'fixed' | 'hourly' | 'piecework';
+    baseSalary?: number;
+    hourlyRate?: number;
+    pieceworkRate?: number;
+    pieceworkUnit?: string;
+    effectiveFrom: string;
+    effectiveTo?: string;
+    status?: 'active' | 'suspended' | 'terminated';
+    notes?: string;
+  }): Promise<Result<unknown>> {
+    try {
+      const rows = await db.insert(payrollContracts).values({
+        employeeId: dto.employeeId,
+        contractNumber: dto.contractNumber,
+        payType: dto.payType,
+        baseSalary: dto.baseSalary ?? null,
+        hourlyRate: dto.hourlyRate ?? null,
+        pieceworkRate: dto.pieceworkRate ?? null,
+        pieceworkUnit: dto.pieceworkUnit ?? null,
+        effectiveFrom: dto.effectiveFrom,
+        effectiveTo: dto.effectiveTo ?? null,
+        status: dto.status ?? 'active',
+        notes: dto.notes ?? null,
+      }).returning();
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return Err(AppErr('DB_ERROR', 'INSERT returned no rows'));
+      }
+      return Ok(this.mapContract(rows[0]));
+    } catch (e: unknown) {
+      const msg = String(e);
+      if (msg.includes('unique') || msg.includes('duplicate') || msg.includes('23505')) {
+        return Err(AppErr('CONFLICT', `Shartnoma raqami allaqachon mavjud: ${dto.contractNumber}`));
+      }
+      return Err(AppErr('DB_ERROR', `PAYROLL_CONTRACT_CREATE_FAILED: ${msg}`));
+    }
   }
 
   async listContracts(): Promise<Result<unknown[]>> {
@@ -184,6 +227,11 @@ export class FinanceExtendedPayrollService {
       if (!contract) {
         return Err(AppErr('NOT_FOUND', `No active payroll contract for employee ${employeeId}`));
       }
+      // 3.2-brak-ushlanma-zanjiri: hal qilinmagan ('open') brak-sabab discipline_records
+      // jarimasi mavjud bo'lsa (MES defect-report → work_centers.brak_limit_pct gate →
+      // HR fine_rules siyosati), bu yerga QO'SHILADI (fabrikatsiya emas — mavjud jarima
+      // yig'indisi; hech qanday brak-fine yo'q bo'lsa 0, xatti-harakat o'zgarmaydi).
+      const brakFines = await this.brakLimitRepo.sumUnpaidBrakFinesByEmployee(employeeId);
       const parts = this.compute(contract, {
         workHours: dto.workHours ?? 0,
         productionUnits: dto.productionUnits ?? 0,
@@ -191,7 +239,7 @@ export class FinanceExtendedPayrollService {
         allowances: dto.allowances ?? 0,
         advances: dto.advances ?? 0,
         loans: dto.loans ?? 0,
-        otherDeductions: dto.otherDeductions ?? 0,
+        otherDeductions: (dto.otherDeductions ?? 0) + brakFines,
       });
       const inserted = await this.insertCalc(
         contract, employeeId, dto.workDays ?? 0, dto.workHours ?? 0,
@@ -215,10 +263,12 @@ export class FinanceExtendedPayrollService {
       }
       const monthlyHours = contract.monthlyHours ?? DEFAULT_MONTHLY_HOURS;
       const workHours = contract.payType === 'hourly' ? monthlyHours : 0;
+      // 3.2-brak-ushlanma-zanjiri: xuddi calculate() dagi kabi — mavjud brak-jarimasi bo'lsa qo'shiladi.
+      const brakFines = await this.brakLimitRepo.sumUnpaidBrakFinesByEmployee(employeeId);
       const parts = this.compute(contract, {
         workHours,
         productionUnits: 0,
-        bonuses: 0, allowances: 0, advances: 0, loans: 0, otherDeductions: 0,
+        bonuses: 0, allowances: 0, advances: 0, loans: 0, otherDeductions: brakFines,
       });
       const periodMonth = dto.periodMonth ?? new Date().toISOString().slice(0, 7);
       // BOSQICH 2 — pull REAL worked days + overtime from `attendance` for the period (was hardcoded

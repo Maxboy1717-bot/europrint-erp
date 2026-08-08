@@ -7,12 +7,17 @@ import { z } from 'zod';
 import { MES_REASON_MAX_LENGTH, MES_TITLE_MAX_LENGTH, MES_SCORE_MAX } from '../constants/mes.constants';
 
 export const MesCreateProductionSessionSchema = z.object({
-  work_order_id:  z.number().int().positive().optional(),
-  machine_id:     z.number().int().positive().optional(),
-  operator_id:    z.number().int().positive().optional(),
-  product_id:     z.number().int().positive().optional(),
-  planned_qty:    z.number().positive().optional(),
-  shift:          z.enum(['morning', 'afternoon', 'night']).optional(),
+  // production_order_id / work_order_id — both accepted (FE sends either); maps to production_sessions.production_order_id
+  production_order_id: z.number().int().positive().optional(),
+  work_order_id:       z.number().int().positive().optional(),
+  // work_center_id / machine_id — both accepted; maps to production_sessions.equipment_id + machine_id
+  work_center_id:      z.number().int().positive().optional(),
+  machine_id:          z.number().int().positive().optional(),
+  operator_id:         z.number().int().positive().optional(),
+  product_id:          z.number().int().positive().optional(),
+  planned_qty:         z.number().positive().optional(),
+  shift:               z.enum(['morning', 'afternoon', 'night']).optional(),
+  notes:               z.string().optional(),
 });
 export type MesCreateProductionSessionDto = z.infer<typeof MesCreateProductionSessionSchema>;
 
@@ -84,6 +89,19 @@ export const MesShiftHandoverSchema = z.object({
 });
 export type MesShiftHandoverDto = z.infer<typeof MesShiftHandoverSchema>;
 
+// ─── Handover tasdiq (qabul-gate, SB0429) ─────────────────────────────────────
+// A handover row is created 'pending' by shiftHandover() above. It stays an
+// unconfirmed draft until the RECEIVING supervisor (received_by) confirms it
+// with a signature — mirrors the POS 2-signature gate pattern (pos-shift-
+// handover.service.ts) scaled to MES's single-receiver schema. Confirming
+// without a signature, confirming twice, or confirming as someone other than
+// the receiver must all be rejected (enforced in the repository UPDATE WHERE
+// clause, not just here).
+export const MesConfirmShiftHandoverSchema = z.object({
+  signature_data: z.string().min(1).max(MES_TITLE_MAX_LENGTH * 10),
+});
+export type MesConfirmShiftHandoverDto = z.infer<typeof MesConfirmShiftHandoverSchema>;
+
 export const MesCloseShiftEvaluationSchema = z.object({
   shift_id:          z.number().int().positive(),
   supervisor_id:     z.number().int().positive().optional(),
@@ -117,7 +135,19 @@ export const MesRecordDowntimeSchema = MesAddDowntimeSchema;
 export type MesRecordDowntimeDto = MesAddDowntimeDto;
 
 export const MesCreateSessionSchema = z.object({
-  notes: z.string().optional(),
+  // /mes/sessions create payload — same shape as production-sessions so user input is not whitelisted away.
+  // Accept both snake_case (work_center_id/production_order_id) and camelCase (workCenterId/ppOrderId) fallbacks.
+  production_order_id: z.number().int().positive().optional(),
+  work_order_id:       z.number().int().positive().optional(),
+  ppOrderId:           z.number().int().positive().optional(),
+  work_center_id:      z.number().int().positive().optional(),
+  workCenterId:        z.number().int().positive().optional(),
+  machine_id:          z.number().int().positive().optional(),
+  operator_id:         z.number().int().positive().optional(),
+  operatorId:          z.number().int().positive().optional(),
+  planned_qty:         z.number().positive().optional(),
+  shift:               z.enum(['morning', 'afternoon', 'night']).optional(),
+  notes:               z.string().optional(),
 });
 export type MesCreateSessionDto = z.infer<typeof MesCreateSessionSchema>;
 
@@ -135,5 +165,32 @@ export const MesMaterialConsumptionSchema = z.object({
   material_id:  z.number().int().positive(),
   quantity:     z.number().positive(),
   batch_number: z.string().optional(),
+  // To'lqin 3 (material/formula): unit_of_measure ustuni jonli DB'da BOR edi, lekin yozuv-yo'li
+  // uni e'tiborsiz qoldirardi → doim NULL (chala data-yo'li, Q-46). Endi uchma-uch ushlanadi.
+  // Qiymat = operator kiritadigan material birligi (kg/m²/list/dona). Kanonik gofra-konversiya
+  // (m²↔kg, GofraConversionService) ON-consumption semantikasi egasi-qaroriga bog'liq (GATED).
+  unit_of_measure: z.string().max(20).optional(),
 });
 export type MesMaterialConsumptionDto = z.infer<typeof MesMaterialConsumptionSchema>;
+
+// 08-mes#33 — Sessiyani Akademiya/o'quv (LMS-sync) deb belgilash. is_training=true bo'lgan
+// sessiya OEE shift-kaskadidan chiqariladi; lms_enrollment_id = LMS ro'yxatga olish bog'lami.
+export const MesSetSessionTrainingSchema = z.object({
+  is_training:       z.boolean(),
+  lms_enrollment_id: z.number().int().positive().nullable().optional(),
+});
+export type MesSetSessionTrainingDto = z.infer<typeof MesSetSessionTrainingSchema>;
+
+// #116 (08-mes, EP-MES-066) — sessiyaga qog'oz formati (list A×B) + gramm + kg yoziladi (aniq material
+// sarfi). Barcha maydon ixtiyoriy (qisman yangilash) — repo COALESCE bilan faqat berilganini yozadi;
+// .refine kamida bitta maydon berilishini talab qiladi (bo'sh PATCH mantiqsiz).
+export const MesSetPaperFormatSchema = z.object({
+  format_a: z.number().positive().optional(), // list o'lchami A (mm)
+  format_b: z.number().positive().optional(), // list o'lchami B (mm)
+  gramm:    z.number().positive().optional(), // grammaj (g/m²)
+  kg:       z.number().positive().optional(), // haqiqiy material sarfi (kg)
+}).refine(
+  (v) => v.format_a != null || v.format_b != null || v.gramm != null || v.kg != null,
+  { message: 'Kamida bitta maydon kerak (format_a/format_b/gramm/kg)' },
+);
+export type MesSetPaperFormatDto = z.infer<typeof MesSetPaperFormatSchema>;

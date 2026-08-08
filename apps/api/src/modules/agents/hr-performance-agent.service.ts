@@ -17,6 +17,7 @@ import { AgentAlertService } from './shared/agent-alert.service';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AgentEventBusService } from './shared/agent-event-bus.service';
 import { AiRouterCallService } from '../ai/application/services/ai-router-call.service';
+import type { AiRequest } from '../ai/domain/types/ai.types';
 import { isOk } from '@common/result';
 
 @Injectable()
@@ -69,13 +70,18 @@ export class HrPerformanceAgentService {
       const risk: 'low' | 'medium' | 'high' = perf.score < 40 ? 'high' : perf.score < 60 ? 'medium' : 'low';
       let reasonsUz = perf.reasons;
       try {
-        const r = await this.ai.callClaude({
+        const churnReq: AiRequest = {
           taskType: 'hr.team_fit_score',
           systemPrompt: 'O\'zbek tilida HR uchun churn xavfi sabablarini 2-3 jumlada tushuntir.',
           prompt: `Xodim ID: ${employeeId}, Performance: ${perf.score}/100, Sabablar: ${perf.reasons.join(', ')}\n\nChurn xavfi ${risk}. Sabablarini ko'rsat:`,
           maxTokens: 200,
-        });
-        if (isOk(r)) reasonsUz = [r.data.text.trim()];
+        };
+        const r = await this.ai.callClaude(churnReq);
+        if (isOk(r)) {
+          reasonsUz = [r.data.text.trim()];
+          // 20-agent audit 2026-08-06: logUsage() must be called explicitly.
+          await this.ai.logUsage('claude', churnReq, r.data);
+        }
       } catch { /* placeholder */ }
       return { risk, reasonsUz };
     });

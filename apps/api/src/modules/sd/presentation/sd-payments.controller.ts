@@ -29,10 +29,13 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
+import { NotFoundException } from '@nestjs/common';
 import { SdPaymentsService } from '../application/sd-payments.service';
 import { SdCreatePaymentSchema, SdCreatePaymentDto } from '../dto/sd.dto';
 
-const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'accountant'];
+const SD_ROLES = ['sales_manager', 'SALES', 'manager', 'director', 'super_admin', 'accountant'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -103,8 +106,22 @@ export class SdPaymentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Put('payments/:id')
   @HttpCode(HttpStatus.OK)
-  async updatePayment(@Param('id') id: string, @Body() body: unknown) {
+  async updatePayment(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = (body ?? {}) as Record<string, unknown>;
+    // audit 2026-08-06 T6 (IDOR item 5): any SD-role caller could edit any payment by
+    // integer/uuid id — no ownership comparison. Non-privileged callers may now only
+    // edit payments they created (created_by NULL = legacy row → pass, the codebase's
+    // established NULL-pass pattern). 404 (not 403) so existence isn't leaked.
+    const privileged = ['super_admin', 'director', 'admin', 'accountant'].includes(String(user?.role ?? '').toLowerCase());
+    if (!privileged) {
+      const own = await db.execute(sql`SELECT created_by FROM sd_payments WHERE id = ${id}::uuid LIMIT 1`);
+      const row = (((own as Rows).rows ?? [])[0] ?? null) as Record<string, unknown> | null;
+      if (!row) throw new NotFoundException("To'lov topilmadi");
+      const createdBy = row['created_by'] == null ? null : Number(row['created_by']);
+      if (createdBy != null && createdBy !== Number(user?.id ?? -1)) {
+        throw new NotFoundException("To'lov topilmadi");
+      }
+    }
     const r = await db.execute(sql`
       UPDATE sd_payments SET
         amount           = COALESCE(${dto['amount']           ?? null}::numeric,       amount),

@@ -68,42 +68,42 @@ export default function PosReservations() {
   const totalReserved = items.reduce((s, i) => s + (i.reserved_qty ?? 0), 0);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "20px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--pos-bg)", padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>BRON QILINGAN STOK</div>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>{t("bronQilinganStokUpper")}</div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{t('reservationPanel')}</h1>
-          <p style={{ fontSize: 13, color: "#6B7280", marginTop: 4 }}>
+          <p style={{ fontSize: 13, color: "var(--pos-text-muted)", marginTop: 4 }}>
             {t("buyurtmaYokiIshlabChiqarishUchun")}
           </p>
         </div>
-        <button onClick={load} style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
+        <button onClick={load} style={{ padding: "8px 16px", background: "var(--pos-bg)", border: "1px solid var(--pos-border)", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
           🔄
         </button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 16 }}>
-        <div style={{ background: "#FFF", borderRadius: 12, padding: 14, border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>JAMI BRON</div>
+        <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 14, border: "1px solid var(--pos-border)" }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{t("jamiBron")}</div>
           <div style={{ fontSize: 24, fontWeight: 800 }}>{items.length}</div>
         </div>
-        <div style={{ background: "#FFF", borderRadius: 12, padding: 14, border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>JAMI MIQDOR</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: "#F59E0B" }}>{fmt(totalReserved)}</div>
+        <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 14, border: "1px solid var(--pos-border)" }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{t("jamiMiqdor")}</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "var(--pos-warning)" }}>{fmt(totalReserved)}</div>
         </div>
       </div>
 
-      <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+      <div style={{ background: "var(--pos-card)", borderRadius: 12, border: "1px solid var(--pos-border)", overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>{t("yuklanmoqda")}</div>
+          <div style={{ padding: 40, textAlign: "center", color: "var(--pos-text-muted)" }}>{t("yuklanmoqda")}</div>
         ) : items.length === 0 ? (
-          <div style={{ padding: 60, textAlign: "center", color: "#9CA3AF" }}>
+          <div style={{ padding: 60, textAlign: "center", color: "var(--pos-text-muted)" }}>
             <div style={{ fontSize: 48 }}>🔓</div>
             <div style={{ marginTop: 8 }}>{t("bronQilinganStokYoq")}</div>
           </div>
         ) : (
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
-            <thead style={{ background: "#F9FAFB" }}>
+            <thead style={{ background: "var(--pos-bg)" }}>
               <tr>
                 <th style={th}>{t('Material')}</th>
                 <th style={th}>{t("ombor")}</th>
@@ -116,10 +116,10 @@ export default function PosReservations() {
             </thead>
             <tbody>
               {items.map(it => (
-                <tr key={it.id} style={{ borderTop: "1px solid #F3F4F6" }}>
+                <tr key={it.id} style={{ borderTop: "1px solid var(--pos-bg)" }}>
                   <td style={td}>{it.material_name}</td>
                   <td style={td}>{it.warehouse_name ?? `#${it.warehouse_id}`}</td>
-                  <td style={{ ...td, textAlign: "right", fontFamily: "monospace", fontWeight: 700, color: "#F59E0B" }}>
+                  <td style={{ ...td, textAlign: "right", fontFamily: "monospace", fontWeight: 700, color: "var(--pos-warning)" }}>
                     {fmt(it.reserved_qty)}
                   </td>
                   <td style={td}>{it.unit ?? "—"}</td>
@@ -127,8 +127,8 @@ export default function PosReservations() {
                   <td style={td}>
                     <span style={{
                       padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700,
-                      background: it.status === "ACTIVE" ? "#FEF3C7" : "#F3F4F6",
-                      color: it.status === "ACTIVE" ? "#92400E" : "#374151",
+                      background: it.status === "ACTIVE" ? "#FEF3C7" : "var(--pos-bg)",
+                      color: it.status === "ACTIVE" ? "#92400E" : "var(--pos-text-muted)",
                     }}>{it.status}</span>
                   </td>
                   <td style={td}>{fmtDate(it.expires_at)}</td>
@@ -142,5 +142,5 @@ export default function PosReservations() {
   );
 }
 
-const th: React.CSSProperties = { padding: "10px 14px", textAlign: "left", fontSize: 11, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" };
+const th: React.CSSProperties = { padding: "10px 14px", textAlign: "left", fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, textTransform: "uppercase" };
 const td: React.CSSProperties = { padding: "10px 14px", fontSize: 13 };

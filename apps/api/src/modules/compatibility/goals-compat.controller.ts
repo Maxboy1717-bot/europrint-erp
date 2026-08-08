@@ -9,15 +9,12 @@ import { Controller, Get, Post, Put, Patch, Delete, Param, Query, Body, HttpCode
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GoalsCompatService } from './goals-compat.service';
 import { unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
-import {
-  GoalAclTranslator,
-  type LegacyGoalRow,
-  type GoalDto,
-} from './acl/goal-acl';
 
 // P1.8.2: proper Zod DTOs for goal mutations (replaces passthrough CompatBodyDto)
 const CreateGoalSchema = z.object({
@@ -50,9 +47,6 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @Roles(...HR_ROLES, 'OPERATOR')
 @Controller('goals')
 export class GoalsCompatController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly acl = new GoalAclTranslator();
-
   constructor(private readonly svc: GoalsCompatService) {}
 
   @Get()
@@ -65,34 +59,12 @@ export class GoalsCompatController {
     return unwrapOrInternal(await this.svc.getGoals(status, category, targetType, limit));
   }
 
-  /**
-   * PA2-14 ACL-translated variant. New BC-3 (HR / Performance) consumers
-   * should target this endpoint; the legacy `GET /goals` stays for
-   * backwards-compat.
-   */
-  @Get('v2')
-  async getGoalsV2(
-    @Query('status') status?: string,
-    @Query('category') category?: string,
-    @Query('targetType') targetType?: string,
-    @Query('limit') limit?: string,
-  ): Promise<GoalDto[]> {
-    const rows = unwrapOrInternal(
-      await this.svc.getGoals(status, category, targetType, limit),
-    ) as unknown as LegacyGoalRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.acl.toDomain(row))
-      .filter((r): r is { ok: true; data: GoalDto } => r.ok)
-      .map((r) => r.data);
-  }
-
   @Post()
   @HttpCode(HttpStatus.CREATED)
   // P1.8.2: validate goal fields; P1.8.3: startDate/endDate required
-  async createGoal(@Body() body: unknown) {
+  async createGoal(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateGoalSchema.parse(body);
-    return unwrapOrInternal(await this.svc.createGoal(dto));
+    return unwrapOrInternal(await this.svc.createGoal({ ...dto, createdBy: user.id }));
   }
 
   @Get(':id')
@@ -114,7 +86,11 @@ export class GoalsCompatController {
     return unwrapOrInternal(await this.svc.updateGoal(id, dto));
   }
 
+  // Delete is more sensitive than the rest of the CRUD — only HR/manager/director/admin
+  // tiers, not the general OPERATOR role (matches RazryadController's owner/manager/HR
+  // restriction pattern). Method-level @Roles() overrides the class-level list above.
   @Delete(':id')
+  @Roles(...HR_ROLES)
   async deleteGoal(@Param('id') id: string) {
     return unwrapOrInternal(await this.svc.deleteGoal(id));
   }

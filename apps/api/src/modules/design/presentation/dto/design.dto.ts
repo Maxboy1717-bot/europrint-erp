@@ -4,10 +4,11 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 import { MAX_DESCRIPTION_LENGTH } from '@common/constants/app.constants';
 export const RequestDesignDtoSchema = z.object({
-  salesOrderId: z.string().uuid().optional(),
+  salesOrderId: IntegerIdSchema.optional(),
   title: z.string().min(1).max(255),
   description: z.string().min(1).max(MAX_DESCRIPTION_LENGTH),
 });
@@ -15,7 +16,7 @@ export const RequestDesignDtoSchema = z.object({
 export type RequestDesignDto = z.infer<typeof RequestDesignDtoSchema>;
 
 export const UpdateDesignStatusDtoSchema = z.object({
-  status: z.enum(['pending', 'in_progress', 'under_review', 'approved', 'rejected', 'completed']),
+  status: z.enum(['new', 'ai_generated', 'designer_review', 'waiting_customer_approval', 'approved', 'rejected', 'revision_requested']),
   files: z.array(z.string()).optional(),
 });
 

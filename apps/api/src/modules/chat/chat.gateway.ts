@@ -19,6 +19,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 import { NotificationBotService } from '../hr/telegram-bots/notification-bot.service';
 import { ChatGatewayHelperService } from './chat-gateway-helper.service';
+import { ChatPresenceRepository } from './repositories/chat-presence.repository';
 import {
   setChatServer,
   getChatServer as _getChatServer,
@@ -29,6 +30,18 @@ import {
 
 // Re-export for back-compat
 export { _getChatServer as getChatServer, _broadcastToRoom as broadcastToRoom };
+
+// Extract a named value out of a raw `Cookie:` header string (WS handshakes
+// don't get cookie-parser). Mirrors jwt-auth.guard reading `access_token`.
+function cookieValue(cookieHeader: string | undefined, name: string): string | undefined {
+  if (!cookieHeader) return undefined;
+  for (const part of cookieHeader.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim());
+  }
+  return undefined;
+}
 
 @WebSocketGateway({
   namespace: '/chat',
@@ -56,6 +69,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly notificationBot: NotificationBotService,
     private readonly jwtService: JwtService,
     private readonly helper: ChatGatewayHelperService,
+    private readonly presenceRepo: ChatPresenceRepository,
     cfg: ConfigService,
   ) {
     configureChatWsCors(cfg.get<string>('ALLOWED_ORIGINS') ?? '', cfg.get<string>('NODE_ENV'));
@@ -70,9 +84,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const token =
         client.handshake.auth?.token ||
-        client.handshake.headers?.authorization?.split(' ')[1];
+        client.handshake.headers?.authorization?.split(' ')[1] ||
+        cookieValue(client.handshake.headers?.cookie, 'access_token');
 
       if (!token) {
+        this.logger.warn('Chat WS: no token (auth.token / Authorization / access_token cookie all empty)');
         client.disconnect();
         return;
       }
@@ -107,6 +123,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const unread = await this.chatService.getTotalUnreadCount(userId);
       client.emit('unread_count', { count: unread });
 
+      // Persist ONLINE status to DB so presence survives server restarts
+      this.presenceRepo.upsertPresence(String(userId), 'ONLINE').catch((e: unknown) => {
+        this.logger.warn(`Failed to persist ONLINE presence for user ${userId}: ${String(e)}`);
+      });
+
       this.server.emit('user:online', { userId });
       this.logger.log(`User ${userId} connected (socket: ${client.id})`);
     } catch (err) {
@@ -123,6 +144,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         sockets.delete(client.id);
         if (sockets.size === 0) {
           this.userSockets.delete(userId);
+          // Persist OFFLINE status to DB — all sockets for this user are gone
+          this.presenceRepo.upsertPresence(String(userId), 'OFFLINE').catch((e: unknown) => {
+            this.logger.warn(`Failed to persist OFFLINE presence for user ${userId}: ${String(e)}`);
+          });
           this.server.emit('user:offline', { userId });
         }
       }
@@ -175,7 +200,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('message:send')
   async handleSendMessageNew(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string },
+    @MessageBody() data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string; clientMsgId?: string; mentionedUserIds?: (number | string)[] },
   ) {
     return this.helper.handleSendMessage(client, data);
   }
@@ -183,7 +208,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('send_message')
   async handleSendMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string },
+    @MessageBody() data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string; clientMsgId?: string; mentionedUserIds?: (number | string)[] },
   ) {
     return this.helper.handleSendMessage(client, data);
   }
@@ -277,7 +302,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('message:delete')
   async handleDeleteMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { messageId: number | string },
+    @MessageBody() data: { messageId: number | string; scope?: 'me' | 'everyone' },
   ) {
     return this.helper.handleDeleteMessage(client, data);
   }

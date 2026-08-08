@@ -344,6 +344,34 @@ export class SalesOrder extends AggregateRoot implements IOrderHeader {
     return this._totalAmount.getAmount();
   }
 
+  getCurrency(): string {
+    return typeof this._totalAmount?.getCurrency === 'function' ? this._totalAmount.getCurrency() : 'UZS';
+  }
+
+  getDesignFlag(): boolean {
+    return this._designFlag;
+  }
+
+  getSampleFlag(): boolean {
+    return this._sampleFlag;
+  }
+
+  // Technolog 3-checkpoint (Algoritm 11.2 §9) — golden-thread SD→PP gate flags.
+  // Repository.update() reads these to persist the flags approveTechCheckpoint()
+  // flips on the aggregate; without them the DB write silently drops every
+  // checkpoint approval (see ApproveTechCheckpointHandler).
+  getTechBomApproved(): boolean {
+    return this._techBomApproved;
+  }
+
+  getTechRoutingApproved(): boolean {
+    return this._techRoutingApproved;
+  }
+
+  getTechCardApproved(): boolean {
+    return this._techCardApproved;
+  }
+
   getCompanyId(): number {
     return this._companyId;
   }

@@ -20,10 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { Printer, Plus, CheckCircle, XCircle, Wifi } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { translations } from "./barcode-types";
 import { EPStatusPill } from "@/components/ep";
 
-type TranslationType = typeof translations.uz;
+type TranslationFn = (key: string, params?: Record<string, string | number>) => string;
 
 interface PrinterConfig {
   id: number;
@@ -36,11 +35,10 @@ interface PrinterConfig {
 }
 
 interface PrinterSettingsTabProps {
-  lang: "uz" | "ru";
-  t: TranslationType & ((key: string) => string);
+  t: TranslationFn;
 }
 
-export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
+export function PrinterSettingsTab({ t }: PrinterSettingsTabProps) {
   const { toast } = useToast();
 
   const [form, setForm] = useState({
@@ -76,12 +74,12 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
         });
     },
     onSuccess: () => {
-      toast({ title: lang === "uz" ? "Printer saqlandi" : "Принтер сохранён" });
+      toast({ title: t("printerSaved") });
       setForm({ name: "", printerIp: "", printerPort: 9100, printFormat: "ZPL", notes: "" });
       refetch();
     },
     onError: (err: Error) => {
-      toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -99,7 +97,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
       const data = (await apiRequest('POST', `/api/v2/pos/printer-config/${config.id}/test`)) as { success: boolean; message: string };
       setTestResult({ id: config.id, success: data.success, message: data.message });
     } catch {
-      setTestResult({ id: config.id, success: false, message: lang === "uz" ? "Ulanib bo'lmadi" : "Не удалось подключиться" });
+      setTestResult({ id: config.id, success: false, message: t("couldNotConnect") });
     } finally {
       setTestingId(null);
     }
@@ -115,21 +113,21 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-400" />
-              {lang === "uz" ? "Aktiv Printer" : "Активный принтер"}
+              {t("activePrinter")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
               <div>
-                <p className="text-muted-foreground text-xs">{t.printerIp}</p>
+                <p className="text-muted-foreground text-xs">{t("printerIp")}</p>
                 <p className="font-mono font-bold">{active.printerIp}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs">{t.printerPort}</p>
+                <p className="text-muted-foreground text-xs">{t("printerPort")}</p>
                 <p className="font-mono">{active.printerPort}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs">{t.printerFormat}</p>
+                <p className="text-muted-foreground text-xs">{t("printerFormat")}</p>
                 <Badge variant="outline">{active.printFormat}</Badge>
               </div>
             </div>
@@ -141,22 +139,22 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            {lang === "uz" ? "Yangi printer qo'shish" : "Добавить принтер"}
+            {t("addNewPrinter")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>{t.printerName}</Label>
+          <Label>{t("printerName")}</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder={lang === "uz" ? "Zebra ZT230" : "Zebra ZT230"}
+                placeholder={t("printerNamePlaceholder")}
                 data-testid="input-printer-name"
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.printerIp}</Label>
+          <Label>{t("printerIp")}</Label>
               <Input
                 value={form.printerIp}
                 onChange={(e) => setForm(f => ({ ...f, printerIp: e.target.value }))}
@@ -165,7 +163,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.printerPort}</Label>
+          <Label>{t("printerPort")}</Label>
               <Input
                 type="number"
                 value={form.printerPort}
@@ -175,14 +173,14 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.printerFormat}</Label>
+          <Label>{t("printerFormat")}</Label>
               <Select value={form.printFormat} onValueChange={(v) => setForm(f => ({ ...f, printFormat: v }))}>
                 <SelectTrigger data-testid="select-printer-format" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ZPL">{t("zplZebraZplIi")}</SelectItem>
-                  <SelectItem value="EPL">{t("eplEltronEpl2")}</SelectItem>
+                  <SelectItem value="ZPL">{t("zplFormatDesc")}</SelectItem>
+                  <SelectItem value="EPL">{t("eplFormatDesc")}</SelectItem>
                   <SelectItem value="PDF">PDF</SelectItem>
                 </SelectContent>
               </Select>
@@ -195,7 +193,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
             data-testid="button-save-printer"
           >
             <Printer className="h-4 w-4 mr-2" />
-            {t.printerSave}
+            {t("printerSave")}
           </Button>
         </CardContent>
       </Card>
@@ -204,7 +202,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold">
-              {lang === "uz" ? "Saqlangan printerlar" : "Сохранённые принтеры"}
+              {t("savedPrinters")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -221,7 +219,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
                     <Badge variant="outline" className="text-xs">{cfg.printFormat}</Badge>
                     {cfg.isActive && (
                       <EPStatusPill tone="success">
-                        {lang === "uz" ? "Aktiv" : "Активен"}
+                        {t("printerActive")}
                       </EPStatusPill>
                     )}
                   </div>
@@ -246,7 +244,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
                     data-testid={`button-test-printer-${cfg.id}`}
                   >
                     <Wifi className="h-3 w-3 mr-1" />
-                    {t.printerTest}
+                    {t("printerTest")}
                   </Button>
                   <Button
                     variant={cfg.isActive ? "secondary" : "outline"}
@@ -254,9 +252,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
                     onClick={() => toggleActiveMutation.mutate({ id: cfg.id, isActive: !cfg.isActive })}
                     data-testid={`button-toggle-printer-${cfg.id}`}
                   >
-                    {cfg.isActive
-                      ? (lang === "uz" ? "O'chirish" : "Выкл.")
-                      : (lang === "uz" ? "Yoqish" : "Вкл.")}
+                    {cfg.isActive ? t("printerOff") : t("printerOn")}
                   </Button>
                 </div>
               </div>
@@ -268,7 +264,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
       {configs.length === 0 && (
         <div className="text-center py-8 text-muted-foreground text-sm">
           <Printer className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>{t.printerNotConfigured}</p>
+          <p>{t("printerNotConfigured")}</p>
         </div>
       )}
     </div>

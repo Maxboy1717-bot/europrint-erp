@@ -8,9 +8,12 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { HrDashboardService } from '../application/hr-dashboard.service';
+import { HrEmployeesExtService } from '../application/hr-employees-ext.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto, CreatePipSchema, CreatePipDto, UpdatePipSchema, UpdatePipDto } from './dto/hr.dto';
+import { I18nService } from 'nestjs-i18n';
 import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 
 type Rows = { rows?: unknown[] };
 
@@ -20,21 +23,48 @@ type Rows = { rows?: unknown[] };
 @UseInterceptors(AuditInterceptor)
 @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER')
 export class HrDashboardController {
-  constructor(private readonly svc: HrDashboardService) {}
+  constructor(
+    private readonly svc: HrDashboardService,
+    private readonly empExtSvc: HrEmployeesExtService,
+    private readonly i18n: I18nService,
+  ) {}
+
+  /**
+   * SECURITY (birthday PII scoping): `birth_date` + full name + position/department are
+   * personal data. HR/DIRECTOR/ADMIN/SUPER_ADMIN legitimately need company-wide visibility
+   * (HR function), but a plain `MANAGER` should only see their own department's birthdays —
+   * not every employee in the company. There is no verified manager→subordinate chain live
+   * yet (`org_departments.manager_id` is largely NULL per memory `feedback`/org audits), so
+   * we scope to the manager's OWN primary department (`employee_org_departments.is_primary`)
+   * instead — never company-wide for that role. If a manager has no resolvable department,
+   * we fail CLOSED (empty list) rather than leaking company-wide PII.
+   * TODO(follow-up, needs owner decision): once `manager_id` / KARTA hierarchy is reliably
+   * populated, scope to "all departments under this manager" instead of just their own.
+   */
+  private async resolveBirthdayDeptScope(user?: { id?: number; role?: string }): Promise<number | undefined> {
+    const role = (user?.role ?? '').toLowerCase();
+    if (role !== 'manager') return undefined; // HR/admin/director roles: company-wide (unchanged)
+    const r = await this.svc.getUserPrimaryDepartmentId(user?.id ?? 0);
+    // Fail closed: unresolvable department → sentinel that matches no real department id.
+    return r.ok && typeof r.data === 'number' ? r.data : -1;
+  }
 
   @Get('birthdays')
-  async getBirthdays(@Query('days') days?: string) {
-    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90)), []);
+  async getBirthdays(@Query('days') days?: string, @CurrentUser() user?: { id: number; role?: string }) {
+    const deptScope = await this.resolveBirthdayDeptScope(user);
+    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90), deptScope), []);
   }
 
   @Get('birthdays/today')
-  async getBirthdaysToday() {
-    return unwrapOrDefault(await this.svc.getBirthdaysToday(), []);
+  async getBirthdaysToday(@CurrentUser() user?: { id: number; role?: string }) {
+    const deptScope = await this.resolveBirthdayDeptScope(user);
+    return unwrapOrDefault(await this.svc.getBirthdaysToday(deptScope), []);
   }
 
   @Get('birthdays/upcoming')
-  async getBirthdaysUpcoming(@Query('days') days?: string) {
-    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90)), []);
+  async getBirthdaysUpcoming(@Query('days') days?: string, @CurrentUser() user?: { id: number; role?: string }) {
+    const deptScope = await this.resolveBirthdayDeptScope(user);
+    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90), deptScope), []);
   }
 
   @Get('milestones/upcoming')
@@ -47,6 +77,13 @@ export class HrDashboardController {
     return unwrapOrDefault(await this.svc.getMonthlyTrend(), []);
   }
 
+  // NOTE (verified 2026-07-13, was flagged in hr-dashboard-deep-audit-2026-05-28.md
+  // as "`_lang` ignored — no DB effect"): checked deliberately. The payload here is
+  // `{ month: 'YYYY-MM', newHires: number, resignations: number }` — no free-text
+  // field exists to translate; the numbers themselves don't change by language. This
+  // is unlike `resignation-stats/:lang` (fixed above), which does carry a localizable
+  // dismissal-reason label. Left as an intentional passthrough rather than fabricating
+  // month-name localization the FE (TurnoverTab.tsx) doesn't consume.
   @Get('monthly-trend/:lang')
   async getMonthlyTrendByLang(@Param('lang') _lang: string) {
     return unwrapOrDefault(await this.svc.getMonthlyTrend(), []);
@@ -138,14 +175,40 @@ export class HrDashboardController {
     return unwrapOrDefault(await this.svc.getAdaptationAtRisk(), []);
   }
 
-  @Get('adaptation/:id')
-  async getAdaptationById(@Param('id') id: string) {
+  // P3.14: FE (AdaptationTab.tsx) calls GET /api/hr/adaptation/:employeeId — looks up the
+  // employee's active adaptation_records row (not adaptation_records.id). Was previously
+  // querying by `id`, which meant the employee-profile tab could never find a real record.
+  @Get('adaptation/:employeeId')
+  async getAdaptationById(@Param('employeeId') employeeId: string) {
     const r = await db.execute(sql`
-      SELECT * FROM adaptation_records WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
+      SELECT
+        ar.id AS "recordId",
+        ar.mentor_id AS "mentorId",
+        COALESCE(mentor.first_name || ' ' || mentor.last_name, NULL) AS "mentorName",
+        mentor.email_work AS "mentorEmail",
+        mentor.phone_number AS "mentorPhone",
+        ar.professional_master_id AS "professionalMasterId",
+        COALESCE(master.first_name || ' ' || master.last_name, NULL) AS "professionalMasterName",
+        master.email_work AS "professionalMasterEmail",
+        master.phone_number AS "professionalMasterPhone",
+        ar.start_date AS "assignedDate",
+        ar.current_milestone AS "currentWeek",
+        ar.total_milestones AS "totalWeeks",
+        ar.progress_percent AS "progressPercent",
+        ar.status AS "status",
+        ar.hr_notes AS "hrNotes",
+        ap.title AS "programName"
+      FROM adaptation_records ar
+      LEFT JOIN employees mentor ON mentor.id = ar.mentor_id
+      LEFT JOIN employees master ON master.id = ar.professional_master_id
+      LEFT JOIN adaptation_programs ap ON ap.id = ar.program_id
+      WHERE ar.employee_id = ${parseInt(employeeId, 10)} AND ar.deleted_at IS NULL
+      ORDER BY ar.created_at DESC
+      LIMIT 1
     `);
-    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
-    return { data: row };
+    const row = ((r as { rows?: Record<string, unknown>[] }).rows ?? [])[0] ?? null;
+    if (!row) return { recordId: null, status: 'not_started', weeklyScores: [] };
+    return { ...row, weeklyScores: [] };
   }
 
   @Get('alumni')
@@ -160,26 +223,41 @@ export class HrDashboardController {
     const result = await this.svc.getAlumni();
     const items = result.ok && Array.isArray(result.data) ? result.data as Record<string,unknown>[] : [];
     const item = items.find(a => String(a['id']) === id);
-    if (!item) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!item) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return item;
   }
 
   @Get('daily-reports')
-  async getDailyReports(@Query('date') _date?: string) {
-    const r = await this.svc.getDailyReportsStats();
-    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
+  async getDailyReports(
+    @Query('date')  date?: string,
+    @Query('type')  type?: string,
+    @Query('limit') limitStr?: string,
+  ) {
+    const limit = Math.min(parseInt(limitStr ?? '100', 10) || 100, 500);
+    const items = unwrapOrDefault(await this.svc.getReportsByDate(date, type, limit), []);
+    return { items, total: (items as unknown[]).length };
   }
 
   @Get('daily-reports/department')
-  async getDailyReportsByDept(@Query('departmentId') _departmentId?: string) {
-    const r = await this.svc.getDailyReportsStats();
-    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
+  async getDailyReportsByDept(
+    @Query('departmentId') departmentId?: string,
+    @Query('date')         date?: string,
+  ) {
+    const deptId = departmentId ? parseInt(departmentId, 10) : undefined;
+    const r = await this.svc.getReportsByDepartment(deptId, date);
+    return r.ok && r.data
+      ? r.data
+      : { submitted: [], missing: [] };
   }
 
   @Get('daily-reports/my')
-  async getDailyReportsMy() {
-    const r = await this.svc.getDailyReportsStats();
-    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
+  async getDailyReportsMy(
+    @CurrentUser() user: { id: number },
+    @Query('limit') limitStr?: string,
+  ) {
+    const limit = Math.min(parseInt(limitStr ?? '50', 10) || 50, 200);
+    const items = unwrapOrDefault(await this.svc.getMyReports(user?.id ?? 0, limit), []);
+    return { items, total: (items as unknown[]).length };
   }
 
   @Post('daily-reports')
@@ -322,23 +400,45 @@ export class HrDashboardController {
       SELECT * FROM ai_interview_sessions WHERE id=${parseInt(id, 10)} LIMIT 1
     `);
     const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return { data: row };
   }
 
   @Get('documents/employee')
-  getEmployeeDocuments() {
-    return { items: [], total: 0 };
+  async getEmployeeDocuments(@Query('employeeId') employeeId?: string, @Query('status') status?: string) {
+    const r = await db.execute(sql`
+      SELECT id, employee_id, document_type, doc_type, title, status, initiated_by,
+             total_steps, current_step, created_at, updated_at
+      FROM hr_documents
+      WHERE (${employeeId ?? null}::int IS NULL OR employee_id = ${parseInt(employeeId ?? '0', 10)})
+        AND (${status ?? null}::text IS NULL OR status = ${status ?? null}::text)
+      ORDER BY created_at DESC
+      LIMIT 200
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('documents/my')
-  getMyDocuments() {
-    return { items: [], total: 0 };
+  async getMyDocuments(@CurrentUser() user: { id: number }) {
+    // hr_documents.initiated_by = users.id of the requester
+    const r = await db.execute(sql`
+      SELECT id, employee_id, document_type, doc_type, title, status, initiated_by,
+             total_steps, current_step, created_at, updated_at
+      FROM hr_documents
+      WHERE initiated_by = ${user?.id ?? 0}
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('documents/pending')
-  getPendingDocuments() {
-    return { items: [], total: 0 };
+  async getPendingDocuments() {
+    const r = await this.empExtSvc.getPendingDocuments();
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length };
   }
 
   @Get('employee-corp')
@@ -376,7 +476,7 @@ export class HrDashboardController {
     const all = unwrapOrDefault(await this.svc.getAbcAnalysis(), []);
     const items = Array.isArray(all) ? all as Record<string,unknown>[] : [];
     const found = items.find(a => String(a['userId'] ?? a['user_id']) === id);
-    if (!found) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!found) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return found;
   }
 
@@ -416,25 +516,29 @@ export class HrDashboardController {
       LIMIT 1
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return { data: row };
   }
 
+  // P3.14: FE MentorCard (AdaptationTab.tsx) also PATCHes `professional_master_id`
+  // (90-day professional master) — was previously silently dropped (no column in COALESCE list).
   @Patch('adaptation/:id')
   async updateAdaptation(@Param('id') id: string, @Body() body: unknown) {
     const dto = (body ?? {}) as Record<string, unknown>;
     const r = await db.execute(sql`
       UPDATE adaptation_records SET
-        mentor_id     = COALESCE(${dto['mentor_id']     ?? null}::int, mentor_id),
-        status        = COALESCE(${dto['status']        ?? null}::text, status),
-        current_phase = COALESCE(${dto['current_phase'] ?? null}::text, current_phase),
-        notes         = COALESCE(${dto['notes']         ?? null}::text, notes),
-        updated_at    = NOW()
+        mentor_id               = COALESCE(${dto['mentor_id']               ?? null}::int, mentor_id),
+        professional_master_id  = COALESCE(${dto['professional_master_id']  ?? null}::int, professional_master_id),
+        status                  = COALESCE(${dto['status']                  ?? null}::text, status),
+        current_phase           = COALESCE(${dto['current_phase']           ?? null}::text, current_phase),
+        hr_notes                = COALESCE(${dto['hr_notes']                ?? null}::text, hr_notes),
+        notes                   = COALESCE(${dto['notes']                   ?? null}::text, notes),
+        updated_at              = NOW()
       WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
       RETURNING id
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return { id, updated: true };
   }
 

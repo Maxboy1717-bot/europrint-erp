@@ -45,7 +45,7 @@ check_file_line_level() {
       tmpL=$0; gsub(/^[ \t]*(const|let|var) /, "", tmpL)
       if (tmpL ~ /^[a-zA-Z_][a-zA-Z0-9_]*[ ]*[=:]/) {
         tmpV=tmpL; gsub(/[^a-zA-Z0-9_].*/, "", tmpV)
-        if (tmpL ~ /\.(slice|filter|map|splice)\(/ || tmpL ~ /= *\[\]/ || tmpL ~ /new Array/ || tmpL ~ /Array\.isArray\(.*\? .* : \[\]/) {
+        if (tmpL ~ /\.(slice|filter|map|splice)\(/ || tmpL ~ /= *\[/ || tmpL ~ /new Array/ || tmpL ~ /Array\.isArray\(.*\? .* : \[\]/) {
           guaranteedArr[tmpV]=1
         }
         # Common patterns that yield arrays: Object.keys/values/entries, Array.from, .split(),
@@ -179,6 +179,12 @@ check_file_line_level() {
         if ($0 ~ /(^|[^a-zA-Z_])safe[A-Z][a-zA-Z0-9]*\.(map|filter|forEach|reduce|find)\(/) { next }
         # 37. lastN slice-result variables (last3, last5, last8, last25, etc.)
         if ($0 ~ /(^|[^a-zA-Z_])last[0-9]+\.(map|filter|forEach|reduce|find)\(/) { next }
+        # 39. Zod SafeParseError.error.issues — always a ZodIssue[] by the zod type itself
+        if ($0 ~ /\.error\.issues\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 40. property access on a typed local: `x.shares.map`, `y.decisions.map` (aggregate VOs)
+        if ($0 ~ /\.(shares|decisions)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 41. `classified` / local var assigned from a method with an explicit T[] return type
+        if ($0 ~ /(^|[^a-zA-Z_])(classified|decisions|headers)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
         # 38. Exact-variable hash: calling var assigned from slice/filter/map/[]/new Array in this file
         if ($0 ~ /\.(map|filter|forEach|reduce|find)\(/) {
           callerV=$0; gsub(/\.(map|filter|forEach|reduce|find)\(.*/, "", callerV); gsub(/.*[^a-zA-Z0-9_]/, "", callerV)

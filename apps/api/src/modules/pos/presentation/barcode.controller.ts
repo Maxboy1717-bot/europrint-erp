@@ -11,6 +11,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 
 import {Controller, Get, Post, Body, Query, Param,
   UseGuards, ParseIntPipe, Logger, UseInterceptors , UsePipes, BadRequestException,} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -41,7 +42,10 @@ import { unwrapOrInternal } from '@common/http-result';
 @Controller('pos/barcode')
 export class BarcodeController {
   private readonly logger = new Logger(BarcodeController.name);
-  constructor(private readonly barcodeService: PosBarcodeService) {}
+  constructor(
+    private readonly barcodeService: PosBarcodeService,
+    private readonly i18n: I18nService,
+  ) {}
 
   // ─── Skanerlash ───────────────────────────────────────────────────────────
 
@@ -60,7 +64,7 @@ export class BarcodeController {
   async lookup(@Query('barcode') barcodeRaw?: string) {
     const parsed = LookupBarcodeQuerySchema.safeParse({ barcode: barcodeRaw });
     if (!parsed.success) {
-      throw new BadRequestException('barcode query parametri majburiy (1–200 belgi)');
+      throw new BadRequestException(await this.i18n.t('validation.barcodeQueryParamRequired'));
     }
     return unwrapOrInternal(await this.barcodeService.lookupByBarcode(parsed.data.barcode));
   }
@@ -88,8 +92,8 @@ export class BarcodeController {
   @Post('generate-ean13')
   @RequirePermission('pos.barcode.assign')
   @ApiOperation({ summary: 'EAN-13 barcode generatsiya (GS1 algoritmi)' })
-  generateEan13(@Body() dto: GenerateEan13Dto) {
-    return { barcode: this.barcodeService.generateEan13(dto) };
+  async generateEan13(@Body() dto: GenerateEan13Dto) {
+    return { barcode: await this.barcodeService.generateEan13(dto) };
   }
 
   // ─── AI Taklif Ko'rib Chiqish ─────────────────────────────────────────────
@@ -106,8 +110,8 @@ export class BarcodeController {
   @Get('ai-suggestion/pending')
   @RequirePermission('pos.material_card.create')
   @ApiOperation({ summary: 'Ko\'rib chiqilmagan AI takliflar ro\'yxati' })
-  getPendingSuggestions() {
+  async getPendingSuggestions() {
     // materialCardSuggestions da PENDING statusdagilar
-    return { message: 'GET /pos/barcode/ai-suggestion/pending' };
+    return unwrapOrInternal(await this.barcodeService.getPendingSuggestions());
   }
 }

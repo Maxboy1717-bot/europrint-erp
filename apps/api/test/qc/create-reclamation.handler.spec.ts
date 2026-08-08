@@ -63,13 +63,13 @@ describe('CreateReclamationHandler', () => {
     }
   });
 
-  it('initializes status to OPEN on freshly created reclamation', async () => {
+  it('initializes status to NEW on freshly created reclamation', async () => {
     await handler.execute(
       new CreateReclamationCommand('X', null, null, 'd', DefectSeverity.MINOR),
     );
 
     const saved = repo.saveReclamation.mock.calls[0][0];
-    expect(saved.status).toBe(ReclamationStatus.OPEN);
+    expect(saved.status).toBe(ReclamationStatus.NEW);
   });
 
   it('forwards repository failure verbatim when save returns err', async () => {
@@ -91,7 +91,7 @@ describe('CreateReclamationHandler', () => {
     expect(repo.saveReclamation).toHaveBeenCalledTimes(1);
   });
 
-  it('generates non-empty id on each new reclamation', async () => {
+  it('always passes id=0 as a placeholder -- the repository assigns the real serial id', async () => {
     await handler.execute(
       new CreateReclamationCommand('A', null, null, 'd', DefectSeverity.MINOR),
     );
@@ -101,8 +101,17 @@ describe('CreateReclamationHandler', () => {
 
     const first = repo.saveReclamation.mock.calls[0][0];
     const second = repo.saveReclamation.mock.calls[1][0];
-    expect(first.id).toBeTruthy();
-    expect(second.id).toBeTruthy();
-    expect(first.id).not.toEqual(second.id);
+    expect(first.id).toBe(0);
+    expect(second.id).toBe(0);
+  });
+
+  // B14 (2026-07-05): qc_reclamations.created_by existed but was never written.
+  it('threads command.createdBy onto the saved Reclamation', async () => {
+    await handler.execute(
+      new CreateReclamationCommand('X', null, null, 'd', DefectSeverity.MINOR, 42),
+    );
+
+    const saved = repo.saveReclamation.mock.calls[0][0];
+    expect(saved.createdBy).toBe(42);
   });
 });

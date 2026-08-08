@@ -10,9 +10,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { glDocuments } from "./fi-schema";
-import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, productionSessions, products } from "./pp-schema";
+import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, products } from "./pp-schema";
 import { warehouseBins, warehouseTransactions, warehouses } from "./wms-schema";
-import { rawMaterials, vendors, purchaseOrders, goodsReceipts } from "./mm-procurement";
+import { rawMaterials, vendors } from "./mm-procurement";
 import { materialCards, materialBatches, batches } from "./mm-materials";
 
 export const aiMaterialInsights = pgTable("ai_material_insights", {
@@ -84,14 +84,20 @@ export const inventoryCounts = pgTable("inventory_counts", {
   // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
   countedBy: integer("counted_by").references(() => users.id, { onDelete: "set null" }),
   updatedAt: timestamp("updated_at"),
-  materialId: integer("material_id"), // single-material count (alongside line-level detail)
+  // NOTE: materialId/startedBy/glDocumentId corrected 2026-07-02 — verified via
+  // information_schema.columns (_audit/q.cjs) + migrations-drift.ts DDL history:
+  // material_id/started_by are TEXT (not integer) and gl_document_id is INTEGER
+  // (not varchar) in the live DB. No .references() on these columns, so this is
+  // an isolated type-correctness fix (see also schema-pos-ext.ts inventory_counts,
+  // fixed same day for the uuid->integer id/warehouse_id/count_id drift).
+  materialId: text("material_id"), // single-material count (alongside line-level detail)
   countedQty: numericMoney("counted_qty"),
   systemQty: numericMoney("system_qty"),
-  startedBy: integer("started_by"),
+  startedBy: text("started_by"),
   isWarehouseLocked: boolean("is_warehouse_locked").default(false),
   systemSnapshotAt: timestamp("system_snapshot_at"),
   totalVarianceValue: numericMoney("total_variance_value"),
-  glDocumentId: varchar("gl_document_id"),
+  glDocumentId: integer("gl_document_id"),
   pdfPath: text("pdf_path"),
   conductedBy: integer("conducted_by"),
 }, (t) => [
@@ -122,44 +128,6 @@ export type InventoryCount = typeof inventoryCounts.$inferSelect;
 export type InsertInventoryCount = z.infer<typeof insertInventoryCountSchema>;
 
 
-// Inventory Count Lines (Inventarizatsiya qatorlari)
-export const inventoryCountLines = pgTable("inventory_count_lines", {
-  id: serial("id").primaryKey(),
-  countId: integer("count_id").notNull().references(() => inventoryCounts.id, { onDelete: "cascade" }),
-  materialId: integer("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
-  productId: integer("product_id").references(() => products.id, { onDelete: "set null" }),
-  itemType: varchar("item_type", { length: 20 }).notNull(), // material, product
-  bookQuantity: numericMoney("book_quantity").notNull(),
-  countedQuantity: numericMoney("counted_quantity"),
-  variance: numericMoney("variance"),
-  variancePercent: numericMoney("variance_percent"),
-  unitCost: numericMoney("unit_cost").notNull(),
-  bookValue: numericMoney("book_value").notNull(),
-  countedValue: numericMoney("counted_value"),
-  valueVariance: numericMoney("value_variance"),
-  reason: text("reason"), // Farq sababi
-  countedBy: integer("counted_by").references(() => users.id, { onDelete: "set null" }),
-  countedAt: timestamp("counted_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  index("idx_inventory_count_lines_count_id").on(t.countId),
-  index("idx_inventory_count_lines_material_id").on(t.materialId),
-  index("idx_inventory_count_lines_product_id").on(t.productId),
-  index("idx_inventory_count_lines_created_at").on(t.createdAt),
-]);
-
-
-export const insertInventoryCountLineSchema = createInsertSchema(inventoryCountLines, {
-  itemType: z.enum(["material", "product"]),
-  bookQuantity: z.number().nonnegative(),
-  unitCost: z.number().nonnegative(),
-  bookValue: z.number().nonnegative(),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type InventoryCountLine = typeof inventoryCountLines.$inferSelect;
-
-export type InsertInventoryCountLine = z.infer<typeof insertInventoryCountLineSchema>;
 
 
 // ========== AI MATERIAL RESERVATION ==========

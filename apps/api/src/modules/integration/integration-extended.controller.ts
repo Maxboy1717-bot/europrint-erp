@@ -264,16 +264,9 @@ export class IntegrationExtendedController {
     return r.ok ? r.data : [];
   }
 
-  @ApiOperation({ summary: 'Perform three way match' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Post('invoice/three-way-match/:invoiceId')
-  @HttpCode(HttpStatus.CREATED)
-  @Roles(...ADMIN_ROLES)
-  @UsePipes(new ZodValidationPipe(InvoiceMatchSchema))
-  async performThreeWayMatch(@Param('invoiceId') invoiceId: string, @Body() dto: InvoiceMatchDto) {
-    const r = await this.repo.performThreeWayMatch(invoiceId, dto.tolerancePercent ?? 5);
-    return r.ok ? r.data : { ok: false };
-  }
+  // POST invoice/three-way-match/:invoiceId was removed 2026-08-07 (audit 2026-08-06):
+  // it compared nothing — it inserted a status='pending' row — and crashed anyway, since
+  // its onConflictDoUpdate targeted invoice_id and three_way_match_results carries no
+  // unique index on that column. The real matcher lives at POST /api/mm/3way-match/:id and
+  // writes to this same table, so the two read endpoints above are unaffected.
 }

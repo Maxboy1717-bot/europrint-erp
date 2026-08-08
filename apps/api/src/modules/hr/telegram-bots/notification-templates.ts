@@ -81,12 +81,12 @@ export const NOTIFICATION_TEMPLATES = {
   },
   DAILY_REPORT_REQUEST: {
     key: 'DAILY_REPORT_REQUEST',
-    template_uz: '📊 <b>Kunlik hisobot eslatmasi</b>\n\nHurmatli {name}, bugungi hisobotingizni topshiring!\nSana: <b>{date}</b>\nDeadline: soat 20:00\n\nTopshirish uchun: /hisobot',
+    template_uz: '📊 <b>Kunlik hisobot eslatmasi</b>\n\nHurmatli {name}, bugungi hisobotingizni topshiring!\nSana: <b>{date}</b>\nDeadline: soat 16:00\n\nTopshirish uchun: /hisobot',
     channels: ['TELEGRAM'],
   },
   DAILY_REPORT_REMINDER: {
     key: 'DAILY_REPORT_REMINDER',
-    template_uz: '⏰ <b>Hisobot yaqinlashmoqda!</b>\n\nHurmatli {name}, kunlik hisobotni topshirishga 1 soat qoldi.\nSana: {date}\nDeadline: 20:00\n\nTopshirish uchun: /hisobot',
+    template_uz: '⏰ <b>Hisobot yaqinlashmoqda!</b>\n\nHurmatli {name}, kunlik hisobotni topshirishga 30 daqiqa qoldi.\nSana: {date}\nDeadline: 16:00\n\nTopshirish uchun: /hisobot',
     channels: ['TELEGRAM'],
   },
   DAILY_REPORT_MISSED: {

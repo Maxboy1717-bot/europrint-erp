@@ -109,6 +109,9 @@ interface QuickCreateFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   isPending: boolean;
+  /** Company picker source for the "deals" entity type (CRM-FK-01 — a deal must be
+   *  traceable to a company). Ignored for every other entity type. */
+  companies?: { id: number; title?: string; name?: string }[];
 }
 
 export function QuickCreateForm({
@@ -119,12 +122,14 @@ export function QuickCreateForm({
   onSubmit,
   onCancel,
   isPending,
+  companies,
 }: QuickCreateFormProps) {
   const { t } = useTranslation("common");
 
-  const showStir   = entityType === "companies";
-  const showSource = entityType === "leads";
-  const showAmount = entityType === "deals" || entityType === "leads";
+  const showStir    = entityType === "companies";
+  const showSource  = entityType === "leads";
+  const showAmount  = entityType === "deals" || entityType === "leads";
+  const showCompany = entityType === "deals";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
@@ -205,6 +210,25 @@ export function QuickCreateForm({
             <SelectContent>
               {SOURCE_OPTIONS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {showCompany && (
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <Building2 className="h-3 w-3" />
+            Kompaniya *
+          </label>
+          <Select value={form.companyId} onValueChange={(v) => setForm((f) => ({ ...f, companyId: v }))}>
+            <SelectTrigger className="h-9" data-testid="select-quick-deal-company">
+              <SelectValue placeholder="Kompaniyani tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {(Array.isArray(companies) ? companies : []).map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>{c.title || c.name || `#${c.id}`}</SelectItem>
               ))}
             </SelectContent>
           </Select>

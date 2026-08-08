@@ -6,10 +6,16 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
-import { ar_aging_buckets, sales_invoices } from '@shared/db';
+import { and, eq, ne, lt, sql } from 'drizzle-orm';
+import { ar_aging_buckets, finance_invoices } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import type { IFinanceArRepo, ArBucket, CreateArEntryDto } from '../../domain/repositories/i-finance-ar.repo';
+
+// OWNER QARORI 2026-07-02 (Moliya-GL-Kassa): finance_invoices = kanonik invoice-manba.
+// sales_invoices / fi_invoices (view over legacy `invoices`) o'rniga finance_invoices
+// (invoice_type='sales') ishlatiladi — sales_invoices'ning yagona yozuvchisi shu fayl edi
+// (0 satr, boshqa consumer yo'q); fi_invoices o'qish esa createArEntry yozuvi bilan
+// mos kelmas edi (o'qish ≠ yozish jadvali — endi ikkalasi ham finance_invoices).
 
 type Row = Record<string, unknown>;
 
@@ -39,24 +45,41 @@ export class FinanceArRepository implements IFinanceArRepo {
   }
 
   async getOverdueInvoices(today: string): Promise<Result<Row[]>> {
+    // Read from finance_invoices (kanonik, 2026-07-02) — invoice_type='sales'.
     return safeCall(async () => {
-      return db.select().from(sales_invoices)
-        .where(sql`${sales_invoices.payment_status} != 'paid' AND ${sales_invoices.due_date} < ${today}::date`)
-        .orderBy(sales_invoices.due_date).then(r => r as Row[]);
-      }, 'DB_ERROR');
+      const rows = await db.select({
+        id:            finance_invoices.id,
+        due_date:      finance_invoices.due_date,
+        total_amount:  finance_invoices.total_amount,
+        paid_amount:   finance_invoices.paid_amount,
+        customer_name: finance_invoices.customer_name,
+        status:        finance_invoices.payment_status,
+      }).from(finance_invoices)
+        .where(and(
+          eq(finance_invoices.invoice_type, 'sales'),
+          ne(finance_invoices.payment_status, 'paid'),
+          lt(finance_invoices.due_date, today),
+        ));
+      return rows as Row[];
+    }, 'DB_ERROR');
   }
 
   async getUnpaidInvoices(): Promise<Result<Row[]>> {
+    // Read from finance_invoices (kanonik, 2026-07-02) — invoice_type='sales'.
     return safeCall(async () => {
-      return db.select({
-        id:            sales_invoices.id,
-        due_date:      sales_invoices.due_date,
-        total_amount:  sales_invoices.total_amount,
-        paid_amount:   sales_invoices.paid_amount,
-        customer_name: sales_invoices.customer_name,
-      }).from(sales_invoices)
-        .where(sql`${sales_invoices.payment_status} != 'paid'`).then(r => r as Row[]);
-      }, 'DB_ERROR');
+      const rows = await db.select({
+        id:            finance_invoices.id,
+        due_date:      finance_invoices.due_date,
+        total_amount:  finance_invoices.total_amount,
+        paid_amount:   finance_invoices.paid_amount,
+        customer_name: finance_invoices.customer_name,
+      }).from(finance_invoices)
+        .where(and(
+          eq(finance_invoices.invoice_type, 'sales'),
+          ne(finance_invoices.payment_status, 'paid'),
+        ));
+      return rows as Row[];
+    }, 'DB_ERROR');
   }
 
   async clearArAgingBuckets(): Promise<void> {
@@ -98,19 +121,20 @@ export class FinanceArRepository implements IFinanceArRepo {
 
   async createArEntry(dto: CreateArEntryDto): Promise<Result<Row>> {
     return safeCall(async () => {
-      const invoiceNumber = `AR-${Date.now()}`;
-      const rows = await db.insert(sales_invoices).values({
-        customer_id:    dto.customerId != null ? String(dto.customerId) : null,
-        customer_name:  null,
-        invoice_number: invoiceNumber,
-        sales_order_id: null,
+      // C4 continued (CRITICAL-CORRECTNESS-AUDIT-2026-07-06, finding 1.3): was `AR-${Date.now()}` —
+      // same finance_invoices.invoice_number collision risk as the other 3 independent writers
+      // (drizzle-finance-invoice.repo.ts, finance-actions.repository.ts, finance-ap.repository.ts),
+      // now closed the same way — server-side nextval(invoice_number_seq), atomic.
+      const rows = await db.insert(finance_invoices).values({
+        invoice_number: sql`'AR-' || EXTRACT(YEAR FROM NOW())::text || '-' || LPAD(nextval('invoice_number_seq')::text, 6, '0')`,
+        invoice_type:   'sales',
+        customer_id:    dto.customerId != null ? Number(dto.customerId) : null,
         total_amount:   String(dto.amount),
         paid_amount:    '0',
-        currency:       'UZS',
-        status:         'draft',
         payment_status: 'unpaid',
         due_date:       dto.dueDate ?? null,
-      } as typeof sales_invoices.$inferInsert).returning();
+        created_by:     dto.createdBy ?? null,
+      } as unknown as typeof finance_invoices.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
     }, 'DB_ERROR');
   }

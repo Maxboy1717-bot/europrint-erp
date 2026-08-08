@@ -13,6 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsTrigger, TabsList } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 // Table/Badge/Card are still needed for the vendors and PO tabs above
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,6 +46,11 @@ export default function MMExtended() {
   const meta = tabMeta[activeTab] || tabMeta["checkbot"];
   const { toast } = useToast();
   const [showVendorDialog, setShowVendorDialog] = useState(false);
+  const [addVehicleOpen, setAddVehicleOpen] = useState(false);
+  const [vehiclePlate, setVehiclePlate] = useState("");
+  const [vehicleModel, setVehicleModel] = useState("");
+  const [vehicleYear, setVehicleYear] = useState("");
+  const [vehicleType, setVehicleType] = useState("own");
 
   const vendorForm = useForm<VendorFormValues>({
     resolver: zodResolver(VendorSchema),
@@ -100,9 +109,22 @@ export default function MMExtended() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mm/fleet/vehicles"] });
       toast({ title: "Mashina qo'shildi" });
+      setVehiclePlate(""); setVehicleModel(""); setVehicleYear(""); setVehicleType("own");
+      setAddVehicleOpen(false);
     },
     onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
   });
+
+  function handleAddVehicle() {
+    if (!vehiclePlate.trim()) {
+      toast({ title: "Davlat raqami majburiy", variant: "destructive" });
+      return;
+    }
+    const dto: Record<string, unknown> = { plate_number: vehiclePlate.trim(), type: vehicleType };
+    if (vehicleModel.trim()) dto.model = vehicleModel.trim();
+    if (vehicleYear && !Number.isNaN(Number(vehicleYear))) dto.year = Number(vehicleYear);
+    addVehicleMutation.mutate(dto);
+  }
 
   // ─── Derived stats ──────────────────────────────────────────────────────────
 
@@ -301,7 +323,7 @@ export default function MMExtended() {
           <TransportTab
             vehicles={vehicles}
             vehiclesLoading={vehiclesLoading}
-            onAddVehicle={() => addVehicleMutation.mutate({ plateNumber: "NEW-001", model: "Yangi mashina", type: "own", status: "idle", fuelLevel: 100, mileage: 0 })}
+            onAddVehicle={() => setAddVehicleOpen(true)}
           />
 
           <GPSTab vehicles={vehicles} vehiclesLoading={vehiclesLoading} />
@@ -312,6 +334,65 @@ export default function MMExtended() {
 
         </div>
       </Tabs>
+
+      {/* ── Add Vehicle Dialog ───────────────────────────────────────────────── */}
+      <Dialog open={addVehicleOpen} onOpenChange={(o) => { if (!o) setAddVehicleOpen(false); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Yangi Mashina Qo'shish</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            <div className="grid gap-1.5">
+              <Label>Davlat raqami *</Label>
+              <Input
+                placeholder="01 A 123 BC"
+                value={vehiclePlate}
+                onChange={(e) => setVehiclePlate(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Model</Label>
+              <Input
+                placeholder="Masalan: DAF XF"
+                value={vehicleModel}
+                onChange={(e) => setVehicleModel(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label>Yil</Label>
+                <Input
+                  type="number"
+                  placeholder="2020"
+                  min={1990}
+                  max={2100}
+                  value={vehicleYear}
+                  onChange={(e) => setVehicleYear(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Turi</Label>
+                <Select value={vehicleType} onValueChange={setVehicleType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="own">O'zimizniki</SelectItem>
+                    <SelectItem value="rent">Ijaradagi</SelectItem>
+                    <SelectItem value="truck">Yuk mashinasi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddVehicleOpen(false)} disabled={addVehicleMutation.isPending}>
+              Bekor qilish
+            </Button>
+            <Button onClick={handleAddVehicle} disabled={addVehicleMutation.isPending || !vehiclePlate.trim()}>
+              {addVehicleMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

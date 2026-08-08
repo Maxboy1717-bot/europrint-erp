@@ -10,6 +10,7 @@ import {
   BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException,
   Param, Patch, Post, Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -30,7 +31,7 @@ const CRM_ADMIN_ROLES = ['super_admin', 'director', 'crm_manager'];
 export class CrmCustomFieldsController {
   private readonly logger = new Logger(CrmCustomFieldsController.name);
 
-  constructor(private readonly svc: CrmCustomFieldsService) {}
+  constructor(private readonly svc: CrmCustomFieldsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -54,9 +55,12 @@ export class CrmCustomFieldsController {
   @Roles(...CRM_ADMIN_ROLES)
   @UsePipes(new ZodValidationPipe(CreateCustomFieldDtoSchema))
   async create(@Body() body: CreateCustomFieldDto) {
-    assertRequired(body.name, 'name and label required');
-    assertRequired(body.label, 'name and label required');
-    return unwrapOrThrow(await this.svc.create(body));
+    // Accept camelCase (FE: fieldName/fieldLabel) or snake_case (API: name/label) keys.
+    const nameVal  = (body as Record<string, unknown>)['fieldName']  ?? body.name;
+    const labelVal = (body as Record<string, unknown>)['fieldLabel'] ?? body.label;
+    assertRequired(nameVal,  await this.i18n.t('validation.fieldNameRequired'));
+    assertRequired(labelVal, await this.i18n.t('validation.fieldLabelRequired'));
+    return unwrapOrThrow(await this.svc.create(body as Record<string, unknown>));
   }
 
   @ApiOperation({ summary: 'Update' })
@@ -71,7 +75,7 @@ export class CrmCustomFieldsController {
     const _rUpdate = await this.svc.update(safeInt(id, 0), body);
     assertOk(_rUpdate);
     const r = _rUpdate.data as Record<string, unknown>;
-    assertFound(r, 'Custom field not found');
+    assertFound(r, await this.i18n.t('errors.customFieldNotFound'));
     return r;
   }
 
@@ -83,8 +87,14 @@ export class CrmCustomFieldsController {
   @Roles(...CRM_ADMIN_ROLES)
   @UsePipes(new ZodValidationPipe(ReorderCustomFieldsDtoSchema))
   async reorder(@Body() body: ReorderCustomFieldsDto) {
-    assertRequired(body.items?.length, 'items required');
-    return unwrapOrThrow(await this.svc.reorder(body.items));
+    // Normalize: FE sends { orderedIds: number[] }; canonical API sends { items: [{id, order_index}] }
+    let items = body.items;
+    if ((!items || items.length === 0) && Array.isArray((body as Record<string, unknown>)['orderedIds'])) {
+      const orderedIds = (body as Record<string, unknown>)['orderedIds'] as number[];
+      items = orderedIds.map((id, index) => ({ id, order_index: index }));
+    }
+    assertRequired(items?.length, await this.i18n.t('validation.itemsOrOrderedIdsRequired'));
+    return unwrapOrThrow(await this.svc.reorder(items!));
   }
 
   @ApiOperation({ summary: 'Delete' })

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EPPageHeader } from "@/components/ep";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, Calculator, FileText, RefreshCw } from "lucide-react";
 import { OrderCostingDetail as OrderCostingDetailType, formatPercent } from "./OrderCostingTypes";
@@ -37,30 +38,18 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
   });
 
   return (
-    <div data-testid="order-costing-detail">
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onBack}
-              className="bg-card/10 border-white/30 text-white hover:bg-card/20"
-              data-testid="button-back"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">{t("buyurtmaTannarxiTafsiloti")}</h1>
-              <p className="text-white/75 text-sm">
-                {costingDetail.salesOrderId || "Buyurtma #" + costingDetail.id.substring(0, 8)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6" data-testid="order-costing-detail">
+      <EPPageHeader
+        icon={
+          <Button variant="outline" size="icon" onClick={onBack} data-testid="button-back">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        }
+        title={t("buyurtmaTannarxiTafsiloti")}
+        subtitle={costingDetail.salesOrderId || "Buyurtma #" + costingDetail.id.substring(0, 8)}
+      />
 
-      <div className="space-y-6 pt-6">
+      <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card data-testid="card-detail-total">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -126,23 +115,23 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-5">
-              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <div className="p-4 rounded-lg bg-[var(--ep-blue-soft)] border border-[var(--ep-blue)]">
                 <div className="text-sm text-muted-foreground mb-1">{t('Material')}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.materialCost)}</div>
               </div>
-              <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
+              <div className="p-4 rounded-lg bg-[var(--ep-purple-soft)] border border-[var(--ep-purple)]">
                 <div className="text-sm text-muted-foreground mb-1">{t("mehnat")}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.laborCost)}</div>
               </div>
-              <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
+              <div className="p-4 rounded-lg bg-[var(--ep-primary-soft)] border border-[var(--ep-primary)]">
                 <div className="text-sm text-muted-foreground mb-1">{t("ustama")}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.overheadCost)}</div>
               </div>
-              <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+              <div className="p-4 rounded-lg bg-[var(--ep-yellow-soft)] border border-[var(--ep-yellow)]">
                 <div className="text-sm text-muted-foreground mb-1">{t("energiya1")}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.energyCost)}</div>
               </div>
-              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+              <div className="p-4 rounded-lg bg-[var(--ep-red-soft)] border border-[var(--ep-red)]">
                 <div className="text-sm text-muted-foreground mb-1">{t("isrof")}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.wasteCost)}</div>
               </div>

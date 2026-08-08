@@ -16,15 +16,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Target, Pencil, Trash2, BarChart2, Users, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Target, Pencil, Trash2, BarChart2, Users, TrendingUp, ChevronDown, ChevronUp, Rocket } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { MarketingCampaign } from "@shared/schema";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 import { useTranslation } from '@/lib/i18n';
-const statusLabels: Record<string, string> = { draft: "Qoralama", active: "Faol", paused: "To'xtatilgan", completed: "Tugallangan" };
-const typeLabels: Record<string, string> = { digital: "Raqamli", print: "Bosma", social: "Ijtimoiy tarmoq", email: "Email", event: "Tadbir" };
-const platformLabels: Record<string, string> = { telegram: "Telegram", instagram: "Instagram", facebook: "Facebook", google: "Google", other: "Boshqa" };
 
 interface CampaignStats {
   id: string;
@@ -59,7 +56,7 @@ function CampaignStatsRow({ campaignId }: { campaignId: string }) {
   return (
     <div className="space-y-3 pt-3 border-t border-border mt-3" data-testid={`campaign-stats-${campaignId}`}>
       {/* Qator 1: Lid statistikasi */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <div className="text-center">
           <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><Users className="h-3 w-3" />{t("jamiLidlar")}</p>
           <p className="text-lg font-bold text-foreground">{stats.totalLeads}</p>
@@ -86,19 +83,19 @@ function CampaignStatsRow({ campaignId }: { campaignId: string }) {
           <p className={`text-base font-bold ${stats.roas !== null && stats.roas >= 4 ? "text-[var(--ep-green)]" : stats.roas !== null && stats.roas >= 2 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {stats.roas !== null ? `${stats.roas}x` : "—"}
           </p>
-          <p className="text-xs text-muted-foreground">{"Maqsad: 4x"}</p>
+          <p className="text-xs text-muted-foreground">{t("maqsad4x")}</p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">CPL</p>
           <p className="text-base font-bold text-foreground">
-            {stats.cpl !== null ? `${stats.cpl.toLocaleString()} so'm` : "—"}
+            {stats.cpl !== null ? `${stats.cpl.toLocaleString()} ${t("som")}` : "—"}
           </p>
           <p className="text-xs text-muted-foreground">{t("har1LidNarxi")}</p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">CPA</p>
           <p className="text-base font-bold text-foreground">
-            {stats.cpa !== null ? `${stats.cpa.toLocaleString()} so'm` : "—"}
+            {stats.cpa !== null ? `${stats.cpa.toLocaleString()} ${t("som")}` : "—"}
           </p>
           <p className="text-xs text-muted-foreground">{t("har1Konversiya")}</p>
         </div>
@@ -106,7 +103,7 @@ function CampaignStatsRow({ campaignId }: { campaignId: string }) {
       {stats.estimatedRevenue > 0 && (
         <div className="text-xs text-muted-foreground flex items-center gap-1">
           <BarChart2 className="h-3 w-3" />
-          Taxminiy daromad: {stats.estimatedRevenue.toLocaleString()} so'm (o'rtacha buyurtma × konversiyalar)
+          {t("campaignTaxminiyDaromad")}: {stats.estimatedRevenue.toLocaleString()} {t("som")} ({t("ortachaBuyurtmaKonversiya")})
         </div>
       )}
     </div>
@@ -115,10 +112,14 @@ function CampaignStatsRow({ campaignId }: { campaignId: string }) {
 
 export default function MarketingCampaigns() {
   const { t } = useTranslation('common');
+  const statusLabels: Record<string, string> = { draft: t("qoralamaTip"), active: t("faolTip"), paused: t("toxtatilganTip"), completed: t("tugallanganTip") };
+  const typeLabels: Record<string, string> = { digital: t("raqamliTip"), print: t("bosmaTip"), social: t("ijtimoiyTarmoqTip"), email: t("emailTip"), event: t("tadbirTip") };
+  const platformLabels: Record<string, string> = { telegram: "Telegram", instagram: "Instagram", facebook: "Facebook", google: "Google", other: t("boshqaTip") };
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [launchCampaignId, setLaunchCampaignId] = useState<string | null>(null);
   const [expandedStats, setExpandedStats] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ name: "", description: "", type: "social", platform: "telegram", status: "draft", budget: "", startDate: "", endDate: "" });
 
@@ -126,19 +127,25 @@ export default function MarketingCampaigns() {
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/marketing/campaigns", data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); setOpen(false); resetForm(); toast({ title: "Kampaniya yaratildi" }); },
-    onError: (e: Error) => toast({ title: "Xatolik", description: e.message, variant: "destructive" }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); setOpen(false); resetForm(); toast({ title: t("kampaniyaYaratildi") }); },
+    onError: (e: Error) => toast({ title: t("xatolik"), description: e.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => apiRequest("PATCH", `/api/marketing/campaigns/${id}`, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); setOpen(false); resetForm(); toast({ title: "Kampaniya yangilandi" }); },
-    onError: (e: Error) => toast({ title: "Xatolik", description: e.message, variant: "destructive" }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); setOpen(false); resetForm(); toast({ title: t("kampaniyaYangilandi") }); },
+    onError: (e: Error) => toast({ title: t("xatolik"), description: e.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/marketing/campaigns/${id}`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); toast({ title: "Kampaniya o'chirildi" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); toast({ title: t("kampaniyaOchirildi") }); },
+  });
+
+  const launchMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("POST", `/api/marketing/campaigns/${id}/launch`, {}),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); setLaunchCampaignId(null); toast({ title: t("kampaniyaIshgaTushirildi") }); },
+    onError: (e: Error) => toast({ title: t("xatolik"), description: e.message, variant: "destructive" }),
   });
 
   const resetForm = () => { setForm({ name: "", description: "", type: "social", platform: "telegram", status: "draft", budget: "", startDate: "", endDate: "" }); setEditId(null); };
@@ -189,7 +196,7 @@ export default function MarketingCampaigns() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg bg-card border-none p-6">
-            <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "Kampaniyani tahrirlash" : "Yangi Kampaniya"}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? t("kampaniyaniTahrirlash") : t("yangiKampaniyaSarlavha")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5"><Label className="text-muted-foreground">{t("nomi")}</Label><Input className="bg-background border-border" data-testid="input-campaign-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
               <div className="space-y-1.5"><Label className="text-muted-foreground">{t("progress.description")}</Label><Textarea className="bg-background border-border" data-testid="input-campaign-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
@@ -205,7 +212,7 @@ export default function MarketingCampaigns() {
                 <div className="space-y-1.5"><Label className="text-muted-foreground">{t("boshlanish")}</Label><Input className="bg-background border-border" type="date" data-testid="input-campaign-start" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
                 <div className="space-y-1.5"><Label className="text-muted-foreground">{t("tugash")}</Label><Input className="bg-background border-border" type="date" data-testid="input-campaign-end" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
               </div>
-              <Button onClick={handleSubmit} disabled={!form.name || createMutation.isPending || updateMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-campaign">{editId ? "Saqlash" : "Yaratish"}</Button>
+              <Button onClick={handleSubmit} disabled={!form.name || createMutation.isPending || updateMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-campaign">{editId ? t("saqlash") : t("yaratishAmal")}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -233,6 +240,9 @@ export default function MarketingCampaigns() {
                   >
                     {expandedStats.has(c.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
+                  {c.status === 'draft' && (
+                    <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 no-default-hover-elevate" onClick={() => setLaunchCampaignId(c.id)} data-testid={`button-launch-campaign-${c.id}`} title={t("ishgaTushirishAmal")}><Rocket className="h-4 w-4" /></Button>
+                  )}
                   <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted no-default-hover-elevate" onClick={() => handleEdit(c)} data-testid={`button-edit-campaign-${c.id}`}><Pencil className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-red-500 hover:bg-red-50 no-default-hover-elevate" onClick={() => setDeleteId(c.id)} data-testid={`button-delete-campaign-${c.id}`}><Trash2 className="h-4 w-4" /></Button>
                 </div>
@@ -252,7 +262,7 @@ export default function MarketingCampaigns() {
                   )}
                   {c.budget && (
                     <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
-                      {Number(c.budget).toLocaleString()} so'm
+                      {Number(c.budget).toLocaleString()} {t("som")}
                     </Badge>
                   )}
                 </div>
@@ -273,9 +283,18 @@ export default function MarketingCampaigns() {
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
         title={t("kampaniyaniOchirish")}
         description={t("ushbuMarketingKampaniyaniOchirishniTasdiqlaysizmi")}
-        confirmText="O'chirish"
+        confirmText={t("ochirishAmal")}
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}
+      />
+      <ConfirmDialog
+        open={!!launchCampaignId}
+        onOpenChange={(v) => { if (!v) setLaunchCampaignId(null); }}
+        title={t("kampaniyaniIshgaTushirish")}
+        description={t("kampaniyaIshgaTushirishTasdiq")}
+        confirmText={t("ishgaTushirishAmal")}
+        variant="default"
+        onConfirm={() => { if (launchCampaignId) launchMutation.mutate(launchCampaignId); }}
       />
     </div>
   );

@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   Users, Sparkles, UserCheck, BarChart3, TrendingUp,
-  Pencil, Trash2,
+  Pencil, Trash2, RefreshCw,
 } from "lucide-react";
 import { tLabel } from "@/lib/i18n/tLabel";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,12 @@ interface CustomerRow extends Customer {
 interface Customer360Data {
   recentOrders?: { documentNumber: string; status: string; totalAmount: number }[];
   contacts?: { fullName: string; position: string; phone: string }[];
+  // SB0611 — "Mahsulotlar arxivi": per-product order history for this customer.
+  productsArchive?: {
+    id: number; orderNumber: string; productName: string;
+    quantity: number; unit: string; unitPrice: number; totalPrice: number;
+    orderDate: string; orderStatus: string;
+  }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -93,7 +99,7 @@ const segTone = (seg: string): EPStatusTone =>
   seg === "A" ? "success" : seg === "B" ? "info" : seg === "C" ? "warning" : seg === "D" ? "danger" : "neutral";
 
 const statusTone = (status: string): EPStatusTone =>
-  status === "active" ? "success" : status === "blacklist" ? "danger" : "warning";
+  status === "active" ? "success" : status === "blacklisted" ? "danger" : "warning";
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -120,7 +126,7 @@ export default function SDCustomers() {
 
   // 360 view dialog
   const [view360Dialog, setView360Dialog] = useState<{ open: boolean; customerId?: number }>({ open: false });
-  const [tab360, setTab360] = useState<"orders" | "contacts">("orders");
+  const [tab360, setTab360] = useState<"orders" | "contacts" | "products">("orders");
 
   // ---------------------------------------------------------------------------
   // Queries
@@ -226,8 +232,41 @@ export default function SDCustomers() {
     onError: () => toast({ title: tLabel("sd.error.delete", "O'chirishda xatolik"), variant: "destructive" }),
   });
 
+  // 2.5-abc-avto-hisob: manual trigger for the live Pareto ABC recompute
+  // (customer-abc.service.ts) — daily cron already runs this at 02:00; this
+  // button lets a user apply it on demand right after new orders land.
+  const abcRecomputeMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("POST", "/api/sd/customers/abc/recompute") as Promise<{
+        updated: number;
+        summary: Record<"A" | "B" | "C", number>;
+      }>,
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["/api/sd/customers"] });
+      const s = data?.summary;
+      toast({
+        title: tLabel("sd.customers.abcRecomputed", "ABC qayta hisoblandi"),
+        description: s
+          ? `A: ${s.A ?? 0}, B: ${s.B ?? 0}, C: ${s.C ?? 0} (${data.updated} ta mijoz)`
+          : undefined,
+      });
+    },
+    onError: () =>
+      toast({
+        title: tLabel("sd.error", "Xatolik"),
+        description: tLabel("sd.customers.abcRecomputeFailed", "ABC hisoblab bo'lmadi"),
+        variant: "destructive",
+      }),
+  });
+
+  const VALID_EDIT_STATUSES = ["active", "inactive", "blacklisted"];
+
   const openEdit = (c: CustomerRow) => {
-    setEditForm({ title: c.name, phone: c.phone, email: c.email, address: c.address, status: c.status });
+    // Item #191: c.status may hold a legacy segment-tier value (e.g. "new") left
+    // over from create() — resending an invalid status 400s the update endpoint
+    // even when the user only meant to edit an unrelated field (phone/email/...).
+    const status = VALID_EDIT_STATUSES.includes(c.status) ? c.status : "active";
+    setEditForm({ title: c.name, phone: c.phone, email: c.email, address: c.address, status });
     setEditDialog({ open: true, customer: c });
   };
 
@@ -240,13 +279,25 @@ export default function SDCustomers() {
         title={t("mijozlarBazasi")}
         subtitle={`${stats.total} ta mijoz · ${stats.activeCount} ta faol`}
         actions={
-          <AddCustomerDialog
-            open={showAdd}
-            onOpenChange={setShowAdd}
-            form={addForm}
-            onSubmit={(d) => addMutation.mutate(d)}
-            isPending={addMutation.isPending}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => abcRecomputeMutation.mutate()}
+              disabled={abcRecomputeMutation.isPending}
+              data-testid="btn-abc-recompute"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${abcRecomputeMutation.isPending ? "animate-spin" : ""}`} />
+              {tLabel("sd.customers.abcRecompute", "ABC qayta hisoblash")}
+            </Button>
+            <AddCustomerDialog
+              open={showAdd}
+              onOpenChange={setShowAdd}
+              form={addForm}
+              onSubmit={(d) => addMutation.mutate(d)}
+              isPending={addMutation.isPending}
+            />
+          </div>
         }
       />
 
@@ -279,7 +330,7 @@ export default function SDCustomers() {
           />
 
           {/* Table */}
-          <div className="bg-card rounded-xl border-none overflow-hidden">
+          <div className="bg-card rounded-xl border border-[var(--ep-border)] overflow-hidden">
             <div className="ep-table-scroll">
               <Table>
                 <TableHeader>
@@ -447,7 +498,7 @@ export default function SDCustomers() {
                 <SelectContent>
                   <SelectItem value="active">{tLabel("sd.status.active", "Faol")}</SelectItem>
                   <SelectItem value="inactive">{tLabel("sd.status.inactive", "Nofaol")}</SelectItem>
-                  <SelectItem value="blacklist">{tLabel("sd.status.blacklist", "Qora ro'yxat")}</SelectItem>
+                  <SelectItem value="blacklisted">{tLabel("sd.status.blacklist", "Qora ro'yxat")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -517,6 +568,12 @@ export default function SDCustomers() {
               onClick={() => setTab360("contacts")}
             >
               {tLabel("sd.360.contacts", "Kontaktlar")}
+            </button>
+            <button
+              className={`text-xs px-3 py-1 rounded-md transition-colors ${tab360 === "products" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-muted"}`}
+              onClick={() => setTab360("products")}
+            >
+              {tLabel("sd.360.products", "Mahsulotlar arxivi")}
             </button>
           </div>
 
@@ -588,6 +645,47 @@ export default function SDCustomers() {
                         <TableCell className="py-2 px-3 font-medium text-sm">{ct.fullName}</TableCell>
                         <TableCell className="py-2 px-3 text-sm text-muted-foreground">{ct.position}</TableCell>
                         <TableCell className="py-2 px-3 text-sm">{ct.phone}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {tab360 === "products" && (
+            <div className="ep-table-scroll">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-2 px-3">
+                      {tLabel("sd.col.docNum", "Raqam")}
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-2 px-3">
+                      {tLabel("sd.360.productName", "Mahsulot")}
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-2 px-3">
+                      {tLabel("sd.360.quantity", "Tiraj")}
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-2 px-3">
+                      {tLabel("sd.col.amount", "Summa")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(Array.isArray(c360?.productsArchive) ? c360!.productsArchive : []).length === 0 ? (
+                    <TableRow className="border-none">
+                      <TableCell colSpan={4} className="py-8 text-center text-muted-foreground text-sm">
+                        {tLabel("sd.360.noProducts", "Mahsulotlar yo'q")}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    (Array.isArray(c360?.productsArchive) ? c360!.productsArchive : []).map((p, i) => (
+                      <TableRow key={`p-${i}`} className="hover:bg-muted/40 border-none">
+                        <TableCell className="py-2 px-3 font-mono text-sm">{p.orderNumber}</TableCell>
+                        <TableCell className="py-2 px-3 text-sm">{p.productName}</TableCell>
+                        <TableCell className="py-2 px-3 text-sm">{p.quantity} {p.unit}</TableCell>
+                        <TableCell className="py-2 px-3 font-semibold">{fmtMoney(Number(p.totalPrice))}</TableCell>
                       </TableRow>
                     ))
                   )}

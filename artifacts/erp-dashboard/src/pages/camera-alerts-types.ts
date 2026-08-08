@@ -53,6 +53,8 @@ export const severityLabels: Record<string, { uz: string; 'uz-cyr': string; ru: 
 };
 
 export interface AlertTranslations {
+  dashboard: string;
+  pageTitle: string;
   title: string;
   subtitle: string;
   back: string;
@@ -78,6 +80,8 @@ export interface AlertTranslations {
 export function buildTranslations(language: Language): AlertTranslations {
   const uz = language === "uz";
   return {
+    dashboard: uz ? "Dashboard ·" : "Панель ·",
+    pageTitle: uz ? "Kamera Ogohlantirishlari" : "Камера Ogohlantirishlari",
     title: uz ? "Bildirishnomalar Markazi" : "Центр уведомлений",
     subtitle: uz ? "Barcha AI kamera ogohlantirishlarini boshqarish" : "Управление всеми уведомлениями AI камер",
     back: uz ? "Orqaga" : "Назад",

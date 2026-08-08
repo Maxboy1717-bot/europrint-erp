@@ -23,9 +23,9 @@
   --ep-muted:   #6B6E72;
   --ep-subtle:  #9A9CA0;
 
-  --ep-bg:      #F5E6E1;   /* SHIPNOW warm-blush page bg */
+  --ep-bg:      #FAFAF9;   /* warm off-white page bg (reconciled to DIZAYN_QOIDALARI; was SHIPNOW blush #F5E6E1) */
   --ep-surface: #FFFFFF;
-  --ep-border:  #E7E2D8;
+  --ep-border:  #EBEAE6;   /* warm subtle border (reconciled; was #E7E2D8) */
   --ep-text:    #15171A;
 
   /* Status */
@@ -43,10 +43,10 @@
   --primary-dim:        28 88% 52%;
   --primary-foreground: 0 0% 100%;
 
-  /* Background #FAF7F2 → warm cream */
-  --background:   15 50% 92%;    /* #F5E6E1 — SHIPNOW warm blush */
+  /* Background → warm off-white #FAFAF9 (reconciled to design-tokens.css / DIZAYN_QOIDALARI) */
+  --background:   220 20% 98%;   /* #FAFAF9 — was 15 50% 92% (SHIPNOW warm blush #F5E6E1) */
   --foreground:   213 11% 9%;    /* #15171A */
-  --border:       38 17% 88%;    /* #E7E2D8 */
+  --border:       48 11% 91%;    /* #EBEAE6 — was 38 17% 88% (#E7E2D8) */
 
   /* Card: pure white */
   --card:            0 0% 100%;

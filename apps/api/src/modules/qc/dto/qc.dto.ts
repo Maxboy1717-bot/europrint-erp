@@ -24,11 +24,22 @@ export const QcUpdateStandardSchema = z.object({
 export type QcUpdateStandardDto = z.infer<typeof QcUpdateStandardSchema>;
 
 export const QcCreateFinalInspectionSchema = z.object({
-  order_id:     z.number().int().positive(),
-  inspector_id: z.number().int().positive().optional(),
-  status:       z.enum(['pending', 'passed', 'failed']).optional(),
-  notes:        z.string().optional(),
-});
+  order_id:      z.number().int().positive().optional(),
+  papkaOrderId:  z.number().int().positive().optional(),
+  inspector_id:  z.number().int().positive().optional(),
+  status:        z.enum(['pending', 'passed', 'failed']).optional(),
+  notes:         z.string().optional(),
+  comments:      z.string().optional(),
+  sampleQty:     z.number().int().min(1).optional(),
+  defectQty:     z.number().int().min(0).optional(),
+  visualOk:      z.boolean().optional(),
+  dimensionsOk:  z.boolean().optional(),
+  printOk:       z.boolean().optional(),
+  packagingOk:   z.boolean().optional(),
+}).refine(
+  (d) => (d.order_id != null || d.papkaOrderId != null),
+  { message: 'order_id yoki papkaOrderId talab qilinadi' }
+);
 export type QcCreateFinalInspectionDto = z.infer<typeof QcCreateFinalInspectionSchema>;
 
 export const QcUpdateFinalInspectionSchema = z.object({
@@ -46,11 +57,15 @@ export const QcCreateBrakSchema = z.object({
   root_cause_id:  z.number().int().positive().optional(),
   reported_by:    z.number().int().positive().optional(),
   papka_order_id: z.number().int().positive().optional(),
+  brak_date:      z.string().optional(),
+  stage:          z.string().optional(),
+  description:    z.string().optional(),
 });
 export type QcCreateBrakDto = z.infer<typeof QcCreateBrakSchema>;
 
 export const QcCreateSupplierQualitySchema = z.object({
   vendor_id:     z.number().int().positive().optional(),
+  supplier_name: z.string().min(1).max(MAX_TITLE_LENGTH),
   material_id:   z.number().int().positive().optional(),
   batch_number:  z.string().optional(),
   sample_size:   z.number().int().min(0).optional(),
@@ -79,7 +94,6 @@ export type QcUpdateApprovalDto = z.infer<typeof QcUpdateApprovalSchema>;
 export const QcUpdateReclamationSchema = z.object({
   status:       z.string().optional(),
   resolution:   z.string().optional(),
-  root_cause_id: z.number().int().positive().optional(),
 });
 export type QcUpdateReclamationDto = z.infer<typeof QcUpdateReclamationSchema>;
 
@@ -88,6 +102,12 @@ export const QcCompleteFinalInspectionSchema = z.object({
   notes:        z.string().optional(),
   defect_count: z.number().int().min(0).optional(),
   passed:       z.boolean().optional(),
+  // T11-06: only persisted when result is 'rework'/'rework_required' (see
+  // qc-extended-final.repository.ts). parent_order_id lets a caller override the
+  // default self-link (the row's own papka_order_id); rework_cost has no automatic
+  // Cost-of-Quality source yet, so it is manually supplied by the caller.
+  parent_order_id: z.number().int().positive().optional(),
+  rework_cost:  z.number().min(0).optional(),
 });
 export type QcCompleteFinalInspectionDto = z.infer<typeof QcCompleteFinalInspectionSchema>;
 

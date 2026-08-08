@@ -4,11 +4,12 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from '@common/constants/app.constants';
 export const CreateAiInterviewDtoSchema = z.object({
-  candidateId:    z.string().uuid(),
+  candidateId:    IntegerIdSchema,
   positionTitle:  z.string().min(1).max(MAX_NAME_LENGTH),
   interviewType:  z.enum(['screening', 'technical', 'behavioral', 'final']).default('screening'),
   scheduledAt:    z.string().datetime().optional(),

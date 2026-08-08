@@ -86,16 +86,16 @@ export function ScanScreen({
     width: "100%",
     padding: "10px 12px",
     borderRadius: 10,
-    border: `1.5px solid ${isDark ? "#374151" : "#d1d5db"}`,
-    background: isDark ? "#111827" : "#fff",
+    border: `1.5px solid var(--ep-border)`,
+    background: "var(--ep-surface)",
     color: colors.text,
     fontSize: 14,
     boxSizing: "border-box",
   };
 
   const cardStyle: React.CSSProperties = {
-    background: isDark ? "#1f2937" : "#f9fafb",
-    border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+    background: "var(--ep-bg)",
+    border: `1px solid var(--ep-border)`,
     borderRadius: 12,
     padding: "12px 14px",
     marginBottom: 10,
@@ -105,7 +105,7 @@ export function ScanScreen({
     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
     padding: "12px 16px", borderRadius: 10, border: "none", cursor: "pointer",
     fontWeight: 600, fontSize: 14, width: "100%",
-    background: isDark ? "#374151" : "#e5e7eb", color: colors.text,
+    background: "var(--ep-border)", color: colors.text,
   };
 
   return (
@@ -130,7 +130,7 @@ export function ScanScreen({
           <div style={{ marginBottom: 12 }}>
             <video
               ref={videoRef}
-              style={{ width: "100%", borderRadius: 12, aspectRatio: "4/3", objectFit: "cover", background: "#000" }}
+              style={{ width: "100%", borderRadius: 12, aspectRatio: "4/3", objectFit: "cover", background: "black" }}
             />
             <button style={{ ...secBtnStyle, marginTop: 8 }} onClick={onStopCamera}>
               {t("kameraniYopish")}
@@ -183,7 +183,7 @@ export function ScanScreen({
               <button style={{ background: "none", border: "none", cursor: "pointer", color: colors.hint, fontSize: 16 }} onClick={onClearScanResult}>✕</button>
             </div>
             <div style={{ display: "flex", gap: 12, marginBottom: 10, fontSize: 13 }}>
-              <span style={{ color: scanResult.stock > 0 ? "#059669" : "#dc2626" }}>
+              <span style={{ color: scanResult.stock > 0 ? "var(--ep-green)" : "var(--ep-red)" }}>
                 📦 {scanResult.stock} {scanResult.unit}
               </span>
               <span style={{ color: colors.hint, fontFamily: "monospace" }}>#{scanResult.barcode}</span>
@@ -228,7 +228,7 @@ export function ScanScreen({
       </div>
 
       {/* Bottom navigation */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: colors.bg, borderTop: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`, display: "flex", justifyContent: "space-around", padding: "8px 0 max(8px, env(safe-area-inset-bottom))" }}>
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: colors.bg, borderTop: `1px solid var(--ep-border)`, display: "flex", justifyContent: "space-around", padding: "8px 0 max(8px, env(safe-area-inset-bottom))" }}>
         <NavBtn icon="📷" label={t("skan")} active={screen === "scan"} onClick={() => onNav("scan")} color={colors.button} hint={colors.hint} text={colors.text} />
         <NavBtn icon={`📤${cartCount > 0 ? ` (${cartCount})` : ""}`} label={t("sorov")} active={screen === "request"} onClick={() => onNav("request")} color={colors.button} hint={colors.hint} text={colors.text} />
         <NavBtn icon="📋" label={t("tarix")} active={screen === "history"} onClick={onNavHistory} color={colors.button} hint={colors.hint} text={colors.text} />
@@ -245,7 +245,7 @@ export function ScanScreen({
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: "fixed", top: 16, left: 16, right: 16, zIndex: 9999, padding: "12px 16px", borderRadius: 10, background: toast.type === "success" ? "#059669" : toast.type === "error" ? "#dc2626" : "#2563eb", color: "#fff", fontWeight: 600, fontSize: 14, textAlign: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
+        <div style={{ position: "fixed", top: 16, left: 16, right: 16, zIndex: 9999, padding: "12px 16px", borderRadius: 10, background: toast.type === "success" ? "var(--ep-green)" : toast.type === "error" ? "var(--ep-red)" : "var(--ep-blue)", color: "white", fontWeight: 600, fontSize: 14, textAlign: "center", boxShadow: "0 4px 12px color-mix(in srgb, black 20%, transparent)" }}>
           {toast.msg}
         </div>
       )}

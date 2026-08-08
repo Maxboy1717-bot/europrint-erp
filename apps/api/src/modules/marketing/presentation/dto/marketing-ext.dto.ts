@@ -8,7 +8,8 @@ import { z } from 'zod';
 import { MAX_SHORT_TEXT, MAX_NAME_LENGTH, ONE_KB, MAX_LONG_TEXT } from '@common/constants/app.constants';
 export const CreateContentPostDtoSchema = z.object({
   title:    z.string().min(1).max(MAX_SHORT_TEXT),
-  content:  z.string().max(ONE_KB * 50).optional(),
+  body:     z.string().min(1).max(ONE_KB * 50),
+  platform: z.enum(['telegram', 'instagram', 'facebook', 'website', 'linkedin']),
   postType: z.enum(['blog', 'news', 'announcement', 'social']).default('blog'),
   tags:     z.string().max(MAX_SHORT_TEXT).optional(),
   category: z.string().max(MAX_NAME_LENGTH).optional(),

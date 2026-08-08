@@ -9,12 +9,18 @@ export interface DirectorSummary {
   production: { value: number; formatted: string; change: string; trend: string };
   employees: { value: number; formatted: string; change: string; trend: string };
 }
+export interface CardAiInsight {
+  cardId: number; positionName: string; ckp: string | null;
+  avgAchievementPct: number; factCount: number; aiFactCount: number;
+  latestAiNote: string | null; lastFactDate: string | null;
+}
 export interface DirDashboard {
   orders: { month: number; completed: number; inProduction: number; overdue: number };
   production: { oee: string | null };
   hr: { present: number; total: number; active: number; late: number; attendanceRate: number };
   alerts: { minStock: number; iot: number };
   criticalStock?: number;
+  aiInsights?: CardAiInsight[];
 }
 export interface DirSummary {
   orders: { today: number; monthTotal: number; monthRevenue: number; activeProduction: number; pending: number; overdue: number };
@@ -79,4 +85,17 @@ export interface IdealVsActual {
   profit: { actual: number; target: number; pct: number; deviation_pct: number; formatted_actual: string; formatted_target: string };
   revenue: { actual: number; target: number; pct: number; deviation_pct: number; formatted_actual: string; formatted_target: string };
   orders: { completed: number; total: number; completion_pct: number };
+}
+export interface OwnerSummary {
+  generatedAt: string;
+  holat: { level: string; score: number; label: string; emoji: string };
+  numbers: {
+    newCustomers: number;
+    lostCustomers: number;
+    smallCustomers: number;
+    salesTrend: { currentWindow: number; previousWindow: number; deltaPct: number | null; windowDays: number };
+    topRisk: { customerId: number | null; customerName: string | null; churnRiskPct: number | null; openDebt: number | null } | null;
+  };
+  digestText: string;
+  telegram: { sent: boolean; reason: string };
 }

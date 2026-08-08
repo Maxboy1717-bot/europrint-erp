@@ -27,16 +27,20 @@ export class CrmExtrasService {
 
   async getDashboard() {
     return safeCall(async () => {
-      const [leads, deals, todayActivities] = await Promise.all([
+      const [leadsResult, dealsResult, activitiesResult] = await Promise.all([
         this.repo.getDashboardLeads(),
         this.repo.getDashboardDeals(),
         this.repo.getDashboardActivities(),
       ]);
+      // Each repo method returns Result<T> — unwrap .data before reading fields.
+      const leadsData   = leadsResult.ok   ? leadsResult.data   : [];
+      const dealsData   = dealsResult.ok   ? (dealsResult.data as Record<string, unknown>) : {};
+      const todayCount  = activitiesResult.ok ? activitiesResult.data : 0;
       return {
-        leads_by_status: leads,
-        pipeline_total: (deals as Record<string, unknown>).pipeline ?? 0,
-        open_deals: (deals as Record<string, unknown>).total ?? 0,
-        today_activities: todayActivities,
+        leads_by_status: leadsData,
+        pipeline_total:  dealsData.pipeline ?? 0,
+        open_deals:      dealsData.total    ?? 0,
+        today_activities: todayCount,
       };
     });
   }
@@ -57,8 +61,8 @@ export class CrmExtrasService {
     return this.repo.listInvoices(lim, off);
   }
 
-  async listProposals(lim: number, off: number) {
-    return this.repo.listProposals(lim, off);
+  async listProposals(lim: number, off: number, dealId?: number | null) {
+    return this.repo.listProposals(lim, off, dealId);
   }
 
   async getLeadStages() {
@@ -66,15 +70,59 @@ export class CrmExtrasService {
   }
 
   async getNba(entityType: string, entityId: number) {
-    return safeCall(async () => ({
-      entity_type: entityType,
-      entity_id: entityId,
-      recommendations: [
-        { action: 'follow_up_call', reason: 'No contact in 7 days', priority: 1 },
-        { action: 'send_proposal', reason: 'Deal stage requires proposal', priority: 2 },
-        { action: 'schedule_demo', reason: 'Product demo not done', priority: 3 },
-      ],
-      generated_at: _time.now(),
-    }));
+    return safeCall(async () => {
+      const activitiesResult = await this.repo.getEntityActivities(entityType, entityId);
+      const activities = activitiesResult.ok ? activitiesResult.data : [];
+
+      const now = _time.now();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const lastActivity = activities[0] ?? null;
+
+      // Derive recommended_action from last activity type
+      let recommended_action = 'make_call';
+      let alternatives: string[] = ['send_email', 'schedule_meeting'];
+      if (lastActivity?.type === 'call') {
+        recommended_action = 'send_email';
+        alternatives = ['schedule_meeting', 'send_proposal'];
+      } else if (lastActivity?.type === 'email') {
+        recommended_action = 'make_call';
+        alternatives = ['schedule_meeting', 'send_proposal'];
+      } else if (lastActivity?.type === 'meeting') {
+        recommended_action = 'send_proposal';
+        alternatives = ['make_call', 'send_email'];
+      }
+
+      // Count overdue activities (due_date < NOW and status != 'completed')
+      const overdueCount = activities.filter(
+        a => a.due_date !== null && a.due_date < now && a.status !== 'completed',
+      ).length;
+
+      // If any overdue exists — add it to alternatives with priority 0
+      const overdueAction = overdueCount > 0 ? 'overdue_followup' : null;
+
+      // Determine urgency: high if last activity > 7 days ago or no activity at all
+      const urgency =
+        lastActivity === null ||
+        (lastActivity.created_at !== null && lastActivity.created_at < sevenDaysAgo)
+          ? 'high'
+          : 'normal';
+
+      const reasoning = lastActivity
+        ? `Last activity type="${lastActivity.type ?? 'unknown'}" on ${lastActivity.created_at?.toISOString() ?? 'unknown'}`
+        : 'No previous activities found — initiate first contact';
+
+      return {
+        entity_type: entityType,
+        entity_id: entityId,
+        recommended_action,
+        alternatives: overdueAction ? [overdueAction, ...alternatives] : alternatives,
+        reasoning,
+        urgency,
+        last_activity_at: lastActivity?.created_at ?? null,
+        overdue_count: overdueCount,
+        generated_at: now,
+      };
+    });
   }
 }

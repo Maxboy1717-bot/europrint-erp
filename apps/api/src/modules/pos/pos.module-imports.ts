@@ -8,9 +8,11 @@ export { PosGateway } from './presentation/pos.gateway';
 
 // Controllers
 export { PosStubController }        from './presentation/pos-stub.controller';
-export { CashRegisterController }   from './presentation/cash-register.controller';
 export { PosPrinterConfigV2Controller } from './presentation/pos-printer-config-v2.controller';
 export { MovementsController }      from './presentation/movements.controller';
+export { ShiftHandoverController }   from './presentation/shift-handover.controller';
+export { PosShiftHandoverService }    from './application/services/pos-shift-handover.service';
+export { PosShiftHandoverRepository } from './infrastructure/repositories/pos-shift-handover.repository';
 export { BarcodeController }        from './presentation/barcode.controller';
 export { RequestsController }       from './presentation/requests.controller';
 export { InventoryCountController } from './presentation/inventory-count.controller';
@@ -23,6 +25,8 @@ export { StockController }          from './presentation/stock.controller';
 export { GlController }             from './presentation/gl.controller';
 export { SyncController }           from './presentation/sync.controller';
 export { PosNotificationsController } from './presentation/pos-notifications.controller';
+export { PosAnomaliesController } from './presentation/pos-anomalies.controller';
+export { MaterialNormsController } from './presentation/material-norms.controller';
 export { PosAuthController } from './presentation/pos-auth.controller';
 export { InventoryPassportController }    from './presentation/inventory-passport.controller';
 export { PosInventoryPassportRepository } from './infrastructure/repositories/pos-inventory-passport.repository';
@@ -34,8 +38,6 @@ export { PosFifoRecalculateJob }          from './application/jobs/pos-fifo-reca
 export { PosInactiveMaterialsJob }        from './application/jobs/pos-inactive-materials.job';
 
 // Retail POS
-export { CashRegisterService }      from './application/services/cash-register.service';
-export { CashRegisterRepository }   from './infrastructure/repositories/cash-register.repository';
 export { PosAuthService }           from './application/services/pos-auth.service';
 export { PosAuthRepository }        from './infrastructure/repositories/pos-auth.repository';
 
@@ -106,11 +108,6 @@ export { EmployeeWriteOffRepository }  from './infrastructure/repositories/emplo
 export { PosInventoryService } from './application/services/pos-inventory.service';
 export { PosInventoryRepository } from './infrastructure/repositories/pos-inventory.repository';
 
-// Legacy POS service with repository pattern
-export { PosService } from './application/services/pos.service';
-export { DrizzlePosSvcRepository } from './infrastructure/repositories/drizzle-pos-svc.repo';
-export { POS_SVC_REPO } from './domain/repositories/i-pos-svc.repo';
-
 // Events & Guards
 export { PosEventHandler }         from './application/event-handlers/pos.events';
 export { PosSecondaryEventsHandler } from './application/event-handlers/pos-secondary-events.handler';
@@ -118,6 +115,12 @@ export { PosEventRepository }      from './infrastructure/repositories/pos-event
 export { PosDepartmentGuard }      from './presentation/guards/pos-department.guard';
 // Wave 4 round-4 — canonical CQRS event handler (completed listener removed 2026-06-06: dead duplicate)
 export { PosWmsSyncCreatedListener }   from './application/event-handlers/pos-wms-sync-created.listener';
+// P2-ANOMALY — qoida-asosli anomaliya aniqlash (movement-completed/cancelled listener)
+export { PosAnomalyService }    from './application/services/pos-anomaly.service';
+export { PosAnomalyRepository } from './infrastructure/repositories/pos-anomaly.repository';
+export { PosAnomalyListener }   from './application/event-handlers/pos-anomaly.listener';
+export { MaterialNormsService }    from './application/services/material-norms.service';
+export { MaterialNormsRepository } from './infrastructure/repositories/material-norms.repository';
 
 // New workflow & balance services
 export { PosRequisitionWorkflowService } from './application/services/pos-requisition-workflow.service';
@@ -139,10 +142,20 @@ export { QuarantineWorkflowService }    from './application/services/quarantine-
 export { ThreeWayMatchService }         from './application/services/three-way-match.service';
 export { SmsService }                   from './application/services/sms.service';
 export { EmailService }                 from './application/services/email.service';
-export { TelegramBotService }           from './application/services/telegram-bot.service';
+// TelegramBotService o'chirildi 2026-08-07 (Q-46): PosTelegramService bilan o'lik dublikat edi.
 export { QueueService }                 from './application/services/queue.service';
 export { WarehouseFeaturesController }  from './presentation/warehouse-features.controller';
 export { PosOperationsController }      from './presentation/pos-operations.controller';
+
+// POS Terminal — kirgach ombor AUTO-OPEN + per-warehouse-type etiket config (BE-T1-WAREHOUSE-OPEN)
+export { WarehouseOpenController }      from './presentation/warehouse-open.controller';
+export { WarehouseOpenService }         from './application/services/warehouse-open.service';
+export { WarehouseOpenRepository }      from './infrastructure/repositories/warehouse-open.repository';
+
+// BE-T2-BARCODE-RESERV — KIRIM barkod-gen + CHIQIM bron-blok (Ombor terminal spec 2026-06-27)
+export { StockIssuableController }       from './presentation/stock-issuable.controller';
+export { PosStockIssuableService }       from './application/services/pos-stock-issuable.service';
+export { PosStockIssuableRepository }    from './infrastructure/repositories/pos-stock-issuable.repository';
 
 // Sprint B: new repositories for warehouse feature services
 export { WarehouseEmployeesRepository }  from './infrastructure/repositories/warehouse-employees.repository';

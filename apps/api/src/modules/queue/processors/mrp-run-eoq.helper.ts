@@ -14,10 +14,22 @@
 import { Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
+import { getConfigNumber } from '@common/config/business-config.helper';
 import { EoqCalculatorService } from '../../wms/domain/services/eoq-calculator.service';
 import type { PriceTier } from '../../wms/domain/services/eoq-calculator.service';
 
 export async function runEoqRecalcAll(eoqSvc: EoqCalculatorService, logger: Logger): Promise<void> {
+  // MN-3 (Magic-Numbers Independent Verification 2026-07-07, M9 config-schema gap):
+  // this ABC-tiered scheme is intentionally NOT consolidated with eoq.constants.ts's flat
+  // 150_000/0.20 (see that file's header comment) -- it's a distinct, more granular
+  // methodology (per-segment holding cost), not a drifted duplicate. Both schemes are now
+  // independently settings-table-tunable; reconciling which should be canonical remains a
+  // real design decision for the owner, not something this pass decides.
+  const orderingCost = await getConfigNumber('mrp_eoq_ordering_cost_uzs', 50_000);
+  const holdingCostA = await getConfigNumber('mrp_eoq_holding_cost_pct_a', 0.20);
+  const holdingCostB = await getConfigNumber('mrp_eoq_holding_cost_pct_b', 0.25);
+  const holdingCostC = await getConfigNumber('mrp_eoq_holding_cost_pct_c', 0.30);
+
   // Uses only existing material_cards columns (no annual_demand/ordering_cost_uzs/holding_cost_percent).
   // Annual demand is derived from pos_inventory_movements (52-week look-back), falling back
   // to current_stock×12 when no movement data exists.
@@ -40,12 +52,12 @@ export async function runEoqRecalcAll(eoqSvc: EoqCalculatorService, logger: Logg
   const matRows = await runQuery(sql`
     SELECT mc.id AS material_id,
            GREATEST(COALESCE(mc.current_stock, 0) * 12, 100)::numeric AS stock_based_demand,
-           50000::numeric AS ordering_cost,
+           ${orderingCost}::numeric AS ordering_cost,
            CASE COALESCE(mc.abc_segment, 'C')
-             WHEN 'A' THEN 0.20
-             WHEN 'B' THEN 0.25
-             ELSE 0.30
-           END::numeric AS holding_cost_pct,
+             WHEN 'A' THEN ${holdingCostA}::numeric
+             WHEN 'B' THEN ${holdingCostB}::numeric
+             ELSE ${holdingCostC}::numeric
+           END AS holding_cost_pct,
            COALESCE(mc.last_purchase_price, mc.unit_price, 1000)::numeric AS unit_price,
            COALESCE(ip.lead_time_days, 7)::integer AS lead_time_days
     FROM material_cards mc

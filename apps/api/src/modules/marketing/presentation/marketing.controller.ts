@@ -40,6 +40,9 @@ enum Role {
  SUPER_ADMIN = 'super_admin',
  DIRECTOR = 'director',
  SALES_MANAGER = 'sales_manager',
+ // audit 2026-08-06 T21: live users seed 'manager', not 'sales_manager' — same fix
+ // as the other 8 marketing controllers (5f26a02b); this file was missed then.
+ MANAGER = 'manager',
 }
 
 @ApiThrottle()
@@ -59,7 +62,7 @@ export class MarketingController {
  @ApiOperation({ summary: 'Get all' })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get()
- @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
  async getAll(
  @Query('status') status?: string,
  @Query('page') page?: string,
@@ -83,7 +86,7 @@ export class MarketingController {
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
- @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
  async getById(@Param('id') id: string) {
  // Canonical = marketing_campaigns (owner 2026-06-05) — same table list/delete read. id is a uuid (varchar).
  return await this.campaignsSvc.findOne(id);
@@ -93,7 +96,7 @@ export class MarketingController {
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
- @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
  async create(
  @Body() dto: CreateCampaignDto,
  @CurrentUser() user: AuthenticatedUser) {
@@ -110,7 +113,7 @@ export class MarketingController {
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id')
- @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
  async update(
  @Param('id') id: string,
  @Body() dto: UpdateCampaignDto,
@@ -137,7 +140,7 @@ export class MarketingController {
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post(':id/launch')
- @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
  async launch(
  @Param('id') id: string,
  @CurrentUser() user: AuthenticatedUser) {

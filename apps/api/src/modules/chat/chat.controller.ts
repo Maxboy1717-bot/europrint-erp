@@ -9,8 +9,8 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
-  Controller, Get, Patch, Post, Body, Param, Query,
-  UseGuards, Logger, UseInterceptors, HttpCode, HttpStatus,
+  Controller, Get, Patch, Post, Delete, Body, Param, Query,
+  UseGuards, Logger, UseInterceptors, HttpCode, HttpStatus, HttpException,
 } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -118,6 +118,7 @@ export class ChatController {
       fileName: body.fileName,
       fileType: body.fileType,
       replyToId: body.replyToId,
+      mentionedUserIds: body.mentionedUserIds,
     }));
   }
 
@@ -190,6 +191,83 @@ export class ChatController {
     return pinned ? [pinned] : [];
   }
 
+  // FE (ChatLayout.handleRoomSelect) singular `rooms/:id/pinned` chaqiradi; oldin
+  // faqat `/api/hr-v2/chat/...`da bor edi → `/api/chat/...`da 404 berardi. Bir xil
+  // servis metodiga delegatsiya, FE kutgan yakka-obyekt shakli bilan.
+  @ApiOperation({ summary: 'Get pinned message (single)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('rooms/:roomId/pinned')
+  async getPinnedMessageSingle(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('roomId') roomId: string,
+  ) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    const pinned = await this.chatService.getPinnedMessage(roomId);
+    return pinned
+      ? {
+          id: String(pinned.id),
+          content: pinned.content,
+          sender_name: pinned.senderName,
+          created_at: pinned.createdAt,
+        }
+      : null;
+  }
+
+  // FE xabar-amal paneli reaction/pin ni FLAT `/api/chat/messages/:id/...` da
+  // chaqiradi (getChatApiBase). Bu handlerlar oldin faqat `/api/hr-v2/chat` da
+  // bor edi → `/api/chat` da 404 (reaction bosilsa hech narsa, pin xato berardi).
+  // Bir xil servisga delegatsiya + gateway broadcast (hr-v2 retire yo'nalishi).
+  @ApiOperation({ summary: 'Toggle reaction (flat /api/chat alias)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Post('messages/:messageId/reactions')
+  @HttpCode(HttpStatus.OK)
+  async toggleReactionFlat(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('messageId') messageId: string,
+    @Body() body: { emoji?: string },
+  ) {
+    const emoji = String(body?.emoji ?? '').trim();
+    if (!emoji) throw new HttpException('emoji majburiy', HttpStatus.BAD_REQUEST);
+    const reactions = unwrapOrInternal(await this.chatService.toggleReaction(messageId, user.id, emoji));
+    this.gateway.server?.emit('reaction:updated', { messageId, reactions });
+    return { reactions };
+  }
+
+  @ApiOperation({ summary: 'Pin/unpin message (flat /api/chat PATCH alias)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Patch('messages/:messageId/pin')
+  async pinMessageFlat(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('messageId') messageId: string,
+    @Body() body: { pin?: boolean },
+  ) {
+    const pin = body?.pin ?? true;
+    const msg = await this.chatService.pinMessage(messageId, user.id, pin);
+    if (!msg) throw new HttpException('Xabar topilmadi', HttpStatus.NOT_FOUND);
+    const roomId = String((msg as { roomId?: unknown }).roomId ?? '');
+    const isPinned = Boolean((msg as { isPinned?: unknown }).isPinned);
+    const pinned = isPinned ? await this.chatService.getPinnedMessage(roomId) : null;
+    this.gateway.server?.to(`room:${roomId}`).emit(
+      isPinned ? 'message:pinned' : 'message:unpinned',
+      isPinned
+        ? { roomId, messageId, content: pinned?.content, senderName: pinned?.senderName }
+        : { roomId, messageId },
+    );
+    return msg;
+  }
+
+  @ApiOperation({ summary: 'Get shared files in room' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('rooms/:roomId/files')
+  async getSharedFiles(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('roomId') roomId: string,
+    @Query('type') type?: string,
+  ) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    return unwrapOrInternal(await this.chatService.getSharedFiles(roomId, type));
+  }
+
   @ApiOperation({ summary: 'Get mute status' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/mute')
@@ -203,6 +281,74 @@ export class ChatController {
     return { muted: me?.isMuted ?? false };
   }
 
+  @ApiOperation({ summary: 'Get online users from DB (presence)' })
+  @ApiResponse({ status: 200, description: 'Array of {userId, lastSeenAt} for ONLINE users' })
+  @Get('presence')
+  async getOnlineUsers() {
+    return unwrapOrInternal(await this.chatService.getOnlineUsers());
+  }
+
+  @ApiOperation({ summary: 'Get one user presence (status + work_status) for the info panel' })
+  @ApiResponse({ status: 200, description: '{ status, workStatus, lastSeenAt } yoki null' })
+  @Get('presence/:userId')
+  async getUserPresence(@Param('userId') userId: string) {
+    return unwrapOrInternal(await this.chatService.getUserPresence(userId));
+  }
+
+  @ApiOperation({ summary: 'Xodimga bog\'liq vazifalar (Kanban + CC)' })
+  @Get('employees/:userId/related-tasks')
+  async getRelatedTasks(@Param('userId') userId: string) {
+    return unwrapOrInternal(await this.chatService.getRelatedTasks(Number(userId)));
+  }
+
+  @ApiOperation({ summary: 'Suhbat izohlari (Izohlar tab)' })
+  @Get('rooms/:roomId/notes')
+  async getRoomNotes(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    return unwrapOrInternal(await this.chatService.listRoomNotes(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Suhbatga izoh qo\'shish' })
+  @Post('rooms/:roomId/notes')
+  async addRoomNote(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string, @Body() body: unknown) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    const text = String((body as Record<string, unknown>)?.body ?? '').trim().slice(0, 2000);
+    if (text) await this.chatService.addRoomNote(Number(roomId), user.id, text);
+    return unwrapOrInternal(await this.chatService.listRoomNotes(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Izohni o\'chirish' })
+  @Delete('rooms/:roomId/notes/:noteId')
+  async deleteRoomNote(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string, @Param('noteId') noteId: string) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    await this.chatService.deleteRoomNote(Number(roomId), Number(noteId));
+    return unwrapOrInternal(await this.chatService.listRoomNotes(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Suhbat teglari (xodim-info paneli)' })
+  @Get('rooms/:roomId/tags')
+  async getRoomTags(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    return unwrapOrInternal(await this.chatService.listRoomTags(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Suhbatga teg qo\'shish' })
+  @Post('rooms/:roomId/tags')
+  async addRoomTag(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string, @Body() body: unknown) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    const tag = String((body as Record<string, unknown>)?.tag ?? '').trim().slice(0, 40);
+    if (tag) await this.chatService.addRoomTag(Number(roomId), tag, user.id);
+    return unwrapOrInternal(await this.chatService.listRoomTags(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Suhbatdan teg olib tashlash' })
+  @Delete('rooms/:roomId/tags/:tag')
+  async removeRoomTag(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string, @Param('tag') tag: string) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    await this.chatService.removeRoomTag(Number(roomId), decodeURIComponent(tag));
+    return unwrapOrInternal(await this.chatService.listRoomTags(Number(roomId)));
+  }
+
   @ApiOperation({ summary: 'Update room' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Patch('rooms/:roomId')
@@ -213,7 +359,9 @@ export class ChatController {
     @Body() body: unknown,
   ) {
     const dto = (body ?? {}) as Record<string, unknown>;
-    await this.chatService.assertRoomMember(roomId, user.id);
+    // Item #12 (audit :263): nom/tavsif/avatar o'zgartirish ADMIN roliga cheklangan —
+    // oddiy a'zolik yetarli emas (xona yaratuvchisi createGroupRoom() da 'ADMIN' oladi).
+    await this.chatService.assertRoomAdmin(roomId, user.id);
     const r = await db.execute(sql`
       UPDATE chat_rooms SET
         name        = COALESCE(${dto['name']        ?? null}::text,    name),

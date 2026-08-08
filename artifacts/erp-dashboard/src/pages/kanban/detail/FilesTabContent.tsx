@@ -66,7 +66,7 @@ export function FilesTabContent({
       </div>
 
       {files.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {(Array.isArray(files) ? files : []).map((file) => {
             const { icon: FileIcon, color: iconColor } = getFileIcon(file.mimeType, file.fileName);
             const showThumbnail = isImageFile(file.mimeType, file.fileName);

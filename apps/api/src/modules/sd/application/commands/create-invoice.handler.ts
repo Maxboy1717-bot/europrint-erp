@@ -31,6 +31,9 @@ export class CreateInvoiceHandler implements ICommandHandler<CreateInvoiceComman
   async execute(command: CreateInvoiceCommand): Promise<Result<Record<string, unknown>>> {
     // Validatsiya va INSERT bir tranzaksiya ichida — read-then-write race yo'q
     const outcome = await this.invoicesRepo.withTransaction(async (tx) => {
+      // VISION-3340 SD-06 #24 — 'full' | 'partial' | null (buyurtma bog'lanmagan yoki hali
+      // yetkazish ma'lumoti yo'q holatda fabrikatsiya qilinmaydi, NULL qoladi — Q-40).
+      let invoiceType: 'full' | 'partial' | null = null;
       // Buyurtma holati tekshiruvi — draft holatida faktura yaratish mumkin emas
       if (command.salesOrderId) {
         const orderResult = await this.invoicesRepo.findOrderForInvoicing(command.salesOrderId, tx);
@@ -51,6 +54,26 @@ export class CreateInvoiceHandler implements ICommandHandler<CreateInvoiceComman
               `Buyurtma holati "${order.status}" da faktura yaratib bo'lmaydi. ` +
                 `Avval buyurtmani tasdiqlating (approved yoki undan keyin).`,
             ),
+          );
+        }
+
+        // VISION-3340 SD-06 #24 — invoice_type: yetkazilgan miqdor (delivery_items, deliveries
+        // orqali) buyurtma miqdoridan (sales_order_items.order_quantity) kam bo'lsa 'partial',
+        // aks holda 'full'. Yetkazish ma'lumoti hali yo'q bo'lsa (hasDeliveryData=false — masalan
+        // build-fazasi bo'sh delivery_items) yoki so'rov muvaffaqiyatsiz bo'lsa hech narsa
+        // fabrikatsiya qilinmaydi — invoiceType NULL qoladi, faktura yaratilishi to'xtamaydi.
+        const fulfillmentResult = await this.invoicesRepo.getOrderFulfillmentQty(
+          command.salesOrderId,
+          tx,
+        );
+        if (fulfillmentResult.ok) {
+          const { orderedQty, deliveredQty, hasDeliveryData } = fulfillmentResult.data;
+          if (hasDeliveryData && orderedQty > 0) {
+            invoiceType = deliveredQty < orderedQty ? 'partial' : 'full';
+          }
+        } else {
+          this.logger.warn(
+            `invoice_type aniqlanmadi (buyurtma #${command.salesOrderId}): ${fulfillmentResult.error.message}`,
           );
         }
       }
@@ -85,6 +108,10 @@ export class CreateInvoiceHandler implements ICommandHandler<CreateInvoiceComman
           createdBy: command.userId,
           createdAt: now,
           updatedAt: now,
+          deliveryTerm: command.deliveryTerm,
+          incotermCode: command.incotermCode,
+          currency: command.currency,
+          invoiceType,
         },
         tx,
       );

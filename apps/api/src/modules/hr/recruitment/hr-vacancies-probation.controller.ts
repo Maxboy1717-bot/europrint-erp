@@ -68,6 +68,13 @@ export class HrVacanciesProbationController {
     return { data: { pipeline_id: id, start_date: dRec['created_at'] ?? null, end_date: dRec['hired_at'] ?? null, ...dates } };
   }
 
+  // Q13-follow-up (2026-07-04): previously wrote `notes` as a plain-text summary
+  // ("probation_review rating=..."), discarding every real field the FE sends
+  // (review_type/scores/observations/decision/reviewer_name/employee_name/
+  // position_name/mentor_name/review_date) and incompatible with Q13's
+  // findProbationReviews(), which JSON.parses `notes` to read a review back.
+  // Now persists the full body as JSON so the GET .../probation-review round
+  // trip (added in Q13) actually returns what was submitted.
   @ApiOperation({ summary: 'Submit probation review' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -75,13 +82,12 @@ export class HrVacanciesProbationController {
   @UsePipes(new ZodValidationPipe(HrProbationReviewSchema))
   async submitProbationReview(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: HrProbationReviewDto,
+    @Body() body: HrProbationReviewDto & Record<string, unknown>,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const rating = body.rating ?? null;
-    const notes = `probation_review rating=${rating}`;
+    const notes = JSON.stringify(body);
     await this.svc.recordFunnelHistory(String(id), 'probation_reviewed', String(user.id), notes);
-    return { data: { pipeline_id: id, reviewed_by: user.id, rating } };
+    return { data: { pipeline_id: id, reviewed_by: user.id, ...body } };
   }
 
   @ApiOperation({ summary: 'Patch probation dates' })
@@ -125,6 +131,12 @@ export class HrVacanciesProbationController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('pipeline/:id/probation-review')
   async getProbationReview(@Param('id', ParseIntPipe) id: number) {
-    return { data: { pipeline_id: id, review: null } };
+    // Q13 fix: was hardcoded { review: null } — reviews submitted via
+    // POST .../probation-review (recorded as hr_funnel_history stage=
+    // 'probation_reviewed') were never read back. FE (ProbationReviewBadges,
+    // ProbationReviewDialog) expects { data: ProbationReview[] }.
+    const r = await this.svc.findProbationReviews(id);
+    const data = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { data };
   }
 }

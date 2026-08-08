@@ -1,16 +1,23 @@
 /**
  * @module drizzle-qc-reclamation.repo
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ *   Uses the canonical INTEGER-PK `qcReclamations` schema (lib/db/src/schema/qc-schema.ts,
+ *   re-exported via shared/db/schema-compat-3.ts) which matches the live `qc_reclamations`
+ *   table (id = serial, matches `information_schema` — verified 2026-07-02). The previous
+ *   version imported the UUID-PK stub from shared/db/schema-misc-qc.ts, which does not
+ *   match the live column type and made every reclamation query/write a latent 22P02 crash.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
 import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
-import { Result, Ok, Err } from '@common/types/result.type';
-import { db, qc_reclamations as qcReclamations } from '@shared/db';
+import { Result } from '@common/types/result.type';
+import { db, qcReclamations } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { Reclamation, ReclamationStatus } from '../../domain/aggregates/reclamation.aggregate';
 import { DefectSeverity } from '../../domain/aggregates/defect.aggregate';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
+import { QC_RECLAMATION_DEFAULT_SLA_DAYS } from '@common/constants/business.constants';
 
 // Re-exported for downstream repos that previously imported this constant from here.
 export { qcReclamations };
@@ -20,10 +27,26 @@ export class DrizzleQcReclamationRepo {
   private readonly logger = new Logger(DrizzleQcReclamationRepo.name);
 
   mapRowToReclamation(row: Record<string, unknown>): Reclamation {
-    return new Reclamation(String(row.id), String(row.customerName ?? ''), row.customerId ? String(row.customerId) : null, row.orderId ? String(row.orderId) : null, String(row.description ?? ''), row.severity as DefectSeverity, row.status as ReclamationStatus, row.reportedDate as Date, row.assignedTo ? String(row.assignedTo) : null, row.resolution ? String(row.resolution) : null, row.resolvedAt as Date | null, row.createdAt as Date, row.updatedAt as Date);
+    return new Reclamation(
+      Number(row.id),
+      String(row.customerName ?? row.clientName ?? ''),
+      row.customerId != null ? Number(row.customerId) : null,
+      row.orderId ? String(row.orderId) : null,
+      String(row.description ?? ''),
+      (row.severity as DefectSeverity | null) ?? DefectSeverity.MAJOR,
+      (row.status as ReclamationStatus | null) ?? ReclamationStatus.NEW,
+      (row.reportedAt as Date | null) ?? (row.createdAt as Date),
+      row.deadlineDays != null ? Number(row.deadlineDays) : QC_RECLAMATION_DEFAULT_SLA_DAYS,
+      row.slaDueAt as Date | null,
+      null, // assignedTo — not tracked on the canonical schema (no live writer today).
+      row.resolution ? String(row.resolution) : null,
+      row.resolvedAt as Date | null,
+      row.createdAt as Date,
+      row.updatedAt as Date,
+    );
   }
 
-  async findReclamationById(id: string): Promise<Result<Reclamation | null>> {
+  async findReclamationById(id: number): Promise<Result<Reclamation | null>> {
     try {
       const [row] = await db.select().from(qcReclamations).where(eq(qcReclamations.id, id)).limit(1);
       if (!row) return { ok: true as const, data: null };
@@ -56,8 +79,42 @@ export class DrizzleQcReclamationRepo {
 
   async saveReclamation(reclamation: Reclamation): Promise<Result<Reclamation>> {
     try {
-      await db.insert(qcReclamations).values({ id: reclamation.id, customerName: reclamation.customerName, customerId: reclamation.customerId, orderId: reclamation.orderId, description: reclamation.description, severity: reclamation.severity, status: reclamation.status, reportedDate: reclamation.reportedDate, assignedTo: reclamation.assignedTo, resolution: reclamation.resolution, resolvedAt: reclamation.resolvedAt, createdAt: reclamation.createdAt, updatedAt: reclamation.updatedAt });
-      return { ok: true as const, data: reclamation };
+      // id is a DB serial (qc_reclamations_id_seq) — pull it explicitly so the
+      // NOT NULL legacy `reclamation_number` business key can embed it (mirrors
+      // sd/infrastructure/repositories/drizzle-sd-lost-orders-reclamations.repo.ts).
+      const seqRows = await typedExecute<{ n: string }>(sql`SELECT nextval('qc_reclamations_id_seq') AS n`);
+      const newId = Number(seqRows[0]?.n ?? 0);
+      const year = reclamation.reportedDate.getFullYear();
+      const reclamationNumber = `QC-REC-${year}-${String(newId).padStart(5, '0')}`;
+      const claimDate = reclamation.reportedDate.toISOString().slice(0, 10);
+
+      const [row] = await db.insert(qcReclamations).values({
+        id: newId,
+        reclamationNumber,
+        // clientName/claimDate/issueType: legacy TZ_04 required columns (no live
+        // CHECK, but Drizzle declares them NOT NULL) — filled from the same data
+        // the CQRS aggregate collects; issueType has no dedicated input yet so it
+        // is recorded as 'other' (a real, valid enum member — not fabricated data).
+        clientName: reclamation.customerName,
+        claimDate,
+        issueType: 'other',
+        description: reclamation.description,
+        customerName: reclamation.customerName,
+        customerId: reclamation.customerId,
+        orderId: reclamation.orderId,
+        severity: reclamation.severity,
+        status: reclamation.status,
+        reportedAt: reclamation.reportedDate,
+        deadlineDays: reclamation.deadlineDays,
+        slaDueAt: reclamation.slaDueAt,
+        resolution: reclamation.resolution,
+        resolvedAt: reclamation.resolvedAt,
+        createdAt: reclamation.createdAt,
+        updatedAt: reclamation.updatedAt,
+        createdBy: reclamation.createdBy,
+      }).returning();
+      if (!row) return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Reclamation insert returned no row' } };
+      return { ok: true as const, data: this.mapRowToReclamation(row as Record<string, unknown>) };
     } catch (error: unknown) {
       this.logger.error('Failed to save reclamation');
       return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to save reclamation' } };
@@ -74,22 +131,27 @@ export class DrizzleQcReclamationRepo {
     }
   }
 
-  async getReclamationStats(): Promise<Result<{ byStatus: Record<string, number>; avgResolutionDays: number; openCount: number }>> {
+  async getReclamationStats(): Promise<Result<{ byStatus: Record<string, number>; avgResolutionDays: number; openCount: number; overdueCount: number }>> {
     try {
       const rows = await db.select().from(qcReclamations);
       const byStatus: Record<string, number> = {};
-      let totalResolutionDays = 0, resolvedCount = 0, openCount = 0;
+      let totalResolutionDays = 0, resolvedCount = 0, openCount = 0, overdueCount = 0;
+      const now = Date.now();
       for (const _row of rows) {
         const row = _row as Record<string, unknown>;
         byStatus[String(row.status)] = (byStatus[String(row.status)] || 0) + 1;
-        if (row.status === ReclamationStatus.OPEN) openCount++;
+        if (row.status === ReclamationStatus.NEW) openCount++;
         if (row.status === ReclamationStatus.RESOLVED && row.resolvedAt) {
-          const days = Math.floor(((row.resolvedAt as Date).getTime() - (row.reportedDate as Date).getTime()) / MS_PER_DAY);
+          const reportedAt = (row.reportedAt as Date | null) ?? (row.createdAt as Date);
+          const days = Math.floor(((row.resolvedAt as Date).getTime() - reportedAt.getTime()) / MS_PER_DAY);
           totalResolutionDays += days;
           resolvedCount++;
         }
+        // SLA timer: open reclamation (not resolved/rejected) whose sla_due_at has passed.
+        const openStatus = row.status !== ReclamationStatus.RESOLVED && row.status !== ReclamationStatus.REJECTED;
+        if (openStatus && row.slaDueAt && (row.slaDueAt as Date).getTime() < now) overdueCount++;
       }
-      return { ok: true as const, data: { byStatus, avgResolutionDays: resolvedCount > 0 ? Math.round(totalResolutionDays / resolvedCount) : 0, openCount } };
+      return { ok: true as const, data: { byStatus, avgResolutionDays: resolvedCount > 0 ? Math.round(totalResolutionDays / resolvedCount) : 0, openCount, overdueCount } };
     } catch (error: unknown) {
       this.logger.error('Failed to get reclamation stats');
       return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to get reclamation stats' } };

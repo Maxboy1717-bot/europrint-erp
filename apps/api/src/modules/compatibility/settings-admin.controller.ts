@@ -17,18 +17,19 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { SettingsAdminService } from './settings-admin.service';
-import {
-  GuidelineAclTranslator,
-  type LegacyGuidelineRow,
-  type GuidelineDto,
-} from './acl/guideline-acl';
 
 const GuidelineSchema = z.object({
-  title:     z.string().min(1),
-  content:   z.string().min(1),
-  category:  z.string().default('general'),
-  isActive:  z.boolean().default(true),
-  createdBy: z.string().optional(),
+  title:         z.string().min(1).optional(),
+  content:       z.string().min(1).optional(),
+  category:      z.string().default('general'),
+  isActive:      z.boolean().default(true),
+  createdBy:     z.string().optional(),
+  // Item #119: file-based guideline model (orgFunctionId/filePath/version) — the compat
+  // shim's original title/content fields stay optional so a text-only guideline (no file)
+  // still works via updateGuideline/PATCH-style partial calls.
+  orgFunctionId: z.coerce.number().int().positive(),
+  filePath:      z.string().min(1),
+  version:       z.string().default('1.0'),
 });
 
 const FilterSchema = z.object({
@@ -46,30 +47,12 @@ const FilterSchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Controller()
 export class SettingsAdminController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly guidelineAcl = new GuidelineAclTranslator();
-
   constructor(private readonly svc: SettingsAdminService) {}
 
   @Get('guidelines')
   @Roles('super_admin', 'admin', 'manager', 'director')
   async getGuidelines() {
     return unwrapOrBadRequest(await this.svc.getGuidelines());
-  }
-
-  /**
-   * PA2-14 ACL-translated variant of guidelines. New BC-6 (Platform / Admin)
-   * consumers should target this route; `/guidelines` stays for backwards-compat.
-   */
-  @Get('guidelines/v2')
-  @Roles('super_admin', 'admin', 'manager', 'director')
-  async getGuidelinesV2(): Promise<GuidelineDto[]> {
-    const rows = unwrapOrBadRequest(await this.svc.getGuidelines()) as unknown as LegacyGuidelineRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.guidelineAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: GuidelineDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Post('guidelines')
@@ -82,13 +65,13 @@ export class SettingsAdminController {
   @Put('guidelines/:id')
   async updateGuideline(@Param('id') id: string, @Body() body: unknown) {
     const dto = GuidelineSchema.partial().parse(body);
-    return unwrapOrNotFound(await this.svc.updateGuideline(id, dto));
+    return unwrapOrNotFound(await this.svc.updateGuideline(parseInt(id, 10), dto));
   }
 
   @Delete('guidelines/:id')
   @HttpCode(HttpStatus.OK)
   async deleteGuideline(@Param('id') id: string) {
-    return unwrapOrNotFound(await this.svc.deleteGuideline(id));
+    return unwrapOrNotFound(await this.svc.deleteGuideline(parseInt(id, 10)));
   }
 
   @Get('contact-settings')

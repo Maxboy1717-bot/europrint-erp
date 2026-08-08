@@ -145,7 +145,7 @@ export class TelegramBotsService {
     if (chatId) {
       const initiated = await this.reportBot.initiateReportRequest(chatId, payload.employeeId, payload.reportDate);
       if (!initiated) {
-        await this.reportBot.sendMessage(chatId, `📊 <b>Kunlik hisobot eslatmasi!</b>\n\nBugungi hisobotingiz hali topshirilmagan!\n⏰ Deadline: soat 20:00\n\n/hisobot buyrug'i bilan topshiring.`);
+        await this.reportBot.sendMessage(chatId, `📊 <b>Kunlik hisobot eslatmasi!</b>\n\nBugungi hisobotingiz hali topshirilmagan!\n⏰ Deadline: soat 16:00\n\n/hisobot buyrug'i bilan topshiring.`);
       }
     }
   }

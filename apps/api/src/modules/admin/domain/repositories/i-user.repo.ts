@@ -28,7 +28,7 @@ export interface IUserRepo {
   findAll(filters: UserFilters): Promise<PaginatedResult<UserAggregate>>;
   create(user: UserAggregate): Promise<UserAggregate>;
   update(user: UserAggregate): Promise<UserAggregate>;
-  softDelete(id: number): Promise<void>;
+  softDelete(id: number): Promise<boolean>;
   restore(id: number): Promise<void>;
 }
 

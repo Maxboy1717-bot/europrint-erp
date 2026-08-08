@@ -17,11 +17,20 @@ export interface ISdQuotationsRepo {
   listContracts(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>>;
   createContract(body: Row): Promise<Result<Row | null>>;
   listPriceFormulas(lim: number, off: number): Promise<Result<Row[]>>;
-  getKpiTeam(): Promise<Result<Row[]>>;
+  getKpiTeam(year: number, month: number): Promise<Result<Row[]>>;
   getKpiTargets(managerId: number | null): Promise<Result<Row[]>>;
-  getFunnelReport(): Promise<Result<Row>>;
+  getFunnelReport(): Promise<Result<Row[]>>;
   getQuotationById(id: string): Promise<Result<Row | null>>;
-  convertQuotationToOrder(id: string): Promise<Result<{ error: string } | { order: Row }>>;
+  getQuotationForPdf(id: string): Promise<Result<Row | null>>;
+  getQuotationItems(id: string): Promise<Result<Row[]>>;
+  // 06-sd#147 — layer-count persist + non-blocking layers->load recommendation
+  setItemLayerCount(itemId: string, layerCount: number): Promise<Result<Row | null>>;
+  recommendLoadForLayers(layerCount: number): Promise<Result<Row | null>>;
+  setItemRollParams(itemId: number, params: { coreDiameterMm: number | null; gilzaDiameterMm: number | null; rollLengthM: number | null }): Promise<Result<Row | null>>;
+  convertQuotationToOrder(id: string, convertedByUserId?: number | null): Promise<Result<{ error: string } | { order: Row }>>;
+  // 06-sd#107 — load-capacity persist + non-blocking flute/layer recommendation
+  setItemLoadCapacity(itemId: string, loadKg: number): Promise<Result<Row | null>>;
+  recommendConstruction(loadKg: number): Promise<Result<Row | null>>;
 }
 
 export const SD_QUOTATIONS_REPO = Symbol('SD_QUOTATIONS_REPO');

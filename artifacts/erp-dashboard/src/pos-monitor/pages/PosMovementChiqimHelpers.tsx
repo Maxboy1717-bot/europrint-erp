@@ -1,8 +1,10 @@
-/** @module PosMovementChiqimHelpers @description Small reusable UI components: ToastContainer, NoStockModal, EmployeeSearch. */
+/**
+ * @module PosMovementChiqimHelpers
+ * @description Small reusable UI for scanner-only CHIQIM: ToastContainer, ScanNotFoundModal,
+ * NumericKeypad (ekran-klaviatura — tarozi ulanmaganda miqdor kiritish, spec 2026-06-27).
+ */
 
-import { useState, useRef } from "react";
-import type { Toast, EmployeeSuggestion } from "./PosMovementChiqimTypes";
-import { apiRequest } from '@/lib/queryClient';
+import type { Toast } from "./PosMovementChiqimTypes";
 import { useTranslation } from '@/lib/i18n';
 
 // ─── Toast container ──────────────────────────────────────────────────────────
@@ -13,7 +15,6 @@ interface ToastContainerProps {
 }
 
 export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
-  const { t } = useTranslation("common");
   if (!toasts.length) return null;
   return (
     <div style={{
@@ -30,17 +31,11 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
               : t.type === "warning"
                 ? "rgba(245,158,11,0.95)"
                 : "rgba(239,68,68,0.95)",
-            color: "#fff",
-            borderRadius: 10,
-            padding: "10px 14px",
-            fontSize: 13,
-            fontWeight: 600,
+            color: "#fff", borderRadius: 10, padding: "10px 14px",
+            fontSize: 13, fontWeight: 600,
             boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10,
-            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 10, cursor: "pointer",
           }}
           onClick={() => onDismiss(t.id)}
         >
@@ -52,110 +47,184 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   );
 }
 
-// ─── No-stock modal ───────────────────────────────────────────────────────────
+// ─── Scan-not-found modal ─────────────────────────────────────────────────────
 
-interface NoStockModalProps {
-  materialName: string;
+interface ScanNotFoundModalProps {
+  barcode: string;
   onClose: () => void;
 }
 
-export function NoStockModal({ materialName, onClose }: NoStockModalProps) {
+export function ScanNotFoundModal({ barcode, onClose }: ScanNotFoundModalProps) {
   const { t } = useTranslation("common");
   return (
     <div className="pos-modal-overlay" onClick={onClose}>
-      <div
-        className="pos-modal"
-        style={{ maxWidth: 380, textAlign: "center" }}
-        onClick={e => e.stopPropagation()}
-      >
+      <div className="pos-modal" style={{ maxWidth: 380, textAlign: "center", minWidth: 320 }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 52, marginBottom: 12 }}>🚫</div>
-        <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "var(--pos-danger)" }}>
-          {t("qoldiqYoq")}
+        <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "var(--pos-action-chiqim)" }}>
+          {t("barcodeTopilmadiSarlavha", "Barkod topilmadi")}
         </h3>
         <p style={{ color: "var(--pos-text-muted)", fontSize: 13, marginBottom: 20 }}>
-          <strong>{materialName}</strong> {t("ombordaMavjudQoldiqYoqBu")}
+          <span className="pos-mono" style={{ color: "var(--pos-text)" }}>{barcode}</span><br />
+          {t("buBarcodeTizimdaYoq", "Bu barkod tizimda topilmadi yoki bu omborga tegishli emas.")}
         </p>
         <button
-          className="pos-btn pos-btn-danger"
-          style={{ minWidth: 120, justifyContent: "center" }}
+          className="pos-btn"
+          style={{ minWidth: 120, justifyContent: "center", background: "var(--pos-action-chiqim)", color: "#fff" }}
           onClick={onClose}
         >
-          {t("close2")}
+          {t("close2", "Yopish")}
         </button>
       </div>
     </div>
   );
 }
 
-// ─── Employee search combobox ─────────────────────────────────────────────────
+// ─── Numeric keypad (ekran-klaviatura) ────────────────────────────────────────
+// Spec: tarozi ulangan → avto-og'irlik; ulanmagan → ekran-klaviatura. Bu komponent
+// tarozi yo'q holatda katta sensorli tugmalar bilan miqdor kiritadi.
 
-interface EmployeeSearchProps {
+interface NumericKeypadProps {
   value: string;
-  onChange: (id: string, name: string) => void;
+  onChange: (v: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+  unit: string;
+  /** Ruxsat etilgan maksimum (bo'sh qoldiq yoki override holatida jami qoldiq). */
+  maxAllowed: number;
 }
 
-export function EmployeeSearch({ value, onChange }: EmployeeSearchProps) {
+export function NumericKeypad({ value, onChange, onConfirm, onClose, unit, maxAllowed }: NumericKeypadProps) {
   const { t } = useTranslation("common");
-  const [query, setQuery] = useState(value);
-  const [open, setOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<EmployeeSuggestion[]>([]);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keys = ["7", "8", "9", "4", "5", "6", "1", "2", "3", ".", "0", "⌫"];
 
-  function search(q: string) {
-    setQuery(q);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (q.length < 2) { setSuggestions([]); setOpen(false); return; }
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res = await apiRequest<EmployeeSuggestion[]>('GET', `/api/pos/employees?q=${encodeURIComponent(q)}`);
-        setSuggestions(Array.isArray(res) ? res.slice(0, 8) : []);
-        setOpen(true);
-      } catch { setSuggestions([]); }
-    }, 280);
+  function press(k: string) {
+    if (k === "⌫") { onChange(value.slice(0, -1)); return; }
+    if (k === "." && value.includes(".")) return;
+    if (k === "." && value === "") { onChange("0."); return; }
+    onChange(value + k);
   }
 
-  function select(s: EmployeeSuggestion) {
-    setQuery(s.name);
-    setOpen(false);
-    onChange(String(s.id), s.name);
-  }
+  const num = parseFloat(value || "0");
+  const exceeds = num > maxAllowed;
 
   return (
-    <div style={{ position: "relative" }}>
-      <input
-        className="pos-input"
-        value={query}
-        onChange={e => search(e.target.value)}
-        onBlur={() => setTimeout(() => setOpen(false), 180)}
-        placeholder={t("xodimIsmi2")}
-      />
-      {open && suggestions.length > 0 && (
-        <div style={{
-          position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
-          background: "var(--pos-card)", border: "1px solid var(--pos-border)",
-          borderRadius: 10, boxShadow: "0 8px 24px rgba(15,23,42,0.10)",
-          maxHeight: 200, overflowY: "auto",
-        }}>
-          {suggestions.map(s => (
-            <div
-              key={s.id}
-              onMouseDown={() => select(s)}
+    <div className="pos-modal-overlay" onClick={onClose}>
+      <div className="pos-modal" style={{ maxWidth: 360, minWidth: 320 }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 12, color: "var(--pos-text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
+          {t("miqdorKiriting", "Miqdor kiriting")} ({unit})
+        </div>
+        <div
+          className="pos-mono"
+          style={{
+            fontSize: 34, fontWeight: 700, textAlign: "right", padding: "12px 16px",
+            borderRadius: 12, marginBottom: 6,
+            background: "rgba(148,163,184,0.10)",
+            color: exceeds ? "var(--pos-action-chiqim)" : "var(--pos-text)",
+            minHeight: 56,
+          }}
+        >
+          {value || "0"}
+        </div>
+        <div style={{ fontSize: 11, marginBottom: 12, color: exceeds ? "var(--pos-action-chiqim)" : "var(--pos-text-muted)", fontWeight: 600 }}>
+          {t("ruxsatEtilganMax", "Ruxsat etilgan maksimum")}: <span className="pos-mono">{maxAllowed}</span> {unit}
+          {exceeds && ` — ${t("chegaradanOshdi", "chegaradan oshdi")}`}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+          {keys.map(k => (
+            <button
+              key={k}
+              onClick={() => press(k)}
+              className="pos-btn"
               style={{
-                padding: "9px 13px", cursor: "pointer", fontSize: 13,
-                borderBottom: "1px solid var(--pos-border)",
-                display: "flex", justifyContent: "space-between",
+                fontSize: 22, fontWeight: 700, padding: "16px 0", justifyContent: "center",
+                background: "rgba(148,163,184,0.12)", color: "var(--pos-text)",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,130,246,0.07)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "")}
-            >
-              <span>{s.name}</span>
-              {s.position && (
-                <span style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{s.position}</span>
-              )}
-            </div>
+            >{k}</button>
           ))}
         </div>
+        <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+          <button className="pos-btn pos-btn-ghost" style={{ flex: 1, justifyContent: "center", padding: "12px 0" }} onClick={onClose}>
+            {t("bekorQilish", "Bekor qilish")}
+          </button>
+          <button
+            className="pos-btn"
+            style={{ flex: 1, justifyContent: "center", padding: "12px 0", fontSize: 15, background: "var(--pos-action-chiqim)", color: "#fff", opacity: exceeds || num <= 0 ? 0.5 : 1 }}
+            disabled={exceeds || num <= 0}
+            onClick={onConfirm}
+          >
+            {t("tasdiqlash", "Tasdiqlash")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Reason / order picker ────────────────────────────────────────────────────
+// Spec: skan → miqdor → sabab/buyurtma → tasdiq. Sabab katalogdan tanlanadi; ORDER
+// tanlansa buyurtma raqami, OTHER tanlansa izoh majburiy.
+
+interface ReasonState {
+  reasonCode: string;
+  orderRef: string;
+  note: string;
+}
+
+interface ReasonPickerProps {
+  reasons: { code: string; label: string }[];
+  value: ReasonState;
+  onChange: (v: ReasonState) => void;
+}
+
+export function ReasonPicker({ reasons, value, onChange }: ReasonPickerProps) {
+  const { t } = useTranslation("common");
+  const needsOrder = value.reasonCode === "ORDER";
+  const needsNote = value.reasonCode === "OTHER";
+
+  return (
+    <div>
+      <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.3 }}>
+        {t("chiqimSababi", "Chiqim sababi / buyurtma")}
+      </label>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: needsOrder || needsNote ? 10 : 0 }}>
+        {reasons.map(r => (
+          <button
+            key={r.code}
+            onClick={() => onChange({ ...value, reasonCode: r.code })}
+            style={{
+              padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+              cursor: "pointer", border: "none", transition: "all 0.15s",
+              background: value.reasonCode === r.code ? "var(--pos-action-chiqim)" : "rgba(148,163,184,0.12)",
+              color: value.reasonCode === r.code ? "#fff" : "var(--pos-text-muted)",
+            }}
+          >{r.label}</button>
+        ))}
+      </div>
+      {needsOrder && (
+        <input
+          className="pos-input"
+          value={value.orderRef}
+          onChange={e => onChange({ ...value, orderRef: e.target.value })}
+          placeholder={t("buyurtmaRaqamiKiriting", "Buyurtma raqamini kiriting")}
+        />
+      )}
+      {needsNote && (
+        <textarea
+          className="pos-input"
+          rows={2}
+          value={value.note}
+          onChange={e => onChange({ ...value, note: e.target.value })}
+          placeholder={t("sababniIzohlang", "Sababni izohlang (majburiy)")}
+          style={{ resize: "vertical" }}
+        />
       )}
     </div>
   );
+}
+
+export type { ReasonState };
+
+// Sahifa uchun barqaror boshlang'ich sabab holati.
+export function initialReason(): ReasonState {
+  return { reasonCode: "PRODUCTION", orderRef: "", note: "" };
 }

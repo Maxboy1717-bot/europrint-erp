@@ -4,17 +4,24 @@
  */
 
 import { Module } from '@nestjs/common';
+// 08-mes #83 — 1 operator + N nomli yordamchi + hissa% (contribution share)
+import { MesCrewMembersController } from './presentation/mes-crew-members.controller';
+import { MesCrewMembersService } from './application/mes-crew-members.service';
+import { MesCrewMembersRepository } from './infrastructure/repositories/mes-crew-members.repo';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { MesSessionsController } from './presentation/mes-sessions.controller';
 import { MesOperationsController } from './presentation/mes-operations.controller';
 import { MesMaintenanceController }  from './presentation/mes-maintenance.controller';
 import { MesShiftsStatsController }  from './presentation/mes-shifts-stats.controller';
 import { MesProductionSessionsController } from './presentation/mes-production-sessions.controller';
+import { MesOeeTargetsController } from './presentation/mes-oee-targets.controller';
 import { StartSessionHandler } from './application/commands/start-session.handler';
 import { CompleteSessionHandler } from './application/commands/complete-session.handler';
 import { RecordDowntimeHandler } from './application/commands/record-downtime.handler';
 import { EndDowntimeHandler } from './application/commands/end-downtime.handler';
+import { PauseSessionHandler } from './application/commands/pause-session.handler';
 import { GetSessionsHandler } from './application/queries/get-sessions.handler';
 import { GetOeeHandler } from './application/queries/get-oee.handler';
 import { GetDowntimeHandler } from './application/queries/get-downtime.handler';
@@ -31,15 +38,28 @@ import { WORK_ORDERS_REPO } from './work-orders/i-work-orders.repo';
 import { MesMaintenanceRepository } from './infrastructure/repositories/mes-maintenance.repo';
 import { MesShiftsStatsRepository } from './infrastructure/repositories/mes-shifts-stats.repo';
 import { MesProductionSessionsRepository } from './infrastructure/repositories/mes-production-sessions.repo';
+import { MesSosEscalationRepository } from './infrastructure/repositories/mes-sos-escalation.repo';
+import { MesSosEscalationService } from './application/mes-sos-escalation.service';
+import { MesBrakLimitRepository } from './infrastructure/repositories/mes-brak-limit.repo';
+// 08-mes #24 — session Format/gramm vs WMS batch (batch_lots→material_cards) parameter comparison
+import { MesWmsParamCompareController } from './presentation/mes-wms-param-compare.controller';
+import { MesWmsParamCompareService } from './application/mes-wms-param-compare.service';
+import { MesWmsParamCompareRepository } from './infrastructure/repositories/mes-wms-param-compare.repo';
+import { MesOeeTargetsService } from './application/mes-oee-targets.service';
+import { MesOeeTargetsRepository } from './infrastructure/repositories/mes-oee-targets.repo';
 // Wave 4 round-2 (PA2-18): LmsCertExpiredListener split into two
 // canonical @EventsHandler listeners + a shared block service.
 import { LmsCertExpiredMesListener } from './infrastructure/event-handlers/lms-cert-expired-mes.listener';
 import { LmsCertExpiredLiveMesListener } from './infrastructure/event-handlers/lms-cert-expired-live-mes.listener';
 import { LmsCertExpiredBlockService } from './infrastructure/event-handlers/lms-cert-expired-block.service';
+import { PpReleasedMesListener } from './infrastructure/event-handlers/pp-released-mes.listener';
+import { SosAlertRaisedMesListener } from './infrastructure/event-handlers/sos-alert-raised-mes.listener';
 
 const listeners = [
   LmsCertExpiredMesListener,       // Trigger 17 — daily-sweep variant (Wave 4 round-2)
   LmsCertExpiredLiveMesListener,   // Trigger 17 — realtime variant   (Wave 4 round-2)
+  PpReleasedMesListener,           // #03 HOP-2 — PP released → open MES production session
+  SosAlertRaisedMesListener,       // 2.3 — tablet sos_alerts → mes_sos_events eskalatsiya-ko'prigi
 ];
 
 const handlers = [
@@ -47,6 +67,7 @@ const handlers = [
   CompleteSessionHandler,
   RecordDowntimeHandler,
   EndDowntimeHandler,
+  PauseSessionHandler,
   GetSessionsHandler,
   GetOeeHandler,
   GetDowntimeHandler,
@@ -54,9 +75,15 @@ const handlers = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot()],
-  controllers: [MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), NotificationsModule],
+  controllers: [MesCrewMembersController, MesWmsParamCompareController, MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController, MesOeeTargetsController],
   providers: [
+    // 08-mes #83 — 1 operator + N nomli yordamchi + hissa% (crew-members CRUD)
+    MesCrewMembersRepository,
+    MesCrewMembersService,
+    // 08-mes #24 — Format/gramm ↔ WMS batch (batch_lots→material_cards) parameter comparison
+    MesWmsParamCompareRepository,
+    MesWmsParamCompareService,
     ...handlers,
     ...listeners,
     LmsCertExpiredBlockService,    // Wave 4 round-2: shared by Trigger 17 split listeners
@@ -70,7 +97,15 @@ const handlers = [
     MesMaintenanceRepository,
     MesShiftsStatsRepository,
     MesProductionSessionsRepository,
+    // #11 — SOS/downtime org-zanjir eskalatsiya
+    MesSosEscalationRepository,
+    MesSosEscalationService,
+    // 3.2-brak-ushlanma-zanjiri — MES defect-report → work_centers.brak_limit_pct gate → signal/HR jarima
+    MesBrakLimitRepository,
+    // 08-mes #36 — OEE-target versiyalangan settings-CRUD (faqat НО/direktor yozadi)
+    MesOeeTargetsRepository,
+    MesOeeTargetsService,
   ],
-  exports: [MES_REPO, DOWNTIME_REPO, WORK_ORDERS_REPO, WorkOrdersService],
+  exports: [MES_REPO, DOWNTIME_REPO, WORK_ORDERS_REPO, WorkOrdersService, MesSosEscalationService, MesBrakLimitRepository],
 })
 export class MesModule {}

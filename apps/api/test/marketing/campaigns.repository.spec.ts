@@ -1,15 +1,40 @@
 /**
  * Unit tests for CampaignsRepository.
  * Covers all public methods. No real DB.
+ *
+ * NOTE: CampaignsRepository uses typedExecute (raw SQL via db.execute) rather
+ * than Drizzle ORM builders. typedExecute does: `db.execute(query)` then reads
+ * `.rows` from the result. The mock must return `{ rows: [...] }` from execute.
  */
 
-import { makeDbChain } from '../_setup/db-mock';
+// Mutable state so individual tests can set resolved rows or inject errors.
+let _executeRows: unknown[] = [];
+let _executeError: Error | null = null;
 
-const dbStub = makeDbChain([]);
+const dbStub = {
+  execute: jest.fn(async () => {
+    if (_executeError) throw _executeError;
+    return { rows: _executeRows };
+  }),
+};
+
+// Helpers mirroring makeDbChain interface so test code stays readable.
+(dbStub as unknown as { __setResolved: (v: unknown[]) => void }).__setResolved =
+  (value: unknown[] | undefined) => { _executeRows = Array.isArray(value) ? value : []; _executeError = null; };
+(dbStub as unknown as { __setRejected: (e: Error) => void }).__setRejected =
+  (err: Error) => { _executeError = err; };
 
 jest.mock('@shared/db', () => ({
   db: dbStub,
   runQuery: jest.fn().mockResolvedValue({ rows: [] }),
+}));
+
+// typedExecute imports db from '@shared/db/schema'; mock it to use dbStub too.
+jest.mock('@shared/db/typed-execute', () => ({
+  typedExecute: async (query: unknown) => {
+    if (_executeError) throw _executeError;
+    return _executeRows;
+  },
 }));
 
 jest.mock('@europrint/schemas', () => ({

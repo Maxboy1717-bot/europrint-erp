@@ -43,7 +43,19 @@ export class LmsMiscRepository {
 
   async saveVideoProgress(data: Row): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO video_progress (employee_id, lesson_id, progress_seconds, total_seconds, completed, updated_at) VALUES (${parseInt(String(data.employeeId ?? data.userId ?? 0), 10)}, ${parseInt(String(data.lessonId ?? 0), 10)}, ${parseInt(String(data.progressSeconds ?? 0), 10)}, ${parseInt(String(data.totalSeconds ?? 0), 10)}, ${Boolean(data.completed)}, NOW()) ON CONFLICT (employee_id, lesson_id) DO UPDATE SET progress_seconds = EXCLUDED.progress_seconds, completed = EXCLUDED.completed, updated_at = NOW() RETURNING *`);
+      // video_progress has no employee_id column (canonical = user_id -> 42703) and no unique index on
+      // (user_id, lesson_id) for ON CONFLICT (42P10). Upsert manually: UPDATE the existing (user,lesson)
+      // row, else INSERT — no DDL needed.
+      const uid = parseInt(String(data.employeeId ?? data.userId ?? 0), 10);
+      const lid = parseInt(String(data.lessonId ?? 0), 10);
+      const ps = parseInt(String(data.progressSeconds ?? 0), 10);
+      const ts = parseInt(String(data.totalSeconds ?? 0), 10);
+      const done = Boolean(data.completed);
+      // Real video_progress cols: "current_time" (reserved word), duration, completed, last_watched_at
+      // (no progress_seconds/total_seconds/updated_at). Map progress->current_time, total->duration.
+      const upd = await exec(sql`UPDATE video_progress SET "current_time" = ${ps}, duration = ${ts}, completed = ${done}, last_watched_at = NOW() WHERE user_id = ${uid} AND lesson_id = ${lid} RETURNING *`);
+      if (Array.isArray(upd) && upd.length > 0) return Ok(upd[0] as Row);
+      const r = await exec(sql`INSERT INTO video_progress (user_id, lesson_id, "current_time", duration, completed, last_watched_at) VALUES (${uid}, ${lid}, ${ps}, ${ts}, ${done}, NOW()) RETURNING *`);
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`saveVideoProgress: ${(error as Error).message}`); return Err((error as Error).message); }
   }
@@ -57,11 +69,18 @@ export class LmsMiscRepository {
     } catch (error) { this.logger.error(`findAchievements: ${(error as Error).message}`); return Err((error as Error).message); }
   }
 
+  // SB0122/SB0139 (T11-03): findMentors previously referenced m.is_active / m.specialization / m.rating —
+  // NONE of these columns exist on `mentors` (real cols: id,name,bio,source,achievements,experience,
+  // expertise,user_id,created_at,updated_at,deleted_at,deleted_by,card_id) -> live 42703 crash on every
+  // call (GET /mentors used by AddCourseDialog/CourseDetail/MentorsPage). Fixed to real schema: soft-delete
+  // filter via deleted_at IS NULL, `expertise` used as the closest existing analogue to "specialization"
+  // (ILIKE match, no dedicated column), and ORDER BY name (no rating column — genuine gap, tracked
+  // separately; fabricating a rating column/value is prohibited, Q-40).
   async findMentors(specialization?: string): Promise<Result<object[]>> {
     try {
       const rows = specialization
-        ? await exec(sql`SELECT m.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name FROM mentors m LEFT JOIN employees e ON e.id = m.user_id WHERE m.is_active = true AND m.specialization = ${specialization} ORDER BY m.rating DESC NULLS LAST`)
-        : await exec(sql`SELECT m.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name FROM mentors m LEFT JOIN employees e ON e.id = m.user_id WHERE m.is_active = true ORDER BY m.rating DESC NULLS LAST`);
+        ? await exec(sql`SELECT m.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name FROM mentors m LEFT JOIN employees e ON e.id = m.user_id WHERE m.deleted_at IS NULL AND m.expertise ILIKE ${'%' + specialization + '%'} ORDER BY m.name ASC NULLS LAST`)
+        : await exec(sql`SELECT m.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name FROM mentors m LEFT JOIN employees e ON e.id = m.user_id WHERE m.deleted_at IS NULL ORDER BY m.name ASC NULLS LAST`);
       return Ok(rows);
     } catch (error) { this.logger.error(`findMentors: ${(error as Error).message}`); return Err((error as Error).message); }
   }
@@ -115,7 +134,10 @@ export class LmsMiscRepository {
 
   async saveModule(data: Row): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO lms_modules (title, course_id, description, sort_order, is_active, created_at) VALUES (${String(data.title)}, ${data.courseId ? parseInt(String(data.courseId), 10) : null}, ${data.description ? String(data.description) : null}, ${data.sortOrder ? parseInt(String(data.sortOrder), 10) : 0}, true, NOW()) RETURNING *`);
+      // lms_modules is a VIEW over `modules` whose NOT NULL col is "order" (reserved word) — the insert
+      // wrote only sort_order and omitted "order" -> 23502. Supply both with the same value.
+      const so = data.sortOrder ? parseInt(String(data.sortOrder), 10) : 0;
+      const r = await exec(sql`INSERT INTO lms_modules (title, course_id, description, sort_order, "order", created_at) VALUES (${String(data.title)}, ${data.courseId ? parseInt(String(data.courseId), 10) : null}, ${data.description ? String(data.description) : null}, ${so}, ${so}, NOW()) RETURNING *`);
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`saveModule: ${(error as Error).message}`); return Err((error as Error).message); }
   }
@@ -156,5 +178,93 @@ export class LmsMiscRepository {
         : await exec(sql`SELECT m.*, c.title_uz AS course_title FROM lms_modules m LEFT JOIN courses c ON c.id = m.course_id ORDER BY m.sort_order ASC, m.created_at DESC`);
       return Ok(rows);
     } catch (error) { this.logger.error(`findAllModules: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  // ─── Card Mentors (lms_card_mentors) — EP-ORG-116 karta-markazli mentor ───────────
+  // KARTAga mentor biriktirish (onboarding). card_id -> org_departments, mentor_user_id -> users.
+
+  // Bitta kartaning faol mentorlari (yoki hammasi). JOIN org_departments (karta nomi) + users (mentor ismi).
+  async findCardMentors(cardId?: string): Promise<Result<object[]>> {
+    try {
+      const rows = cardId
+        ? await exec(sql`SELECT cm.*, od.name AS card_title, u.full_name AS mentor_name, c.title_uz AS course_title FROM lms_card_mentors cm LEFT JOIN org_departments od ON od.id = cm.card_id LEFT JOIN users u ON u.id = cm.mentor_user_id LEFT JOIN courses c ON c.id = cm.course_id WHERE cm.card_id = ${parseInt(cardId, 10)} ORDER BY cm.is_active DESC, cm.assigned_at DESC`)
+        : await exec(sql`SELECT cm.*, od.name AS card_title, u.full_name AS mentor_name, c.title_uz AS course_title FROM lms_card_mentors cm LEFT JOIN org_departments od ON od.id = cm.card_id LEFT JOIN users u ON u.id = cm.mentor_user_id LEFT JOIN courses c ON c.id = cm.course_id WHERE cm.is_active = true ORDER BY cm.assigned_at DESC LIMIT 200`);
+      return Ok(rows);
+    } catch (error) { this.logger.error(`findCardMentors: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  async findCardMentorById(id: string): Promise<Result<Row>> {
+    try {
+      const r = await exec(sql`SELECT cm.*, od.name AS card_title, u.full_name AS mentor_name, c.title_uz AS course_title FROM lms_card_mentors cm LEFT JOIN org_departments od ON od.id = cm.card_id LEFT JOIN users u ON u.id = cm.mentor_user_id LEFT JOIN courses c ON c.id = cm.course_id WHERE cm.id = ${parseInt(id, 10)} LIMIT 1`);
+      if (!r.length) return Err('Mentor biriktiruvi topilmadi');
+      return Ok(r[0] as Row);
+    } catch (error) { this.logger.error(`findCardMentorById: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  // Mentor biriktirish (assign). Faol dublikat bo'lsa qaytariladi (uq idx 23505 ushlanadi).
+  async assignCardMentor(data: {
+    cardId: number; mentorUserId: number; courseId?: number | null; notes?: string | null; assignedBy?: number | null;
+  }): Promise<Result<Row>> {
+    try {
+      const r = await exec(sql`
+        INSERT INTO lms_card_mentors (card_id, mentor_user_id, course_id, notes, assigned_by, is_active, assigned_at, created_at, updated_at)
+        VALUES (${data.cardId}, ${data.mentorUserId}, ${data.courseId ?? null}, ${data.notes ?? null}, ${data.assignedBy ?? null}, true, NOW(), NOW(), NOW())
+        RETURNING *`);
+      return Ok((r[0] ?? {}) as Row);
+    } catch (error) {
+      const msg = (error as Error).message;
+      if (/uq_lms_card_mentor_active|duplicate key/.test(msg)) return Err('Bu karta uchun mentor allaqachon biriktirilgan');
+      this.logger.error(`assignCardMentor: ${msg}`); return Err(msg);
+    }
+  }
+
+  async updateCardMentor(id: string, data: { courseId?: number | null; notes?: string | null }): Promise<Result<Row>> {
+    try {
+      const r = await exec(sql`
+        UPDATE lms_card_mentors
+        SET course_id = COALESCE(${data.courseId ?? null}, course_id),
+            notes     = COALESCE(${data.notes ?? null}, notes),
+            updated_at = NOW()
+        WHERE id = ${parseInt(id, 10)} AND is_active = true
+        RETURNING *`);
+      if (!r.length) return Err('Faol mentor biriktiruvi topilmadi');
+      return Ok(r[0] as Row);
+    } catch (error) { this.logger.error(`updateCardMentor: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  // Mentorni baholash / malakasini tasdiqlash (EP-ORG-116 follow-up). rating -> NUMERIC(2,1)
+  // CHECK 0..5 (23514 agar chegaradan tashqari bo'lsa); qualificationVerified=true bo'lsa
+  // qualification_verified_at/by to'ldiriladi, aks holda mavjud qiymat saqlanadi (COALESCE emas —
+  // false explicit "tasdiqlanmagan" holatini qaytarib qo'ymasligi uchun CASE ishlatiladi).
+  async rateCardMentor(
+    id: string,
+    data: { rating?: number | null; qualificationVerified?: boolean; verifiedBy?: number | null },
+  ): Promise<Result<Row>> {
+    try {
+      const verify = data.qualificationVerified === true;
+      const r = await exec(sql`
+        UPDATE lms_card_mentors
+        SET rating = COALESCE(${data.rating ?? null}, rating),
+            qualification_verified_at = CASE WHEN ${verify} THEN NOW() ELSE qualification_verified_at END,
+            qualification_verified_by = CASE WHEN ${verify} THEN ${data.verifiedBy ?? null} ELSE qualification_verified_by END,
+            updated_at = NOW()
+        WHERE id = ${parseInt(id, 10)} AND is_active = true
+        RETURNING *`);
+      if (!r.length) return Err('Faol mentor biriktiruvi topilmadi');
+      return Ok(r[0] as Row);
+    } catch (error) {
+      const msg = (error as Error).message;
+      if (/lms_card_mentors_rating_check|violates check constraint/.test(msg)) return Err('Baho 0 dan 5 gacha bo\'lishi kerak');
+      this.logger.error(`rateCardMentor: ${msg}`); return Err(msg);
+    }
+  }
+
+  // Revoke (soft): is_active=false + revoked_at — uq idx faqat is_active=true ni qamrab oladi, qayta-biriktirish mumkin.
+  async revokeCardMentor(id: string): Promise<Result<Row>> {
+    try {
+      const r = await exec(sql`UPDATE lms_card_mentors SET is_active = false, revoked_at = NOW(), updated_at = NOW() WHERE id = ${parseInt(id, 10)} AND is_active = true RETURNING *`);
+      if (!r.length) return Err('Faol mentor biriktiruvi topilmadi');
+      return Ok(r[0] as Row);
+    } catch (error) { this.logger.error(`revokeCardMentor: ${(error as Error).message}`); return Err((error as Error).message); }
   }
 }

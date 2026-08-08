@@ -9,14 +9,22 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest, getAuthHeaders } from "@/lib/queryClient";
-import { FileText } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 
 import {
   mapBackendCard,
   buildPdfHtml,
+  mapBomRow,
+  mapRouteRow,
+  mapVersionRow,
+  EMPTY_CREATE_FORM,
   type TechCard,
   type OptimizeResult,
   type PapkaOrder,
+  type BomRow,
+  type RouteRow,
+  type VersionRow,
+  type CreateCardForm,
 } from "./TechCardsTypes";
 import { StatsBar, PendingOrdersPanel, CardsGrid } from "./TechCardsSections";
 import {
@@ -24,6 +32,8 @@ import {
   GenerateCardDialog,
   OptimizeResultPanel,
 } from "./TechCardsDialogs";
+import { CreateCardDialog } from "./TechCardsMaster";
+import { Button } from "@/components/ui/button";
 import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -43,6 +53,8 @@ export default function TechCards() {
   const [genDialog, setGenDialog] = useState(false);
   const [genOrder, setGenOrder] = useState<PapkaOrder | null>(null);
   const [genLoading, setGenLoading] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateCardForm>(EMPTY_CREATE_FORM);
 
   // Data fetching
   const { data: cards = [], isLoading } = useQuery<TechCard[]>({
@@ -65,14 +77,116 @@ export default function TechCards() {
     },
   });
 
+  // Child rows for the currently-open card (master detail)
+  const selectedId = selectedCard?.id;
+  const { data: bom = [] } = useQuery<BomRow[]>({
+    queryKey: ["/api/technology/cards", selectedId, "bom"],
+    enabled: !!selectedId && showViewModal,
+    queryFn: async () => {
+      const raw = await apiRequest<Record<string, unknown>[]>('GET', `/api/technology/cards/${selectedId}/bom`);
+      return (Array.isArray(raw) ? raw : []).map(mapBomRow);
+    },
+  });
+  const { data: routes = [] } = useQuery<RouteRow[]>({
+    queryKey: ["/api/technology/cards", selectedId, "routes"],
+    enabled: !!selectedId && showViewModal,
+    queryFn: async () => {
+      const raw = await apiRequest<Record<string, unknown>[]>('GET', `/api/technology/cards/${selectedId}/routes`);
+      return (Array.isArray(raw) ? raw : []).map(mapRouteRow);
+    },
+  });
+  const { data: versions = [] } = useQuery<VersionRow[]>({
+    queryKey: ["/api/technology/cards", selectedId, "versions"],
+    enabled: !!selectedId && showViewModal,
+    queryFn: async () => {
+      const raw = await apiRequest<Record<string, unknown>[]>('GET', `/api/technology/cards/${selectedId}/versions`);
+      return (Array.isArray(raw) ? raw : []).map(mapVersionRow);
+    },
+  });
+
+  const invalidateCard = (id?: string) => {
+    queryClient.invalidateQueries({ queryKey: ["/api/technology/cards"] });
+    if (id) ["bom", "routes", "versions"].forEach((k) => queryClient.invalidateQueries({ queryKey: ["/api/technology/cards", id, k] }));
+  };
+
   // Mutations
+  // audit 2026-08-06 T22A: BE endpoint is an honest 501 (#FX) — surface that as an
+  // informative "coming soon" toast instead of a scary destructive error.
+  const isNotImplemented = (err: Error) => /501|Not Implemented|amalga oshiriladi/i.test(err.message);
+
   const optimizeMutation = useMutation({
     mutationFn: (cardId: string) => apiRequest<OptimizeResult>('GET', `/api/technology/cards/${cardId}/optimize`),
     onSuccess: (data) => setOptimizeResult(data),
     onError: (err: Error) => {
+      if (isNotImplemented(err)) {
+        toast({ title: "Tez orada", description: "AI-optimallashtirish hali ulanmagan — bu funksiya keyingi bosqichda ishga tushadi" });
+        return;
+      }
       toast({ title: "Xatolik", description: err.message, variant: "destructive" });
     },
   });
+
+  const createMutation = useMutation({
+    mutationFn: (form: CreateCardForm) => apiRequest('POST', "/api/technology/cards", {
+      code: form.code.trim() || undefined,
+      name: form.name.trim(),
+      direction: form.direction || undefined,
+      materialType: form.materialType.trim() || undefined,
+      productType: form.productType.trim() || undefined,
+      formatA: form.formatA ? Number(form.formatA) : undefined,
+      formatB: form.formatB ? Number(form.formatB) : undefined,
+      formatCode: form.formatCode.trim() || undefined,
+      gofraProfile: form.gofraProfile.trim() || undefined,
+      scrapPct: form.scrapPct ? Number(form.scrapPct) : undefined,
+    }),
+    onSuccess: () => {
+      toast({ title: "Muvaffaqiyat", description: "Texkarta yaratildi" });
+      setCreateOpen(false);
+      setCreateForm(EMPTY_CREATE_FORM);
+      invalidateCard();
+    },
+    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+  });
+
+  const gateMutation = useMutation({
+    mutationFn: ({ id, gate }: { id: string; gate: "lab" | "maket" }) =>
+      apiRequest('POST', `/api/technology/cards/${id}/${gate === "lab" ? "lab-approve" : "maket-approve"}`),
+    onSuccess: (data, vars) => {
+      const updated = mapBackendCard(data as Record<string, unknown>);
+      setSelectedCard((prev) => (prev && prev.id === vars.id ? updated : prev));
+      invalidateCard(vars.id);
+    },
+    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+  });
+
+  const addBomMutation = useMutation({
+    mutationFn: ({ id, item }: { id: string; item: { materialCode: string; quantity: number; unit: string; layer?: string } }) =>
+      apiRequest('POST', `/api/technology/cards/${id}/bom`, item),
+    onSuccess: (_d, vars) => invalidateCard(vars.id),
+    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+  });
+
+  const addRouteMutation = useMutation({
+    mutationFn: ({ id, route }: { id: string; route: { opSeq: number; operation: string; normPerHour?: number; minRazryad?: number } }) =>
+      apiRequest('POST', `/api/technology/cards/${id}/routes`, route),
+    onSuccess: (_d, vars) => invalidateCard(vars.id),
+    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+  });
+
+  // SB0741 — rollback: restore a card to a prior version snapshot.
+  const restoreVersionMutation = useMutation({
+    mutationFn: ({ id, versionId }: { id: string; versionId: number }) =>
+      apiRequest('POST', `/api/technology/cards/${id}/versions/${versionId}/restore`),
+    onSuccess: (data, vars) => {
+      const updated = mapBackendCard(data as Record<string, unknown>);
+      setSelectedCard((prev) => (prev && prev.id === vars.id ? updated : prev));
+      invalidateCard(vars.id);
+      toast({ title: "Muvaffaqiyat", description: "Texkarta tanlangan versiyaga qaytarildi" });
+    },
+    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+  });
+
+  const masterBusy = gateMutation.isPending || addBomMutation.isPending || addRouteMutation.isPending || restoreVersionMutation.isPending;
 
   // Handlers
   const handleGenerateCard = async (order: PapkaOrder) => {
@@ -89,7 +203,11 @@ export default function TechCards() {
       setGenDialog(false);
     } catch (err: unknown) {
       const e = err as Error;
-      toast({ title: "Xatolik", description: e.message, variant: "destructive" });
+      if (isNotImplemented(e)) {
+        toast({ title: "Tez orada", description: "AI karta-generatsiya hali ulanmagan — bu funksiya keyingi bosqichda ishga tushadi" });
+      } else {
+        toast({ title: "Xatolik", description: e.message, variant: "destructive" });
+      }
     } finally {
       setGenLoading(false);
     }
@@ -122,25 +240,24 @@ export default function TechCards() {
     setGenDialog(true);
   };
 
-  if (isLoading) return <div className="p-6">{t("Yuklanmoqda...")}</div>;
+  if (isLoading) return <div className="text-center py-12 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>;
 
   const safeCards = Array.isArray(cards) ? cards : [];
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-tech-cards">
-      {/* Page header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <FileText className="h-8 w-8 text-primary" />
-        </div>
-        <div>
-          <EPPageHeader
+    <div className="space-y-6" data-testid="page-tech-cards">
+      <EPPageHeader
+        icon={<FileText className="h-5 w-5" />}
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("texnologikKartalar")}</b></>}
         title={t("texnologikKartalar")}
         subtitle={t("ishlabChiqarishTexnologikKartalariVa")}
+        actions={
+          <Button onClick={() => setCreateOpen(true)} data-testid="btn-new-card">
+            <Plus className="h-4 w-4 mr-1" />
+            {t("yangiTexkarta", "Yangi texkarta")}
+          </Button>
+        }
       />
-        </div>
-      </div>
 
       {/* KPI chips */}
       <StatsBar
@@ -177,6 +294,15 @@ export default function TechCards() {
         isOptimizePending={optimizeMutation.isPending}
         onOptimize={(id) => optimizeMutation.mutate(id)}
         onExport={handleExportPDF}
+        bom={bom}
+        routes={routes}
+        versions={versions}
+        isMasterBusy={masterBusy}
+        onLabApprove={(id) => gateMutation.mutate({ id, gate: "lab" })}
+        onMaketApprove={(id) => gateMutation.mutate({ id, gate: "maket" })}
+        onAddBom={(id, item) => addBomMutation.mutate({ id, item })}
+        onAddRoute={(id, route) => addRouteMutation.mutate({ id, route })}
+        onRestoreVersion={(id, versionId) => restoreVersionMutation.mutate({ id, versionId })}
       />
 
       <GenerateCardDialog
@@ -185,6 +311,15 @@ export default function TechCards() {
         order={genOrder}
         isLoading={genLoading}
         onConfirm={handleGenerateCard}
+      />
+
+      <CreateCardDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        form={createForm}
+        setForm={setCreateForm}
+        onSubmit={() => createMutation.mutate(createForm)}
+        isPending={createMutation.isPending}
       />
     </div>
   );

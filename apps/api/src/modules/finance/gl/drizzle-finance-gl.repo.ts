@@ -39,13 +39,6 @@ export class DrizzleFinanceGlRepository implements IFinanceGlRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || `GL hisob #${id} topilmadi`); }
   }
 
-  async postDocument(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
-    try {
-      const result = await db.insert(glDocuments).values({ ...dto, status: 'posted' } as typeof glDocuments.$inferInsert).returning();
-      return Ok((result[0] as Record<string, unknown>));
-    } catch (e: unknown) { return Err((e as Error)?.message || 'Hujjat joylashtirishda xatolik'); }
-  }
-
   async seedAccounts(rows: Record<string, unknown>[]): Promise<Result<object[]>> {
     try {
       const results = await db

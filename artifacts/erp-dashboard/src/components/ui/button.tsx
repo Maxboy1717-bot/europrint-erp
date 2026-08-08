@@ -39,7 +39,7 @@ const buttonVariants = cva(
           "bg-card border border-border text-foreground hover:bg-[var(--bg-blush-soft,#FBF1ED)] hover:border-primary hover:text-primary",
         // Dark — near-black slab for high-emphasis non-brand actions
         dark:
-          "bg-[#15171A] text-white hover:bg-[#2A2D33]",
+          "bg-[var(--ep-text)] text-white hover:bg-[#2A2D33]",
         // Ghost — transparent, blush hover
         ghost:
           "text-muted-foreground hover:bg-[var(--bg-blush-soft,#FBF1ED)] hover:text-foreground",

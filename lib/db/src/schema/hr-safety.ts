@@ -18,8 +18,8 @@ export { operatorDailyStats, insertOperatorDailyStatsSchema, InsertOperatorDaily
 // ======== TZ_13 (13-01): RFID kirish/chiqish — attendance_records ========
 export { attendanceRecords, insertAttendanceRecordSchema, InsertAttendanceRecord, AttendanceRecord } from "./attendance";
 
-// ======== Employee 360° Assessments ========
-export { employee360Assessments, insertEmployee360AssessmentSchema, InsertEmployee360Assessment, Employee360Assessment } from "./assessment";
+// ORFAN CLEANUP (2026-07-02): employee360Assessments re-export removed —
+// pgTable deleted from assessment.ts (dead lib/db duplicate, Q-29 verified).
 
 // ======== Employee Career Profile ========
 export const employeeCareerProfiles = pgTable("employee_career_profiles", {
@@ -64,30 +64,14 @@ export type HrCapitalProfile = typeof hrCapitalProfiles.$inferSelect;
 export type InsertHrCapitalProfile = z.infer<typeof insertHrCapitalProfileSchema>;
 
 // ============= HEALTH & SAFETY =============
-export { safetyIncidents, insertSafetyIncidentSchema, InsertSafetyIncident, SafetyIncident } from "./safety";
-export { ppeCompliance, insertPpeComplianceSchema, InsertPpeCompliance, PpeCompliance } from "./safety";
 export { safetyTrainings, insertSafetyTrainingSchema, InsertSafetyTraining, SafetyTraining } from "./safety";
-export { hazardZones, insertHazardZoneSchema, InsertHazardZone, HazardZone } from "./safety";
-
-// HR Conflict Reports (Muammo va nizolarni qaydlash)
-export const hrConflictReports = pgTable("hr_conflict_reports", {
-  id: varchar("id", { length: 64 }).primaryKey(),
-  party1: text("party1").notNull(),
-  party2: text("party2").notNull(),
-  description: text("description").notNull(),
-  severity: varchar("severity", { length: 20 }).notNull().default("low"), // low, medium, high
-  status: varchar("status", { length: 30 }).notNull().default("open"), // open, investigating, resolved
-  createdBy: integer("created_by").references(() => users.id, { onDelete: 'set null' }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (t) => [
-  check("hr_conflict_severity_chk", sql`${t.severity} IN ('low','medium','high')`),
-  check("hr_conflict_status_chk", sql`${t.status} IN ('open','investigating','resolved')`),
-]);
-
-export const insertHrConflictReportSchema = createInsertSchema(hrConflictReports).omit({ createdAt: true, updatedAt: true } as never);
-export type HrConflictReport = typeof hrConflictReports.$inferSelect;
-export type InsertHrConflictReport = z.infer<typeof insertHrConflictReportSchema>;
+// ORFAN CLEANUP (2026-07-02): safetyIncidents/ppeCompliance/hazardZones
+// re-exports removed — pgTables deleted from safety.ts (dead lib/db
+// duplicates, Q-29 verified). hrConflictReports pgTable removed here too
+// (dead lib/db duplicate, Q-29 verified: never imported via @workspace/db
+// anywhere in apps/). Canonical live snake_case stubs are in
+// apps/api/src/shared/db/schema-business-c-2-hr-safety.ts /
+// schema-business-c-2-hr-payroll.ts.
 
 // Succession Plans (Kadrlar zaxirasi rejalari)
 export { successionPlans, insertSuccessionPlanSchema, InsertSuccessionPlan, SuccessionPlan } from "./assessment";

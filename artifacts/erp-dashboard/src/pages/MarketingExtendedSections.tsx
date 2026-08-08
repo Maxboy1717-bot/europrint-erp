@@ -3,14 +3,19 @@
  * @description Major section (tab content) components for the MarketingExtended page.
  */
 
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from '@/lib/i18n';
 import {
-  Globe, GitBranch, Scale,
-  TrendingUp, TrendingDown, ArrowUpRight, Star, Users, AlertTriangle,
+  Globe, GitBranch, Scale, Plus,
+  TrendingUp, TrendingDown, ArrowUpRight, Users, AlertTriangle,
 } from "lucide-react";
 import {
   type MarketingCampaign,
@@ -81,7 +86,7 @@ export function RoiSection({campaigns, totalBudget, totalSpent, roi }: RoiSectio
                   <TableCell className="font-medium py-3 px-6">{c.name}</TableCell>
                   <TableCell className="py-3 px-6"><Badge variant="outline" className="border-border text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">{c.type || "—"}</Badge></TableCell>
                   <TableCell className="text-right py-3 px-6">{(Number(c.budget || 0) / 1000).toFixed(0)}K</TableCell>
-                  <TableCell className="text-right py-3 px-6">{(Number(c.spent || 0) / 1000).toFixed(0)}K</TableCell>
+                  <TableCell className="text-right py-3 px-6">{(Number(c.spentAmount || 0) / 1000).toFixed(0)}K</TableCell>
                   <TableCell className="py-3 px-6"><Badge variant={c.status === "active" ? "default" : "secondary"} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">{c.status}</Badge></TableCell>
                 </TableRow>
               ))}
@@ -147,8 +152,36 @@ export function SeoSection() {
   );
 }
 // --- A/B Testing section ---
+/** Variant conversion rate % = conversions / impressions, guarded (0 when no impressions). */
+function convRate(conversions?: number, impressions?: number): number {
+  if (!impressions || impressions <= 0) return 0;
+  return Math.round(((conversions ?? 0) / impressions) * 1000) / 10;
+}
+
 export function AbSection({ abTests }: { abTests: AbTest[] }) {
   const { t } = useTranslation("common");
+  const queryClient = useQueryClient();
+  const [name, setName] = useState("");
+  const [variantA, setVariantA] = useState("");
+  const [variantB, setVariantB] = useState("");
+
+  const createMutation = useMutation({
+    mutationFn: (body: { name: string; variant_a: string; variant_b: string }) =>
+      apiRequest("POST", "/api/marketing/ab-tests", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/marketing/ab-tests"] });
+      setName(""); setVariantA(""); setVariantB("");
+    },
+    onError: () => { /* keep the entered values so the user can retry */ },
+  });
+
+  const rows = Array.isArray(abTests) ? abTests : [];
+  const canSubmit = !!name.trim() && !!variantA.trim() && !!variantB.trim() && !createMutation.isPending;
+  const submit = () => {
+    if (!canSubmit) return;
+    createMutation.mutate({ name: name.trim(), variant_a: variantA.trim(), variant_b: variantB.trim() });
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-xl p-6">
@@ -156,23 +189,35 @@ export function AbSection({ abTests }: { abTests: AbTest[] }) {
           <GitBranch className="w-4 h-4 text-primary" />
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("aBTestNatijalari")}</h3>
         </div>
-        {abTests.length === 0
+
+        {/* Create A/B test — name + two variant labels */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <Input placeholder={t("testNomi")} value={name} onChange={(e) => setName(e.target.value)} className="flex-1 min-w-[160px]" />
+          <Input placeholder="Variant A" value={variantA} onChange={(e) => setVariantA(e.target.value)} className="w-32" />
+          <Input placeholder="Variant B" value={variantB} onChange={(e) => setVariantB(e.target.value)} className="w-32" />
+          <Button onClick={submit} disabled={!canSubmit}>
+            <Plus className="h-4 w-4 mr-1" />{t("add")}
+          </Button>
+        </div>
+
+        {rows.length === 0
           ? <p className="text-center text-muted-foreground py-8">{t("aBTestlarMavjudEmas")}</p>
           : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
-              <TableRow><TH>{t("testNomi")}</TH><TH>{t("variant")}</TH><TH right>{t("konversiya1")}</TH><TH right>{t("tashrif")}</TH><TH>{t("status28")}</TH></TableRow>
+              <TableRow><TH>{t("testNomi")}</TH><TH>Variant A</TH><TH right>A %</TH><TH>Variant B</TH><TH right>B %</TH><TH>{t("status28")}</TH></TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(abTests) ? abTests : []).map((t, i) => (
-                <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
-                  <TableCell className="py-3 px-6">{t.name}</TableCell>
-                  <TableCell className="py-3 px-6"><Badge variant={t.variant === "B" ? "default" : "outline"} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">Variant {t.variant}</Badge></TableCell>
-                  <TableCell className="text-right font-medium py-3 px-6">{t.conversion}%</TableCell>
-                  <TableCell className="text-right py-3 px-6">{t.visitors.toLocaleString()}</TableCell>
+              {rows.map((row, i) => (
+                <TableRow key={row.id ?? `k-${i}`} className="hover:bg-muted/40 transition-colors">
+                  <TableCell className="py-3 px-6">{row.name}</TableCell>
+                  <TableCell className="py-3 px-6"><Badge variant="outline" className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">{row.variant_a ?? "A"}</Badge></TableCell>
+                  <TableCell className="text-right font-medium py-3 px-6">{convRate(row.conversions_a, row.impressions_a)}%</TableCell>
+                  <TableCell className="py-3 px-6"><Badge variant="default" className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">{row.variant_b ?? "B"}</Badge></TableCell>
+                  <TableCell className="text-right font-medium py-3 px-6">{convRate(row.conversions_b, row.impressions_b)}%</TableCell>
                   <TableCell className="py-3 px-6">
-                    <Badge variant={t.status === "running" ? "secondary" : "default"} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
-                      {t.status === "running" ? "Davom etmoqda" : "Yakunlandi"}
+                    <Badge variant={row.status === "running" ? "secondary" : "default"} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
+                      {row.status === "running" ? "Davom etmoqda" : "Yakunlandi"}
                     </Badge>
                   </TableCell>
                 </TableRow>
@@ -199,34 +244,37 @@ export function CompSection({ competitors }: { competitors: Competitor[] }) {
         ) : (
           <>
             <div className="space-y-3 mb-6">
-              {competitors.map((c, i) => (
-                <div key={`k-${i}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-sm font-medium ${(c.companyName || c.name) === "Europrint" ? "text-primary" : "text-foreground"}`}>{c.companyName || c.name}</span>
-                    <span className="text-sm text-muted-foreground">{c.share}%</span>
+              {competitors.map((c, i) => {
+                const ourShare = Number(c.avgOurShare) || 0;
+                const theirShare = Number(c.avgTheirShare) || 0;
+                return (
+                  <div key={`k-${i}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-foreground">{c.name}</span>
+                      <span className="text-sm text-muted-foreground">{t("bizningUlush")} {ourShare}% · {t("raqobatUlushi")} {theirShare}%</span>
+                    </div>
+                    <div className="w-full bg-muted/60 rounded-full h-2 flex overflow-hidden">
+                      <div className="h-2 bg-primary" style={{ width: `${ourShare}%` }} />
+                      <div className="h-2 bg-outline-variant" style={{ width: `${theirShare}%` }} />
+                    </div>
                   </div>
-                  <div className="w-full bg-muted/60 rounded-full h-2">
-                    <div className={`h-2 rounded-full ${(c.companyName || c.name) === "Europrint" ? "bg-primary" : "bg-outline-variant"}`} style={{ width: `${c.share}%` }} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="ep-table-scroll"><Table>
               <TableHeader>
-                <TableRow><TH>{t("company")}</TH><TH>{t("price")}</TH><TH>{t("Sifat")}</TH><TH>{t("Yetkazish")}</TH><TH>{t("zaifTomon")}</TH></TableRow>
+                <TableRow><TH>{t("company")}</TH><TH>{t("mijozlarSoni")}</TH><TH>{t("bizningUlush")}</TH><TH>{t("raqobatUlushi")}</TH><TH>{t("kochishXavfi")}</TH></TableRow>
               </TableHeader>
               <TableBody>
                 {competitors.map((c, i) => (
-                  <TableRow key={`k-${i}`} className={`hover:bg-muted/40 transition-colors ${(c.companyName || c.name) === "Europrint" ? "bg-primary/5" : ""}`}>
-                    <TableCell className="font-medium py-3 px-6">{c.companyName || c.name}</TableCell>
-                    <TableCell className="py-3 px-6">{c.price || "—"}</TableCell>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                    <TableCell className="font-medium py-3 px-6">{c.name}</TableCell>
+                    <TableCell className="py-3 px-6">{c.customersCount ?? 0}</TableCell>
+                    <TableCell className="py-3 px-6">{Number(c.avgOurShare) || 0}%</TableCell>
+                    <TableCell className="py-3 px-6">{Number(c.avgTheirShare) || 0}%</TableCell>
                     <TableCell className="py-3 px-6">
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: c.quality || 0 }).map((_, j) => <Star key={j} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
-                      </div>
+                      <Badge className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate", RISK_COLORS[c.switchRisk] || RISK_COLORS.medium)}>{t(c.switchRisk || "medium")}</Badge>
                     </TableCell>
-                    <TableCell className="py-3 px-6">{c.delivery || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm py-3 px-6">{c.weakness || "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -242,8 +290,35 @@ interface NpsSectionProps { npsLoading: boolean; npsData: NpsMonthly[]; churnLoa
 
 export function NpsSection({ npsLoading, npsData, churnLoading, churnData }: NpsSectionProps) {
   const { t } = useTranslation("common");
+  const queryClient = useQueryClient();
+  const [score, setScore] = useState("");
+  const [comment, setComment] = useState("");
+
+  const createNps = useMutation({
+    mutationFn: (body: { score: number; comment: string }) => apiRequest("POST", "/api/marketing/nps", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/marketing/nps/monthly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketing/churn-risk"] });
+      setScore(""); setComment("");
+    },
+    onError: () => { /* keep entered values so the user can retry */ },
+  });
+  const scoreNum = Number(score);
+  const canSubmit = score.trim() !== "" && Number.isFinite(scoreNum) && scoreNum >= 0 && scoreNum <= 10 && !createNps.isPending;
+
   return (
     <div className="space-y-6">
+      {/* Record an NPS response (score 0-10 + optional comment) — POST /api/marketing/nps;
+          NOW() lands it in the current month so the trend cards above refresh on invalidate. */}
+      <div className="bg-card rounded-xl p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input type="number" min={0} max={10} placeholder="NPS (0-10)" value={score} onChange={(e) => setScore(e.target.value)} className="w-32" />
+          <Input placeholder={t("izoh")} value={comment} onChange={(e) => setComment(e.target.value)} className="flex-1 min-w-[160px]" />
+          <Button onClick={() => { if (canSubmit) createNps.mutate({ score: scoreNum, comment: comment.trim() }); }} disabled={!canSubmit}>
+            <Plus className="h-4 w-4 mr-1" />{t("add")}
+          </Button>
+        </div>
+      </div>
       {npsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (

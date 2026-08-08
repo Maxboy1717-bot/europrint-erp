@@ -120,6 +120,12 @@ export const courses = pgTable('courses', {
   status: text('status').notNull().default('active'),
   instructorId: text('instructor_id'),
   coverUrl: text('cover_url'),
+  // Card-centric LMS (EP-LMS-001): a darslik is bound to an org-CARD (org_functions.id),
+  // not a department/employee. Logical ref only (no hard FK — cross-module ADR). Keeps department_id.
+  cardId: integer('card_id'),
+  // Q562 (cross-card credit): a universal course (e.g. TX instruktaj) completed on one card
+  // credits the same course on the employee's OTHER cards. CourseCompletedCreditHandler gates on this.
+  isUniversal: boolean('is_universal').default(false),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
@@ -140,6 +146,28 @@ export const productionSessions = pgTable('production_sessions', {
   startedAt: ts('started_at'),
   endedAt: ts('ended_at'),
   createdAt: ts('created_at').defaultNow(),
+  // T7-05: direct operator=KARTA link → org_departments(id). Additive, nullable
+  // (owner/MES DATA). A67 ckp-mes-feed listener prefers this over resolve-via paths.
+  operatorCardId: integer('operator_card_id'),
+  // 08-mes #4 — sessiya BOSHLANGANDAGI norma versiyasi snapshot (retro-buzilmaslik).
+  // NULL = hali snapshot qilinmagan / amaldagi norma yo'q. start-session.handler yozadi.
+  normaVersion: integer('norma_version'),
+  // #116 (08-mes, EP-MES-066) — qog'oz formati (list A×B, mm) + gramm (g/m²) + kg (aniq material sarfi).
+  // Additive, nullable (operator per-sessiya kiritadi); NULL → mavjud sessiyalar regress emas.
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  formatA: decimal('format_a', { precision: 12, scale: 2 }),
+  formatB: decimal('format_b', { precision: 12, scale: 2 }),
+  gramm: decimal('gramm', { precision: 10, scale: 2 }),
+  kg: decimal('kg', { precision: 14, scale: 3 }),
+  // 08-mes#33 — Akademiya/o'quv sessiyasini OEE'dan chiqarish bayrog'i (default false, Q-46 regress yo'q)
+  // + LMS-sync bog'lami (lms_enrollments.id ga ishora, nullable runtime-DATA).
+  isTraining: boolean('is_training').notNull().default(false),
+  lmsEnrollmentId: integer('lms_enrollment_id'),
+  // 08-mes#34 (EP-MES-059) — gofra qatlam soni + м2, format_a/b/gramm'dan ALOHIDA
+  // (5/3-qatlam aralashib ketish xatosini oldini olish uchun). Additive, nullable.
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  gofraLayerCount: integer('gofra_layer_count'),
+  gofraAreaM2: decimal('gofra_area_m2', { precision: 10, scale: 2 }),
 });
 
 // NOTE: convergence deferred (tier-1) — lib/db aiUsageLogs.userId is numeric but

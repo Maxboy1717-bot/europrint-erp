@@ -6,7 +6,6 @@
 import { Result } from '@common/result';
 import type { DrizzleExecutor } from '../../../common/types/drizzle.types';
 export type { DrizzleExecutor };
-type Row = Record<string, unknown>;
 
 export interface OrderForInvoice {
   id: string;
@@ -29,6 +28,26 @@ export interface CreateInvoiceInput {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  /** Master-reja 3.5 "eksport-invoys (Incoterms)" — ixtiyoriy (EP-SD-070). */
+  deliveryTerm?: string | null;
+  incotermCode?: string | null;
+  currency?: string | null;
+  /** VISION-3340 SD-06 #24 — 'full' | 'partial' | null; CreateInvoiceHandler hisoblaydi. */
+  invoiceType?: string | null;
+}
+
+/**
+ * Result of comparing what was ORDERED (`sales_order_items.order_quantity`) against what has
+ * actually been DELIVERED so far (`delivery_items.delivery_quantity`, via `deliveries`).
+ * `hasDeliveryData` is true only when at least one `delivery_items` row exists for the order —
+ * this distinguishes "nothing shipped yet" (unknown — the table is empty in the build phase)
+ * from "confirmed 0 delivered", so callers never fabricate a 'partial'/'full' verdict out of an
+ * empty table (Q-40).
+ */
+export interface OrderFulfillmentQty {
+  orderedQty: number;
+  deliveredQty: number;
+  hasDeliveryData: boolean;
 }
 
 export interface InvoiceRow {
@@ -40,11 +59,6 @@ export interface InvoiceRow {
 }
 
 export interface ISdInvoicesRepository {
-  findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;
-  findById(id: number): Promise<Result<any | null>>;
-  findByInvoiceNumber(invoiceNumber: string): Promise<Result<any | null>>;
-  create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>>;
-
   /**
    * Loads only the fields needed for invoice-creation guards (status, soft-delete).
    * Pass `tx` to participate in an outer transaction.
@@ -55,10 +69,21 @@ export interface ISdInvoicesRepository {
   ): Promise<Result<OrderForInvoice | null>>;
 
   /**
-   * Inserts a row into the legacy `invoices` table and returns the projected summary.
+   * Inserts a row into the canonical `invoices` table and returns the projected summary.
    * Pass `tx` to participate in an outer transaction.
    */
   createInvoice(input: CreateInvoiceInput, tx?: DrizzleExecutor): Promise<Result<InvoiceRow>>;
+
+  /**
+   * Sums the order's ordered line quantities against what has actually left the warehouse for
+   * it, to stamp `invoices.invoice_type` ('full' | 'partial') at invoice-creation time
+   * (VISION-3340 SD-06 #24). See {@link OrderFulfillmentQty} for the no-fabrication contract.
+   * Pass `tx` to participate in an outer transaction.
+   */
+  getOrderFulfillmentQty(
+    salesOrderId: string,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<OrderFulfillmentQty>>;
 
   /**
    * Runs the supplied work inside a Drizzle transaction. Lets callers keep the

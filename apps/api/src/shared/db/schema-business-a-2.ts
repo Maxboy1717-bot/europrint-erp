@@ -21,6 +21,7 @@ export {
   mro_pm_schedules,
   mro_utility_readings,
   mro_canteen_logs,
+  mro_settings,
 } from './schema-business-a-2-mro';
 
 // ─── Director: Strategic, OKR ─────────────────────────────────────────────────
@@ -48,6 +49,22 @@ export const dokla = pgTable('dokla', {
   status:        text('status').default('sent'),
   created_at:    timestamp('created_at').defaultNow(),
   updated_at:    timestamp('updated_at').defaultNow(),
+  // 04-cc EP-COR-043/044/046/067 — additive (Q-35, 2026-07-11). doc_type: rejali |
+  // sorovga_javob | muammo. sla_deadline_at: hisoblovchi cron kelgusi bosqich, bu
+  // faqat qiymat ustuni. period/attachment_url: EP-COR-046 "Davr"/"Ilova" (mavjud
+  // subject/problem/result/proposal RENAME qilinmadi — Q-46).
+  doc_type:         text('doc_type'),
+  sla_deadline_at:  timestamp('sla_deadline_at', { withTimezone: true }),
+  period:           text('period'),
+  attachment_url:   text('attachment_url'),
+  papka_order_id:   integer('papka_order_id'),
+  // Owner decision 2026-07-13 (chat) — hard-delete -> soft-delete + audit trail
+  // (coordination.repository.ts deleteDokla() previously ran a real Drizzle .delete()).
+  // Additive, nullable (Q-35/Q-46). Mirrors sd_customers.deleted_at/deleted_by shape
+  // (VISION-3340 #63, commit 01daa468). Human-readable mirror:
+  // apps/api/src/shared/db/migrations/dokla-rasporyazhenie-soft-delete-2026-07-13.sql.
+  deleted_at:       timestamp('deleted_at'),
+  deleted_by:       integer('deleted_by'),
 });
 
 export const rasporyazhenie = pgTable('rasporyazhenie', {
@@ -63,6 +80,15 @@ export const rasporyazhenie = pgTable('rasporyazhenie', {
   done_note:    text('done_note'),
   created_at:   timestamp('created_at').defaultNow(),
   updated_at:   timestamp('updated_at').defaultNow(),
+  // 04-cc EP-COR-067/097 — additive (Q-35, 2026-07-11): Buyurtma/Papka yagona kalit.
+  papka_order_id: integer('papka_order_id'),
+  // Owner decision 2026-07-13 (chat) — hard-delete -> soft-delete + audit trail
+  // (coordination.repository.ts deleteRasp() previously ran a real Drizzle .delete()).
+  // Additive, nullable (Q-35/Q-46). Mirrors sd_customers.deleted_at/deleted_by shape
+  // (VISION-3340 #63, commit 01daa468). Human-readable mirror:
+  // apps/api/src/shared/db/migrations/dokla-rasporyazhenie-soft-delete-2026-07-13.sql.
+  deleted_at:     timestamp('deleted_at'),
+  deleted_by:     integer('deleted_by'),
 });
 
 // ─── Core: Seven Functions & RACI ─────────────────────────────────────────────

@@ -85,7 +85,45 @@ export const stockApi = {
   adjust:          (b: Record<string, unknown>)     => posReq("POST", "/stock/adjust", b),
   getLowAlerts:    ()                               => posReq("GET",  "/stock/low-alerts"),
   getExpiryAlerts: (days?: number)                  => posReq("GET",  `/stock/expiry-alerts${days ? `?days=${days}` : ""}`),
+  /**
+   * GET /api/pos/stock/issuable/:barcode — CHIQIM oqimi (spec 2026-06-27, FAQAT SKANER):
+   * skanlangan barkod → material + jami qoldiq + bron → bo'sh qoldiq; bron>0 → blocked
+   * (faqat super_admin/direktor override). BE: PosStockIssuableService.getIssuable.
+   */
+  getIssuable:     (barcode: string, warehouseId?: string) =>
+    posReq<IssuableResult>(
+      "GET",
+      `/stock/issuable/${encodeURIComponent(barcode)}${warehouseId ? `?warehouseId=${encodeURIComponent(warehouseId)}` : ""}`,
+    ),
 };
+
+/** CHIQIM bron-blok javobi — BE IssuableResult bilan bir xil (stock-issuable.service.ts). */
+export interface IssuableResult {
+  found:          boolean;
+  barcode:        string;
+  materialCardId?: number;
+  materialCode?:  string | null;
+  materialName?:  string;
+  unit?:          string;
+  warehouseId?:   number;
+  warehouseCode?: string | null;
+  warehouseName?: string | null;
+  onHand:         number;
+  reserved:       number;
+  freeStock:      number;
+  /** Bron > 0 → CHIQIM blok (faqat override roli buzadi). */
+  blocked:        boolean;
+  /** Ushbu user blokni buza oladimi (super_admin / direktor). */
+  canOverride:    boolean;
+  reservations:   Array<{
+    reservationId:     number;
+    reservationNumber: string | null;
+    reservedQuantity:  number;
+    reservedByAi:      boolean;
+    orderId:           number | null;
+    orderType:         string | null;
+  }>;
+}
 
 // ─── GL ────────────────────────────────────────────────────────────────────
 
@@ -173,6 +211,31 @@ export interface ScanBarcodeResult {
   };
 }
 
+/** Etiket fizik o'lchami — ombor turi label-config'iga moslashadi (KIRIM spec). */
+export interface InboundLabelDimensions {
+  template: string;
+  widthMm:  number;
+  heightMm: number;
+  dpi:      number;
+}
+
+/** POST /api/pos/barcode/generate javobi — BE InboundBarcodeResult bilan bir xil. */
+export interface InboundBarcodeResult {
+  barcode:        string;
+  queueId:        number;
+  materialCardId: number;
+  warehouseId:    number;
+  label: {
+    materialCode:  string | null;
+    materialName:  string;
+    unit:          string;
+    quantity:      number | null;
+    warehouseCode: string;
+    barcodeType:   "CODE128";
+    dimensions:    InboundLabelDimensions;
+  };
+}
+
 export const barcodeApi = {
   scan:       (b: { barcode: string; warehouseId?: string }) =>
     posReq<ScanBarcodeResult>("POST", "/barcode/scan", b),
@@ -180,6 +243,13 @@ export const barcodeApi = {
     posReq("POST", "/barcode/print", b),
   lookup:     (barcode: string) =>
     posReq("GET", `/barcode/lookup?barcode=${encodeURIComponent(barcode)}`),
+  /**
+   * POST /api/pos/barcode/generate — KIRIM uchun noyob barkod "tug'iladi" (POS Monitor
+   * printeridan, ERP'dan EMAS). Ombor-prefiks + seq, etiket o'lchami ombor turiga moslashadi.
+   * Barkod MAJBURIY: bu chaqirilmasa KIRIM saqlanmaydi (spec 2026-06-27).
+   */
+  generate:   (b: { materialCardId: number; warehouseId: number; quantity?: number; unit?: string }) =>
+    posReq<InboundBarcodeResult>("POST", "/barcode/generate", b),
 };
 
 // ─── Materials ─────────────────────────────────────────────────────────────
@@ -273,13 +343,12 @@ export const printerApi = {
 };
 
 // ─── Quarantine & Inventory Passport API ─────────────────────────────────────
+// DIQQAT (IKKI QC-DUNYO tuzatildi, 2026-07-02): karantin ro'yxati + QC qarori endi
+// FAQAT haqiqiy oqim — warehouseFeaturesApi.listQuarantine/qcDecision
+// (/wh-features/... → QuarantineWorkflowService: status o'zgaradi + stok QC-HOLD→RM-MAIN
+// ko'chadi + passport ham yangilanadi). Eski passport-only getList/recordQcDecision
+// (/inventory-passport/... — stok ko'chirmaydi, status o'zgartirmaydi) o'chirildi (Q-46).
 export const quarantineApi = {
-  getList: () =>
-    posReq<unknown[]>("GET", "/inventory-passport/quarantine"),
-
-  recordQcDecision: (movementId: number, qcResult: "QABUL" | "REWORK" | "CHIQARISH", qcNote?: string) =>
-    posReq("POST", `/inventory-passport/${movementId}/qc-decision`, { qcResult, qcNote }),
-
   createPassport: (dto: {
     movementId: number;
     supplierName?: string;
@@ -353,6 +422,16 @@ export const warehouseFeaturesApi = {
   getMaterialProfile: (materialId: number) =>
     posReq(`GET`, `/wh-features/material/${materialId}/profile`),
 
+  // Karantin QC qarori (QABUL/REWORK/CHIQARISH) — 'karantin'/'qc_review' holatidagi
+  // harakatlar uchun; jonli/ulangan QuarantineWorkflowService orqali ishlaydi.
+  qcDecision: (movementId: number, decision: "QABUL" | "REWORK" | "CHIQARISH", qcNote?: string) =>
+    posReq(`POST`, `/wh-features/movement/${movementId}/qc-decision`, { decision, qcNote }),
+
+  // Karantin ro'yxati (haqiqiy oqim) — 'karantin'/'qc_review' holatidagi harakatlar
+  // (pos_movements + passport LEFT JOIN). BE: QuarantineWorkflowService.listQuarantine.
+  listQuarantine: () =>
+    posReq<unknown[]>(`GET`, `/wh-features/quarantine`),
+
   // GL Posting (avtomatik)
   postGl:           (movementId: number) =>
     posReq(`POST`, `/wh-features/movement/${movementId}/gl-post`),
@@ -394,4 +473,140 @@ export const warehouseFeaturesApi = {
   }) => posReq(`POST`, `/wh-features/grn`, body),
   approveGrn: (id: number) =>
     posReq(`POST`, `/wh-features/grn/${id}/approve`),
+};
+
+// ─── Handovers / Smena topshirig'i (POS Monitor 1-to'lqin) ────────────────────
+// BE: /api/pos/handovers + /api/pos/handovers/pallets — smena/pallet topshirig'i,
+// imzolash (2-imzo), bekor qilish, pallet balansi.
+
+export const handoversApi = {
+  /** GET /api/pos/handovers — barcha smena topshiriqlari (filtrlanadi). */
+  getAll: (params?: { status?: string; warehouseId?: string; shiftId?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.status)      p.set("status", params.status);
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.shiftId)     p.set("shiftId", String(params.shiftId));
+    if (params?.limit)       p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `/handovers${qs ? "?" + qs : ""}`);
+  },
+  /** GET /api/pos/handovers/:id — bitta topshiriq tafsiloti. */
+  getOne:  (id: number)                      => posReq("GET",  `/handovers/${id}`),
+  /** POST /api/pos/handovers — yangi smena topshirig'i (Q-43 real saqlash). */
+  create:  (b: Record<string, unknown>)      => posReq("POST", "/handovers", b),
+  /** POST /api/pos/handovers/:id/sign — topshiriqni imzolash (qabul/topshiruvchi 2-imzo). */
+  sign:    (id: number, b?: Record<string, unknown>) => posReq("POST", `/handovers/${id}/sign`, b ?? {}),
+  /** POST /api/pos/handovers/:id/cancel — topshiriqni bekor qilish. */
+  cancel:  (id: number, reason?: string)     => posReq("POST", `/handovers/${id}/cancel`, { reason }),
+  /** GET /api/pos/handovers/pallets — pallet ro'yxati (smena bo'yicha). */
+  getPallets:       (params?: { warehouseId?: string; status?: string }) => {
+    const p = new URLSearchParams();
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.status)      p.set("status", params.status);
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `/handovers/pallets${qs ? "?" + qs : ""}`);
+  },
+  /** GET /api/pos/handovers/pallets/balance — pallet balansi (kirim/chiqim farqi). */
+  getPalletBalance: (params?: { warehouseId?: string }) => {
+    const p = new URLSearchParams();
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    const qs = p.toString();
+    return posReq("GET", `/handovers/pallets/balance${qs ? "?" + qs : ""}`);
+  },
+};
+
+// ─── In-Transit / Yo'ldagi yuk (WMS) ──────────────────────────────────────────
+// BE: /api/wms/in-transit/* — omborlararo ko'chirishda yo'lda turgan yuk holati.
+
+export const inTransitApi = {
+  /** GET /api/wms/in-transit — yo'ldagi yuklar ro'yxati. */
+  getAll: (params?: { fromWarehouseId?: string; toWarehouseId?: string; status?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.fromWarehouseId) p.set("fromWarehouseId", params.fromWarehouseId);
+    if (params?.toWarehouseId)   p.set("toWarehouseId", params.toWarehouseId);
+    if (params?.status)          p.set("status", params.status);
+    if (params?.limit)           p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `${_base}/api/wms/in-transit${qs ? "?" + qs : ""}`);
+  },
+  /** GET /api/wms/in-transit/:id — bitta yo'ldagi yuk tafsiloti. */
+  getOne:   (id: number) => posReq("GET",  `${_base}/api/wms/in-transit/${id}`),
+  /** POST /api/wms/in-transit/:id/receive — yo'ldagi yukni manzil omborida qabul qilish. */
+  receive:  (id: number, b?: Record<string, unknown>) =>
+    posReq("POST", `${_base}/api/wms/in-transit/${id}/receive`, b ?? {}),
+  /** POST /api/wms/in-transit/:id/report-loss — yo'lda yo'qotish/kamomad qayd qilish. */
+  reportLoss: (id: number, b: Record<string, unknown>) =>
+    posReq("POST", `${_base}/api/wms/in-transit/${id}/report-loss`, b),
+};
+
+// ─── Material Life / Material umri (WMS) ──────────────────────────────────────
+// BE: /api/wms/material-life/* — material yaroqlilik muddati, qoldiq umri, eskirish.
+
+export const materialLifeApi = {
+  /** GET /api/wms/material-life — material umri ro'yxati (muddat bo'yicha). */
+  getAll: (params?: { warehouseId?: string; status?: string; daysLeft?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.status)      p.set("status", params.status);
+    if (params?.daysLeft)    p.set("daysLeft", String(params.daysLeft));
+    if (params?.limit)       p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `${_base}/api/wms/material-life${qs ? "?" + qs : ""}`);
+  },
+  /** GET /api/wms/material-life/:materialId — bitta material umri tafsiloti. */
+  getOne:    (materialId: number) =>
+    posReq("GET", `${_base}/api/wms/material-life/${materialId}`),
+  /** GET /api/wms/material-life/expiring — muddati tugayotgan materiallar. */
+  getExpiring: (days = 30) =>
+    posReq<unknown[]>("GET", `${_base}/api/wms/material-life/expiring?days=${days}`),
+};
+
+// ─── Variance / Inventarizatsiya og'ishi (POS) ────────────────────────────────
+// BE: /api/pos/inventory-count/* — og'ish konfiguratsiyasi, qarori, sabab kataloglari, muzlatilgan zonalar.
+
+export const varianceApi = {
+  /** GET /api/pos/inventory-count/variance-config — og'ish chegaralari konfiguratsiyasi. */
+  getVarianceConfig: () =>
+    posReq("GET", "/inventory-count/variance-config"),
+  /** POST /api/pos/inventory-count/variance-config — og'ish chegarasini saqlash (Q-43). */
+  saveVarianceConfig: (b: Record<string, unknown>) =>
+    posReq("POST", "/inventory-count/variance-config", b),
+  /** POST /api/pos/inventory-count/variance-decision — og'ish bo'yicha qaror (qabul/rad/tekshir). */
+  recordVarianceDecision: (b: Record<string, unknown>) =>
+    posReq("POST", "/inventory-count/variance-decision", b),
+  /** GET /api/pos/inventory-count/count-deviation-reasons — og'ish sabab katalogi. */
+  getDeviationReasons: () =>
+    posReq<unknown[]>("GET", "/inventory-count/count-deviation-reasons"),
+  /** GET /api/pos/inventory-count/freeze-zones — muzlatilgan (sanash) zonalar. */
+  getFreezeZones: () =>
+    posReq<unknown[]>("GET", "/inventory-count/freeze-zones"),
+  /** POST /api/pos/inventory-count/freeze-zones — zonani muzlatish/muzdan chiqarish. */
+  setFreezeZone: (b: Record<string, unknown>) =>
+    posReq("POST", "/inventory-count/freeze-zones", b),
+};
+
+// ─── Movement Extra / Harakat qo'shimcha (POS) ────────────────────────────────
+// BE: /api/pos/movements/:id/recheck-techcard + /confirmations + /api/pos/anomalies.
+
+export const movementExtraApi = {
+  /** POST /api/pos/movements/:id/recheck-techcard — texkartani qayta tekshirish (ruxsat/bloklar). */
+  recheckTechcard: (id: number) =>
+    posReq<{
+      allowed: boolean;
+      blocks?: { code: string; message: string }[];
+      techCardId?: number;
+      checkedAt?: string;
+    }>("POST", `/movements/${id}/recheck-techcard`),
+  /** GET /api/pos/movements/:id/confirmations — harakat tasdiqlari (kim imzolagan). */
+  getConfirmations: (id: number) =>
+    posReq<unknown[]>("GET", `/movements/${id}/confirmations`),
+  /** GET /api/pos/anomalies — anomaliya-flag qo'yilgan harakatlar ro'yxati. */
+  getAnomalies: (params?: { status?: string; warehouseId?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.status)      p.set("status", params.status);
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.limit)       p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `/anomalies${qs ? "?" + qs : ""}`);
+  },
 };

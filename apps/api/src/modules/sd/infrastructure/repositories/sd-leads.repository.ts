@@ -36,15 +36,14 @@ export class SdLeadsRepository implements ISdLeadsRepo {
 
   async getStats(): Promise<Result<Row>>  {
   try {
-      const rows = await runQuery<Row>(sql`
-        SELECT COUNT(*)::int AS total,
-               COUNT(*) FILTER (WHERE status = 'new')::int AS new_leads,
-               COUNT(*) FILTER (WHERE status = 'in_progress')::int AS in_progress,
-               COUNT(*) FILTER (WHERE status = 'converted')::int AS converted,
-               COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS this_week
-        FROM crm_leads
-      `);
-      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
+      const totalRes = await runQuery<Row>(sql`SELECT COUNT(*)::int AS total FROM crm_leads WHERE deleted_at IS NULL`);
+      const byStatusRes = await runQuery<Row>(sql`SELECT status, COUNT(*)::int AS cnt FROM crm_leads WHERE deleted_at IS NULL GROUP BY status`);
+      const total = (totalRes.rows[0] as { total: number } | undefined)?.total ?? 0;
+      const byStatus: Record<string, number> = {};
+      for (const r of (byStatusRes.rows as Array<{ status: string; cnt: number }>)) {
+        if (r.status) byStatus[r.status] = r.cnt;
+      }
+      return Ok({ total, byStatus } as Row);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -87,7 +86,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
   try {
       const rows = await runQuery<Row>(sql`
         INSERT INTO crm_leads (title, customer_id, assigned_to, opportunity_amount, notes, source, status)
-        VALUES (${body.title}, ${body.customer_id ?? null}, ${body.assigned_to ?? null}, ${body.expected_amount ?? 0}, ${body.notes ?? null}, ${body.source ?? 'manual'}, 'new')
+        VALUES (${body.title}, ${body.customer_id ?? null}, ${body.assigned_to ?? null}, ${(body.amount ?? body.expected_amount) ?? 0}, ${body.notes ?? null}, ${body.source ?? 'manual'}, 'new')
         RETURNING *
       `);
       return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
@@ -102,7 +101,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
         UPDATE crm_leads
         SET title = COALESCE(${body.title ?? null}, title),
             assigned_to = COALESCE(${body.assigned_to ?? null}, assigned_to),
-            opportunity_amount = COALESCE(${body.expected_amount ?? null}, opportunity_amount),
+            opportunity_amount = COALESCE(${(body.amount ?? body.expected_amount) ?? null}, opportunity_amount),
             notes = COALESCE(${body.notes ?? null}, notes),
             status = COALESCE(${body.status ?? null}, status),
             updated_at = NOW()
@@ -171,12 +170,16 @@ export class SdLeadsRepository implements ISdLeadsRepo {
     expected_amount: unknown,
     lid: number,
     notes: unknown,
+    convertedBy?: number,
   ): Promise<Result<Row>> {
     try {
       const order = await db.transaction(async (tx) => {
+        // B14 (2026-07-05): created_by_user_id (the real integer creator column --
+        // matches execSdSalesOrderInsert's convention; sales_orders.created_by is
+        // uuid-typed and intentionally left null elsewhere) was never written here.
         const res = await tx.execute(sql`
-          INSERT INTO sales_orders (customer_id, total_amount, status, crm_lead_id, notes)
-          VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null})
+          INSERT INTO sales_orders (customer_id, total_amount, status, crm_lead_id, notes, created_by_user_id)
+          VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null}, ${convertedBy ?? null})
           RETURNING *
         `);
         const inserted = (res.rows?.[0] ?? {}) as Row;

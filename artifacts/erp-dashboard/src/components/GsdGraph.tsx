@@ -78,9 +78,11 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
   const [form, setForm] = useState({ week_date: "", actual: "", note: "" });
 
   const { data, isLoading } = useQuery<GsdData>({
-    queryKey: [`/api/hr/gsd/employees/${employeeId}/history`],
+    // SB0300 fix: was pointed at the payroll-period history route (wrong table,
+    // wrong shape); real card-GSD weekly definition+facts now live at /gsd-history.
+    queryKey: [`/api/hr/gsd/employees/${employeeId}/gsd-history`],
     enabled: !!employeeId,
-    queryFn: () => apiRequest<GsdData>('GET', `/api/hr/gsd/employees/${employeeId}/history?months=12`),
+    queryFn: () => apiRequest<GsdData>('GET', `/api/hr/gsd/employees/${employeeId}/gsd-history?months=12`),
   });
 
   const submitMutation = useMutation({
@@ -88,7 +90,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
       return apiRequest("POST", `/api/hr/gsd/employees/${employeeId}`, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/hr/gsd/employees/${employeeId}/history`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/hr/gsd/employees/${employeeId}/gsd-history`] });
       toast({ title: "GSD natijasi saqlandi" });
       setAddOpen(false);
       setForm({ week_date: "", actual: "", note: "" });

@@ -3,9 +3,9 @@
  * @description Source module. See exports for details.
  */
 
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import {
-  current_stock, ideal_rasm_targets, wms_alerts,
+  ideal_rasm_targets, wms_alerts,
   sd_sales_orders, order_status_logs,
   pos_damage_qc_links, pos_barcode_print_queue,
   employee_issuance_log, three_way_match_results,
@@ -23,30 +23,63 @@ import { eq, and, sql, ilike, inArray } from 'drizzle-orm';
 
 type Row = Record<string, unknown>;
 
+/**
+ * A84 (MOLIYA — GL↔stock single-writer): POS confirmed-movement stock-IN now lands on the
+ * CANONICAL `warehouse_stock` (was the `current_stock` VIEW — a simple updatable view that
+ * maps quantity_on_hand→warehouse_stock.quantity but does NOT carry available_quantity).
+ * Writing through the view bumped `quantity` while leaving `available_quantity` stale, so the
+ * two columns drifted apart (DB-proof: view-insert of a new pair left quantity=20/available=0,
+ * making the material un-issuable to every WMS reader and the goods-issue guard
+ * `available_quantity >= amount`). This breaks the warehouse_stock single-writer invariant the
+ * WMS/GL chain relies on. We now upsert warehouse_stock directly, keeping quantity AND
+ * available_quantity in lockstep — same idempotent ON CONFLICT (warehouse_id, material_id)
+ * pattern as execReceiveFg (queries-wms.ts), so POS and WMS share one canonical writer shape.
+ */
 export async function execCurrentStockUpsert(matId: number, warehouseId: unknown, qty: number): Promise<void> {
-  await db.insert(current_stock).values({
-    material_id: matId,
-    warehouse_id: warehouseId as number,
-    quantity_on_hand: String(qty),
-  }).onConflictDoUpdate({
-    target: [current_stock.material_id, current_stock.warehouse_id],
-    set: {
-      quantity_on_hand: sql`${current_stock.quantity_on_hand} + ${qty}`,
-      last_movement_at: sql`NOW()`,
-    },
-  });
+  await runQuery(sql`
+    INSERT INTO warehouse_stock
+      (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
+    VALUES
+      (${warehouseId as number}, ${matId}, ${qty}, 0, ${qty}, NOW(), NOW(), NOW())
+    ON CONFLICT (warehouse_id, material_id)
+    DO UPDATE SET
+      quantity           = warehouse_stock.quantity + ${qty},
+      available_quantity = warehouse_stock.available_quantity + ${qty},
+      last_movement_at   = NOW(),
+      last_updated_at    = NOW()
+  `);
 }
 
-export async function execCurrentStockDecrement(matId: number, warehouseId: unknown, qty: number): Promise<void> {
-  await db.update(current_stock)
-    .set({
-      quantity_on_hand: sql`GREATEST(0, ${current_stock.quantity_on_hand} - ${qty})`,
-      last_movement_at: sql`NOW()`,
-    })
-    .where(and(
-      eq(current_stock.material_id, matId),
-      eq(current_stock.warehouse_id, warehouseId as number),
-    ));
+/**
+ * A84: POS confirmed-movement stock-OUT canonical decrement on `warehouse_stock` (was the
+ * `current_stock` VIEW, which only shrank `quantity` and left `available_quantity` stale —
+ * over-stating issuable stock). Decrements BOTH quantity and available_quantity in lockstep
+ * so the canonical balance the WMS issue guard / GL valuation read stays correct.
+ *
+ * VISION-3340 #57: this used to write an UNCONDITIONAL UPDATE floored at 0 via
+ * `GREATEST(0, quantity - qty)` — no pre-check, no guard. An overdraw (qty > available)
+ * silently succeeded and just clamped the balance to 0, instead of failing the movement.
+ * That is the same class of TOCTOU/no-guard bug already fixed on the WMS issue path
+ * (`execIssueFromWarehouseStock`, queries-wms.ts) and the reservation/issue paths
+ * (`execUpdateStockReserved`/`execUpdateStockIssued`, queries-wms.ts). This now mirrors
+ * `execIssueFromWarehouseStock` exactly: a guarded conditional UPDATE (`available_quantity
+ * >= qty`) with `RETURNING id`. Postgres row-level locking makes the guard atomic against
+ * concurrent decrements on the same row. Returns `true` iff the guard passed and the row
+ * was updated; `false` (0 rows affected, no write happened) means the caller must treat
+ * this as insufficient stock rather than silently proceeding.
+ */
+export async function execCurrentStockDecrement(matId: number, warehouseId: unknown, qty: number): Promise<boolean> {
+  const result = await runQuery(sql`
+    UPDATE warehouse_stock
+    SET quantity           = quantity - ${qty},
+        available_quantity = available_quantity - ${qty},
+        last_movement_at   = NOW(),
+        last_updated_at    = NOW()
+    WHERE material_id = ${matId} AND warehouse_id = ${warehouseId as number}
+      AND available_quantity >= ${qty}
+    RETURNING id
+  `);
+  return result.rows.length > 0;
 }
 
 export async function execIdealRasmTargetInsert(t: {

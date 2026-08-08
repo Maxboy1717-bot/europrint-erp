@@ -196,13 +196,11 @@ export class WmsWarehouseGatewayRepo {
     return (rows.rows[0] ?? {}) as Row;
   }
 
-  async completeGoodsReceipt(receiptId: number, userId: number | null): Promise<Row> {
-    const rows = await runQuery<Row>(sql`
-      UPDATE mm_goods_receipts SET status = 'completed', completed_by = ${userId}, completed_at = NOW()
-      WHERE id = ${receiptId} RETURNING *
-    `);
-    return (rows.rows[0] ?? {}) as Row;
-  }
+  // NOTE: legacy completeGoodsReceipt() (status='completed', no QC check) REMOVED
+  // 2026-06-19. It bypassed the karantin gate (DRAFT→KARANTIN→QC_PASS→MAIN) and
+  // let stock be posted while in quarantine. Completion now flows ONLY through
+  // WmsQuarantineGateService.releaseToMain (QC_PASS → MAIN, enforced). Q-46: dead
+  // bypass writer removed rather than left as a second un-gated path.
 
   async getLowStock(): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
@@ -226,11 +224,34 @@ export class WmsWarehouseGatewayRepo {
     return (rows.rows[0] ?? { found: false, barcode }) as Row;
   }
 
+  /**
+   * true agar `warehouseId` yoki `code` bo'yicha faol ombor topilsa.
+   * Q20 fix: sync-pos endpoint haqiqiy omborni tekshirishi kerak — noto'g'ri
+   * ID/kod jim yutilib "ok:true" qaytarilmasligi uchun.
+   */
+  async warehouseExists(numericId: number | null, code: string | number): Promise<boolean> {
+    const rows = await runQuery<{ id: number }>(sql`
+      SELECT id FROM wms_warehouses
+      WHERE is_active = true
+        AND (
+          (${numericId}::int IS NOT NULL AND id = ${numericId})
+          OR code = ${String(code)}
+        )
+      LIMIT 1
+    `);
+    return rows.rows.length > 0;
+  }
+
+  /**
+   * `pos_sync_events`ga audit yozuvi qo'shadi. Xato bo'lsa YUTILMAYDI — chaqiruvchi
+   * (controller) haqiqiy xatoni ko'rishi va foydalanuvchiga to'g'ri javob qaytarishi
+   * uchun exception yuqoriga uzatiladi (Q20 — soxta ok:true taqiqlangan).
+   */
   async logPosSyncEvent(warehouseId: number | null, userId: number | null): Promise<void> {
     await runQuery(sql`
       INSERT INTO pos_sync_events (warehouse_id, event_type, triggered_by, created_at)
       VALUES (${warehouseId}, 'WAREHOUSE_SYNC', ${userId}, NOW())
       ON CONFLICT DO NOTHING
-    `).catch(() => null);
+    `);
   }
 }

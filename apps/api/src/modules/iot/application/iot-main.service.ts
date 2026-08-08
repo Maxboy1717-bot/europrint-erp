@@ -112,6 +112,14 @@ export class IotMainService {
     return this.oeeRepo.findOee(deviceId, days);
   }
 
+  /** 07-pp#38 — Director "eng yomon stanok" OEE reytingi + alohida brak% flag. */
+  getWorstMachineRanking(
+    from: string | undefined,
+    to: string | undefined,
+  ): ReturnType<DrizzleIotOeeRepo['findWorstMachineRanking']> {
+    return this.oeeRepo.findWorstMachineRanking(from, to);
+  }
+
   async getProductionMetrics(
     shift?: string,
   ): Promise<Result<{ shift: string; metrics: ProductionMetricData }>> {

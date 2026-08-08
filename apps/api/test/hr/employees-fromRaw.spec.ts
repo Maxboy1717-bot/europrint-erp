@@ -19,6 +19,7 @@
 
 import 'reflect-metadata';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { I18nService } from 'nestjs-i18n';
 
 import { EmployeesService } from '../../src/modules/hr/employees/employees.service';
 import type { IEmployeesRepository } from '../../src/modules/hr/employees/i-employees.repo';
@@ -61,7 +62,8 @@ describe('EmployeesService — Employee.fromRaw hydration (H.12)', () => {
 
   beforeEach(() => {
     repo = makeRepo();
-    service = new EmployeesService(repo, new EventEmitter2());
+    const i18n = { t: jest.fn((key: string) => key) } as unknown as I18nService;
+    service = new EmployeesService(repo, new EventEmitter2(), i18n);
   });
 
   describe('findAll', () => {

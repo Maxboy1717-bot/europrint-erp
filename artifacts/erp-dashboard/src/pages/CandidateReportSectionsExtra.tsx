@@ -34,21 +34,21 @@ export function Section4Conclusion({ recommendation }: { recommendation: string 
             : recommendation === "UNPRODUCTIVE" ? "text-[var(--ep-red)]"
             : "text-gray-700"
           }`}>
-            {recommendation === "FLAGMAN"        ? "QABUL TAVSIYA ETILADI"
-              : recommendation === "PROCESSNIK"  ? "QABUL (OPERATSION LAVOZIM)"
-              : recommendation === "UNPRODUCTIVE" ? "RAD ETISH TAVSIYA ETILADI"
-              : "QABUL HOLATI ANIQLANMAGAN"}
+            {recommendation === "FLAGMAN"        ? t("qabulTavsiyaEtiladi")
+              : recommendation === "PROCESSNIK"  ? t("qabulOperatsionLavozim")
+              : recommendation === "UNPRODUCTIVE" ? t("radEtishTavsiyaEtiladi")
+              : t("qabulHolatiAniqlanmagan")}
           </p>
         </div>
       </div>
       <p className="text-sm text-gray-700">
         {recommendation === "FLAGMAN"
-          ? "Nomzod Flagman kategoriyasiga mos. Yuqori samaradorlik, mustaqil ishlash qobiliyati va aniq natijalar ko'rsatgan. Ishga qabul qilish tavsiya etiladi."
+          ? t("flagmanTavsifi")
           : recommendation === "PROCESSNIK"
-          ? "Nomzod Processnik kategoriyasiga mos. Operatsion va ijrochi lavozimlarga mos, ko'rsatma asosida yaxshi ishlaydi."
+          ? t("processnikTavsifi")
           : recommendation === "UNPRODUCTIVE"
-          ? "Nomzod hozircha kompaniya talablariga javob bermaydi. Rad etish tavsiya etiladi."
-          : "Nomzodning to'liq baholash ma'lumotlari mavjud emas. Qo'shimcha baholash talab etiladi."}
+          ? t("unproductiveTavsifi")
+          : t("unknownTavsifi")}
       </p>
     </div>
   );
@@ -73,10 +73,10 @@ export function Section5RisksAndOpportunities({
             {(Object.entries(toolTestResults) as [string, number][])
               .filter(([, v]) => Math.abs(v) >= 80)
               .map(([k, v]) => (
-                <li key={k}>• {TOOL_TEST_TRAIT_LABELS[k]} ({k}) kompulsiv daraja: {v > 0 ? "+" : ""}{v}</li>
+                <li key={k}>• {TOOL_TEST_TRAIT_LABELS[k]} ({k}) {t("kompulsivDaraja")}: {v > 0 ? "+" : ""}{v}</li>
               ))}
             {latestToolTest && latestToolTest.totalScore < -30 && (
-              <li>• Umumiy ball past: {latestToolTest.totalScore}</li>
+              <li>• {t("umumiyBallPast")}: {latestToolTest.totalScore}</li>
             )}
             {(Object.entries(toolTestResults) as [string, number][])
               .filter(([, v]) => Math.abs(v) >= 80).length === 0 &&
@@ -97,10 +97,10 @@ export function Section5RisksAndOpportunities({
             {(Object.entries(toolTestResults) as [string, number][])
               .filter(([, v]) => v >= 30 && v < 80)
               .map(([k, v]) => (
-                <li key={k}>• {TOOL_TEST_TRAIT_LABELS[k]} ({k}) kuchli: +{v}</li>
+                <li key={k}>• {TOOL_TEST_TRAIT_LABELS[k]} ({k}) {t("kuchliLabel")}: +{v}</li>
               ))}
             {latestToolTest && latestToolTest.totalScore >= 30 && (
-              <li>• Umumiy ball yuqori: +{latestToolTest.totalScore}</li>
+              <li>• {t("umumiyBallYuqori")}: +{latestToolTest.totalScore}</li>
             )}
             {(Object.entries(toolTestResults) as [string, number][])
               .filter(([, v]) => v >= 30 && v < 80).length === 0 &&

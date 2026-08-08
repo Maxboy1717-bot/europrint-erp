@@ -35,17 +35,17 @@ interface QualityDefect {
 }
 
 const SEVERITY_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive"; cls: string }> = {
-  critical: { label: "Kritik",   variant: "destructive", cls: "bg-red-100 text-destructive"    },
-  high:     { label: "Yuqori",   variant: "destructive", cls: "bg-red-100 text-destructive"    },
-  medium:   { label: "O'rtacha", variant: "secondary",   cls: "bg-amber-100 text-[var(--ep-yellow)]"    },
-  low:      { label: "Past",     variant: "outline",     cls: "bg-green-50 text-[var(--ep-green)]"     },
+  critical: { label: "qcSevKritik",  variant: "destructive", cls: "bg-red-100 text-destructive"    },
+  high:     { label: "qcSevYuqori",  variant: "destructive", cls: "bg-red-100 text-destructive"    },
+  medium:   { label: "qcSevOrtacha", variant: "secondary",   cls: "bg-amber-100 text-[var(--ep-yellow)]"    },
+  low:      { label: "qcSevPast",    variant: "outline",     cls: "bg-green-50 text-[var(--ep-green)]"     },
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  open:        "Ochiq",
-  resolved:    "Hal qilindi",
-  pending:     "Kutilmoqda",
-  in_review:   "Ko'rib chiqilmoqda",
+  open:        "qcStatOchiq",
+  resolved:    "qcStatHalQilindi",
+  pending:     "qcStatKutilmoqda",
+  in_review:   "qcStatKoribChiqilmoqda",
 };
 
 export default function QualityDefectsCameraPage() {
@@ -92,7 +92,7 @@ export default function QualityDefectsCameraPage() {
                 onClick={() => setSeverityFilter(s)}
                 data-testid={`filter-severity-${s}`}
               >
-                {s === "all" ? "Barchasi" : (SEVERITY_MAP[s]?.label ?? s)}
+                {s === "all" ? t("qcBarchasi") : (SEVERITY_MAP[s]?.label ? t(SEVERITY_MAP[s].label) : s)}
               </Button>
             ))}
           </div>
@@ -107,7 +107,7 @@ export default function QualityDefectsCameraPage() {
                 onClick={() => setStatusFilter(s)}
                 data-testid={`filter-status-${s}`}
               >
-                {s === "all" ? "Barchasi" : (STATUS_LABELS[s] ?? s)}
+                {s === "all" ? t("qcBarchasi") : (STATUS_LABELS[s] ? t(STATUS_LABELS[s]) : s)}
               </Button>
             ))}
           </div>
@@ -161,9 +161,9 @@ export default function QualityDefectsCameraPage() {
                             {camera      && <span>📷 {camera}</span>}
                             {d.location  && <span>📍 {d.location}</span>}
                             {d.confidence !== undefined && (
-                              <span>Aniqlik: {Math.round(d.confidence * 100)}%</span>
+                              <span>{t("qcAniqlik")}: {Math.round(d.confidence * 100)}%</span>
                             )}
-                            {d.quantity !== undefined && <span>Miqdor: {d.quantity}</span>}
+                            {d.quantity !== undefined && <span>{t("qcMiqdor")}: {d.quantity}</span>}
                             {detectedAt && (
                               <span>{new Date(detectedAt).toLocaleString("uz-UZ", { dateStyle: "short", timeStyle: "short" })}</span>
                             )}
@@ -173,10 +173,10 @@ export default function QualityDefectsCameraPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <Badge variant={sc.variant} className="text-xs">{sc.label}</Badge>
+                          <Badge variant={sc.variant} className="text-xs">{t(sc.label)}</Badge>
                           {d.status && d.status !== "open" && (
                             <Badge variant="outline" className="text-xs">
-                              {STATUS_LABELS[d.status] ?? d.status}
+                              {STATUS_LABELS[d.status] ? t(STATUS_LABELS[d.status]) : d.status}
                             </Badge>
                           )}
                         </div>

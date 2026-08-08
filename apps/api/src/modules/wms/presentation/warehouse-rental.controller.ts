@@ -22,8 +22,8 @@ import {
   WmsMarkRentalPaidSchema, WmsMarkRentalPaidDto,
 } from '../dto/wms.dto';
 
-const WR_READ = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER', 'finance_manager'];
-const WR_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const WR_READ = ['super_admin', 'warehouse_manager', 'director', 'finance_manager'];
+const WR_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

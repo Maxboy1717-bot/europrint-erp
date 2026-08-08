@@ -23,7 +23,9 @@ import { PermissionGuard }   from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
 
 import { PosInventoryCountService } from '../application/services/pos-inventory-count.service';
+import { PosVarianceConfigService } from '../application/services/pos-variance-config.service';
 import { PosPdfService }            from '../application/services/pos-pdf.service';
+import { z } from 'zod';
 
 import {
   CreateInventoryCountDto,
@@ -34,6 +36,14 @@ import {
 } from '../dto/inventory-count.dto';
 import { unwrapOrInternal } from '@common/http-result';
 
+// P4: farq avto-tasdiq chegarasini belgilash (egasi-DATA). warehouseId=null → global default.
+const SetVarianceConfigSchema = z.object({
+  warehouseId:           z.number().int().positive().nullable().optional(),
+  autoApproveQtyPct:     z.number().min(0),
+  autoApproveValueUzs:   z.number().min(0),
+  notes:                 z.string().max(500).optional(),
+});
+
 @ApiTags('POS — Inventarizatsiya')
 @ApiBearerAuth()
 @UseGuards(PermissionGuard)
@@ -43,7 +53,28 @@ import { unwrapOrInternal } from '@common/http-result';
 export class InventoryCountController {
   private readonly logger = new Logger(InventoryCountController.name);
   constructor(private readonly countService: PosInventoryCountService,
+    private readonly varianceConfig: PosVarianceConfigService,
     private readonly pdfService:   PosPdfService) {}
+
+  // ─── P4: Farq chegarasi konfiguratsiyasi (egasi-DATA) ─────────────────────
+
+  @Get('variance-config')
+  @RequirePermission('pos.inventory_count.read')
+  @ApiOperation({ summary: 'Farq avto-tasdiq chegarasi (ombor yoki global default)' })
+  async getVarianceConfig(@Query('warehouseId') warehouseId?: string) {
+    const whId = warehouseId != null && warehouseId !== '' ? Number(warehouseId) : null;
+    return unwrapOrInternal(await this.varianceConfig.getThreshold(whId));
+  }
+
+  @Patch('variance-config')
+  @RequirePermission('pos.inventory_count.approve')
+  @ApiOperation({ summary: 'Farq avto-tasdiq chegarasini belgilash (egasi-DATA)' })
+  async setVarianceConfig(@Body() body: unknown) {
+    const dto = SetVarianceConfigSchema.parse(body);
+    return unwrapOrInternal(
+      await this.varianceConfig.setThreshold(dto.warehouseId ?? null, dto.autoApproveQtyPct, dto.autoApproveValueUzs, dto.notes),
+    );
+  }
 
   // ─── Ro'yxat ─────────────────────────────────────────────────────────────
 
@@ -86,6 +117,15 @@ export class InventoryCountController {
   @ApiOperation({ summary: 'Inventarizatsiya farq hisoboti' })
   async getVariance(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.countService.getVarianceReport(id));
+  }
+
+  // ─── P4: Farq avto-tasdiq / eskalatsiya qarori ────────────────────────────
+
+  @Get(':id/variance-decision')
+  @RequirePermission('pos.inventory_count.read')
+  @ApiOperation({ summary: 'Farq chegarasi: avto-tasdiq (AUTO_APPROVE) yoki menejer-tasdiq (ESCALATE)' })
+  async getVarianceDecision(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrInternal(await this.countService.evaluateVarianceDecision(id));
   }
 
   // ─── Tasdiqlash ───────────────────────────────────────────────────────────

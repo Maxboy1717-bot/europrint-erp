@@ -53,6 +53,10 @@ function makeCache(connected: boolean): RbacCacheService {
   } as unknown as RbacCacheService;
 }
 
+function makeI18n(): { t: jest.Mock } {
+  return { t: jest.fn().mockResolvedValue('translated') };
+}
+
 describe('PermissionGuard', () => {
   beforeEach(() => {
     const mocked = db as unknown as DbMock;
@@ -64,19 +68,19 @@ describe('PermissionGuard', () => {
   });
 
   it('returns true when no @RequirePermission decorator is set', async () => {
-    const guard = new PermissionGuard(makeReflector(undefined), makeCache(false));
+    const guard = new PermissionGuard(makeReflector(undefined), makeCache(false), makeI18n() as never);
     const ctx = makeContext({ role: 'employee' });
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
   it('returns false when user is missing from request', async () => {
-    const guard = new PermissionGuard(makeReflector('hr:READ'), makeCache(false));
+    const guard = new PermissionGuard(makeReflector('hr:READ'), makeCache(false), makeI18n() as never);
     const ctx = makeContext(undefined);
     await expect(guard.canActivate(ctx)).resolves.toBe(false);
   });
 
   it('returns true when user is admin role and bypasses lookup', async () => {
-    const guard = new PermissionGuard(makeReflector('finance:WRITE'), makeCache(false));
+    const guard = new PermissionGuard(makeReflector('finance:WRITE'), makeCache(false), makeI18n() as never);
     const ctx = makeContext({ role: 'admin' });
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
@@ -86,7 +90,7 @@ describe('PermissionGuard', () => {
     mocked.where.mockResolvedValueOnce([
       { positionId: 5, moduleCode: 'hr', accessLevel: 'WRITE' },
     ]);
-    const guard = new PermissionGuard(makeReflector('hr:READ'), makeCache(false));
+    const guard = new PermissionGuard(makeReflector('hr:READ'), makeCache(false), makeI18n() as never);
     const ctx = makeContext({ role: 'employee', positionId: 5 });
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
@@ -96,7 +100,7 @@ describe('PermissionGuard', () => {
     mocked.where.mockResolvedValueOnce([
       { positionId: 5, moduleCode: 'finance', accessLevel: 'READ' },
     ]);
-    const guard = new PermissionGuard(makeReflector('hr:READ'), makeCache(false));
+    const guard = new PermissionGuard(makeReflector('hr:READ'), makeCache(false), makeI18n() as never);
     const ctx = makeContext({ role: 'employee', positionId: 5 });
     await expect(guard.canActivate(ctx)).resolves.toBe(false);
   });
@@ -106,13 +110,13 @@ describe('PermissionGuard', () => {
     mocked.where.mockResolvedValueOnce([
       { positionId: 5, moduleCode: 'hr', accessLevel: 'READ' },
     ]);
-    const guard = new PermissionGuard(makeReflector('hr:FULL'), makeCache(false));
+    const guard = new PermissionGuard(makeReflector('hr:FULL'), makeCache(false), makeI18n() as never);
     const ctx = makeContext({ role: 'employee', positionId: 5 });
     await expect(guard.canActivate(ctx)).resolves.toBe(false);
   });
 
   it('returns false when user has no positionId attached', async () => {
-    const guard = new PermissionGuard(makeReflector('hr:READ'), makeCache(false));
+    const guard = new PermissionGuard(makeReflector('hr:READ'), makeCache(false), makeI18n() as never);
     const ctx = makeContext({ role: 'employee' });
     await expect(guard.canActivate(ctx)).resolves.toBe(false);
   });

@@ -29,13 +29,18 @@ type OverdueInboxData = {
   }[];
 };
 
-export function DashboardPanel({ t }: { t: (key: string) => string }) {
+export function DashboardPanel({ t, boardId }: { t: (key: string) => string; boardId?: string | null }) {
+  // Board-scoped "letuchka" (kunlik letuchka) — bir ekran. When a department
+  // board is selected the metrics / task-stats / overdue-inbox queries are
+  // filtered to that board via ?boardId= (buildUrlFromQueryKey drops null/
+  // undefined, so an unset boardId preserves the org-wide view). Vision
+  // 15-kanban #124 (TASDIQ-2146 §15 #124).
   const { data: metrics, isLoading: metricsLoading } = useQuery<TeamMetrics>({
-    queryKey: ['/api/kanban/dashboard/team-metrics'],
+    queryKey: ['/api/kanban/dashboard/team-metrics', { boardId }],
   });
 
   const { data: taskStats, isLoading: statsLoading } = useQuery<TaskStats>({
-    queryKey: ['/api/kanban/task-stats'],
+    queryKey: ['/api/kanban/task-stats', { boardId }],
   });
 
   const { data: employees = [] } = useQuery<{ id: string; fullName: string; profileImageUrl?: string | null }[]>({
@@ -43,7 +48,7 @@ export function DashboardPanel({ t }: { t: (key: string) => string }) {
   });
 
   const { data: overdueInbox } = useQuery<OverdueInboxData>({
-    queryKey: ['/api/kanban/overdue-inbox'],
+    queryKey: ['/api/kanban/overdue-inbox', { boardId }],
     refetchInterval: 5 * 60 * 1000,
   });
 
@@ -182,7 +187,7 @@ export function DashboardPanel({ t }: { t: (key: string) => string }) {
 
       {/* ── 24h rule overdue inbox detail ────────────────────────── */}
       {overdueInbox && overdueInbox.count > 0 && (
-        <Card className="p-4 border-red-200 dark:border-red-800" style={{ borderColor: "#ef4444" }}>
+        <Card className="p-4 border-red-200 dark:border-red-800" style={{ borderColor: "var(--ep-red)" }}>
           <h3 className="font-semibold mb-3 flex items-center gap-2 text-[var(--ep-red)] dark:text-red-400">
             <Clock className="h-4 w-4" />
             24-Soat Qoida Buzilganlari ({overdueInbox.count} ta)

@@ -16,6 +16,8 @@ import { TashkentTimeService } from '@common/time';
 import { TelegramService } from '../telegram/telegram.service';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { SYSTEM_USER_ID } from '@common/constants/app.constants';
+import { computeDisciplineEscalation, escalationFlags } from '../modules/hr/attendance/discipline-escalation.helper';
 
 const GRACE_PERIOD_MIN = 5;       // 5 min grace
 const DEFAULT_FINE_UZS = 50000;   // 50,000 UZS for late arrival
@@ -60,10 +62,15 @@ export class LateArrivalFineCron {
           AND st.start_time IS NOT NULL
           AND EXTRACT(EPOCH FROM (a.check_in_time - (a.check_in_date::date + st.start_time::time)))/60 > ${GRACE_PERIOD_MIN}
           AND NOT EXISTS (
-            SELECT 1 FROM hr_disciplinary_actions da
-            WHERE da.employee_id = e.id
-              AND da.action_date = ${today}
-              AND da.action_type = 'late_fine_proposal'
+            -- NOTE: hr_disciplinary_actions does not exist in DB; canonical table is
+            -- discipline_records (see fix-discipline-schema.sql). violation_type carries
+            -- the same role as the old action_type; 'late_fine_proposal' distinguishes
+            -- this cron's proposals from other late_arrival-family violation rows.
+            SELECT 1 FROM discipline_records dr
+            WHERE dr.employee_id = e.id
+              AND dr.violation_date = ${today}
+              AND dr.violation_type = 'late_fine_proposal'
+              AND dr.is_soft_deleted = false
           )
       `);
       const data = (rows as unknown as { rows: LateArrivalRow[] }).rows;
@@ -72,13 +79,27 @@ export class LateArrivalFineCron {
       for (const r of data) {
         const minutesLate = Math.round(r.minutes_late);
         const fineAmount = Math.min(DEFAULT_FINE_UZS, minutesLate * 5000);  // 5000 UZS per minute, capped
-        // Create proposal (not applied until accepted)
+        const reasonText = `Kech kelish: ${minutesLate} daqiqa kechikish.`;
+        // Create proposal (not applied until accepted). discipline_records.reason and
+        // .given_by are NOT NULL with no default (see fix-discipline-schema.sql) — an
+        // auto-generated proposal has no human approver, so SYSTEM_USER_ID is used,
+        // matching the existing convention in late-arrival.service.ts.
+        // Owner directive 2026-07-13 (HR Nazorat fix): stamp cumulative escalation stage
+        // so late-fine proposals count toward the employee's verbal/written/fine/dismissal
+        // ladder just like manually-issued violations (discipline-escalation.helper.ts).
+        const { stage, cumulativeCount, previousRecordId } = await computeDisciplineEscalation(r.employee_id);
+        const flags = escalationFlags(stage);
         await db.execute(sql`
-          INSERT INTO hr_disciplinary_actions
-            (employee_id, action_type, action_date, severity, description, proposed_fine_uzs, status, created_at)
+          INSERT INTO discipline_records
+            (employee_id, violation_type, violation_date, issued_date, severity,
+             description, reason, given_by, fine_amount, status, created_at,
+             escalation_stage, violation_count_this_category, previous_warning_id,
+             is_first_warning, is_second_warning, is_final_warning)
           VALUES
-            (${r.employee_id}, 'late_fine_proposal', ${this.time.today()}, 'minor',
-             ${`Kech kelish: ${minutesLate} daqiqa kechikish.`}, ${fineAmount}, 'proposed', NOW())
+            (${r.employee_id}, 'late_fine_proposal', ${this.time.today()}, ${this.time.today()}, 'minor',
+             ${reasonText}, ${reasonText}, ${SYSTEM_USER_ID}, ${fineAmount}, 'open', NOW(),
+             ${stage}, ${cumulativeCount}, ${previousRecordId},
+             ${flags.isFirstWarning}, ${flags.isSecondWarning}, ${flags.isFinalWarning})
         `);
 
         // Notify employee via Telegram

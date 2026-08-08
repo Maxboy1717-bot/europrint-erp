@@ -188,7 +188,7 @@ export function EntityCard({
 
         <h4
           className="font-semibold leading-snug line-clamp-2 pr-8 mb-1.5"
-          style={{ fontSize: 13.5, color: "#2D3748" }}
+          style={{ fontSize: 13.5, color: "var(--ep-text)" }}
         >
           {title || "—"}
         </h4>

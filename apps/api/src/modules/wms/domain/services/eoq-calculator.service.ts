@@ -7,9 +7,11 @@ import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeDiv, safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
+import {
+  DEFAULT_ORDERING_COST_UZS as EOQ_DEFAULT_ORDERING_COST,
+  DEFAULT_HOLDING_COST_PCT as EOQ_DEFAULT_HOLDING_RATE,
+} from '../constants/eoq.constants';
 
-const EOQ_DEFAULT_HOLDING_RATE = 0.20;
-const EOQ_DEFAULT_ORDERING_COST = 150_000;
 const EOQ_PACK_ROUND = 1;
 
 export interface PriceTier {

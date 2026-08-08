@@ -16,6 +16,8 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 const CreateCustomerSchema = z.object({
   name: z.string().max(500).optional(),
@@ -24,6 +26,11 @@ const CreateCustomerSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().max(50).optional(),
   address: z.string().max(2000).optional(),
+  // CRM-13 #120: customer's usual settlement method — same vocabulary as
+  // SdCreatePaymentSchema.payment_method (sd.dto.ts) / sd_payments.payment_method.
+  default_payment_type: z.enum(['cash', 'card', 'bank_transfer', 'online']).optional(),
+  // CRM-13 #133 — agreed packaging method (free text; runtime-entered, no fixed vocabulary in vision)
+  packaging_method: z.string().max(500).optional(),
 }).passthrough();
 
 const AddContactSchema = z.object({
@@ -65,10 +72,15 @@ const AddNpsSchema = z.object({
 }).passthrough();
 
 const UpdateInternalNotesSchema = z.object({
-  notes: z.string().max(5000).optional(),
-  risk_level: z.string().max(50).optional(),
-  internal_classification: z.string().max(100).optional(),
-}).passthrough();
+  // Declares exactly what the repo (updateInternalNotes) reads and the FE (Customer360View)
+  // sends: relationship_quality, internal_notes (-> the `notes` column), share_of_wallet.
+  // risk_level/internal_classification had no column (dropped); the earlier trim left `notes`,
+  // but the repo reads body.internal_notes (NOT body.notes) so `notes` was itself a phantom.
+  // No passthrough: the advertised contract now matches what actually saves.
+  relationship_quality: z.string().max(100).optional(),
+  internal_notes: z.string().max(5000).optional(),
+  share_of_wallet: z.number().nonnegative().optional(),
+});
 
 const CreateComplaintSchema = z.object({
   subject: z.string().max(500).optional(),
@@ -80,6 +92,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdCustomersService } from '../application/sd-customers.service';
+import { CustomerAbcService } from '../application/customer-abc.service';
 import {
   SdUpdateCustomerSchema, SdUpdateCustomerDto,
   SdAddContactSchema, SdAddContactDto,
@@ -88,7 +101,8 @@ import {
   SdAddDocumentSchema, SdAddDocumentDto,
 } from '../dto/sd.dto';
 
-const SD_WRITE_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SD_WRITE_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -101,12 +115,30 @@ export class SdCustomersController {
 
   constructor(
     private readonly svc: SdCustomersService,
+    private readonly abc: CustomerAbcService,
     private readonly i18n: I18nService,
   ) {}
+
+  @ApiOperation({ summary: 'ABC segment preview (compute, no persist) (EP-SD master-data)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('abc/preview')
+  @Roles(...SD_WRITE_ROLES)
+  async abcPreview() {
+    return unwrapOrThrow(await this.abc.preview());
+  }
+
+  @ApiOperation({ summary: 'ABC segment recompute + persist (annual purchase Pareto)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @Post('abc/recompute')
+  @Roles(...SD_WRITE_ROLES)
+  async abcRecompute() {
+    return unwrapOrThrow(await this.abc.recompute());
+  }
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
+  @Roles(...SD_WRITE_ROLES)
   async list(@Query('search') search?: string, @Query('status') status?: string,
     @Query('segment') segment?: string,
     @Query('limit') limit?: string, @Query('offset') offset?: string) {
@@ -121,14 +153,14 @@ export class SdCustomersController {
   @ApiOperation({ summary: 'Export customers as CSV' })
   @ApiResponse({ status: 200, description: 'CSV file' })
   @Get('export')
-  @Roles('super_admin', 'director', 'sales_manager')
+  @Roles('super_admin', 'director', 'sales_manager', 'manager')
   async exportCustomers(
     @Query('search') search?: string,
     @Query('status') status?: string,
     @Res({ passthrough: true }) res?: FastifyReply,
   ): Promise<StreamableFile> {
     const result = await this.svc.exportCsv(search, status);
-    if (!result.ok) throw new HttpException('Export failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    if (!result.ok) throw new HttpException(await this.i18n.t('errors.customerExportFailed'), HttpStatus.INTERNAL_SERVER_ERROR);
     void res!.header('Content-Type', 'text/csv; charset=utf-8')
               .header('Content-Disposition', 'attachment; filename="customers.csv"');
     return new StreamableFile(Readable.from(Buffer.from(result.data as string, 'utf-8')));
@@ -138,11 +170,12 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
+  @Roles(...SD_WRITE_ROLES)
   async getById(@Param('id') id: string) {
     const cid = safeInt(id, 0);
     const _rR = await this.svc.getById(cid);
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Customer not found');
+    assertFound(r, await this.i18n.t('errors.customerNotFound'));
     const customer = r[0];
     // Enrich with contacts and recent orders in parallel
     const [contactsResult, ordersResult] = await Promise.all([
@@ -175,11 +208,20 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/360')
+  @Roles(...SD_WRITE_ROLES)
   async get360View(@Param('id') id: string) {
     const _rResult = await this.svc.get360View(safeInt(id, 0));
     const data = unwrapOrThrow(_rResult);
-    assertFound((data as Record<string, unknown>).customer ?? (data as Record<string, unknown>).basic, 'Customer not found');
+    assertFound((data as Record<string, unknown>).customer ?? (data as Record<string, unknown>).basic, await this.i18n.t('errors.customerNotFound'));
     return data;
+  }
+
+  @ApiOperation({ summary: 'Credit-limit check (EP-SD-060/061/062)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/credit-check')
+  @Roles(...SD_WRITE_ROLES)
+  async creditCheck(@Param('id') id: string, @Query('amount') amount?: string) {
+    return unwrapOrThrow(await this.svc.getCreditStatus(safeInt(id, 0), Number(amount ?? 0)));
   }
 
   @ApiOperation({ summary: 'Create' })
@@ -187,12 +229,12 @@ export class SdCustomersController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(...SD_WRITE_ROLES)
-  async create(@Body() body: unknown) {
+  async create(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateCustomerSchema.parse(body);
     if (!dto.name && !dto.title) {
       throw new BadRequestException(await this.i18n.t('errors.customerNameRequired'));
     }
-    return unwrapOrThrow(await this.svc.create(dto as Record<string, unknown>));
+    return unwrapOrThrow(await this.svc.create(dto as Record<string, unknown>, user.id));
   }
 
   @ApiOperation({ summary: 'Update' })
@@ -202,10 +244,12 @@ export class SdCustomersController {
   @Put(':id')
   @UsePipes(new ZodValidationPipe(SdUpdateCustomerSchema))
   @Roles(...SD_WRITE_ROLES)
-  async update(@Param('id') id: string, @Body() body: SdUpdateCustomerDto) {
-    const _rR = await this.svc.update(safeInt(id, 0), body);
+  async update(@Param('id') id: string, @Body() body: SdUpdateCustomerDto, @CurrentUser() user: AuthenticatedUser) {
+    // Ownership gate (owner decision 2026-07-13): svc.update() checks user.id/role
+    // against sd_customers.manager_id — see sd-customer-scope.ts.
+    const _rR = await this.svc.update(safeInt(id, 0), body, { id: user.id, role: user.role });
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Customer not found');
+    assertFound(r, await this.i18n.t('errors.customerNotFound'));
     return r[0];
   }
 
@@ -216,11 +260,13 @@ export class SdCustomersController {
   // LEGACY_NOOP: soft-delete returns 200 with empty body; frontend SdCustomers
   // page does not read the response. P3-26 audit verified service.softDelete()
   // does real work; only the response shape is empty.
+  // VISION-3340 #63: now threads the acting user into deleted_by (previously the
+  // controller never accepted @CurrentUser(), so deleted_at/deleted_by stayed NULL).
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'director')
-  async delete(@Param('id') id: string) {
-    await this.svc.softDelete(safeInt(id, 0));
+  async delete(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    await this.svc.softDelete(safeInt(id, 0), user.id);
     return {};
   }
 
@@ -228,6 +274,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/contacts')
+  @Roles(...SD_WRITE_ROLES)
   async getContacts(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getContacts(safeInt(id, 0)));
   }
@@ -265,7 +312,7 @@ export class SdCustomersController {
         role_note: dto.role_note, telegram: dto.telegram },
     );
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Contact not found');
+    assertFound(r, await this.i18n.t('errors.contactNotFound'));
     return r[0];
   }
 
@@ -285,6 +332,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/interactions')
+  @Roles(...SD_WRITE_ROLES)
   async getInteractions(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getInteractions(safeInt(id, 0)));
   }
@@ -304,6 +352,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/documents')
+  @Roles(...SD_WRITE_ROLES)
   async getDocuments(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getDocuments(safeInt(id, 0)));
   }
@@ -335,6 +384,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/competitors')
+  @Roles(...SD_WRITE_ROLES)
   async getCompetitors(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getCompetitors(safeInt(id, 0)));
   }
@@ -368,6 +418,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/nps')
+  @Roles(...SD_WRITE_ROLES)
   async getNps(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getNps(safeInt(id, 0)));
   }
@@ -399,6 +450,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/complaints')
+  @Roles(...SD_WRITE_ROLES)
   async getComplaints(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getComplaints(safeInt(id, 0)));
   }

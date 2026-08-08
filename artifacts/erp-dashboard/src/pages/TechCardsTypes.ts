@@ -32,10 +32,20 @@ export interface BackendNorm {
 
 export interface TechCard {
   id: string;
+  code?: string;
   name: string;
+  direction?: string;
+  materialType?: string;
   productType: string;
   formatA: number;
   formatB: number;
+  formatCode?: string;
+  gofraProfile?: string;
+  scrapPct?: number;
+  status?: string;        // draft | approved | archived
+  version?: number;
+  labApproved?: boolean;
+  maketApproved?: boolean;
   totalDurationMinutes?: number;
   setupDurationMinutes?: number;
   notes?: string;
@@ -56,6 +66,32 @@ export interface TechCard {
     unit: string;
     wastagePercent: number;
   }>;
+}
+
+// ── Phase 1 master child rows ────────────────────────────────────────────────
+export interface BomRow { id: number; materialCode: string; quantity: string; unit: string; layer?: string | null; }
+export interface RouteRow { id: number; opSeq: number; operation: string; machineId?: number | null; normPerHour?: string | null; setupMinutes?: number | null; minRazryad?: number | null; isCore?: boolean; }
+export interface VersionRow { id: number; version: number; changedBy?: number | null; changedAt: string; }
+
+/** Manual master-create form (texkarta master). Strings — coerced on submit. */
+export interface CreateCardForm {
+  code: string; name: string; direction: string; materialType: string; productType: string;
+  formatA: string; formatB: string; formatCode: string; gofraProfile: string; scrapPct: string;
+}
+
+export const EMPTY_CREATE_FORM: CreateCardForm = {
+  code: '', name: '', direction: '', materialType: '', productType: '',
+  formatA: '', formatB: '', formatCode: '', gofraProfile: '', scrapPct: '',
+};
+
+export function mapBomRow(r: Record<string, unknown>): BomRow {
+  return { id: Number(r.id), materialCode: String(r.material_code ?? r.materialCode ?? ''), quantity: String(r.quantity ?? '0'), unit: String(r.unit ?? 'kg'), layer: (r.layer as string) ?? null };
+}
+export function mapRouteRow(r: Record<string, unknown>): RouteRow {
+  return { id: Number(r.id), opSeq: Number(r.op_seq ?? r.opSeq ?? 0), operation: String(r.operation ?? ''), machineId: (r.machine_id ?? r.machineId) as number ?? null, normPerHour: (r.norm_per_hour ?? r.normPerHour) as string ?? null, setupMinutes: (r.setup_minutes ?? r.setupMinutes) as number ?? null, minRazryad: (r.min_razryad ?? r.minRazryad) as number ?? null, isCore: Boolean(r.is_core ?? r.isCore) };
+}
+export function mapVersionRow(r: Record<string, unknown>): VersionRow {
+  return { id: Number(r.id), version: Number(r.version ?? 0), changedBy: (r.changed_by ?? r.changedBy) as number ?? null, changedAt: String(r.changed_at ?? r.changedAt ?? '') };
 }
 
 export interface OptimizeResult {
@@ -197,12 +233,15 @@ export function buildPdfHtml(card: TechCard): string {
 // Backend mapper
 // ---------------------------------------------------------------------------
 
-/** Maps a raw API response record to a typed {@link TechCard}. */
+/** Maps a raw API response record to a typed {@link TechCard}.
+ *  Reads snake_case (raw DB columns from the master) with camelCase fallback. */
 export function mapBackendCard(raw: Record<string, unknown>): TechCard {
-  const productType = (raw.productType as string) || "Noma'lum";
-  const formatA = Number(raw.formatA) || 0;
-  const formatB = Number(raw.formatB) || 0;
-  const name = `${productType} — ${formatA}x${formatB} mm`;
+  const pick = (s: string, c: string): unknown => raw[s] ?? raw[c];
+  const productType = (pick('product_type', 'productType') as string) || "Noma'lum";
+  const formatA = Number(pick('format_a', 'formatA')) || 0;
+  const formatB = Number(pick('format_b', 'formatB')) || 0;
+  const realName = (raw.name as string) || '';
+  const name = realName || `${productType} — ${formatA}x${formatB} mm`;
 
   const rawOps: BackendOperation[] = [];
   if (raw.operations) {
@@ -235,19 +274,31 @@ export function mapBackendCard(raw: Record<string, unknown>): TechCard {
     wastagePercent: Number(n.wastePercentage) || 0,
   }));
 
+  const isActiveRaw = pick('is_active', 'isActive');
+  const scrap = pick('scrap_pct', 'scrapPct');
   return {
-    id: raw.id as string,
+    id: String(raw.id ?? ''),
+    code: (raw.code as string) || undefined,
     name,
+    direction: (raw.direction as string) || undefined,
+    materialType: (pick('material_type', 'materialType') as string) || undefined,
     productType,
     formatA,
     formatB,
-    totalDurationMinutes: Number(raw.totalDurationMinutes) || 0,
-    setupDurationMinutes: Number(raw.setupDurationMinutes) || 0,
+    formatCode: (pick('format_code', 'formatCode') as string) || undefined,
+    gofraProfile: (pick('gofra_profile', 'gofraProfile') as string) || undefined,
+    scrapPct: scrap != null ? Number(scrap) : undefined,
+    status: (raw.status as string) || undefined,
+    version: pick('version', 'version') != null ? Number(pick('version', 'version')) : undefined,
+    labApproved: Boolean(pick('lab_approved', 'labApproved')),
+    maketApproved: Boolean(pick('maket_approved', 'maketApproved')),
+    totalDurationMinutes: Number(pick('total_duration_minutes', 'totalDurationMinutes')) || 0,
+    setupDurationMinutes: Number(pick('setup_duration_minutes', 'setupDurationMinutes')) || 0,
     notes: raw.notes as string | undefined,
-    isActive: raw.isActive !== false,
-    createdAt: (raw.createdAt as string) || new Date().toISOString(),
-    calculatedByAI: Boolean(raw.calculatedByAI),
-    basedOnOrdersCount: Number(raw.basedOnOrdersCount) || 0,
+    isActive: isActiveRaw !== false,
+    createdAt: (pick('created_at', 'createdAt') as string) || new Date().toISOString(),
+    calculatedByAI: Boolean(pick('calculated_by_ai', 'calculatedByAI')),
+    basedOnOrdersCount: Number(pick('based_on_orders_count', 'basedOnOrdersCount')) || 0,
     operations,
     materials,
   };

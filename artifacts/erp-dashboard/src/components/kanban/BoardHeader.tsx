@@ -3,6 +3,7 @@
  * @description React UI component.
  */
 
+import { useState } from "react";
 import {
   Plus, ChevronDown, ListTodo, FolderKanban, FileText, Users,
   AlertTriangle, MessageSquare, Bell, Bot, GitBranch, TrendingUp, Search, X, Trash2,
@@ -10,6 +11,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NotificationsPanel } from "../../pages/kanban/NotificationsPanel";
 import {
   KanbanBoardType, KanbanColumn, KanbanTranslations,
@@ -151,6 +153,7 @@ export function BoardHeader({
   boards, setShowCreateBoard, hasActiveFilters, onDeleteBoard,
 }: BoardHeaderProps) {
   const t = tProp as unknown as KanbanTranslations & ((key: string) => string);
+  const [confirmDeleteBoardId, setConfirmDeleteBoardId] = useState<string | null>(null);
   const clearFilters = () => setFilters(() => ({
     search: "", columnId: null, priority: null, assigneeId: null,
     overdue: false, hasNewComments: false, tagId: null, tagName: null,
@@ -171,7 +174,7 @@ export function BoardHeader({
         {/* Sarlavha */}
         <h1
           className="mr-2"
-          style={{ fontSize: 22, fontWeight: 700, color: "#2D3748", letterSpacing: "-0.01em" }}
+          style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", letterSpacing: "-0.01em" }}
         >
           {t("kanbanDoskasi")}
         </h1>
@@ -355,13 +358,7 @@ export function BoardHeader({
           <button
             title={t("doskaniOchirish")}
             data-testid="button-delete-board"
-            onClick={() => {
-              const board = boards.find(b => String(b.id) === String(selectedBoardId));
-              const name = board?.name ?? "bu doska";
-              if (window.confirm(`"${name}" doskasini o'chirasizmi? Barcha ustunlar va kartalar ham o'chadi.`)) {
-                onDeleteBoard(String(selectedBoardId));
-              }
-            }}
+            onClick={() => setConfirmDeleteBoardId(String(selectedBoardId))}
             style={{
               width: 36, height: 36, borderRadius: 10,
               border: "none", cursor: "pointer",
@@ -383,7 +380,7 @@ export function BoardHeader({
         {/* Qidiruv */}
         <div className="relative" style={{ width: 280 }}>
           <Search
-            style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#A0AEC0" }}
+            style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "var(--ep-muted)" }}
           />
           <input
             value={filters.search}
@@ -447,6 +444,17 @@ export function BoardHeader({
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteBoardId !== null}
+        onOpenChange={open => { if (!open) setConfirmDeleteBoardId(null); }}
+        title={t("doskaniOchirish")}
+        description={`"${boards.find(b => String(b.id) === confirmDeleteBoardId)?.name ?? "bu doska"}" doskasini o'chirasizmi? Barcha ustunlar va kartalar ham o'chadi.`}
+        confirmText="O'chirish"
+        cancelText="Bekor qilish"
+        variant="destructive"
+        onConfirm={() => { if (confirmDeleteBoardId !== null) onDeleteBoard(confirmDeleteBoardId); setConfirmDeleteBoardId(null); }}
+      />
     </div>
   );
 }

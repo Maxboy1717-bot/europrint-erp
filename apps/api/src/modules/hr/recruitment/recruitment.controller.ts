@@ -88,6 +88,13 @@ export class RecruitmentController {
     return unwrapOrInternal(await this.recruitmentService.getFunnelKanban(vacancyId ? +vacancyId : undefined));
   }
 
+  @Get('funnel/kanban-hc')
+  @ApiOperation({ summary: 'Kanban — owner 7 bosqich (HR CAPITAL: portret→...→kuchaytirish)' })
+  @ApiQuery({ name: 'vacancyId', required: false, type: Number })
+  async kanbanHc(@Query('vacancyId') vacancyId?: string) {
+    return unwrapOrInternal(await this.recruitmentService.getFunnelKanbanHc(vacancyId ? +vacancyId : undefined));
+  }
+
   @Get('funnel/:id')
   @ApiOperation({ summary: 'Bitta funnel ma\'lumotlari' })
   async getFunnel(@Param('id', ParseIntPipe) id: number) {

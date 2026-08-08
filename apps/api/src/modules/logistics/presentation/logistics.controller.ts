@@ -19,6 +19,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
@@ -33,6 +34,7 @@ import { AssignDriverCommand} from '../application/commands/assign-driver.comman
 import { GetDeliveriesQuery} from '../application/queries/get-deliveries.query';
 import { DispatchDeliveryDto, AssignDriverDto, CompleteDeliveryDto} from './dto/logistics.dto';
 import { IDeliveryRepo, DELIVERY_REPO } from '../domain/repositories/i-delivery.repo';
+import { DeliveryStatus } from '../domain/enums/delivery-status.enum';
 
 enum Role {
  SUPER_ADMIN = 'super_admin',
@@ -54,6 +56,7 @@ export class LogisticsController {
  private readonly queryBus: QueryBus,
  private readonly eventEmitter: EventEmitter2,
  @Inject(DELIVERY_REPO) private readonly deliveryRepo: IDeliveryRepo,
+ private readonly i18n: I18nService,
  ) {}
 
  @ApiOperation({ summary: 'Get all' })
@@ -85,7 +88,7 @@ export class LogisticsController {
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_MANAGER)
  async getById(@Param('id') id: string) {
    const result = await this.deliveryRepo.findById(id);
-   if (!result.ok || !result.data) throw new NotFoundException(`Yetkazib berish #${id} topilmadi`);
+   if (!result.ok || !result.data) throw new NotFoundException(await this.i18n.t('errors.deliveryNotFoundWithId', { args: { id } }));
    return { statusCode: HttpStatus.OK, data: result.data };
 }
 
@@ -132,6 +135,10 @@ export class LogisticsController {
  @Body() dto?: CompleteDeliveryDto) {
  this.logger.log('Completing delivery');
 
+ // Real DB update — mark delivery as DELIVERED
+ const updated = await this.deliveryRepo.update(id, { status: DeliveryStatus.DELIVERED });
+ if (!updated.ok) this.logger.warn(`completeDelivery: DB update failed for id=${id}: ${updated.error}`);
+
  // Emit completion event (Trigger 14)
  this.eventEmitter.emit(ERP_EVENTS.DELIVERY_COMPLETED, {
  deliveryId: id,
@@ -143,7 +150,7 @@ export class LogisticsController {
 
  return {
  statusCode: HttpStatus.OK,
- data: { id, status: 'completed'},
+ data: { id, status: DeliveryStatus.DELIVERED, updated: updated.ok },
 };
 }
 }

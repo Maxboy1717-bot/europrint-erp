@@ -10,7 +10,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
  */
 
 import {Controller, Get, Post, Patch, Param, Body, Query,
-  UseGuards, Ip, Res, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors , UsePipes,} from '@nestjs/common';
+  UseGuards, Ip, Res, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors , UsePipes,
+  InternalServerErrorException,} from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 
 import {
@@ -30,6 +31,8 @@ import { PosMovementQueryService }   from '../application/services/pos-movement-
 import { PosAuditService }           from '../application/services/pos-audit.service';
 import { PosPdfService }             from '../application/services/pos-pdf.service';
 import { StockLedgerService }        from '../application/services/stock-ledger.service';
+import { PosTechCardGateService }    from '../application/services/pos-techcard-gate.service';
+import { z } from 'zod';
 
 import {
   CreateMovementDto,
@@ -41,6 +44,11 @@ import {
   CreateInventoryAdjustmentDto,
 } from '../dto/movement.dto';
 import { unwrapOrInternal } from '@common/http-result';
+
+// P4: buyurtma o'zgarishi — chiqarilgan materialni YANGI texkartaga qayta-tekshirish.
+const RecheckOrderChangeSchema = z.object({
+  newTechnologyCardId: z.number().int().positive(),
+});
 
 @ApiTags('POS — Harakatlar')
 @ApiBearerAuth()
@@ -57,6 +65,7 @@ export class MovementsController {
     private readonly auditService:          PosAuditService,
     private readonly pdfService:            PosPdfService,
     private readonly stockLedgerService:    StockLedgerService,
+    private readonly techCardGate:          PosTechCardGateService,
   ) {}
 
   // ─── Ro'yxat ─────────────────────────────────────────────────────────────
@@ -88,7 +97,8 @@ export class MovementsController {
     @CurrentUser() user: AuthenticatedUser,
     @Ip() ip: string,
   ) {
-    return unwrapOrInternal(await this.movementService.createMovement(dto, user.id, ip));
+    // G1-2 (2026-07-02): rol uzatiladi — bron-blok override faqat super_admin/direktor.
+    return unwrapOrInternal(await this.movementService.createMovement(dto, user.id, ip, user.role));
   }
 
   // ─── Status O'zgartirish ──────────────────────────────────────────────────
@@ -133,7 +143,13 @@ export class MovementsController {
     @Res() res: FastifyReply,
   ) {
     const bufferR = await this.pdfService.generateMovementAct(id);
-    const buffer = bufferR.ok ? (bufferR.data as Buffer) : Buffer.alloc(0);
+    // FAZA D bag-fix (Q-40): avval xatolik jimgina 0-baytli "200 OK" qaytarardi
+    // (fake-success). Endi xatolik ochiq loglanadi + haqiqiy xato javobi beriladi.
+    if (!bufferR.ok) {
+      this.logger.error(`Harakat akti PDF generatsiya xatoligi (id=${id}): ${bufferR.error.message}`);
+      throw new InternalServerErrorException(bufferR.error.message);
+    }
+    const buffer = bufferR.data as Buffer;
     res
       .header('Content-Type', 'application/pdf')
       .header('Content-Disposition', `attachment; filename="movement-${id}.pdf"`)
@@ -148,6 +164,19 @@ export class MovementsController {
   @ApiOperation({ summary: 'Harakat tasdiqlash yozuvlari (imzo, qaror, IP)' })
   async getConfirmations(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.stockLedgerService.getConfirmations(id));
+  }
+
+  // ─── P4: Buyurtma O'zgarishi — Texkarta Qayta-Tekshiruvi ───────────────────
+
+  @Post(':id/recheck-techcard')
+  @RequirePermission('pos.movements.update')
+  @ApiOperation({ summary: 'Buyurtma o\'zgardi — chiqarilgan materialni yangi texkartaga qayta-tekshirish (EP-WMS-084/085)' })
+  async recheckTechCard(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ) {
+    const dto = RecheckOrderChangeSchema.parse(body);
+    return unwrapOrInternal(await this.techCardGate.recheckOnOrderChange(id, dto.newTechnologyCardId));
   }
 
   // ─── Audit Log ────────────────────────────────────────────────────────────

@@ -19,6 +19,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { safeInt } from '../../hr/common/db-rows';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -41,7 +42,7 @@ import { unwrapOrInternal } from '@common/http-result';
 export class FinanceAccountingController {
   private readonly logger = new Logger(FinanceAccountingController.name);
 
-  constructor(private readonly svc: FinanceAccountingService) {}
+  constructor(private readonly svc: FinanceAccountingService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'Get dashboard' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -91,7 +92,7 @@ export class FinanceAccountingController {
   @UsePipes(new ZodValidationPipe(FinanceGlDocumentBodySchema))
   async createGlDocument(@Body() body: FinanceGlDocumentBodyDto) {
     const doc = await this.svc.createGlDocument(body);
-    assertRequired(doc, 'GL hujjat yaratishda xatolik');
+    assertRequired(doc, await this.i18n.t('errors.glDocumentCreationFailed'));
     return doc;
   }
 
@@ -111,8 +112,8 @@ export class FinanceAccountingController {
   async closePeriod(@Param('id') id: string, @Body() body: FinanceClosePeriodDto) {
     const periodId = safeInt(id, 0);
     const period = await this.svc.getPeriod(periodId);
-    assertFound(period, 'Davr topilmadi');
-    assertValidated((period as Record<string, unknown>).status !== 'closed', 'Davr allaqachon yopilgan');
+    assertFound(period, await this.i18n.t('errors.accountingPeriodNotFoundWithId', { args: { id: periodId } }));
+    assertValidated((period as Record<string, unknown>).status !== 'closed', await this.i18n.t('errors.accountingPeriodAlreadyClosed'));
     const closedBy = body.closedBy ? Number(body.closedBy) : null;
     return unwrapOrInternal(await this.svc.closePeriod(periodId, closedBy));
   }

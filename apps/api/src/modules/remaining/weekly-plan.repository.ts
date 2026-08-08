@@ -92,14 +92,21 @@ export class WeeklyPlanRepository {
 
   async updatePlanById(planId: number, patch: Row): Promise<Result<Row | null>> {
     try {
-      const { gsd_target, top5_tasks, success_factors, resources_needed, status } = patch;
+      // Accept both snake_case (FE convention) and camelCase aliases — mirrors createPlan's
+      // gsd_target/gsdTarget handling so a partial PATCH doesn't silently no-op when the
+      // caller uses the other casing.
+      const gsd_target       = patch['gsd_target']       ?? patch['gsdTarget']       ?? null;
+      const top5_tasks       = patch['top5_tasks']        ?? patch['top5Tasks']        ?? null;
+      const success_factors  = patch['success_factors']   ?? patch['successFactors']   ?? null;
+      const resources_needed = patch['resources_needed']  ?? patch['resourcesNeeded']  ?? null;
+      const status           = patch['status'] ?? null;
       const r = await exec(sql`
         UPDATE weekly_plans
-        SET gsd_target       = COALESCE(${gsd_target       ?? null}, gsd_target),
-            top5_tasks       = COALESCE(${top5_tasks       != null ? JSON.stringify(top5_tasks) : null}::jsonb, top5_tasks),
-            success_factors  = COALESCE(${success_factors  ?? null}, success_factors),
-            resources_needed = COALESCE(${resources_needed ?? null}, resources_needed),
-            status           = COALESCE(${status           ?? null}, status),
+        SET gsd_target       = COALESCE(${gsd_target}, gsd_target),
+            top5_tasks       = COALESCE(${top5_tasks != null ? JSON.stringify(top5_tasks) : null}::jsonb, top5_tasks),
+            success_factors  = COALESCE(${success_factors}, success_factors),
+            resources_needed = COALESCE(${resources_needed}, resources_needed),
+            status           = COALESCE(${status}, status),
             updated_at       = NOW()
         WHERE id = ${planId}
         RETURNING *

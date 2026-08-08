@@ -16,6 +16,7 @@ import {
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@auth/guards/roles.guard';
@@ -36,7 +37,7 @@ import { Panel } from '../domain/aggregates/panel.aggregate';
 export class PanelsController {
   private readonly logger = new Logger(PanelsController.name);
 
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(private commandBus: CommandBus, private queryBus: QueryBus, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'Get my panel' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -54,7 +55,7 @@ export class PanelsController {
   async saveMyPanel(@Body() dto: SavePanelDto, @CurrentUser() user: AuthenticatedUser): Promise<Panel> {
     this.logger.log(`Save panel for user ${user.id}`);
     const parsed = SavePanelDtoSchema.safeParse(dto);
-    assertValidated(parsed.success, "Noto'g'ri ma'lumotlar");
+    assertValidated(parsed.success, await this.i18n.t('validation.invalidInputData'));
     const res = await this.commandBus.execute(new SavePanelCommand(String(user.id), dto));
     return unwrapOrThrow(res);
   }

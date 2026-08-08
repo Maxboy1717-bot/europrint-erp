@@ -44,6 +44,9 @@ export class UpdateMaterialHandler implements ICommandHandler<UpdateMaterialComm
         command.isActive ?? material.isActive,
         material.createdAt,
         _time.now(),
+        material.reservedQuantity,
+        material.createdBy,
+        command.updatedBy,
       );
 
       const result = await this.materialRepository.update(updated);

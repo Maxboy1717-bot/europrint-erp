@@ -164,10 +164,25 @@ export class RopTriggerHandler implements IEventHandler<StockUpdatedEvent> {
     const orderQty = recommendedEoq > 0 ? recommendedEoq : minOrderQty > 0 ? minOrderQty : 1;
     const priority = canonicalOnHand <= 0 ? 'URGENT' : 'NORMAL';
 
+    // Q-46 (2026-07-02): `mm_purchase_requisitions` is an updatable VIEW over the
+    // base table `purchase_requisitions` (pg_get_viewdef-verified), which enforces
+    // NOT NULL on requisition_number/material_id/required_quantity/required_date.
+    // The header INSERT here previously omitted all four — every ROP trigger fire
+    // threw 23502 on the header row, caught by `handle()`'s try/catch and only
+    // logged (never surfaced to a buyer), so the auto-requisition was silently
+    // never created. Fix: supply requisition_number (from the canonical
+    // `purchase_requisition_seq` sequence), material_id + required_quantity (the
+    // real triggering material/qty already computed above), and required_date
+    // (today — required_date is `varchar(10)` 'YYYY-MM-DD', and "at/below ROP"
+    // means the need is immediate, not a fabricated future date).
     await runQuery(sql`
       WITH new_req AS (
-        INSERT INTO mm_purchase_requisitions (title, notes, status, created_at, updated_at)
+        INSERT INTO mm_purchase_requisitions
+          (requisition_number, material_id, required_quantity, required_date,
+           title, notes, status, created_at, updated_at)
         VALUES (
+          'PR-' || to_char(NOW(), 'YYYY') || '-' || lpad(nextval('purchase_requisition_seq')::text, 6, '0'),
+          ${materialId}, ${orderQty}, to_char(NOW(), 'YYYY-MM-DD'),
           ${`[${AUTO_ROP_SOURCE}] ${mat.name} #${materialId} — ${priority}`},
           ${`ROP trigger: on_hand=${canonicalOnHand} ≤ rop=${rop}. Priority: ${priority}. Source: ${AUTO_ROP_SOURCE}`},
           'pending',

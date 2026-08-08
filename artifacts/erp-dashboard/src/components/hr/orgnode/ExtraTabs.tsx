@@ -6,7 +6,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, UserX, Layers, TrendingUp, CheckCircle, BarChart2 } from "lucide-react";
 import { StatCard } from "./StatCard";
-import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { NodeDetail, resolveNodeTypeLabel } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
 import { tLabel } from '@/lib/i18n/tLabel';
@@ -15,7 +15,7 @@ interface StatsTabProps {
 }
 
 export function StatsTab({ node }: StatsTabProps) {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
   const isVacant = !node.headUserName;
   
   return (
@@ -25,37 +25,37 @@ export function StatsTab({ node }: StatsTabProps) {
           icon={<Users className="h-4 w-4" />}
           label={t("togridanXodimlar")}
           value={node.employeeCount}
-          color="#0f766e"
+          color="var(--ep-org-l5)"
         />
         <StatCard
           icon={<Building2 className="h-4 w-4" />}
           label={tLabel('common.ExtraTabs.jamiBolimlarFarzand', "Jami bo'limlar (farzand)")}
           value={node.childCount}
-          color="#1d4ed8"
+          color="var(--ep-org-l1)"
         />
         <StatCard
           icon={<UserX className="h-4 w-4" />}
           label={t("vakantFarzandlar")}
           value={node.vacantChildCount ?? 0}
-          color={(node.vacantChildCount ?? 0) > 0 ? "#dc2626" : "#6b7280"}
+          color={(node.vacantChildCount ?? 0) > 0 ? "var(--ep-red)" : "hsl(var(--muted-foreground))"}
         />
         <StatCard
           icon={<Layers className="h-4 w-4" />}
           label={t("ierarxiyaDarajasi")}
-          value={`${node.hierarchyLevel} — ${NODE_TYPE_LABELS[node.nodeType] || node.nodeType}`}
-          color="#7c3aed"
+          value={`${node.hierarchyLevel} — ${resolveNodeTypeLabel(node.nodeType, language) ?? node.nodeType}`}
+          color="var(--ep-org-l0)"
         />
         <StatCard
           icon={isVacant ? <UserX className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
           label={t("rahbarHolati")}
           value={isVacant ? "Vakant" : "Tayinlangan"}
-          color={isVacant ? "#dc2626" : "#16a34a"}
+          color={isVacant ? "var(--ep-red)" : "var(--ep-green)"}
         />
         <StatCard
           icon={<TrendingUp className="h-4 w-4" />}
           label={t("faollik")}
           value={node.isActive ? "Faol ✓" : "Nofaol ✗"}
-          color={node.isActive ? "#059669" : "#6b7280"}
+          color={node.isActive ? "var(--ep-green)" : "hsl(var(--muted-foreground))"}
         />
       </div>
       <div className="mt-4">
@@ -68,7 +68,7 @@ export function StatsTab({ node }: StatsTabProps) {
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             {([
-              { label: "Bo'lim turi", value: NODE_TYPE_LABELS[node.nodeType] || node.nodeType },
+              { label: "Bo'lim turi", value: resolveNodeTypeLabel(node.nodeType, language) ?? node.nodeType },
               { label: "Ota bo'lim", value: node.parentName || (node.parentId ? `#${node.parentId}` : "Ildiz (asosiy)") },
               { label: "QYaM uzunligi", value: node.tskp ? `${node.tskp.length} belgi` : "Kiritilmagan" },
               { label: "Rang kodi", value: node.color },

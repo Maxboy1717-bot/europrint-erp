@@ -21,6 +21,15 @@ export interface IMmDashboardRepo {
   createFuelLog(body: Row, userId: number | null): Promise<Result<Row>>;
   getSupplierPerformance(): Promise<Result<Row[]>>;
   getPriceHistory(materialId: number): Promise<Result<Row[]>>;
+  getFleetMaintenance(): Promise<Result<Row[]>>;
+  getVehicleLocations(): Promise<Result<Row[]>>;
+  getDriverExpenses(): Promise<Result<Row[]>>;
+  getVendorInvoices(): Promise<Result<Row[]>>;
+  getVendorInvoiceById(id: number): Promise<Result<Row | null>>;
+  getThreeWayMatch(): Promise<Result<Row[]>>;
+  getFleetDeliveries(): Promise<Result<Row[]>>;
+  createFleetDelivery(body: Row): Promise<Result<Row>>;
+  updateFleetDeliveryStatus(id: number, status: string): Promise<Result<Row | null>>;
 }
 
 export const MM_DASHBOARD_REPO = Symbol('MM_DASHBOARD_REPO');

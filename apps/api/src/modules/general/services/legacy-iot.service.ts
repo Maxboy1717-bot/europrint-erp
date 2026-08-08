@@ -5,7 +5,7 @@
  *     stopped) — Drizzle has no native FILTER clause and would require
  *     four separate queries or CASE-based SUM workarounds.
  *   - Legacy compatibility layer queries against tables (equipment,
- *     production_sessions, downtime_events, defect_types, technology_cards,
+ *     production_sessions, downtime_events, technology_cards,
  *     products) that have no Drizzle schema definitions in lib/db/src/schema/.
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
@@ -35,16 +35,26 @@ export class LegacyIotService {
           FROM equipment
         `);
         const row = (r.rows[0] as Record<string, unknown>) ?? {};
+
+        const oeeRow = await db.execute(sql`
+          SELECT
+            COALESCE(ROUND(AVG(oee)::numeric, 2), 0)          AS average_oee,
+            COALESCE(ROUND(AVG(availability)::numeric, 2), 0)  AS average_efficiency
+          FROM production_sessions
+          WHERE deleted_at IS NULL AND oee IS NOT NULL
+        `);
+        const oeeData = (oeeRow.rows[0] as Record<string, unknown>) ?? {};
+
         return {
-          totalEquipment:    parseInt(String(row['total']       ?? '0')),
-          runningCount:      parseInt(String(row['running']     ?? '0')),
-          maintenanceCount:  parseInt(String(row['maintenance'] ?? '0')),
-          stoppedCount:      parseInt(String(row['stopped']     ?? '0')),
-          oeeAvg: 78.5,
-          efficiency: 82.0,
+          totalEquipment:   parseInt(String(row['total']       ?? '0')),
+          runningCount:     parseInt(String(row['running']     ?? '0')),
+          maintenanceCount: parseInt(String(row['maintenance'] ?? '0')),
+          stoppedCount:     parseInt(String(row['stopped']     ?? '0')),
+          averageOee:       parseFloat(String(oeeData['average_oee']        ?? '0')),
+          efficiency:       parseFloat(String(oeeData['average_efficiency']  ?? '0')),
         };
       } catch {
-        return { totalEquipment: 0, runningCount: 0, maintenanceCount: 0, stoppedCount: 0, oeeAvg: 78.5, efficiency: 82.0 };
+        return { totalEquipment: 0, runningCount: 0, maintenanceCount: 0, stoppedCount: 0, averageOee: 0, efficiency: 0 };
       }
     });
   }
@@ -72,18 +82,24 @@ export class LegacyIotService {
     } catch { return []; }
   }
 
-  // NOTE: P3-30 — no pgTable definition found for `defect_types`; needs schema work first.
   async getIotTabletDefectReasons(): Promise<Record<string, unknown>[]> {
-    try {
-      const r = await db.execute(sql`SELECT * FROM defect_types ORDER BY name`);
-      return r.rows as Record<string, unknown>[];
-    } catch {
-      return [
-        { id: 1, name: 'Bosma sifatsiz', code: 'PRINT_DEFECT' },
-        { id: 2, name: "O'lcham xatosi", code: 'SIZE_ERROR' },
-        { id: 3, name: 'Rang xatosi', code: 'COLOR_ERROR' },
-      ];
-    }
+    // Q-40 fix: labelRu was echo of labelUz (name AS "labelRu" — no Russian column in
+    // mes_downtime_reasons). Wire: LEFT JOIN downtime_reason_codes on code to get name_ru.
+    // COALESCE(drc.name_ru, dr.name) falls back to Uzbek when downtime_reason_codes is
+    // empty — no regression, but Russian text appears automatically once that table is
+    // seeded (docs/migration/seed/ plans it). No new DDL: both tables already exist.
+    const r = await db.execute(sql`
+      SELECT
+        dr.code                                   AS code,
+        dr.name                                   AS "labelUz",
+        COALESCE(drc.name_ru, dr.name)            AS "labelRu",
+        dr.category                               AS stage
+      FROM mes_downtime_reasons dr
+      LEFT JOIN downtime_reason_codes drc ON drc.code = dr.code
+      WHERE dr.is_active = true
+      ORDER BY dr.code
+    `);
+    return r.rows as Record<string, unknown>[];
   }
 
   // ─── Production Orders ───────────────────────────────────────────────────────

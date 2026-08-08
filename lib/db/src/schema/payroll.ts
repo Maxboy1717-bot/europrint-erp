@@ -56,19 +56,27 @@ export const salaryHistory = pgTable("salary_history", {
   createdBy: integer("created_by"),
 });
 
+// 3.15-mukofot-mexanizm (2026-07-03): live-DB ustunlar bilan to'liq moslashtirildi
+// (information_schema orqali tasdiqlangan, Q-29) — userId/amount/currency/description
+// qo'shildi, paymentDate/bonusType/employeeId nullability haqiqiy ustunlarga mos
+// qilindi. Additive-only: DDL o'zgarmadi, faqat Drizzle-ta'rif live jadvalga yetdi.
 export const bonusPayments = pgTable("bonus_payments", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
-  bonusType: varchar("bonus_type", { length: 30 }),
+  userId: integer("user_id").notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }),
+  bonusType: varchar("bonus_type", { length: 30 }).notNull(),
   bonusPeriodStart: date("bonus_period_start"),
   bonusPeriodEnd: date("bonus_period_end"),
   baseSalary: decimal("base_salary", { precision: 12, scale: 2 }),
   bonusPercentage: decimal("bonus_percentage", { precision: 5, scale: 2 }),
   bonusAmount: decimal("bonus_amount", { precision: 12, scale: 2 }),
+  amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).notNull().default("UZS"),
   reason: text("reason"),
+  description: text("description"),
   approvedBy: integer("approved_by"),
   approvalDate: date("approval_date"),
-  paymentDate: date("payment_date"),
+  paymentDate: varchar("payment_date", { length: 20 }).notNull(),
   status: varchar("status", { length: 20 }).default("draft"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

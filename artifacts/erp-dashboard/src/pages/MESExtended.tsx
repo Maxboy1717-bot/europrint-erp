@@ -24,12 +24,15 @@ import {
   type MaintenanceRequest,
   type DowntimeReason,
   type MESLeaderboard,
+  type SosEvent,
+  type SosFormValues,
 } from "./MESExtendedTypes";
 import { MaintenanceDialog } from "./MESExtendedDialogs";
 import { OeeTab, ReasonsTab } from "./MESExtendedTabsA";
 import { ZonesTab, MaintenanceTab } from "./MESExtendedTabsB";
 import { GamificationTab } from "./MESExtendedTabsD";
 import { NormsTab, SmenaTab } from "./MESExtendedTabsC";
+import { SosTab } from "./MESExtendedTabsSos";
 import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -50,7 +53,7 @@ export default function MESExtended() {
 
   const maintForm = useForm<MaintFormValues>({
     resolver: zodResolver(MaintSchema),
-    defaultValues: { machineId: "", issue: "", priority: "medium" },
+    defaultValues: { title: "", work_center_id: undefined, priority: "medium" },
   });
 
   // ─── Queries ───────────────────────────────────────────────────────────────
@@ -58,6 +61,15 @@ export default function MESExtended() {
   const { data: oeeData, isLoading: oeeLoading, refetch: refetchOee } = useQuery<Record<string, unknown>>({
     queryKey: ["/api/mes/oee"],
   });
+
+  // 08-mes#36 (Qoida 12 magic-number): factory-wide "World Class" chegara endi
+  // mes_oee_targets'dan (НО/direktor CRUD orqali versiyalanadigan) o'qiladi — 85 hardcode emas.
+  // Backend default (station_id yo'q holatda) ham 85 — shu bilan mos, faqat endi tahrirlanadi.
+  const { data: oeeTargetData } = useQuery<{ target_percent: number }>({
+    queryKey: ["/api/mes/oee-targets/current"],
+    staleTime: 60_000,
+  });
+  const oeeTargetPercent = Number(oeeTargetData?.target_percent) || 85;
 
   const { data: maintenanceRequests = [], isLoading: maintLoading, refetch: refetchMaint } = useQuery<MaintenanceRequest[]>({
     queryKey: ["/api/mes/maintenance-requests"],
@@ -87,6 +99,19 @@ export default function MESExtended() {
     select: selectArray<MESTask>,
   });
 
+  const { data: sosHistory = [], isLoading: sosLoading } = useQuery<SosEvent[]>({
+    queryKey: ["/api/mes/sos/history"],
+    select: selectArray<SosEvent>,
+  });
+
+  const { data: sosWorkCenters = [] } = useQuery<Array<{ id: string; name: string }>>({
+    queryKey: ["/api/pp/work-centers"],
+    select: (raw: unknown): Array<{ id: string; name: string }> => {
+      const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+      return items.map(item => ({ id: String(item.id ?? ""), name: String(item.name ?? "") }));
+    },
+  });
+
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
   const createMaint = useMutation({
@@ -101,19 +126,39 @@ export default function MESExtended() {
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
+  const createShiftHandover = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiRequest("POST", "/api/mes/shifts/handover", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/shifts/current"] });
+      toast({ title: "Smena o'tkazildi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const createSos = useMutation({
+    mutationFn: (data: SosFormValues) =>
+      apiRequest("POST", "/api/mes/sos", data as unknown as Record<string, unknown>),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/sos/history"] });
+      toast({ title: "SOS signali yuborildi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
   // ─── Derived stats ─────────────────────────────────────────────────────────
 
   const machines: MESMachine[] = Array.isArray(oeeData?.machines) ? (oeeData.machines as MESMachine[]) : [];
   const avgOee = machines.length > 0
     ? Math.round(machines.reduce((s, m) => s + Number(m.oee || 0), 0) / machines.length)
     : (oeeData?.averageOee || 0);
-  const worldClass = machines.filter(m => Number(m.oee || 0) >= 85).length;
+  const worldClass = machines.filter(m => Number(m.oee || 0) >= oeeTargetPercent).length;
 
   const kpiItems = [
-    { label: "O'rtacha OEE",      value: `${avgOee || (mesStats?.avgOee as number) || 0}%`,    desc: "Uskunalar samaradorligi", Icon: Activity, accent: "text-[var(--ep-blue)]"   },
-    { label: "World Class (≥85%)", value: worldClass || (mesStats?.worldClassCount as number) || 0, desc: "Stanoq",               Icon: Trophy,   accent: "text-[var(--ep-green)]"  },
-    { label: "Ta'mirlashda",       value: machines.filter(m => m.status?.includes("Ta'mir") || m.status === "maintenance").length, desc: "Hozir nosoz", Icon: Wrench, accent: "text-[var(--ep-red)]"    },
-    { label: "Jami Stanoqlar",     value: machines.length,                                       desc: "Monitoring ostida",      Icon: Cpu,      accent: "text-[var(--ep-purple)]" },
+    { label: t("ortachaOee"),      value: `${avgOee || (mesStats?.avgOee as number) || 0}%`,    desc: t("uskunalarSamaradorligi"), Icon: Activity, accent: "text-[var(--ep-blue)]"   },
+    { label: `World Class (≥${oeeTargetPercent}%)`, value: worldClass || (mesStats?.worldClassCount as number) || 0, desc: t("stanoqDesc"),               Icon: Trophy,   accent: "text-[var(--ep-green)]"  },
+    { label: t("tamirlashda"),       value: machines.filter(m => m.status?.includes("Ta'mir") || m.status === "maintenance").length, desc: t("hozirNosoz"), Icon: Wrench, accent: "text-[var(--ep-red)]"    },
+    { label: t("jamiStanoqlar"),     value: machines.length,                                       desc: t("monitoringOstida"),      Icon: Cpu,      accent: "text-[var(--ep-purple)]" },
   ];
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -123,12 +168,12 @@ export default function MESExtended() {
       <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("mesSexBoshqaruvi")}</b></>}
         title={t("mesSexBoshqaruvi")}
-        subtitle="OEE monitoring, smena boshqaruvi, texnik xizmat"
+        subtitle={t("oeeMonitoringSmenaBoshqaruvi")}
       >
         {currentShift && (
           <Badge variant="secondary" className="flex items-center gap-1.5">
             <Clock className="h-3 w-3" />
-            {currentShift.shiftName || "Aktiv smena"}
+            {currentShift.shiftName || t("aktivSmena")}
           </Badge>
         )}
         <Button variant="outline" size="sm" onClick={() => refetchOee()}>
@@ -179,6 +224,21 @@ export default function MESExtended() {
             onHandoverToast={() =>
               toast({ title: "Smena o'tkazish boshlandi", description: "Yangi operator ma'lumotlarini kiriting" })
             }
+            onConfirmHandover={(incomingId, notes, issues) =>
+              createShiftHandover.mutate({
+                outgoing_supervisor: currentShift?.operator_id ?? currentShift?.operatorId ?? 0,
+                incoming_supervisor: incomingId,
+                notes,
+                issues,
+              })
+            }
+          />
+          <SosTab
+            sosHistory={sosHistory}
+            isLoading={sosLoading}
+            workCenters={sosWorkCenters}
+            onSubmit={data => createSos.mutate(data)}
+            isPending={createSos.isPending}
           />
         </div>
       </Tabs>

@@ -1,5 +1,3 @@
-
-import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module WarehouseDailyViewTypes
  * @description Types and constants for WarehouseDailyView page.
@@ -24,7 +22,7 @@ export interface MaterialKit {
   id: string;
   kitNumber: string;
   orderId: string;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'confirmed' | 'consumed';
+  status: 'pending' | 'prepared' | 'delivered' | 'confirmed' | 'in_use' | 'completed' | 'preparing' | 'ready' | 'consumed';
   barcode: string;
   scheduledDate: string;
   scheduledTime: string;
@@ -53,11 +51,14 @@ export interface Equipment {
   name: string;
 }
 
-export const STATUS_COLORS: Record<string, { bg: string; text: string; label: string; labelRu: string }> = {
-  pending: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-800 dark:text-yellow-200", label: tLabel('warehouse.WarehouseDailyView.kutilmoqda', "Kutilmoqda"), labelRu: "Ожидает" },
-  preparing: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-200", label: tLabel('warehouse.WarehouseDailyView.tayyorlanmoqda', "Tayyorlanmoqda"), labelRu: "Готовится" },
-  ready: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-800 dark:text-green-200", label: "Tayyor", labelRu: "Готов" },
-  delivered: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-800 dark:text-purple-200", label: "Yetkazildi", labelRu: "Доставлен" },
-  confirmed: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-800 dark:text-emerald-200", label: tLabel('warehouse.WarehouseDailyView.tasdiqlangan', "Tasdiqlangan"), labelRu: "Подтверждён" },
-  consumed: { bg: "bg-muted/40 dark:bg-gray-900/30", text: "text-foreground dark:text-gray-200", label: "Ishlatildi", labelRu: "Использован" },
+export const STATUS_COLORS: Record<string, { bg: string; text: string; labelKey: string }> = {
+  pending: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-800 dark:text-yellow-200", labelKey: "WarehouseDailyView.kutilmoqda" },
+  preparing: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-200", labelKey: "WarehouseDailyView.tayyorlanmoqda" },
+  // audit 2026-08-06 T13.5: canonical DB vocabulary (material_kits_status_chk) —
+  // 'preparing'/'ready' above are legacy display-only (pre-fix rows).
+  prepared: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-200", labelKey: "WarehouseDailyView.statusPrepared" },
+  ready: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-800 dark:text-green-200", labelKey: "WarehouseDailyView.statusReady" },
+  delivered: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-800 dark:text-purple-200", labelKey: "WarehouseDailyView.statusDelivered" },
+  confirmed: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-800 dark:text-emerald-200", labelKey: "WarehouseDailyView.tasdiqlangan" },
+  consumed: { bg: "bg-muted/40 dark:bg-gray-900/30", text: "text-foreground dark:text-gray-200", labelKey: "WarehouseDailyView.statusConsumed" },
 };

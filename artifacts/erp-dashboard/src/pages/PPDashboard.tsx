@@ -62,33 +62,33 @@ export default function PPDashboard() {
 
   const kpiItems: KpiItem[] = [
     {
-      label: "Faol Buyurtmalar",
+      label: t("faolBuyurtmalar"),
       value: isLoading || ordersLoading ? "—" : activeOrders,
-      desc: `${orders.length} ta jami buyurtma`,
+      desc: t("taJamiBuyurtma", { count: orders.length }),
       icon: Factory,
       accent: "text-[var(--ep-yellow)]",
       href: "/papka-orders",
     },
     {
-      label: "Bajarilgan",
+      label: t("bajarilganKpi"),
       value: isLoading || ordersLoading ? "—" : completedOrders,
-      desc: "Bu hafta tayyor bo'lgan",
+      desc: t("buHaftaTayyorBolgan"),
       icon: CheckCircle,
       accent: "text-[var(--ep-green)]",
       href: "/papka-orders",
     },
     {
-      label: "Stanoq Vazifalari",
+      label: t("stanoqVazifalariKpi"),
       value: isLoading || tasksLoading ? "—" : inProgressTasks,
-      desc: `${pendingTasks} ta kutmoqda`,
+      desc: t("taKutmoqda", { count: pendingTasks }),
       icon: Cog,
       accent: "text-[var(--ep-blue)]",
       href: "/machine-tasks",
     },
     {
-      label: "Rejalashtirish",
+      label: t("rejalashtirishKpi"),
       value: isLoading || ordersLoading ? "—" : `${planningPct}%`,
-      desc: "Bajarilgan/jami buyurtmalar",
+      desc: t("bajarilganJamiBuyurtmalar"),
       icon: Target,
       accent: "text-[var(--ep-purple)]",
       href: "/planning",
@@ -96,7 +96,7 @@ export default function PPDashboard() {
   ];
 
   const quickActions: QuickAction[] = [
-    { title: t("newOrder"), href: "/order-wizard", icon: Plus },
+    { title: t("newOrder"), href: "/order-create", icon: Plus },
     { title: t("scheduling"), href: "/planning", icon: Calendar },
     { title: t("createBom"), href: "/erp/pp/bom", icon: Package },
     { title: t("runMrp"), href: "/erp/pp/mrp", icon: ClipboardList },
@@ -143,7 +143,7 @@ export default function PPDashboard() {
             asChild
             data-testid="button-new-order-pp"
           >
-            <Link href="/order-wizard">
+            <Link href="/order-create">
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               {t("yangiBuyurtma")}
             </Link>

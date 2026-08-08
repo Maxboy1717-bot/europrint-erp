@@ -55,7 +55,7 @@ export function LeadFormDialog({open,
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">{editId ? "Lidni tahrirlash" : "Yangi Lid"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{editId ? t("lidniTahrirlash") : t("yangiLid")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -102,7 +102,7 @@ export function LeadFormDialog({open,
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(sourceLabels).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                    <SelectItem key={k} value={k}>{t(v)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -116,7 +116,7 @@ export function LeadFormDialog({open,
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(statusLabels).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                    <SelectItem key={k} value={k}>{t(v)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -166,7 +166,7 @@ export function LeadFormDialog({open,
             className="w-full"
             data-testid="button-submit-lead"
           >
-            {editId ? "Saqlash" : "Qo'shish"}
+            {editId ? t("save") : t("add")}
           </Button>
         </div>
       </DialogContent>
@@ -187,7 +187,7 @@ export function FunnelDialog({ open, onOpenChange, funnelData }: FunnelDialogPro
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{"Marketing voronkasi"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("marketingVoronkasi")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           {(Array.isArray(funnelData) ? funnelData : []).map((stage, i) => (
             <div
@@ -241,7 +241,7 @@ export function DeleteLeadConfirm({
       onOpenChange={onOpenChange}
       title={t("lidniOchirish")}
       description={t("ushbuMarketingLidniOchirishniTasdiqlaysizmi")}
-      confirmText="O'chirish"
+      confirmText={t("delete")}
       variant="destructive"
       onConfirm={onConfirm}
     />

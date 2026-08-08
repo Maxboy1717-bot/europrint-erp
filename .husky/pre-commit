@@ -83,6 +83,10 @@ node scripts/reviewer-schema-dup.mjs || exit 1
 # Qoida 17: notImplemented() taqiqlangan
 node scripts/check-no-new-stubs.mjs || exit 1
 
+# Fantom jadval: kod bazada yo'q jadvalga murojaat qilmasin (audit 2026-08-07 — 21 ta jonli
+# so'rov yo'li shunday edi va hech biri xato bermasdi; docs/audit/FANTOM-JADVALLAR-2026-08-07.md)
+node scripts/check-phantom-tables.mjs || exit 1
+
 # Qoida 18: FE-BE URL solishtirish (warning only)
 node scripts/check-fe-api-urls.mjs
 

@@ -12,35 +12,56 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download, FileText, Trophy, Clock, ClipboardList, CheckCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { format } from "date-fns";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, selectArray } from "@/lib/queryClient";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 import { useTranslation } from '@/lib/i18n';
+
+type RegularAttempt = {
+  id: string;
+  userName: string | null;
+  testName: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  score: number | null;
+  passed: boolean;
+};
+
+type AiAttempt = {
+  id: string;
+  userName: string | null;
+  positionName: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  analyzedAt: string | null;
+  score: number | null;
+  status: string;
+};
+
+/**
+ * Sana xavfsiz formatlash — `null`/`undefined`/yaroqsiz qiymatda `format()`
+ * chaqirilmaydi. `new Date(undefined)` → Invalid Date → date-fns `RangeError`
+ * tashlaydi va butun sahifa oq ekranga aylanadi.
+ */
+function formatDateSafe(value: string | null | undefined): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return format(d, "dd.MM.yyyy HH:mm");
+}
+
 export default function AllExams() {
   const { t } = useTranslation('common');
-  const { data: regularAttempts = [], isLoading: isLoadingRegular, isError, error, refetch} = useQuery<Array<{
-    id: string;
-    userName: string;
-    testName: string;
-    startedAt: string;
-    finishedAt: string | null;
-    score: number | null;
-    passed: boolean;
-  }>>({
+  // Backend `{ items, total }` qaytaradi (LmsAttemptsController.getAllAttempts) —
+  // `selectArray` uni massivga keltiradi, xom massiv kelsa ham ishlaydi.
+  const { data: regularAttempts = [], isLoading: isLoadingRegular, isError, error, refetch} = useQuery<unknown, Error, RegularAttempt[]>({
     queryKey: ["/api/attempts/all"],
+    select: (d) => selectArray<RegularAttempt>(d),
   });
 
-  const { data: aiAttempts = [], isLoading: isLoadingAI } = useQuery<Array<{
-    id: string;
-    userName: string;
-    positionName: string;
-    startedAt: string;
-    completedAt: string | null;
-    analyzedAt: string | null;
-    score: number | null;
-    status: string;
-  }>>({
+  const { data: aiAttempts = [], isLoading: isLoadingAI } = useQuery<unknown, Error, AiAttempt[]>({
     queryKey: ["/api/ai-exam/attempts"],
+    select: (d) => selectArray<AiAttempt>(d),
   });
 
   const qc = useQueryClient();
@@ -107,10 +128,11 @@ export default function AllExams() {
     URL.revokeObjectURL(url);
   };
 
-  const formatDuration = (startedAt: string, finishedAt: string | null) => {
-    if (!finishedAt) return "—";
+  const formatDuration = (startedAt: string | null, finishedAt: string | null) => {
+    if (!startedAt || !finishedAt) return "—";
     const start = new Date(startedAt);
     const end = new Date(finishedAt);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "—";
     const diffMs = end.getTime() - start.getTime();
     const minutes = Math.floor(diffMs / 60000);
     const seconds = Math.floor((diffMs % 60000) / 1000);
@@ -185,7 +207,9 @@ export default function AllExams() {
                     <TableCell className="font-medium px-6 text-foreground">{attempt.userName}</TableCell>
                     <TableCell className="px-6 text-foreground">{attempt.testName}</TableCell>
                     <TableCell className="px-6 text-foreground">
-                      {format(new Date(attempt.startedAt), "dd.MM.yyyy HH:mm")}
+                      {attempt.startedAt
+                        ? format(new Date(attempt.startedAt), "dd.MM.yyyy HH:mm")
+                        : "—"}
                     </TableCell>
                     <TableCell className="px-6 text-foreground">
                       {attempt.finishedAt
@@ -277,7 +301,9 @@ export default function AllExams() {
                     <TableCell className="font-medium px-6 text-foreground">{attempt.userName}</TableCell>
                     <TableCell className="px-6 text-foreground">{attempt.positionName}</TableCell>
                     <TableCell className="px-6 text-foreground">
-                      {format(new Date(attempt.startedAt), "dd.MM.yyyy HH:mm")}
+                      {attempt.startedAt
+                        ? format(new Date(attempt.startedAt), "dd.MM.yyyy HH:mm")
+                        : "—"}
                     </TableCell>
                     <TableCell className="px-6 text-foreground">
                       {attempt.completedAt

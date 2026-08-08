@@ -10,9 +10,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { glDocuments } from "./fi-schema";
-import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, productionSessions, products } from "./pp-schema";
+import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, products } from "./pp-schema";
 import { warehouseBins, warehouseTransactions, warehouses } from "./wms-schema";
-import { vendors, rawMaterials, goodsReceipts } from "./mm-procurement";
+import { vendors, rawMaterials } from "./mm-procurement";
 
 export const batches = pgTable("batches", {
   id: serial("id").primaryKey(),
@@ -95,6 +95,10 @@ export const materialCards = pgTable("material_cards", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
+  // B14 (2026-07-05): live columns existed but were never declared here, so
+  // Drizzle silently dropped them on every insert/select.
+  createdBy: integer("created_by"),
+  updatedBy: integer("updated_by"),
 }, (t) => [
   index("idx_material_cards_warehouse_id").on(t.warehouseId),
   index("idx_material_cards_category").on(t.category),
@@ -216,7 +220,8 @@ export const materialBatches = pgTable("material_batches", {
   expiryDate: varchar("expiry_date", { length: 10 }),
   supplierId: varchar("supplier_id"),
   supplierBatchNumber: varchar("supplier_batch_number", { length: 100 }),
-  goodsReceiptId: varchar("goods_receipt_id").references(() => goodsReceipts.id, { onDelete: "set null" }),
+  // NOTE: FK to goodsReceipts removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  goodsReceiptId: varchar("goods_receipt_id"),
   qcStatus: varchar("qc_status", { length: 20 }).default("pending"),
   barcode: varchar("barcode", { length: 100 }).unique(),
   qrCode: text("qr_code"),

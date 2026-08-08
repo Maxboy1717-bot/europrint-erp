@@ -17,7 +17,7 @@ export class PosQuarantineCheckJob {
     private readonly workflowSvc: QuarantineWorkflowService,
   ) {}
 
-  /** Har soatda 48 soatdan oshgan karantinlarni tekshirish */
+  /** Har soatda muddati o'tgan karantinlarni tekshirish (default 48 soat, business_settings 'pos.quarantine_escalation_hours' orqali sozlanadi) */
   @Cron(CronExpression.EVERY_HOUR)
   async checkExpiredQuarantine(): Promise<void> {
     this.logger.debug('Karantin muddatlari tekshirilmoqda...');

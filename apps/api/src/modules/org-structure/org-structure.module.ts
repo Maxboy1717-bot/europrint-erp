@@ -4,6 +4,10 @@
  */
 
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
+// T7-10-follow-up: CardRepository.resolveGate() reuses LmsCardGateService (EP-ORG-027) to
+// surface the mandatory-darslik gate to the FE card-gate banner (Q-40, no reimplementation).
+import { LmsModule } from '../lms/lms.module';
 import { OrgStructureController } from './org-structure.controller';
 import { OrgStructureService } from './org-structure.service';
 import { OrgExportService } from './org-export.service';
@@ -13,10 +17,49 @@ import { PositionFolderRepository } from './position-folder.repository';
 import { NodePortretService } from './node-portret.service';
 import { NodePortretRepository } from './node-portret.repository';
 import { OrgStructureRepository, OrgQueriesRepo, OrgMutationsRepo } from './org-structure.repository';
+import { CardController } from './card.controller';
+import { CardService } from './card.service';
+import { CardRepository } from './card.repository';
+import { RazryadController } from './razryad.controller';
+import { RazryadService } from './razryad.service';
+import { RazryadRepository } from './razryad.repository';
+import { RazryadHistoryController } from './razryad-history.controller';
+import { RazryadHistoryService } from './razryad-history.service';
+import { RazryadHistoryRepository } from './razryad-history.repository';
+// VISION-3340 #15 — razryad promotion certificate PDF (mirrors QcCertificatePdfService pattern)
+import { RazryadCertificatePdfService } from './razryad-certificate-pdf.service';
+import { CkpController } from './ckp.controller';
+import { CkpFactService } from './ckp-fact.service';
+import { CkpFactRepository } from './ckp-fact.repository';
+import { CardFolderController } from './card-folder.controller';
+import { CardFolderService } from './card-folder.service';
+import { CardFolderRepository } from './card-folder.repository';
+// T10-03 — card_templates (lavozim-turi shablon + apply-template → yangi karta urug'lash)
+import { CardTemplateController } from './card-template.controller';
+import { CardTemplateService } from './card-template.service';
+import { CardTemplateRepository } from './card-template.repository';
+// T10-08 — error_catalog (XATO-KATALOG: tipik xatolar/nuqson-sabablari, defect-dropdown manbai)
+import { ErrorCatalogController } from './error-catalog.controller';
+import { ErrorCatalogService } from './error-catalog.service';
+import { ErrorCatalogRepository } from './error-catalog.repository';
+// EP-ORG-046 — hr_question_bank CRUD (AI-imtihon savollar banki; avval faqat o'qilardi)
+import { QuestionBankController } from './question-bank.controller';
+import { QuestionBankService } from './question-bank.service';
+import { QuestionBankRepository } from './question-bank.repository';
+// EP-ORG-041 (ORG-CASCADE, owner decision #13)
+import { OrgCascadeListener } from './cascade/org-cascade.listener';
+import { OrgCascadeRepository } from './cascade/org-cascade.repository';
+// A67 (To'lqin 4 — ЦКП): MES completed → daily ЦКП fact feed (@OnEvent, via EventBridge)
+import { CkpMesFeedListener } from './ckp-mes-feed.listener';
+// T18-C2 (ЦКП KASKAD-AGREGAT): CkpReportedEvent → ota-zanjir SUM/AVG roll-up (@OnEvent)
+import { CkpCascadeListener } from './cascade/ckp-cascade.listener';
+// Gap #2 (T20-A1): lms.exam.passed → razryad-so'rov avto-zanjir (@OnEvent)
+import { ExamPassedRazryadListener } from './exam-passed-razryad.listener';
 
 @Module({
-  controllers: [OrgStructureController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository],
-  exports: [OrgStructureService, PositionFolderService],
+  imports: [NotificationsModule, LmsModule],
+  controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController, CardTemplateController, ErrorCatalogController, QuestionBankController],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, RazryadCertificatePdfService, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CkpCascadeListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository, ExamPassedRazryadListener, QuestionBankService, QuestionBankRepository],
+  exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService, CardTemplateService, CkpFactService],
 })
 export class OrgStructureModule {}

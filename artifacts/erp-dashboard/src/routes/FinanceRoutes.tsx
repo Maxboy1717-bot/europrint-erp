@@ -18,12 +18,13 @@ const ProductProfitability = lazy(() => import("@/pages/ProductProfitability"));
 const DailyKPIDashboard = lazy(() => import("@/pages/DailyKPIDashboard"));
 const AccountsReceivable = lazy(() => import("@/pages/AccountsReceivable"));
 const AccountsPayable = lazy(() => import("@/pages/AccountsPayable"));
+const ArApAging = lazy(() => import("@/pages/ArApAging"));
 const PayrollAutomation = lazy(() => import("@/pages/PayrollAutomation"));
 const MaterialsAccounting = lazy(() => import("@/pages/MaterialsAccounting"));
 const GLDocuments = lazy(() => import("@/pages/GLDocuments"));
 const ChartOfAccounts = lazy(() => import("@/pages/ChartOfAccounts"));
 const PeriodClosing = lazy(() => import("@/pages/PeriodClosing"));
-const CashRegister = lazy(() => import("@/pages/CashRegister"));
+const CashierHub = lazy(() => import("@/pages/CashierHub"));
 const IncomeExpense = lazy(() => import("@/pages/IncomeExpense"));
 const InventoryValuation = lazy(() => import("@/pages/InventoryValuation"));
 const AssetManagement = lazy(() => import("@/pages/AssetManagement"));
@@ -42,12 +43,13 @@ export const FINANCE_ROUTES: [string, React.ComponentType][] = [
   ['/finance/daily-kpi',               DailyKPIDashboard],
   ['/accounting/ar',                   AccountsReceivable],
   ['/accounting/ap',                   AccountsPayable],
+  ['/accounting/ar-ap-aging',          ArApAging],
   ['/accounting/payroll-automation',   PayrollAutomation],
   ['/accounting/materials',            MaterialsAccounting],
   ['/accounting/gl-documents',         GLDocuments],
   ['/accounting/chart-of-accounts',    ChartOfAccounts],
   ['/accounting/period-closing',       PeriodClosing],
-  ['/accounting/cash-register',        CashRegister],
+  ['/accounting/cashier-hub',          CashierHub],
   ['/accounting/income-expense',       IncomeExpense],
   ['/accounting/inventory-valuation',  InventoryValuation],
   ['/accounting/asset-management',     AssetManagement],

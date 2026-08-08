@@ -8,25 +8,25 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 
 const {
   getPendingSyncCountMock,
-  syncOrderDraftsMock,
   syncQcRecheckQueueMock,
   syncPosMovementsMock,
+  syncCrmQueueMock,
   toastMock,
   apiRequestMock,
 } = vi.hoisted(() => ({
   getPendingSyncCountMock: vi.fn(),
-  syncOrderDraftsMock: vi.fn(),
   syncQcRecheckQueueMock: vi.fn(),
   syncPosMovementsMock: vi.fn(),
+  syncCrmQueueMock: vi.fn(),
   toastMock: vi.fn(),
   apiRequestMock: vi.fn(),
 }));
 
 vi.mock('@/lib/erp-offline-db', () => ({
   getPendingSyncCount: () => getPendingSyncCountMock(),
-  syncOrderDrafts: (req: unknown) => syncOrderDraftsMock(req),
   syncQcRecheckQueue: (req: unknown) => syncQcRecheckQueueMock(req),
   syncPosMovements: (req: unknown) => syncPosMovementsMock(req),
+  syncCrmQueue: (req: unknown) => syncCrmQueueMock(req),
 }));
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -42,9 +42,9 @@ import { useErpOfflineSync } from './useErpOfflineSync';
 describe('useErpOfflineSync', () => {
   beforeEach(() => {
     getPendingSyncCountMock.mockReset();
-    syncOrderDraftsMock.mockReset();
     syncQcRecheckQueueMock.mockReset();
     syncPosMovementsMock.mockReset();
+    syncCrmQueueMock.mockReset();
     toastMock.mockReset();
     apiRequestMock.mockReset();
     Object.defineProperty(navigator, 'onLine', {
@@ -55,13 +55,11 @@ describe('useErpOfflineSync', () => {
 
   it('returns initial sync status with zero counts', () => {
     getPendingSyncCountMock.mockResolvedValue({
-      orderDrafts: 0,
       qcRechecks: 0,
       posMovements: 0,
       conflicts: 0,
     });
     const { result } = renderHook(() => useErpOfflineSync());
-    expect(result.current.status.orderDrafts).toBe(0);
     expect(result.current.status.qcRechecks).toBe(0);
     expect(result.current.status.posMovements).toBe(0);
     expect(result.current.status.syncing).toBe(false);
@@ -69,7 +67,6 @@ describe('useErpOfflineSync', () => {
 
   it('exposes isOnline reflecting navigator state', () => {
     getPendingSyncCountMock.mockResolvedValue({
-      orderDrafts: 0,
       qcRechecks: 0,
       posMovements: 0,
       conflicts: 0,
@@ -80,7 +77,6 @@ describe('useErpOfflineSync', () => {
 
   it('exposes refreshCounts and syncAll as functions', () => {
     getPendingSyncCountMock.mockResolvedValue({
-      orderDrafts: 0,
       qcRechecks: 0,
       posMovements: 0,
       conflicts: 0,
@@ -96,7 +92,6 @@ describe('useErpOfflineSync', () => {
     await act(async () => {
       await result.current.refreshCounts();
     });
-    expect(result.current.status.orderDrafts).toBe(0);
     expect(result.current.status.qcRechecks).toBe(0);
   });
 
@@ -106,7 +101,6 @@ describe('useErpOfflineSync', () => {
       value: false,
     });
     getPendingSyncCountMock.mockResolvedValue({
-      orderDrafts: 0,
       qcRechecks: 0,
       posMovements: 0,
       conflicts: 0,
@@ -118,19 +112,17 @@ describe('useErpOfflineSync', () => {
     expect(toastMock).toHaveBeenCalledWith(
       expect.objectContaining({ variant: 'destructive' }),
     );
-    expect(syncOrderDraftsMock).not.toHaveBeenCalled();
+    expect(syncQcRecheckQueueMock).not.toHaveBeenCalled();
   });
 
   it('refreshCounts updates state with returned counts', async () => {
     getPendingSyncCountMock.mockResolvedValue({
-      orderDrafts: 3,
       qcRechecks: 1,
       posMovements: 5,
       conflicts: 0,
     });
     const { result } = renderHook(() => useErpOfflineSync());
-    await waitFor(() => expect(result.current.status.orderDrafts).toBe(3));
-    expect(result.current.status.qcRechecks).toBe(1);
+    await waitFor(() => expect(result.current.status.qcRechecks).toBe(1));
     expect(result.current.status.posMovements).toBe(5);
   });
 });

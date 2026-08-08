@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Search, GitBranch, FileText, Plus, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tLabel } from "@/lib/i18n/tLabel";
-import { procurementApi, type ApprovalStep } from "@/lib/api/procurement.api";
+import { procurementApi, type ApprovalStep, type EmployeeSelectOption } from "@/lib/api/procurement.api";
 import { warehouseApi, type WarehouseType } from "@/lib/api/warehouse.api";
 
 export default function ProcurementPage() {
@@ -32,9 +32,11 @@ export default function ProcurementPage() {
   const [created, setCreated] = useState<Record<string, unknown> | null>(null);
   const [wlApprover, setWlApprover] = useState("");
   const [worklist, setWorklist] = useState<Record<string, unknown>[] | null>(null);
+  const [employees, setEmployees] = useState<EmployeeSelectOption[]>([]);
 
   useEffect(() => {
     warehouseApi.types().then(setWhTypes).catch(() => setWhTypes([]));
+    procurementApi.employeesForSelect().then((r) => setEmployees(Array.isArray(r) ? r : [])).catch(() => setEmployees([]));
   }, []);
 
   const loadChain = async () => {
@@ -148,8 +150,18 @@ export default function ProcurementPage() {
               <Input id="cTitle" value={cTitle} onChange={(e) => setCTitle(e.target.value)} />
             </div>
             <div>
-              <Label htmlFor="cEmp">{tLabel("common.procurement.requesterEmp", "Ta'minotchi (xodim ID)")}</Label>
-              <Input id="cEmp" value={cEmp} onChange={(e) => setCEmp(e.target.value)} placeholder="masalan 5" />
+              <Label htmlFor="cEmp">{tLabel("common.procurement.requesterEmp", "So'rov beruvchi xodim")}</Label>
+              <select
+                id="cEmp"
+                value={cEmp}
+                onChange={(e) => setCEmp(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">{tLabel("common.procurement.chooseEmployee", "Xodimni tanlang")}</option>
+                {employees.map((e) => (
+                  <option key={e.id} value={String(e.id)}>{e.full_name}{e.role ? ` (${e.role})` : ""}</option>
+                ))}
+              </select>
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="cDesc">{tLabel("common.procurement.material", "Material (nima olinadi)")}</Label>
@@ -204,8 +216,18 @@ export default function ProcurementPage() {
         <CardContent className="space-y-3">
           <div className="flex items-end gap-2">
             <div className="flex-1">
-              <Label htmlFor="wlApprover">{tLabel("common.procurement.approverUser", "Rahbar (user ID)")}</Label>
-              <Input id="wlApprover" value={wlApprover} onChange={(e) => setWlApprover(e.target.value)} placeholder="masalan 35" />
+              <Label htmlFor="wlApprover">{tLabel("common.procurement.approverUser", "Rahbar")}</Label>
+              <select
+                id="wlApprover"
+                value={wlApprover}
+                onChange={(e) => setWlApprover(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">{tLabel("common.procurement.chooseEmployee", "Xodimni tanlang")}</option>
+                {employees.filter((e) => e.user_id != null).map((e) => (
+                  <option key={e.id} value={String(e.user_id)}>{e.full_name}{e.role ? ` (${e.role})` : ""}</option>
+                ))}
+              </select>
             </div>
             <Button onClick={loadWorklist} disabled={loading}>
               <Search className="mr-1 h-4 w-4" /> {tLabel("common.procurement.view", "Ko'rish")}
@@ -246,8 +268,18 @@ export default function ProcurementPage() {
           <CardContent className="space-y-3">
             <div className="flex items-end gap-2">
               <div className="flex-1">
-                <Label htmlFor="empId">{tLabel("common.procurement.employeeId", "Xodim ID")}</Label>
-                <Input id="empId" value={empId} onChange={(e) => setEmpId(e.target.value)} placeholder={tLabel("common.procurement.egEmp", "masalan 5")} />
+                <Label htmlFor="empId">{tLabel("common.procurement.employeeId", "Xodim")}</Label>
+                <select
+                  id="empId"
+                  value={empId}
+                  onChange={(e) => setEmpId(e.target.value)}
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">{tLabel("common.procurement.chooseEmployee", "Xodimni tanlang")}</option>
+                  {employees.map((e) => (
+                    <option key={e.id} value={String(e.id)}>{e.full_name}{e.role ? ` (${e.role})` : ""}</option>
+                  ))}
+                </select>
               </div>
               <Button onClick={loadChain} disabled={loading}>
                 <Search className="mr-1 h-4 w-4" /> {tLabel("common.procurement.view", "Ko'rish")}

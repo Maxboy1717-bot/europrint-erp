@@ -11,9 +11,9 @@ import type { MovementStatus } from '../../application/services/quarantine-workf
 
 @Injectable()
 export class QuarantineWorkflowRepository {
-  async findQcHoldWarehouse(): Promise<{ id: number } | null> {
+  async findQcHoldWarehouse(code: string): Promise<{ id: number } | null> {
     const rows = await typedExecute<{ id: number }>(sql`
-      SELECT id FROM warehouses WHERE code = 'QC-HOLD' AND is_active = true LIMIT 1
+      SELECT id FROM warehouses WHERE code = ${code} AND is_active = true LIMIT 1
     `);
     return rows[0] ?? null;
   }
@@ -24,6 +24,20 @@ export class QuarantineWorkflowRepository {
       SELECT id, code FROM warehouses
        WHERE code IN (${codeList}) AND is_active = true
     `);
+  }
+
+  /** KARANTIN→QC bosqichini OMBOR_MENEJER/AI_GL hodisalariga ulash uchun minimal movement ma'lumoti. */
+  async findMovementBasic(movementId: number): Promise<{
+    id: number; movement_number: string; movement_type: string; status: string; created_by: number | null;
+  } | null> {
+    const rows = await typedExecute<{
+      id: number; movement_number: string; movement_type: string; status: string; created_by: number | null;
+    }>(sql`
+      SELECT id, movement_number, movement_type, status, created_by
+      FROM pos_movements
+      WHERE id = ${movementId}
+    `);
+    return rows[0] ?? null;
   }
 
   async updateMovementStatus(
@@ -73,15 +87,27 @@ export class QuarantineWorkflowRepository {
     `);
   }
 
-  async reduceWarehouseStock(warehouseId: number, materialCardId: number, qty: number): Promise<void> {
-    await db.execute(sql`
+  /**
+   * C1.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): GREATEST(quantity-qty,0) silently CLAMPED an
+   * oversell to zero instead of rejecting it — a movement claiming to move/discard more than
+   * QC-HOLD actually has would silently succeed with a wrong (clamped) result, masking the
+   * discrepancy instead of surfacing it. Now a guarded UPDATE (WHERE quantity/available_quantity
+   * both cover qty) — the caller gets a boolean and must decide how to react (log/skip) rather
+   * than the DB quietly lying about how much stock actually moved.
+   */
+  async reduceWarehouseStock(warehouseId: number, materialCardId: number, qty: number): Promise<boolean> {
+    const rows = await typedExecute<{ id: number }>(sql`
       UPDATE warehouse_stock
-         SET quantity           = GREATEST(quantity           - ${qty}, 0),
-             available_quantity = GREATEST(available_quantity - ${qty}, 0),
+         SET quantity           = quantity           - ${qty},
+             available_quantity = available_quantity - ${qty},
              last_updated_at    = NOW()
-       WHERE warehouse_id     = ${warehouseId}
-         AND material_id = ${materialCardId}
+       WHERE warehouse_id = ${warehouseId}
+         AND material_id  = ${materialCardId}
+         AND quantity           >= ${qty}
+         AND available_quantity >= ${qty}
+      RETURNING id
     `);
+    return rows.length > 0;
   }
 
   async updateInventoryPassport(movementId: number, decision: string, qcNote: string | null): Promise<void> {
@@ -96,12 +122,12 @@ export class QuarantineWorkflowRepository {
     } catch { /* passport table may not exist — intentionally swallowed */ }
   }
 
-  async escalateExpiredQuarantine(): Promise<Array<{ id: number; movement_number: string }>> {
+  async escalateExpiredQuarantine(escalationHours: number): Promise<Array<{ id: number; movement_number: string }>> {
     return typedExecute<{ id: number; movement_number: string }>(sql`
       UPDATE pos_movements
          SET status = 'qc_review', updated_at = NOW()
        WHERE status = 'karantin'
-         AND created_at < NOW() - INTERVAL '48 hours'
+         AND created_at < NOW() - (${escalationHours} || ' hours')::interval
       RETURNING id, movement_number
     `);
   }

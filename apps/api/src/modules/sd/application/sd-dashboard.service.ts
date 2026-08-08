@@ -86,4 +86,12 @@ export class SdDashboardService {
       };
     });
   }
+
+  async getLeaderboard(period: string | null, lim: number) {
+    return safeCall(async () => {
+      const rowsRes = await this.repo.getManagerLeaderboard(period, lim);
+      const leaderboard = rowsRes.ok ? rowsRes.data : [];
+      return { leaderboard, period: period ?? 'monthly' };
+    });
+  }
 }

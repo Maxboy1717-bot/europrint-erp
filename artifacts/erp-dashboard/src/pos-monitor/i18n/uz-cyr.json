@@ -1,4 +1,13 @@
 {
+  "anomaliya": "Аномалия",
+  "texkartaTekshiruvi": "Техкарта текшируви",
+  "texkartaQaytaTekshir": "Техкартани қайта текшир",
+  "texkartaRuxsat": "Техкарта бўйича рухсат берилган",
+  "texkartaBloklangan": "Техкарта блоклаган",
+  "texkarta": "Техкарта",
+  "qcQabul": "Қабул қилиш",
+  "qaytaIshlash": "Қайта ишлаш",
+  "qcChiqarish": "Таъминотчига қайтариш",
   "nav": {
     "dashboard": "Бош саҳифа",
     "newKirim": "📥 Янги Кирим",
@@ -6,7 +15,9 @@
     "newMaterial": "➕ Янги Материал",
     "materials": "Материаллар",
     "qcreview": "QC Кўриб чиқиш",
-    "myInventory": "Менинг инвертарим"
+    "myInventory": "Менинг инвертарим",
+    "handovers": "🤝 Смена топшириш",
+    "inTransit": "🚢 Йўлдаги импорт"
   },
   "common": {
     "search": "Қидириш...",
@@ -74,6 +85,7 @@
     "completed": "Бажарилди",
     "cancelled": "Бекор қилинди",
     "karantin": "Карантинда",
+    "qc_review": "QC кўриб чиқилмоқда",
     "DRAFT": "Қоралама",
     "SUBMITTED": "Юборилди",
     "APPROVED": "Тасдиқланди",
@@ -312,8 +324,15 @@
     "returnButton": "Қайтариш",
     "returnModal": "Қайтариш сўрови",
     "hrWarning": "Ишдан кетишдан олдин қайтаринг",
+    "hrWarningDetail": "Сиз ҳали {count} турдаги материал қайтармагансиз. Ишдан кетишдан олдин ҳаммасини қайтаринг.",
     "noItems": "Сизга ҳеч қандай материал берилмаган",
-    "checklist": "Қайтариш чеклисти"
+    "checklist": "Қайтариш чеклисти",
+    "downloadReport": "Ҳисоботни юклаб олиш",
+    "givenCount": "Берилган материаллар сони",
+    "currentBalance": "Ҳозирги баланс",
+    "returnedCount": "Қайтарилган материаллар",
+    "itemsList": "Материаллар рўйхати",
+    "optionalNote": "Ихтиёрий изоҳ"
   },
   "glPosting": {
     "title": "GL Постинг ҳолати",

@@ -14,6 +14,8 @@ describe('KnowledgeBaseService', () => {
     remove:   jest.fn().mockResolvedValue(Ok({ id: '1' })),
   };
 
+  const i18nStub = { t: jest.fn().mockResolvedValue('stub message') };
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -27,12 +29,12 @@ describe('KnowledgeBaseService', () => {
   });
 
   it('is constructible with a repo stub', () => {
-    const svc = new KnowledgeBaseService(repoStub as never);
+    const svc = new KnowledgeBaseService(repoStub as never, i18nStub as never);
     expect(svc).toBeInstanceOf(KnowledgeBaseService);
   });
 
   it('findById throws NotFoundException when row is null', async () => {
-    const svc = new KnowledgeBaseService(repoStub as never);
+    const svc = new KnowledgeBaseService(repoStub as never, i18nStub as never);
     await expect(svc.findById('nope')).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -42,14 +44,14 @@ describe('KnowledgeBaseService', () => {
   });
 
   it('create persists a valid dto via repo.insert', async () => {
-    const svc = new KnowledgeBaseService(repoStub as never);
+    const svc = new KnowledgeBaseService(repoStub as never, i18nStub as never);
     const result = await svc.create({ title: 'doc 1' });
     expect(repoStub.insert).toHaveBeenCalled();
     expect(result).toEqual({ id: '1', title: 't' });
   });
 
   it('create surfaces BadRequestException when zod validation fails', async () => {
-    const svc = new KnowledgeBaseService(repoStub as never);
+    const svc = new KnowledgeBaseService(repoStub as never, i18nStub as never);
     await expect(svc.create({})).rejects.toBeDefined();
     expect(repoStub.insert).not.toHaveBeenCalled();
   });

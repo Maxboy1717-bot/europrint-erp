@@ -17,7 +17,14 @@ export class PosTelegramExtService {
     private readonly configService: ConfigService,
     private readonly telegramExtRepo: PosTelegramExtRepository,
   ) {
-    this.botToken = this.configService.get<string>('POS_TELEGRAM_BOT_TOKEN');
+    // audit 2026-08-06 T23B: POS_TELEGRAM_BOT_TOKEN was defined nowhere
+    // (.env/.env.example/env.schema.ts) so every notification silently no-opped —
+    // "QC tekshiruv kerak"/"Tasdiqlash kutilmoqda" never reached anyone even with a
+    // working main bot. Fall back to the canonical TELEGRAM_BOT_TOKEN; the dedicated
+    // POS var still wins if the owner ever provisions a separate bot.
+    this.botToken =
+      this.configService.get<string>('POS_TELEGRAM_BOT_TOKEN') ??
+      this.configService.get<string>('TELEGRAM_BOT_TOKEN');
   }
 
   private async _sendNotif(
@@ -25,7 +32,10 @@ export class PosTelegramExtService {
     message: string,
     keyboard?: Array<Array<{ text: string; callback_data: string }>>,
   ){
-    if (!this.botToken) return;
+    if (!this.botToken) {
+      this.logger.warn('Telegram token yo\'q (POS_TELEGRAM_BOT_TOKEN/TELEGRAM_BOT_TOKEN) — POS xabari yuborilmadi');
+      return;
+    }
     try {
       const url = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
       const body = {

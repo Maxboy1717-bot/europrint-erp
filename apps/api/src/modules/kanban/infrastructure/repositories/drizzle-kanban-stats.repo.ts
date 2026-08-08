@@ -8,11 +8,10 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { eq, ne, sql } from 'drizzle-orm';
-import { db, kanban_tasks, runQuery } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { runQuery } from '@shared/db';
 import { safeCall, Result } from '@common/result';
-
-const COUNT_EXPR = sql<number>`count(*)::int`;
+import { KANBAN_RATING_WEIGHT_ACHIEVEMENT, KANBAN_RATING_WEIGHT_ESCALATION, KANBAN_CANCELLED_COLUMN_KEYWORDS } from '@common/constants/business.constants';
 
 @Injectable()
 export class DrizzleKanbanStatsRepository {
@@ -21,25 +20,161 @@ export class DrizzleKanbanStatsRepository {
 
   async getTaskStats(boardId?: string): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const boardFilter = boardId ? sql`AND board_id = ${boardId}` : sql``;
-      const today = _time.now().toISOString().split('T')[0];
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT
-          COUNT(*) FILTER (WHERE deleted_at IS NULL)                            AS total,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NULL)   AS in_progress,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date < ${today} AND completed_at IS NULL) AS overdue,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date = ${today})    AS today_due
-        FROM kanban_cards
-        WHERE 1=1 ${boardFilter}
-      `);
-      const s = rows.rows[0] ?? {};
+      const boardFilter     = boardId ? sql`AND board_id = ${boardId}`    : sql``;
+      const boardFilterKtt  = boardId
+        ? sql`AND ktt.card_id IN (SELECT id::text FROM kanban_cards WHERE board_id = ${boardId})`
+        : sql``;
+
+      // Kanban-15 A17: a card moved into a "bekor"/"cancel" column by
+      // moveOrderCardToCancelled (kanban-cards.repo.ts, on order cancellation)
+      // is NEUTRAL for the completion-rate KPI below — excluded from both the
+      // numerator and the denominator (not counted as a failure/incomplete
+      // task), and reported separately as `cancelled_tasks` so the exclusion
+      // stays visible instead of silently skewing the rate
+      // (business.constants.ts KANBAN_CANCELLED_COLUMN_KEYWORDS).
+      const cancelledColumnMatch = sql.join(
+        KANBAN_CANCELLED_COLUMN_KEYWORDS.map((kw) => sql`kcol.name ILIKE ${'%' + kw + '%'}`),
+        sql` OR `,
+      );
+
+      // ── 1. Summary ────────────────────────────────────────────────────────
+      const [summaryRes, weeklyRes, timeRes, empRes] = await Promise.all([
+
+        runQuery<Record<string, unknown>>(sql`
+          WITH card_flags AS (
+            SELECT
+              kc.*,
+              EXISTS (
+                SELECT 1 FROM kanban_columns kcol
+                WHERE kcol.id = kc.column_id AND kcol.deleted_at IS NULL AND (${cancelledColumnMatch})
+              ) AS is_cancelled
+            FROM kanban_cards kc
+            WHERE 1=1 ${boardFilter}
+          )
+          SELECT
+            COUNT(*) FILTER (WHERE deleted_at IS NULL)                                               AS total_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)                  AS completed_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NULL)                      AS pending_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND accepted_at IS NOT NULL AND completed_at IS NULL) AS accepted_not_completed,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND source = 'telegram')                       AS telegram_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(due_date FROM 1 FOR 10)::date < CURRENT_DATE AND completed_at IS NULL) AS overdue_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND is_cancelled)                               AS cancelled_tasks,
+            ROUND(
+              CASE WHEN COUNT(*) FILTER (WHERE deleted_at IS NULL AND NOT is_cancelled) = 0 THEN 0
+                   ELSE COUNT(*) FILTER (WHERE deleted_at IS NULL AND NOT is_cancelled AND completed_at IS NOT NULL)::numeric
+                      / COUNT(*) FILTER (WHERE deleted_at IS NULL AND NOT is_cancelled) * 100
+              END
+            )                                                                                         AS completion_rate,
+            ROUND(
+              AVG(
+                EXTRACT(EPOCH FROM (completed_at - created_at)) / 86400.0
+              ) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)
+            )                                                                                         AS avg_completion_days
+          FROM card_flags
+        `),
+
+        // ── 2. Weekly trend (last 7 days) ──────────────────────────────────
+        runQuery<Record<string, unknown>>(sql`
+          SELECT
+            DATE_TRUNC('day', d.day)::date::text                        AS date,
+            TO_CHAR(d.day, 'Dy')                                        AS day_name,
+            COUNT(kc_created.id)::int                                   AS created,
+            COUNT(kc_completed.id)::int                                 AS completed
+          FROM generate_series(
+            CURRENT_DATE - INTERVAL '6 days',
+            CURRENT_DATE,
+            INTERVAL '1 day'
+          ) AS d(day)
+          LEFT JOIN kanban_cards kc_created
+            ON kc_created.deleted_at IS NULL
+            AND DATE_TRUNC('day', kc_created.created_at) = DATE_TRUNC('day', d.day)
+            ${boardFilter}
+          LEFT JOIN kanban_cards kc_completed
+            ON kc_completed.deleted_at IS NULL
+            AND kc_completed.completed_at IS NOT NULL
+            AND DATE_TRUNC('day', kc_completed.completed_at) = DATE_TRUNC('day', d.day)
+            ${boardFilter}
+          GROUP BY d.day
+          ORDER BY d.day
+        `),
+
+        // ── 3. Time tracking ───────────────────────────────────────────────
+        runQuery<Record<string, unknown>>(sql`
+          SELECT
+            COALESCE(SUM(ktt.duration_minutes), 0)::int AS total_tracked_minutes
+          FROM kanban_time_tracks ktt
+          WHERE ktt.ended_at IS NOT NULL
+            ${boardFilterKtt}
+        `),
+
+        // ── 4. Employee stats ──────────────────────────────────────────────
+        runQuery<Record<string, unknown>>(sql`
+          SELECT
+            kc.owner_user_id::text                                       AS user_id,
+            COUNT(*)::int                                                 AS assigned,
+            COUNT(*) FILTER (WHERE kc.completed_at IS NOT NULL)::int     AS completed,
+            COUNT(*) FILTER (
+              WHERE kc.completed_at IS NOT NULL
+                AND kc.due_date IS NOT NULL
+                AND kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+                AND kc.completed_at <= kc.due_date::timestamp
+            )::int                                                        AS on_time,
+            COUNT(*) FILTER (
+              WHERE kc.completed_at IS NOT NULL
+                AND kc.due_date IS NOT NULL
+                AND kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+                AND kc.completed_at > kc.due_date::timestamp
+            )::int                                                        AS late,
+            ROUND(
+              AVG(
+                EXTRACT(EPOCH FROM (kc.completed_at - kc.created_at)) / 3600.0
+              ) FILTER (WHERE kc.completed_at IS NOT NULL)
+            )::float                                                      AS avg_completion_time
+          FROM kanban_cards kc
+          WHERE kc.deleted_at IS NULL
+            AND kc.owner_user_id IS NOT NULL
+            ${boardFilter}
+          GROUP BY kc.owner_user_id
+          ORDER BY assigned DESC
+          LIMIT 50
+        `),
+      ]);
+
+      const s  = summaryRes.rows[0]  ?? {};
+      const t  = timeRes.rows[0]     ?? {};
+
+      const totalTrackedMinutes = Number(t.total_tracked_minutes ?? 0);
+
       return {
-        total:      Number(s.total       ?? 0),
-        completed:  Number(s.completed   ?? 0),
-        inProgress: Number(s.in_progress ?? 0),
-        overdue:    Number(s.overdue     ?? 0),
-        todayDue:   Number(s.today_due   ?? 0),
+        summary: {
+          totalTasks:           Number(s.total_tasks           ?? 0),
+          completedTasks:       Number(s.completed_tasks       ?? 0),
+          pendingTasks:         Number(s.pending_tasks         ?? 0),
+          acceptedNotCompleted: Number(s.accepted_not_completed ?? 0),
+          telegramTasks:        Number(s.telegram_tasks        ?? 0),
+          overdueTasks:         Number(s.overdue_tasks         ?? 0),
+          cancelledTasks:       Number(s.cancelled_tasks       ?? 0),
+          completionRate:       Number(s.completion_rate       ?? 0),
+          avgCompletionDays:    Number(s.avg_completion_days   ?? 0),
+        },
+        weeklyTrend: (Array.isArray(weeklyRes.rows) ? weeklyRes.rows : []).map((r) => ({
+          date:      String(r.date      ?? ''),
+          dayName:   String(r.day_name  ?? ''),
+          created:   Number(r.created   ?? 0),
+          completed: Number(r.completed ?? 0),
+        })),
+        timeTracking: {
+          totalTrackedMinutes,
+          totalTrackedHours: Math.round(totalTrackedMinutes / 60),
+        },
+        employeeStats: (Array.isArray(empRes.rows) ? empRes.rows : []).map((r) => ({
+          userId:            String(r.user_id            ?? ''),
+          assigned:          Number(r.assigned           ?? 0),
+          completed:         Number(r.completed          ?? 0),
+          onTime:            Number(r.on_time            ?? 0),
+          late:              Number(r.late               ?? 0),
+          avgCompletionTime: Number(r.avg_completion_time ?? 0),
+        })),
       };
     });
   }
@@ -55,24 +190,47 @@ export class DrizzleKanbanStatsRepository {
           u.email,
           COUNT(*) FILTER (WHERE kc.deleted_at IS NULL)                              AS total,
           COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.due_date < ${today} AND kc.completed_at IS NULL) AS overdue
+          COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.due_date < ${today} AND kc.completed_at IS NULL) AS overdue,
+          COUNT(DISTINCT n.id) FILTER (WHERE kc.deleted_at IS NULL)                  AS escalation_count
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        LEFT JOIN notifications n
+               ON n.reference_type = 'kanban_card'
+              AND n.reference_id = kc.id
+              AND n.type = 'kanban_overdue'
+              AND n.user_id = kc.owner_user_id
         WHERE kc.owner_user_id IS NOT NULL ${boardFilter}
         GROUP BY kc.owner_user_id, u.first_name, u.last_name, u.email
         ORDER BY total DESC
         LIMIT 50
       `);
       return {
-        employees: rows.rows.map((r) => ({
-          userId:    r.owner_user_id,
-          fullName:  r.full_name ?? 'Noma\'lum',
-          email:     r.email ?? '',
-          total:     Number(r.total     ?? 0),
-          completed: Number(r.completed ?? 0),
-          overdue:   Number(r.overdue   ?? 0),
-          rate:      Number(r.total) > 0 ? Math.round((Number(r.completed) / Number(r.total)) * 100) : 0,
-        })),
+        // Vision-1000-answers/15-kanban.md #39 (Item A39): KPI_score = achievement*0.7
+        // - escalation_penalty*0.3. `rate` (existing achievement %) and `escalationCount`
+        // (new — count of 'kanban_overdue' notifications this owner received, written by
+        // kanban-overdue-escalation.cron.ts / EP-KAN-045) are combined into `ratingScore`
+        // using the named weights from business.constants.ts. Existing fields
+        // (total/completed/overdue/rate) are unchanged.
+        employees: rows.rows.map((r) => {
+          const total = Number(r.total ?? 0);
+          const completed = Number(r.completed ?? 0);
+          const achievementRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+          const escalationCount = Number(r.escalation_count ?? 0);
+          const ratingScore = Math.round(
+            (achievementRate * KANBAN_RATING_WEIGHT_ACHIEVEMENT - escalationCount * KANBAN_RATING_WEIGHT_ESCALATION) * 100,
+          ) / 100;
+          return {
+            userId:          r.owner_user_id,
+            fullName:        r.full_name ?? 'Noma\'lum',
+            email:           r.email ?? '',
+            total,
+            completed,
+            overdue:         Number(r.overdue ?? 0),
+            rate:            achievementRate,
+            escalationCount,
+            ratingScore,
+          };
+        }),
       };
     });
   }
@@ -89,13 +247,13 @@ export class DrizzleKanbanStatsRepository {
           kb.name    AS board_name,
           EXTRACT(EPOCH FROM (NOW() - kc.created_at)) / 3600 AS hours_old
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        LEFT JOIN kanban_columns kco ON kco.id::text = kc.column_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        LEFT JOIN kanban_columns kco ON kco.id = kc.column_id
+        LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         WHERE kc.deleted_at IS NULL
           AND kc.completed_at IS NULL
           AND (
-            (kc.due_date < CURRENT_DATE)
+            (kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(kc.due_date FROM 1 FOR 10)::date < CURRENT_DATE)
             OR (LOWER(kco.name) LIKE '%kiruvchi%' AND kc.created_at < NOW() - INTERVAL '24 hours')
             OR (LOWER(kco.name) LIKE '%inbox%'    AND kc.created_at < NOW() - INTERVAL '24 hours')
           )
@@ -124,12 +282,19 @@ export class DrizzleKanbanStatsRepository {
 
   async getSprintInfo(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const active = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(ne(kanban_tasks.status, 'done'));
-      const done = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(eq(kanban_tasks.status, 'done'));
+      // TWO-WORLD FIX: read canonical kanban_cards (has rows) instead of the
+      // dead kanban_tasks table (always empty). kanban_cards has no `status`
+      // column — completion is derived from `completed_at` (NULL = active).
+      const rows = await runQuery<Record<string, unknown>>(sql`
+        SELECT
+          COUNT(*) FILTER (WHERE completed_at IS NULL)     AS active,
+          COUNT(*) FILTER (WHERE completed_at IS NOT NULL) AS done
+        FROM kanban_cards
+        WHERE deleted_at IS NULL
+      `);
+      const s = rows.rows[0] ?? {};
       return {
-        activeSprint: { totalCards: Number(active[0]?.count ?? 0), completedCards: Number(done[0]?.count ?? 0) },
+        activeSprint: { totalCards: Number(s.active ?? 0), completedCards: Number(s.done ?? 0) },
         upcomingSprints: [],
         completedSprints: [],
       };
@@ -142,7 +307,7 @@ export class DrizzleKanbanStatsRepository {
         SELECT DISTINCT kc.owner_user_id AS user_id,
                (u.first_name || ' ' || u.last_name) AS full_name, u.email
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
         WHERE kc.owner_user_id IS NOT NULL AND kc.deleted_at IS NULL
         ORDER BY full_name
       `);
@@ -155,9 +320,9 @@ export class DrizzleKanbanStatsRepository {
       const rows = await runQuery<Record<string, unknown>>(sql`
         SELECT kc.*, (u.first_name || ' ' || u.last_name) AS owner_name
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
         WHERE kc.deleted_at IS NULL AND kc.completed_at IS NULL
-          AND kc.due_date < CURRENT_DATE
+          AND kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(kc.due_date FROM 1 FOR 10)::date < CURRENT_DATE
         ORDER BY kc.due_date ASC
         LIMIT 100
       `);
@@ -170,8 +335,8 @@ export class DrizzleKanbanStatsRepository {
       const rows = await runQuery<Record<string, unknown>>(sql`
         SELECT kc.*, kco.name AS column_name, kb.name AS board_name
         FROM kanban_cards kc
-        LEFT JOIN kanban_columns kco ON kco.id::text = kc.column_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
+        LEFT JOIN kanban_columns kco ON kco.id = kc.column_id
+        LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         WHERE kc.owner_user_id = ${employeeId} AND kc.deleted_at IS NULL
         ORDER BY kc.created_at DESC
       `);
@@ -185,7 +350,7 @@ export class DrizzleKanbanStatsRepository {
         SELECT
           COUNT(*)                                                                AS total,
           COUNT(*) FILTER (WHERE completed_at IS NOT NULL)                       AS completed,
-          COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
+          COUNT(*) FILTER (WHERE due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(due_date FROM 1 FOR 10)::date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
           COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')        AS last_7_days,
           COUNT(*) FILTER (WHERE completed_at >= NOW() - INTERVAL '7 days')      AS completed_7_days
         FROM kanban_cards WHERE deleted_at IS NULL
@@ -209,10 +374,10 @@ export class DrizzleKanbanStatsRepository {
         SELECT kc.id, kc.title, kc.due_date, kc.priority, kc.owner_user_id,
                (u.first_name || ' ' || u.last_name) AS owner_name, kb.name AS board_name
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         WHERE kc.deleted_at IS NULL AND kc.completed_at IS NULL
-          AND kc.due_date < CURRENT_DATE
+          AND kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(kc.due_date FROM 1 FOR 10)::date < CURRENT_DATE
         ORDER BY kc.due_date ASC
         LIMIT 200
       `);
@@ -230,7 +395,7 @@ export class DrizzleKanbanStatsRepository {
         SELECT
           COUNT(*)                                                                AS total,
           COUNT(*) FILTER (WHERE completed_at IS NOT NULL)                       AS completed,
-          COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
+          COUNT(*) FILTER (WHERE due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(due_date FROM 1 FOR 10)::date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
           COUNT(DISTINCT owner_user_id) FILTER (WHERE owner_user_id IS NOT NULL) AS active_users
         FROM kanban_cards WHERE deleted_at IS NULL
       `);
@@ -244,26 +409,93 @@ export class DrizzleKanbanStatsRepository {
     });
   }
 
-  async getEmployeePerformance(): Promise<Result<Record<string, unknown>>> {
+  async getEmployeePerformance(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
+      // NOTE: kanban_cards.owner_user_id = integer, users.id = integer (direct join).
+      // kanban_time_tracks.card_id = text, kanban_results.card_id = text → cast kc.id::text.
+      // Return shape matches FE EmployeePerformance[] (user.id/fullName/profileImageUrl + totals).
       const rows = await runQuery<Record<string, unknown>>(sql`
         SELECT
-          kc.owner_user_id,
-          (u.first_name || ' ' || u.last_name) AS full_name,
-          COUNT(*) AS total,
-          COUNT(*) FILTER (WHERE kc.completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE kc.due_date < CURRENT_DATE AND kc.completed_at IS NULL) AS overdue
+          u.id::text                                     AS user_id,
+          COALESCE(u.first_name || ' ' || u.last_name, u.email) AS full_name,
+          u.profile_image_url,
+          COUNT(DISTINCT kc.id)::int                    AS total_tasks,
+          COALESCE(SUM(ktt.duration_minutes), 0)::int   AS total_time_minutes,
+          COUNT(DISTINCT kr.id)::int                    AS total_results
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        WHERE kc.owner_user_id IS NOT NULL AND kc.deleted_at IS NULL
-        GROUP BY kc.owner_user_id, u.first_name, u.last_name
-        ORDER BY completed DESC
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        LEFT JOIN kanban_time_tracks ktt
+               ON ktt.card_id = kc.id::text AND ktt.user_id = u.id
+        LEFT JOIN kanban_results kr ON kr.card_id = kc.id::text
+        WHERE kc.deleted_at IS NULL AND kc.owner_user_id IS NOT NULL
+        GROUP BY u.id, u.first_name, u.last_name, u.email, u.profile_image_url
+        ORDER BY total_tasks DESC
         LIMIT 50
       `);
-      return {
-        employees: rows.rows,
-        generatedAt: _time.now().toISOString(),
-      };
+      return rows.rows.map((r) => ({
+        user: {
+          id:              String(r.user_id ?? ''),
+          fullName:        String(r.full_name ?? 'Noma\'lum'),
+          profileImageUrl: (r.profile_image_url as string | null) ?? null,
+        },
+        totalTasks:       Number(r.total_tasks       ?? 0),
+        totalTimeMinutes: Number(r.total_time_minutes ?? 0),
+        totalResults:     Number(r.total_results      ?? 0),
+      }));
+    });
+  }
+
+  async getResourceAllocation(boardId?: string): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      // "Resource allocation" = active (not completed, not soft-deleted) card
+      // workload per owner_user_id, bucketed by due_date window — today /
+      // next 7 days / current calendar month — plus `total` = all open cards
+      // assigned regardless of due date. Mirrors getEmployeePerformance's
+      // user{id,fullName,profileImageUrl} contract above (FE AllocationData,
+      // kanban-types.ts / ResourceAllocationView.tsx).
+      const boardFilter = boardId ? sql`AND kc.board_id = ${boardId}` : sql``;
+      const rows = await runQuery<Record<string, unknown>>(sql`
+        SELECT
+          u.id::text                                             AS user_id,
+          COALESCE(u.first_name || ' ' || u.last_name, u.email)  AS full_name,
+          u.profile_image_url,
+          COUNT(*) FILTER (
+            WHERE kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+              AND substring(kc.due_date FROM 1 FOR 10)::date = CURRENT_DATE
+          )::int                                                  AS today,
+          COUNT(*) FILTER (
+            WHERE kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+              AND substring(kc.due_date FROM 1 FOR 10)::date
+                    BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '6 days'
+          )::int                                                  AS this_week,
+          COUNT(*) FILTER (
+            WHERE kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+              AND substring(kc.due_date FROM 1 FOR 10)::date >= CURRENT_DATE
+              AND substring(kc.due_date FROM 1 FOR 10)::date
+                    < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+          )::int                                                  AS this_month,
+          COUNT(*)::int                                           AS total
+        FROM kanban_cards kc
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        WHERE kc.deleted_at IS NULL
+          AND kc.completed_at IS NULL
+          AND kc.owner_user_id IS NOT NULL
+          ${boardFilter}
+        GROUP BY u.id, u.first_name, u.last_name, u.email, u.profile_image_url
+        ORDER BY total DESC
+        LIMIT 50
+      `);
+      return rows.rows.map((r) => ({
+        user: {
+          id:              String(r.user_id ?? ''),
+          fullName:        String(r.full_name ?? 'Noma\'lum'),
+          profileImageUrl: (r.profile_image_url as string | null) ?? null,
+        },
+        today:     Number(r.today      ?? 0),
+        thisWeek:  Number(r.this_week  ?? 0),
+        thisMonth: Number(r.this_month ?? 0),
+        total:     Number(r.total      ?? 0),
+      }));
     });
   }
 }

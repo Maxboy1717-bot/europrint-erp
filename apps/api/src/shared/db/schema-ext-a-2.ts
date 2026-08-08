@@ -40,6 +40,9 @@ export const mm_goods_receipt_items = pgTable('mm_goods_receipt_items', {
   ordered_qty:   numeric('ordered_qty', { precision: 15, scale: 4 }).default('0'),
   received_qty:  numeric('received_qty', { precision: 15, scale: 4 }).default('0'),
   batch_number:  text('batch_number'),
+  // vision 10-wms#5: receipt-location confirm gate — nullable FK to warehouse_zones / warehouse_bins
+  zone_id:         integer('zone_id'),
+  bin_location_id: integer('bin_location_id'),
   created_at:    timestamp('created_at').defaultNow(),
 });
 
@@ -73,7 +76,7 @@ export const mm_materials_ext = canonicalMmMaterials;
 // mm_vendors: re-exported from canonical definition in schema-misc-qc.ts
 export const mm_vendors_ext = canonicalMmVendors;
 
-// ─── Technology: Tech Cards & Clients ────────────────────────────────────────
+// ─── Technology: Tech Cards ───────────────────────────────────────────────────
 
 export const tech_cards = pgTable('tech_cards', {
   id:              serial('id').primaryKey(),
@@ -83,12 +86,6 @@ export const tech_cards = pgTable('tech_cards', {
   print_type:      text('print_type'),
   finishing:       text('finishing'),
   created_at:      timestamp('created_at').defaultNow(),
-});
-
-export const clients = pgTable('clients', {
-  id:         serial('id').primaryKey(),
-  name:       text('name'),
-  created_at: timestamp('created_at').defaultNow(),
 });
 
 // ─── Technology: Papka Orders (extended) ─────────────────────────────────────

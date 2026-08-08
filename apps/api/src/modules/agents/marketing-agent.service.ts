@@ -7,6 +7,7 @@ import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AiRouterCallService } from '../ai/application/services/ai-router-call.service';
+import type { AiRequest } from '../ai/domain/types/ai.types';
 import { isOk } from '@common/result';
 import { VIP_REVENUE_THRESHOLD_UZS, VIP_ACTIVE_WINDOW_DAYS, CHURN_MED_DAYS } from '@common/constants/business.constants';
 
@@ -35,12 +36,15 @@ export class MarketingAgentService {
   /** Marketing matni generatsiya */
   async generateContent(brief: string, lang: 'uz' | 'ru' = 'uz'): Promise<{ text: string }> {
     return this.audit.wrap({ agentName: this.AGENT, action: 'generate_content', aiUsed: true }, async () => {
-      const r = await this.ai.callClaude({
+      const contentReq: AiRequest = {
         taskType: 'marketing.content_generate',
         systemPrompt: `Sen Europrint marketing yordamchisisan. ${lang === 'ru' ? 'Rus' : "O'zbek"} tilida professional marketing matn yoz.`,
         prompt: brief,
         maxTokens: 600,
-      });
+      };
+      const r = await this.ai.callClaude(contentReq);
+      // 20-agent audit 2026-08-06: logUsage() must be called explicitly.
+      if (isOk(r)) await this.ai.logUsage('claude', contentReq, r.data);
       return { text: isOk(r) ? r.data.text : 'Matn yaratilmadi' };
     });
   }

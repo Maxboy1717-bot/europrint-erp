@@ -4,10 +4,11 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const GetProductionOrdersDtoSchema = z.object({
   status: z.enum(['pending', 'scheduled', 'in_progress', 'completed', 'on_hold', 'cancelled']).optional(),
-  salesOrderId: z.string().uuid().optional(),
+  salesOrderId: IntegerIdSchema.optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   page: z.number().int().positive().default(1),
@@ -27,7 +28,7 @@ export const GetRoutingsDtoSchema = z.object({
 });
 
 export const GetMrpReportDtoSchema = z.object({
-  productionOrderId: z.string().uuid().optional(),
+  productionOrderId: IntegerIdSchema.optional(),
 });
 
 export type GetProductionOrdersDto = z.infer<typeof GetProductionOrdersDtoSchema>;

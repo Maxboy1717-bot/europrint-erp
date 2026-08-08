@@ -86,7 +86,7 @@ describe('MmVendorsPrService', () => {
       { material_id: 2, quantity: 3, unit_price: 200 },
     ]);
 
-    expect(repo.createRequisition).toHaveBeenCalledWith('PR-77', 1, '2026-06-01', null);
+    expect(repo.createRequisition).toHaveBeenCalledWith('PR-77', 1, '2026-06-01', null, 1, 5);
     expect(repo.createRequisitionItem).toHaveBeenCalledTimes(2);
     expect(repo.createRequisitionItem).toHaveBeenNthCalledWith(1, 77, 1, 5, 100);
     expect(repo.createRequisitionItem).toHaveBeenNthCalledWith(2, 77, 2, 3, 200);

@@ -54,6 +54,20 @@ export class PosStockReservationRepository {
     await db.update(stockReservations).set({ status: 'FULFILLED', issuedAt: _time.now() }).where(and(sql`${stockReservations}.pos_movement_id = ${posMovementId}`, eq(stockReservations.status, 'ACTIVE')));
   }
 
+  /**
+   * G1-2 BRON-BLOK (2026-07-02): material+ombor bo'yicha ACTIVE bron yig'indisi.
+   * Semantika pos-stock-issuable.repository.findActiveReservations bilan BIR XIL:
+   * UPPER(status)='ACTIVE', miqdor = COALESCE(reserved_quantity, quantity, 0).
+   * NOTE: raw SQL — jonli jadvalda drift ustunlar (reserved_quantity/quantity)
+   * COALESCE bilan birlashtiriladi; Drizzle select bunga tekis mos kelmaydi.
+   */
+  async sumActiveReservations(materialCardId: number, warehouseId: number): Promise<Result<number>> {
+    return safeCall(async () => {
+      const r = await exec(sql`SELECT COALESCE(SUM(COALESCE(reserved_quantity, quantity, 0)), 0) AS total FROM stock_reservations WHERE material_id = ${materialCardId} AND warehouse_id = ${warehouseId} AND UPPER(COALESCE(status, '')) = 'ACTIVE'`);
+      return Number(r[0]?.total ?? 0);
+    }, 'DB_ERROR');
+  }
+
   async expireOldReservations(): Promise<Result<number>> {
     return safeCall(async () => {
       const r = await exec(sql`UPDATE stock_reservations SET status = 'EXPIRED', updated_at = NOW() WHERE status = 'ACTIVE' AND expires_at < NOW() RETURNING id`);

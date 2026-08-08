@@ -10,7 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
 import { design_orders } from '@shared/db/schema-misc';
 import { SQL, SQLWrapper, count, eq, sql } from 'drizzle-orm';
-import { safeCall, Ok, Result } from '@common/result';
+import { safeCall, Ok, Err, AppErr, Result } from '@common/result';
 import { execNotificationMarkRead } from '@common/database/queries-remaining';
 import type { IDesignExtendedRepo } from '../../domain/repositories/i-design-extended.repo';
 
@@ -66,13 +66,17 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
   }
 
   async findTemplates(): Promise<Result<{ id: string; name: string; category: string }[]>> {
-    return Ok([
-      { id: 'tmpl-001', name: 'EuroPrint Standart', category: 'brand' },
-      { id: 'tmpl-002', name: 'Qoʻyimta Klassik', category: 'packaging' },
-      { id: 'tmpl-003', name: 'Flayer Minimal', category: 'print' },
-      { id: 'tmpl-004', name: 'Vizitka Corporate', category: 'card' },
-      { id: 'tmpl-005', name: 'Banner Outdoor', category: 'banner' },
-    ]);
+    return safeCall(async () => {
+      const rows = await exec(sql`
+        SELECT id::text AS id, name, type AS category,
+               file_url AS "fileUrl", thumbnail_url AS "thumbnailUrl",
+               tags, status
+        FROM design_library_items
+        WHERE deleted_at IS NULL
+        ORDER BY created_at DESC LIMIT 100
+      `);
+      return rows as unknown as { id: string; name: string; category: string }[];
+    });
   }
 
   async generateDesigns(orderId: string, prompt: string, count: number): Promise<Result<{ designs: unknown[]; generationTime: number }>> {
@@ -118,7 +122,30 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
   }
 
   async generateMockup(designId: string, productType: string): Promise<Result<{ mockupUrl: string; designId: string; productType: string }>> {
-    return Ok({ mockupUrl: `/mockups/${designId}-${productType}.png`, designId, productType });
+    const found = await safeCall(async () => {
+      const rows = await exec(sql`
+        SELECT id::text AS id, image_url AS "imageUrl" FROM designs WHERE id = ${parseInt(designId, 10)}
+      `);
+      const r = rows[0];
+      if (!r) throw new Error('Design topilmadi');
+      return r['imageUrl'] ? String(r['imageUrl']) : null;
+    }, 'DB_ERROR');
+    if (!found.ok) return found as Result<never>;
+    // No real 3D-render pipeline exists yet (nothing in the codebase ever
+    // writes designs.image_url). Previously this fabricated a
+    // `/mockups/{id}-{type}.png` URL that pointed at a file that was never
+    // created — the FE showed a "3D Mockup yaratildi!" success toast and
+    // rendered a broken <img>. Be honest instead: only return a mockupUrl
+    // when a real source image exists; otherwise report NOT_IMPLEMENTED.
+    // NOTE: the controller unwraps via unwrapOrInternal(), whose switch has
+    // no NOT_IMPLEMENTED case, so this currently surfaces as HTTP 500 (not
+    // 501) with CRITICAL-severity logging — not the true stub-intent path.
+    // Fixing that requires touching the shared http-result.ts helper used by
+    // 169 other controllers, which is out of scope for this repo-only change.
+    if (!found.data) {
+      return Err(AppErr('NOT_IMPLEMENTED', '3D mockup generatori hali ulanmagan — dizaynda manba tasvir (image_url) mavjud emas'));
+    }
+    return Ok({ mockupUrl: found.data, designId, productType });
   }
 
   async approveDesign(designId: string): Promise<Result<{ id: string; status: string }>> {

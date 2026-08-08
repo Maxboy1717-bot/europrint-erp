@@ -127,7 +127,14 @@ export default function DailyReportPage() {
     setForm(f => ({ ...f, [key]: value }));
 
   const handleOverride = (id: number) => {
-    hrOverride.mutate({ id, is_auto_absent: true, status: "absent", hr_user_id: 1, reason: overrideReason });
+    // hr_user_id removed: it was hardcoded to a fake constant (1) regardless of who was
+    // actually logged in. The backend now derives the real HR actor from the JWT session
+    // (@CurrentUser()) and rejects the request outright if that identity is missing —
+    // no client-supplied or fallback id is trusted for this field.
+    // `status: "absent"` removed: 'absent' is not a valid daily-report status (violates
+    // hr_daily_reports_status_chk — only draft/submitted/approved/rejected are allowed).
+    // Absence is represented by `is_auto_absent`, which the backend already reads.
+    hrOverride.mutate({ id, is_auto_absent: true, reason: overrideReason });
   };
 
   return (

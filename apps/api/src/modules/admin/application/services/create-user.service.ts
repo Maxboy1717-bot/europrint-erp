@@ -22,6 +22,7 @@ export interface CreateUserCommand {
   role: UserRole;
   departmentId?: number;
   positionId?: number;
+  executorRole: UserRole | string | undefined;
 }
 
 export type CreateUserCommandResult =
@@ -64,6 +65,15 @@ export class CreateUserService {
   }
 
   async execute(command: CreateUserCommand): Promise<CreateUserCommandResult> {
+    // SECURITY (audit 2026-08-06 T1): privilege-escalation guard. RolesGuard lets
+    // DIRECTOR reach this endpoint, and its admin/director bypass ignores the @Roles
+    // list — so without this second layer a director could mint a super_admin account.
+    const privileged: string[] = [UserRole.SUPER_ADMIN, UserRole.DIRECTOR];
+    const executor = String(command.executorRole ?? '').toLowerCase();
+    if (privileged.includes(command.role) && executor !== UserRole.SUPER_ADMIN) {
+      this.logger.warn(`Privilege-escalation blocked: executor=${executor} tried to create role=${command.role}`);
+      return Err(AppErr('FORBIDDEN', "Faqat SUPER_ADMIN yuqori-imtiyozli (super_admin/director) hisob yarata oladi"));
+    }
     const conflict = await this.validateUniqueness(command);
     if (conflict) return conflict;
     const user = await this.buildUserAggregate(command);

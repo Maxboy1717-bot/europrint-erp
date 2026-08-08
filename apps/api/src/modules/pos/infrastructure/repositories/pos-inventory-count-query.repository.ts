@@ -12,11 +12,34 @@ import type { CountFilterDto } from '../../dto/inventory-count.dto';
 
 type Row = Record<string, unknown>;
 export interface CountPagedResult { items: Row[]; total: number; page: number; limit: number; totalPages: number }
-const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
+
+/**
+ * `db.transaction(async (tx) => ...)` callback param type — same convention as
+ * warehouse-config.service.ts / pos-warehouse-integration-movement.service.ts's `Tx` alias.
+ * Exported so PosInventoryCountQueryService#bulkRecordActualQty can thread ONE transaction
+ * handle through multiple repo calls (C-5.5, CRITICAL-CORRECTNESS-AUDIT — see runInTransaction below).
+ */
+export type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+const exec = (q: SQL | SQLWrapper, executor: Executor = db): Promise<Result<Row[]>> =>
+  safeCall(async () => (await executor.execute(q)).rows as Row[]);
 
 @Injectable()
 export class PosInventoryCountQueryRepository {
   private readonly logger = new Logger(PosInventoryCountQueryRepository.name);
+
+  /**
+   * C-5.5 (CRITICAL-CORRECTNESS-AUDIT) — runs `fn` inside a SINGLE Postgres transaction on
+   * this repo's own `db` handle (not a second pool), so every read/write `fn` performs via
+   * the supplied `tx` commits or rolls back together. Used by
+   * PosInventoryCountQueryService#bulkRecordActualQty: previously each line in a bulk-record
+   * call ran its own implicit one-statement transaction (via findLine/checkBarcode/updateCountLine
+   * each defaulting to the bare `db`), so a failure on line N left lines 1..N-1 already
+   * persisted — a partially-applied bulk count. Now the whole batch shares one `tx`.
+   */
+  async runInTransaction<T>(fn: (tx: Executor) => Promise<T>): Promise<T> {
+    return db.transaction(fn);
+  }
 
   async snapshotStock(countId: number, warehouseId: string, categoryFilter?: string): Promise<Result<void>>  {
   try {  
@@ -32,27 +55,27 @@ export class PosInventoryCountQueryRepository {
 
   }
 
-  async findLine(lineId: number): Promise<Result<Row | null>> {
-  try {  
-      const [line] = await db.select().from(posInventoryCountLines).where(eq(posInventoryCountLines.id, lineId));
+  async findLine(lineId: number, executor: Executor = db): Promise<Result<Row | null>> {
+  try {
+      const [line] = await executor.select().from(posInventoryCountLines).where(eq(posInventoryCountLines.id, lineId));
       return Ok(line ?? null);  } catch (_e) {
     return Err(String(_e));
   }
 
   }
 
-  async checkBarcode(materialCardId: number, scannedBarcode: string): Promise<Result<boolean>>  {
-  try {  
-      const r = await exec(sql`SELECT id FROM material_cards WHERE id = ${materialCardId} AND (barcode = ${scannedBarcode} OR id IN (SELECT pmp.material_id FROM inventory_barcode_assignments iba JOIN pos_material_passports pmp ON pmp.id = iba.passport_id WHERE iba.barcode = ${scannedBarcode} AND iba.is_active = TRUE)) LIMIT 1`);
+  async checkBarcode(materialCardId: number, scannedBarcode: string, executor: Executor = db): Promise<Result<boolean>>  {
+  try {
+      const r = await exec(sql`SELECT id FROM material_cards WHERE id = ${materialCardId} AND (barcode = ${scannedBarcode} OR id IN (SELECT pmp.material_id FROM inventory_barcode_assignments iba JOIN pos_material_passports pmp ON pmp.id = iba.passport_id WHERE iba.barcode = ${scannedBarcode} AND iba.is_active = TRUE)) LIMIT 1`, executor);
       return Ok((r.ok ? r.data : []).length > 0);  } catch (_e) {
     return Err(String(_e));
   }
 
   }
 
-  async updateCountLine(lineId: number, updates: Partial<typeof posInventoryCountLines.$inferInsert>): Promise<Result<void>>  {
-  try {  
-      await db.update(posInventoryCountLines).set(updates).where(eq(posInventoryCountLines.id, lineId));  return Ok();  } catch (_e) {
+  async updateCountLine(lineId: number, updates: Partial<typeof posInventoryCountLines.$inferInsert>, executor: Executor = db): Promise<Result<void>>  {
+  try {
+      await executor.update(posInventoryCountLines).set(updates).where(eq(posInventoryCountLines.id, lineId));  return Ok();  } catch (_e) {
     return Err(String(_e));
   }
 

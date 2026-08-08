@@ -14,10 +14,14 @@ export class InventoryMaterialsService {
   async listMaterials(search?: string, category?: string, page = 1, limit = 50): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const offset = (page - 1) * limit;
-      const [items, total] = await Promise.all([
+      // Unwrap the repo Results — items/total must be the array + number, not the
+      // Result wrappers (the controller returns this object straight to the client).
+      const [itemsR, totalR] = await Promise.all([
         this.repo.listMaterials(search, category, limit, offset),
         this.repo.countMaterials(search),
       ]);
+      const items = itemsR.ok && Array.isArray(itemsR.data) ? itemsR.data : [];
+      const total = totalR.ok ? totalR.data : 0;
       return { items, total, page, limit };
     });
   }
@@ -32,6 +36,10 @@ export class InventoryMaterialsService {
       ]);
       return { material, stock, recent_purchases, recent_transactions };
     });
+  }
+
+  async createMaterial(body: Record<string, unknown>) {
+    return this.repo.createMaterial(body);
   }
 
   async updateMaterial(id: number, body: Record<string, unknown>) {

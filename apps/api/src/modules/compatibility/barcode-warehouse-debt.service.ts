@@ -35,4 +35,30 @@ export class BarcodeWarehouseDebtService {
     `);
     return rows(res)[0] ?? { id, not_found: true };
     });}
+
+  async updateDebt(id: string, patch: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const intId = parseInt(id, 10);
+      // Whitelisted nullable params — NULL means "leave existing value" (COALESCE pattern)
+      const status            = patch['status']             !== undefined ? String(patch['status'])           : null;
+      const description       = patch['description']        !== undefined ? String(patch['description'])      : null;
+      const resolutionNotes   = patch['resolution_notes']   !== undefined ? String(patch['resolution_notes']) : null;
+      const damageAmount      = patch['damage_amount']      !== undefined ? Number(patch['damage_amount'])    : null;
+      const assessedValue     = patch['assessed_value']     !== undefined ? Number(patch['assessed_value'])   : null;
+      const compensatedAmount = patch['compensated_amount'] !== undefined ? Number(patch['compensated_amount']) : null;
+      const res = await rawSql(sql`
+        UPDATE employee_liability_cases SET
+          status             = COALESCE(${status},            status),
+          description        = COALESCE(${description},       description),
+          resolution_notes   = COALESCE(${resolutionNotes},   resolution_notes),
+          damage_amount      = COALESCE(${damageAmount},      damage_amount),
+          assessed_value     = COALESCE(${assessedValue},     assessed_value),
+          compensated_amount = COALESCE(${compensatedAmount}, compensated_amount),
+          updated_at         = NOW()
+        WHERE id = ${intId}
+        RETURNING *
+      `);
+      return rows(res)[0] ?? { id, updated: false };
+    });
+  }
 }

@@ -143,7 +143,15 @@ export class KanbanExtCardService {
     return this.repo.completeCard(cardId, userId, completionReport);
   }
 
+  rejectCard(cardId: string, userId: number, reason: string): Promise<Result<Record<string, unknown>>> {
+    return this.repo.rejectCard(cardId, userId, reason);
+  }
+
   createCardFlat(body: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     return this.repo.createCardFlat(body);
+  }
+
+  bulkAssignCards(cardIds: number[], ownerUserId: number | null): Promise<Result<{ updated: number; ids: number[] }>> {
+    return this.repo.bulkAssignCards(cardIds, ownerUserId);
   }
 }

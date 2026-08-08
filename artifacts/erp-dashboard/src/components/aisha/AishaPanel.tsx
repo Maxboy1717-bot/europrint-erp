@@ -10,7 +10,9 @@ import { useEffect, useState } from 'react';
 import { useAishaStore } from '@/aisha/store';
 import { useTranslation } from '@/lib/i18n';
 import { AishaOrb } from './AishaOrb';
+import { AishaHudCorners } from './AishaHudCorners';
 import { useWakeWord } from '@/aisha/hooks/use-wake-word';
+import './aisha-immersive.css';
 
 interface Props {
   isDirector: boolean;
@@ -52,24 +54,22 @@ export function AishaPanel({ isDirector, accessKey = null, ppnUrl = '/aisha/asse
   return (
     <aside
       data-testid="aisha-panel"
+      className="aisha-glass"
       style={{
-        position: 'fixed', top: 16, right: 16,
+        position: 'fixed', top: 72, right: 16,
         width: collapsed ? 80 : 320,
-        background: 'white',
-        borderRadius: 16,
-        boxShadow: '0 8px 32px rgba(15, 23, 42, .08)',
-        border: '1px solid rgba(99,102,241,.12)',
-        padding: 16, zIndex: 50,
+        padding: 16, zIndex: 60,
         transition: 'width .2s ease',
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
+      <AishaHudCorners />
       <header style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <AishaOrb status={status} size={48} />
         {!collapsed && (
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, color: '#1e293b' }}>{t('title')}</div>
-            <div data-testid="aisha-status" style={{ fontSize: 12, color: '#64748b' }}>
+            <div className="aisha-glass-title">{t('title')}</div>
+            <div data-testid="aisha-status" className="aisha-glass-muted" style={{ fontSize: 12 }}>
               {t(`status.${status}`) as string}
             </div>
           </div>
@@ -77,22 +77,24 @@ export function AishaPanel({ isDirector, accessKey = null, ppnUrl = '/aisha/asse
         <button
           aria-label={collapsed ? (t('panel.expand') as string) : (t('panel.collapse') as string)}
           onClick={() => setCollapsed(c => !c)}
-          style={{ background: 'transparent', border: 0, cursor: 'pointer', fontSize: 18, color: '#64748b' }}
+          className="aisha-glass-muted"
+          style={{ background: 'transparent', border: 0, cursor: 'pointer', fontSize: 18 }}
         >
           {collapsed ? '▸' : '▾'}
         </button>
       </header>
+      <div className="aisha-hud-scanline" style={{ marginTop: 10 }} />
 
       {!collapsed && (
         <>
-          <div style={{ marginTop: 12, fontSize: 12, fontWeight: 600, color: '#475569' }}>
+          <div className="aisha-glass-title" style={{ marginTop: 12, fontSize: 12 }}>
             {t('panel.history')}
           </div>
           <ul data-testid="aisha-history" style={{ marginTop: 8, padding: 0, listStyle: 'none', maxHeight: 180, overflowY: 'auto' }}>
             {safeHistory.length === 0
-              ? <li style={{ fontSize: 12, color: '#94a3b8' }}>{t('panel.noHistory') as string}</li>
+              ? <li className="aisha-glass-subtle" style={{ fontSize: 12 }}>{t('panel.noHistory') as string}</li>
               : safeHistory.map(h => (
-                  <li key={h.id} style={{ fontSize: 13, padding: '6px 0', borderBottom: '1px solid #f1f5f9', color: '#1e293b' }}>
+                  <li key={h.id} className="aisha-glass-divider aisha-glass-title" style={{ fontSize: 13, padding: '6px 0', borderBottom: '1px solid', fontWeight: 400 }}>
                     {h.transcript}
                   </li>
                 ))}
@@ -101,17 +103,13 @@ export function AishaPanel({ isDirector, accessKey = null, ppnUrl = '/aisha/asse
             <button
               data-testid="aisha-mute"
               onClick={toggleMute}
-              style={{
-                flex: 1, padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
-                background: muted ? '#fee2e2' : '#eef2ff',
-                color: muted ? '#b91c1c' : '#4338ca',
-                border: 0, fontSize: 13, fontWeight: 500,
-              }}
+              className={muted ? 'aisha-glass-btn aisha-glass-btn--danger' : 'aisha-glass-btn'}
+              style={{ flex: 1, padding: '8px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
             >
               {muted ? (t('panel.unmute') as string) : (t('panel.mute') as string)}
             </button>
           </div>
-          <div style={{ marginTop: 8, fontSize: 11, color: '#94a3b8' }}>
+          <div className="aisha-glass-subtle" style={{ marginTop: 8, fontSize: 11 }}>
             {t('shortcut.muteHint') as string} · {t('shortcut.wakeHint') as string}
           </div>
         </>

@@ -3,13 +3,18 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { DrizzleSdCustomersRepository } from '../infrastructure/repositories/drizzle-sd-customers.repo';
+import { canEditSdCustomer } from '../common/sd-customer-scope';
 
 @Injectable()
 export class SdCustomersService {
-  constructor(private readonly repo: DrizzleSdCustomersRepository) {}
+  constructor(
+    private readonly repo: DrizzleSdCustomersRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async list(search: string | undefined, status: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -22,20 +27,42 @@ export class SdCustomersService {
     return safeCall(async () => this.repo.getById(cid));
   }
 
+  /** EP-SD-060/061/062 credit-limit check (flag, not auto-block — E1). */
+  async getCreditStatus(cid: number, amount: number) {
+    return safeCall(async () => this.repo.getCreditStatus(cid, amount));
+  }
+
   async get360View(cid: number) {
     return safeCall(async () => this.repo.get360View(cid));
   }
 
-  async create(body: Record<string, unknown>) {
-    return safeCall(async () => this.repo.create(body));
+  async create(body: Record<string, unknown>, createdBy?: number) {
+    return safeCall(async () => this.repo.create(body, createdBy));
   }
 
-  async update(cid: number, body: Record<string, unknown>) {
-    return safeCall(async () => this.repo.update(cid, body));
+  /**
+   * Owner decision 2026-07-13 (chat): other managers may VIEW but not EDIT a customer
+   * they don't own. `user` carries id + role so the ownership gate can compare against
+   * sd_customers.manager_id and let privileged roles override — see
+   * sd-customer-scope.ts canEditSdCustomer() for the full rule (incl. the NULL-safe
+   * "unowned customer stays editable" fallback while manager_id is unpopulated).
+   */
+  async update(cid: number, body: Record<string, unknown>, user: { id?: number; role?: string | null }) {
+    return safeCall(async () => {
+      const owner = await this.repo.getOwnerId(cid);
+      if (owner) {
+        const managerId = owner.manager_id;
+        const ownerId = managerId != null ? Number(managerId) : null;
+        if (!canEditSdCustomer(ownerId, user)) {
+          throw new ForbiddenException(await this.i18n.t('errors.customerNotOwnedByYou'));
+        }
+      }
+      return this.repo.update(cid, body, user?.id);
+    });
   }
 
-  async softDelete(cid: number) {
-    return safeCall(async () => this.repo.softDelete(cid));
+  async softDelete(cid: number, deletedBy?: number) {
+    return safeCall(async () => this.repo.softDelete(cid, deletedBy));
   }
 
   async getContacts(cid: number) {

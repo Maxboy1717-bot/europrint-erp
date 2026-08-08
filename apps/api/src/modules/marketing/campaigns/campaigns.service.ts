@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { CampaignsRepository } from './campaigns.repository';
 
@@ -11,7 +12,10 @@ import { CampaignsRepository } from './campaigns.repository';
 export class CampaignsService {
   private readonly logger = new Logger(CampaignsService.name);
 
-  constructor(private readonly repo: CampaignsRepository) {}
+  constructor(
+    private readonly repo: CampaignsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   private mapRow(r: Record<string, unknown>) {
     return { ...r, budget: Number(r['budget']) || 0, spent: Number(r['spentAmount']) || 0 };
@@ -34,7 +38,7 @@ export class CampaignsService {
   async findOne(id: string) {
     const r = await this.repo.findOne(id);
     const row = r.ok ? r.data : null;
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.campaignNotFoundWithId', { args: { id } }));
     return row;
   }
 

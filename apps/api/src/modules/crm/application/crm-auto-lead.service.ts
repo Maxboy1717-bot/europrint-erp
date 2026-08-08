@@ -50,6 +50,14 @@ export class CrmAutoLeadService {
     return this.repo.ingestWebsiteLead(email, phone, first_name, last_name, page_url, message);
   }
 
+  async ingestWhatsappLead(phone: unknown, first_name: unknown, last_name: unknown, message: unknown) {
+    return this.repo.ingestWhatsappLead(phone, first_name, last_name, message);
+  }
+
+  async ingestSmsLead(phone: unknown, first_name: unknown, last_name: unknown, message: unknown) {
+    return this.repo.ingestSmsLead(phone, first_name, last_name, message);
+  }
+
   async churnRescue(entityType: string, eid: number): Promise<Result<object | null, AppError>> {
     return safeCall(async () => {
       const rResult = await this.repo.getChurnRisk(entityType, eid);

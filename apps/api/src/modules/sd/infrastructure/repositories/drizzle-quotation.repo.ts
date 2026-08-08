@@ -2,12 +2,14 @@
  * NOTE: Raw parametrised SQL retained intentionally here — the live tables
  *   `sd_quotations`, `sales_orders`, `fi_payments`, `sd_contracts`,
  *   `sd_price_formulas`, and `sd_kpi_targets` carry legacy columns (e.g.
- *   `deleted_at`, `title`, `currency`, `valid_until`, `items`, `cancel_reason`,
- *   `signature_data`) that are not modelled in `lib/db/src/schema/*` Drizzle
- *   tables. Each UPDATE also uses COALESCE-with-RETURNING semantics that
- *   Drizzle's `.update().set().where().returning()` cannot express without a
- *   matching `$inferSelect` shape. All parameters are passed through tagged
- *   templates so injection is impossible. See ARCHITECTURE_RULES.md Rule 4.
+ *   `deleted_at`, `title`, `currency`, `valid_until`, `items`, `cancel_reason`)
+ *   that are not modelled in `lib/db/src/schema/*` Drizzle tables. Each UPDATE
+ *   also uses COALESCE-with-RETURNING semantics that Drizzle's
+ *   `.update().set().where().returning()` cannot express without a matching
+ *   `$inferSelect` shape. All parameters are passed through tagged templates
+ *   so injection is impossible. See ARCHITECTURE_RULES.md Rule 4.
+ *   NOTE (SB0585): `sd_contracts.signature_data` does NOT exist live — the
+ *   real sign-gate columns are `signed_at`/`signed_ip`/`pdf_url`.
  */
 /**
  * @module drizzle-quotation.repo
@@ -46,9 +48,12 @@ const PRICE_SETTINGS_COLS = sql`
   print_4color_price::float8     AS "print4ColorPrice",
   plate_cost_per_color::float8   AS "plateCostPerColor",
   die_cost_new::float8           AS "dieCostNew",
+  die_cost_existing::float8      AS "dieCostExisting",
   lamination_price::float8       AS "laminationPrice",
   embossing_price::float8        AS "embossingPrice",
+  kashirovka_price::float8        AS "kashirovkaPrice",
   perforation_price::float8      AS "perforationPrice",
+  hourly_labor_rate::float8      AS "hourlyLaborRate",
   delivery_base_cost::float8     AS "deliveryBaseCost",
   storage_freedays               AS "storageFreedays",
   storage_daily_rate::float8     AS "storageDailyRate",
@@ -71,7 +76,7 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
     }
   }
 
-  async approveQuotation(id: string): Promise<Result<MutationRow | null>> {
+  async approveQuotation(id: string, approvedBy?: number): Promise<Result<MutationRow | null>> {
     try {
       // 1. Mark quotation approved
       const qr = await runQuery<Record<string, unknown>>(sql`
@@ -88,15 +93,53 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
       const totalAmount = typeof q['total_price'] === 'number' ? q['total_price']
         : parseFloat(String(q['total_price'] ?? '0')) || 0;
       const customerId = q['customer_id'] != null ? parseInt(String(q['customer_id']), 10) : null;
-      // Use only columns that actually exist in the live sales_orders table
+      // Use only columns that actually exist in the live sales_orders table.
+      // B14 (2026-07-05): created_by_user_id is the integer creator column (mirrors
+      // execSdSalesOrderInsert's convention) -- created_by is uuid-typed and
+      // intentionally left null elsewhere in this codebase, not used here.
       const or = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO sales_orders
-          (document_number, order_date, pricing_date, customer_id, net_value, total_value, quotation_id)
+          (document_number, order_date, pricing_date, customer_id, net_value, total_value, quotation_id, created_by_user_id)
         VALUES
-          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${String(id)})
+          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${String(id)}, ${approvedBy ?? null})
         RETURNING id, document_number
       `);
       const orderId = or.rows[0]?.['id'] != null ? parseInt(String(or.rows[0]['id']), 10) : null;
+
+      // 2.5. Copy the quotation's bespoke-job line items across (owner decision 2026-07-13,
+      // chat — "Mahsulot vs Buyurtma zanjiri"). sd_quotation_items has no product_id (this shop
+      // quotes custom jobs by physical spec, not catalog SKUs), so product_id stays NULL on the
+      // order line; the spec columns carry the job description across instead. Mirrors
+      // saveItems()'s item_number convention (create-order.handler.ts's canonical create path).
+      if (orderId) {
+        const qItems = await runQuery<Record<string, unknown>>(sql`
+          SELECT * FROM sd_quotation_items WHERE quotation_id = ${id} AND deleted_at IS NULL ORDER BY id
+        `);
+        for (let i = 0; i < qItems.rows.length; i++) {
+          const qi = qItems.rows[i];
+          const itemNumber = String((i + 1) * 10).padStart(6, '0');
+          const qty = Number(qi['quantity'] ?? 0);
+          const price = Number(qi['unit_price'] ?? 0);
+          await runQuery(sql`
+            INSERT INTO sales_order_items
+              (sales_order_id, item_number, quotation_item_id, description, order_quantity, open_quantity,
+               unit, net_price, total_price, product_type, paper_type, thickness_mm, length_mm, width_mm,
+               height_mm, print_colors, lamination, perforation, special_coating, is_new_die, printing_method,
+               machine_format, load_capacity_kg, core_diameter_mm, gilza_diameter_mm, roll_length_m,
+               kashirovka, print_sides, layer_count, setup_time_minutes, created_at)
+            VALUES
+              (${orderId}, ${itemNumber}, ${qi['id']}, ${qi['product_type'] ?? 'Maxsus buyurtma'}, ${qty}, ${qty},
+               'dona', ${price}, ${qty * price}, ${qi['product_type'] ?? null}, ${qi['paper_type'] ?? null},
+               ${qi['thickness_mm'] ?? null}, ${qi['length_mm'] ?? null}, ${qi['width_mm'] ?? null},
+               ${qi['height_mm'] ?? null}, ${qi['print_colors'] ?? null}, ${qi['lamination'] ?? null},
+               ${qi['perforation'] ?? null}, ${qi['special_coating'] ?? null}, ${qi['is_new_die'] ?? null},
+               ${qi['printing_method'] ?? null}, ${qi['machine_format'] ?? null}, ${qi['load_capacity_kg'] ?? null},
+               ${qi['core_diameter_mm'] ?? null}, ${qi['gilza_diameter_mm'] ?? null}, ${qi['roll_length_m'] ?? null},
+               ${qi['kashirovka'] ?? null}, ${qi['print_sides'] ?? null}, ${qi['layer_count'] ?? null},
+               ${qi['setup_time_minutes'] ?? null}, NOW())
+          `);
+        }
+      }
 
       // 3. Create a contract linked to the new order
       const contractNumber = `CNT-${Date.now()}`;
@@ -123,20 +166,19 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async updateQuotation(id: string, patch: QuotationUpdatePatch): Promise<Result<MutationRow | null>> {
     try {
-      const itemsJson = patch.items !== undefined && patch.items !== null
-        ? JSON.stringify(patch.items)
-        : null;
+      // #04 SD fix: live sd_quotations has NO title/items columns (they crashed UPDATE). Patch the real
+      // columns only; payment_terms is a live column and is now honored. Line items live in sd_quotation_items.
       const r = await runQuery<MutationRow>(sql`
         UPDATE sd_quotations
         SET
-          title        = COALESCE(${patch.title ?? null}, title),
-          total_amount = COALESCE(${patch.total_amount ?? null}, total_amount),
-          currency     = COALESCE(${patch.currency ?? null}, currency),
-          valid_until  = COALESCE(${patch.valid_until ?? null}, valid_until),
-          notes        = COALESCE(${patch.notes ?? null}, notes),
-          status       = COALESCE(${patch.status ?? null}, status),
-          items        = COALESCE(${itemsJson}, items),
-          updated_at   = NOW()
+          total_amount  = COALESCE(${patch.total_amount ?? null}, total_amount),
+          total_value   = COALESCE(${patch.total_amount ?? null}, total_value),
+          currency      = COALESCE(${patch.currency ?? null}, currency),
+          valid_until   = COALESCE(${patch.valid_until ?? null}, valid_until),
+          notes         = COALESCE(${patch.notes ?? null}, notes),
+          status        = COALESCE(${patch.status ?? null}, status),
+          payment_terms = COALESCE(${(patch as { payment_terms?: string }).payment_terms ?? null}, payment_terms),
+          updated_at    = NOW()
         WHERE id = ${id} AND deleted_at IS NULL
         RETURNING *
       `);
@@ -161,11 +203,24 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async updateKpiTarget(id: string, patch: KpiTargetPatch): Promise<Result<MutationRow | null>> {
     try {
+      // sd_kpi_targets does not exist in the live DB — canonical table is sd_manager_quotas.
+      // patch.target_value maps to quota_amount; patch.period is decomposed into year/month
+      // if provided as "YYYY-MM" string; otherwise year/month are kept unchanged via COALESCE.
+      const num = (v: unknown) =>
+        v != null && v !== '' && !Number.isNaN(Number(v)) ? Number(v) : null;
+      const periodStr = patch.period != null ? String(patch.period) : null;
+      const periodParts = periodStr?.match(/^(\d{4})-(\d{2})$/) ?? null;
+      const periodYear = periodParts ? parseInt(periodParts[1] ?? '0', 10) : null;
+      const periodMonth = periodParts ? parseInt(periodParts[2] ?? '0', 10) : null;
+
+      // quota_amount: prefer patch.quota_amount (mapped from FE revenueTarget),
+      // fall back to legacy patch.target_value for backward compatibility.
       const r = await runQuery<MutationRow>(sql`
-        UPDATE sd_kpi_targets
+        UPDATE sd_manager_quotas
         SET
-          target_value = COALESCE(${patch.target_value ?? null}, target_value),
-          period       = COALESCE(${patch.period ?? null}, period),
+          quota_amount = COALESCE(${num(patch.quota_amount ?? patch.target_value)}, quota_amount),
+          year         = COALESCE(${periodYear}, year),
+          month        = COALESCE(${periodMonth}, month),
           updated_at   = NOW()
         WHERE id = ${id}
         RETURNING *
@@ -193,11 +248,14 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
   async markPaymentPaid(id: string, paymentDate: unknown): Promise<Result<MutationRow | null>> {
     try {
       const today = new Date().toISOString().split('T')[0] as string;
+      // EP-SD-030: `amount` must be RETURNING'd — sd_quotations.service.ts reads
+      // r.data['amount'] to decide whether to post the GL leg (postCustomerPayment).
+      // Without it the amount always reads as 0 and the GL entry silently never posts.
       const r = await runQuery<MutationRow>(sql`
         UPDATE sd_payments
         SET status = 'paid', paid_date = COALESCE(${paymentDate ?? null}, paid_date, ${today}), updated_at = NOW()
         WHERE id = ${id}
-        RETURNING id, status, updated_at
+        RETURNING id, status, updated_at, amount::float8 AS amount
       `);
       return Ok(r.rows[0] ?? null);
     } catch (e) {
@@ -207,14 +265,19 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async signContract(id: string, signatureData: unknown): Promise<Result<MutationRow | null>> {
     try {
-      const sigJson = signatureData !== undefined && signatureData !== null
-        ? JSON.stringify(signatureData)
-        : null;
+      // SB0585 fix: live `sd_contracts` has NO `signature_data` column (only
+      // signed_at/signed_ip/pdf_url) — the previous UPDATE crashed with DB_ERROR
+      // (undefined column) on every call. Canonical sign gate = `signed_at`
+      // timestamp, matching SdContractsController.sign() (PATCH /sd/contracts/:id/sign).
+      // `signatureData` (if the caller sent one) is preserved in `pdf_url` only when
+      // it looks like a URL; otherwise it is accepted but not persisted verbatim,
+      // since there is no JSON column to hold it (no fabricated column added — Q-35).
+      const sigUrl = typeof signatureData === 'string' && signatureData.length > 0 ? signatureData : null;
       const r = await runQuery<MutationRow>(sql`
         UPDATE sd_contracts
-        SET status = 'signed', signature_data = ${sigJson}, updated_at = NOW()
+        SET status = 'signed', signed_at = NOW(), pdf_url = COALESCE(${sigUrl}, pdf_url), updated_at = NOW()
         WHERE id = ${id}
-        RETURNING id, status, updated_at
+        RETURNING id, status, signed_at, updated_at
       `);
       return Ok(r.rows[0] ?? null);
     } catch (e) {
@@ -243,6 +306,7 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
           die_cost_new           = COALESCE(${num(patch.dieCostNew)}, die_cost_new),
           lamination_price       = COALESCE(${num(patch.laminationPrice)}, lamination_price),
           embossing_price        = COALESCE(${num(patch.embossingPrice)}, embossing_price),
+          kashirovka_price       = COALESCE(${num(patch.kashirovkaPrice)}, kashirovka_price),
           perforation_price      = COALESCE(${num(patch.perforationPrice)}, perforation_price),
           delivery_base_cost     = COALESCE(${num(patch.deliveryBaseCost)}, delivery_base_cost),
           storage_freedays       = COALESCE(${num(patch.storageFreedays)}, storage_freedays),

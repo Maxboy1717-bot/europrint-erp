@@ -3,38 +3,119 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, Post, Query, Param, Body, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Query, Param, Body, Res, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
-import { unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
-import { notImplemented } from '@common/exceptions/not-implemented';
+import { unwrapOrInternal, unwrapOrNotFound, throwFromError } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { QcNewService } from '../application/qc-new.service';
+import { QcCertificatePdfService } from '../application/qc-certificate-pdf.service';
 import { SpcService } from '../domain/services/spc.service';
+import { QcAqlService } from '../domain/services/qc-aql.service';
+import type { AqlInspectionLevel, AqlLevel } from '../constants/qc-aql.constants';
 import { z } from 'zod';
+
+/**
+ * Canonical QC "stage" enum for qc_defects / qc_checkpoints rows.
+ *
+ * VISION-3340 #42: this enum used to exist ONLY inline inside CheckpointDto
+ * below. The sibling write path — QcDefectsExtendedController.createBrak
+ * (POST /qc/braks) — accepted an unvalidated free-text "stage" field that
+ * defaulted to the literal 'production', which is NOT a member of this enum.
+ * That let two rows land in the same qc_defects table with incompatible
+ * "stage" values, silently breaking any downstream filter/group-by on stage.
+ *
+ * Exported so QcDefectsExtendedController imports and validates against this
+ * SAME schema instance instead of redefining a second, driftable copy.
+ */
+export const QcStageSchema = z.enum(['incoming', 'in_process', 'final', 'dispatch']);
+export type QcStage = z.infer<typeof QcStageSchema>;
 
 const CheckpointDto = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-  stage: z.enum(['incoming', 'in_process', 'final', 'dispatch']).default('in_process'),
+  stage: QcStageSchema.default('in_process'),
   standard_id: z.number().optional(),
 });
 
+/**
+ * Zod schema for GET /qc/aql/plan query parameters.
+ * All three fields are required; defaults mirror the ISO 2859-1 owner defaults.
+ */
+const AqlPlanQuerySchema = z.object({
+  lotSize: z.coerce.number().int().positive('lotSize must be a positive integer'),
+  aql: z.coerce.number().refine(
+    (v): v is AqlLevel => [0.65, 1.0, 1.5, 2.5, 4.0, 6.5].includes(v),
+    { message: 'aql must be one of: 0.65, 1.0, 1.5, 2.5, 4.0, 6.5' },
+  ).default(2.5),
+  level: z.enum(['I', 'II', 'III']).default('II'),
+});
+
+const CertificateDto = z.object({
+  certNumber: z.string().min(1),
+  orderId: z.number().int().optional(),
+  productName: z.string().optional(),
+  issuedDate: z.string().optional(),
+  status: z.enum(['active', 'draft', 'revoked']).default('active'),
+  notes: z.string().max(2000).optional(),
+  issuedBy: z.string().optional(),
+});
+
+/** T21-A2 (Gap #19): sertifikat PDF generatsiya kirish parametrlari (raqam serverda beriladi). */
+const GenerateCertPdfDto = z.object({
+  orderId: z.number().int().optional(),
+  productName: z.string().max(300).optional(),
+  issuedBy: z.string().max(200).optional(),
+  notes: z.string().max(2000).optional(),
+});
+
+/**
+ * Numeric field that may arrive as a string (LabSection.tsx's react-hook-form registers
+ * grammatura/qalinlik/bosim/namlik as z.string().optional() on the FE, so <Input type="number">
+ * values travel over the wire as strings -- and an untouched optional field arrives as "").
+ * Blank/null/undefined -> undefined (not persisted); anything else is coerced to a number.
+ */
+const optionalNumericInput = z.preprocess(
+  (v) => (v === '' || v === null || v === undefined ? undefined : v),
+  z.coerce.number(),
+).optional();
+
+/**
+ * POST /qc/lab-tests body. Two shapes are accepted on the SAME endpoint (owner 2026-07-13,
+ * QC lab-tests session model -- Q-46 additive, not a replacement):
+ *  - generic one-parameter-per-row model (parameter_name + value/unit/min_value/max_value)
+ *  - LabSection.tsx's real lab-test SESSION model (materialName + 4 simultaneous
+ *    measurements + operatorName + result), which has no single "parameter name".
+ * At least one of parameter_name / materialName must be present so the row is identifiable.
+ */
 const LabTestDto = z.object({
   order_id: z.number().optional(),
-  parameter_name: z.string().min(1),
+  parameter_name: z.string().min(1).optional(),
   value: z.number().optional(),
   unit: z.string().optional(),
   min_value: z.number().optional(),
   max_value: z.number().optional(),
   tested_by: z.string().optional(),
   notes: z.string().optional(),
+  // Session-model fields -- LabSection.tsx's LabSchema/createLabTest payload.
+  materialName: z.string().min(1).optional(),
+  lotNumber: z.string().optional(),
+  grammatura: optionalNumericInput,
+  qalinlik: optionalNumericInput,
+  bosim: optionalNumericInput,
+  namlik: optionalNumericInput,
+  operatorName: z.string().optional(),
+  result: z.enum(['pass', 'fail', 'conditional', 'pending']).optional(),
+}).refine((d) => !!(d.parameter_name || d.materialName), {
+  message: 'parameter_name yoki materialName kiritilishi shart',
+  path: ['materialName'],
 });
 
 const QC_ROLES = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.QC_SPECIALIST, Role.PRODUCTION_MANAGER, 'qc_manager', 'qc_inspector'];
@@ -49,6 +130,8 @@ export class QcNewController {
   constructor(
     private readonly svc: QcNewService,
     private readonly spcSvc: SpcService,
+    private readonly aqlSvc: QcAqlService,
+    private readonly certPdfSvc: QcCertificatePdfService,
   ) {}
 
   @Get('dashboard')
@@ -85,6 +168,55 @@ export class QcNewController {
   @ApiOperation({ summary: 'List quality certificates' })
   async getCertificates(@Query('status') status?: string) {
     return unwrapOrInternal(await this.svc.getCertificates(status));
+  }
+
+  @Post('certificates')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'Create quality certificate' })
+  async createCertificate(@Body() body: unknown) {
+    const dto = CertificateDto.parse(body);
+    return unwrapOrInternal(await this.svc.createCertificate(dto));
+  }
+
+  /**
+   * POST /qc/certificates/generate-pdf
+   * T21-A2 (Gap #19): SF-<YYYY>-NNNNN raqam ketma-ket + sertifikat yozuvi + PDF.
+   * PDF binar javob (application/pdf) sifatida qaytariladi (yuklab olish/ko'rish).
+   */
+  @Post('certificates/generate-pdf')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'T21-A2: Sertifikat PDF (SF-YYYY-NNNNN) generatsiya + saqlash + yuklash' })
+  async generateCertificatePdf(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ): Promise<Buffer> {
+    const dto = GenerateCertPdfDto.parse(body);
+    const result = await this.certPdfSvc.generate({
+      orderId: dto.orderId ?? null,
+      productName: dto.productName ?? null,
+      issuedBy: dto.issuedBy ?? null,
+      notes: dto.notes ?? null,
+    });
+    if (!result.ok) throwFromError(result.error);
+    const { certNumber, pdf } = result.data;
+    void res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="${certNumber}.pdf"`)
+      .header('X-Certificate-Number', certNumber);
+    return pdf;
+  }
+
+  /**
+   * GET /qc/certificates/next-number
+   * Keyingi sertifikat raqamini ko'rsatish (NEXTVAL — raqamni sarflaydi/oldindan ajratadi).
+   */
+  @Get('certificates/next-number')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'T21-A2: Keyingi sertifikat raqami (SF-YYYY-NNNNN) — sekvens nextval' })
+  async getNextCertificateNumber() {
+    const r = await this.certPdfSvc.nextCertificateNumber();
+    if (!r.ok) throwFromError(r.error);
+    return { certNumber: r.data };
   }
 
   @Get('lab-tests')
@@ -145,5 +277,115 @@ export class QcNewController {
   @ApiOperation({ summary: 'Supplier quality ratings aggregated' })
   async getSupplierQualityRatings() {
     return unwrapOrInternal(await this.svc.getSupplierQualityRatings());
+  }
+
+  /**
+   * GET /qc/traceability/:productionOrderId
+   *
+   * VISION-3340 #40 — full material→QC→delivery golden-thread trace for one production order:
+   * the production order + its sales order, the QC inspections, the MES sessions, the finished-goods
+   * stock receipts (wms_transactions 'IN' ledger) with their QC-/MES- batch trace, the current
+   * on-hand FG stock, and the outbound deliveries. Un-linkable hops (Guruh-B — e.g. raw-material
+   * mm_goods_receipts, which has no FK to the production order) are reported in `missingHops`.
+   *
+   * Transport-only (Rule 6): the repo validates the id (VALIDATION → 400) and returns NOT_FOUND
+   * (→ 404) when the production order does not exist. unwrapOrInternal maps both codes.
+   */
+  @Get('traceability/:productionOrderId')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'VISION-3340 #40: production-order traceability (material → QC → FG stock → delivery)' })
+  async getTraceability(@Param('productionOrderId') productionOrderId: string) {
+    return unwrapOrInternal(await this.svc.getTraceability(Number.parseInt(productionOrderId, 10)));
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // AQL sampling-plan endpoints
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * GET /qc/aql/plan?lotSize=<n>&aql=<aql>&level=<I|II|III>
+   *
+   * Returns the ISO 2859-1 single-sampling plan for the supplied lot-size and
+   * AQL/level parameters.  No DB access — the QcAqlService is pure compute.
+   *
+   * 400 when lotSize ≤ 0 / non-integer / below ISO minimum (2), or when the
+   * AQL value is not supported for the resolved code letter.
+   */
+  @Get('aql/plan')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'ISO 2859-1 AQL sampling plan for a given lot size (pure compute)' })
+  @ApiQuery({ name: 'lotSize', type: Number, required: true, description: 'Lot size (integer ≥ 2)' })
+  @ApiQuery({ name: 'aql', type: Number, required: false, description: 'AQL level (default 2.5)' })
+  @ApiQuery({ name: 'level', enum: ['I', 'II', 'III'], required: false, description: 'Inspection level (default II)' })
+  getAqlPlan(@Query() query: unknown) {
+    const parsed = AqlPlanQuerySchema.safeParse(query);
+    if (!parsed.success) {
+      // Zod error → 400 with first issue message
+      const msg = parsed.error.issues[0]?.message ?? 'Invalid query parameters';
+      throwFromError({ code: 'VALIDATION', message: msg });
+    }
+    const { lotSize, aql, level } = (parsed as { success: true; data: { lotSize: number; aql: AqlLevel; level: AqlInspectionLevel } }).data;
+    const result = this.aqlSvc.plan(lotSize, aql, level);
+    if (!result.ok) throwFromError(result.error);
+    return result.data;
+  }
+
+  /**
+   * GET /qc/inspections/:id/aql-plan
+   *
+   * Reads the qc_inspections row for the given id, uses items_checked as the
+   * lot size (the count written at create time), and returns the ISO 2859-1
+   * sampling plan.
+   *
+   * Accepts optional ?aql= and ?level= overrides; defaults to AQL 2.5 / Level II.
+   * 404 when no inspection row exists.
+   * 400 when items_checked is 0 / null (no lot size recorded yet).
+   */
+  @Get('inspections/:id/aql-plan')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'ISO 2859-1 AQL plan derived from an existing inspection\'s lot size' })
+  @ApiQuery({ name: 'aql', type: Number, required: false, description: 'AQL override (default 2.5)' })
+  @ApiQuery({ name: 'level', enum: ['I', 'II', 'III'], required: false, description: 'Inspection level override (default II)' })
+  async getInspectionAqlPlan(
+    @Param('id') id: string,
+    @Query() query: unknown,
+  ) {
+    // Parse optional overrides (lotSize is not accepted here — it comes from the DB)
+    const overrideSchema = z.object({
+      aql: z.coerce.number().refine(
+        (v): v is AqlLevel => [0.65, 1.0, 1.5, 2.5, 4.0, 6.5].includes(v),
+        { message: 'aql must be one of: 0.65, 1.0, 1.5, 2.5, 4.0, 6.5' },
+      ).default(2.5),
+      level: z.enum(['I', 'II', 'III']).default('II'),
+    });
+    const parsedOverride = overrideSchema.safeParse(query);
+    if (!parsedOverride.success) {
+      const msg = parsedOverride.error.issues[0]?.message ?? 'Invalid query parameters';
+      throwFromError({ code: 'VALIDATION', message: msg });
+    }
+    const { aql, level } = (parsedOverride as { success: true; data: { aql: AqlLevel; level: AqlInspectionLevel } }).data;
+
+    // Fetch the inspection row — uses the existing service/repo (no new DB access)
+    const inspResult = await this.svc.getInspectionById(id);
+    if (!inspResult.ok) throwFromError(inspResult.error);
+    const row = inspResult.data as Record<string, unknown> | null;
+    if (row == null) {
+      throwFromError({ code: 'NOT_FOUND', message: `Inspection ${id} topilmadi` });
+    }
+
+    // items_checked is the lot-size column that exists in both the Drizzle schema
+    // and the live DB.  Graceful degrade: if the column is absent or zero → 400.
+    const rawLotSize = (row as Record<string, unknown>)['items_checked'];
+    const lotSize = rawLotSize != null ? Number(rawLotSize) : 0;
+    if (!Number.isFinite(lotSize) || lotSize < 2) {
+      throwFromError({
+        code: 'VALIDATION',
+        message: `Inspection ${id} da items_checked=${rawLotSize ?? 'null'} — AQL hisoblash uchun kamida 2 bo'lishi kerak`,
+      });
+    }
+
+    const planResult = this.aqlSvc.plan(lotSize, aql, level);
+    if (!planResult.ok) throwFromError(planResult.error);
+    return { inspectionId: id, lotSize, aql, level, plan: planResult.data };
   }
 }

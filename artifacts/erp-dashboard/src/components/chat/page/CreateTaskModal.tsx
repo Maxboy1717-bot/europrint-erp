@@ -1,9 +1,15 @@
 /**
  * @module CreateTaskModal
- * @description React UI component.
+ * @description "Xabardan Task Yaratish" — chat xabaridan HAQIQIY Kanban karta
+ *   yaratadi (owner 2026-07-13 qarori: "Kanban karta + xabar bog'lami").
+ *   Oqim: (1) POST /api/kanban/cards → mavjud Kanban modulida karta (mas'ul
+ *   xodim = owner_user_id, foydalanuvchi tanlagan doska+1-ustun); (2) POST
+ *   /api/chat/message-tasks → chat_message_tasks'ga xabar↔karta bog'lami
+ *   (traceability). Yangi vazifa mas'ul xodimning "Bog'liq-vazifalar" tab'ida
+ *   owner_user_id bo'yicha ko'rinadi.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -23,6 +29,10 @@ interface Employee {
   employeeId?: string;
 }
 
+interface KanbanBoardLite { id: string | number; name: string; }
+interface KanbanColumnLite { id: string | number; name: string; sort_order?: number; }
+interface KanbanBoardDetail { id: string | number; name: string; columns?: KanbanColumnLite[]; }
+
 interface Props {
   message: ChatMessage | null;
   open: boolean;
@@ -35,6 +45,7 @@ export function CreateTaskModal({message, open, onClose }: Props) {
   const [title, setTitle] = useState(message?.content?.slice(0, 100) ?? "");
   const [assignedTo, setAssignedTo] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [boardId, setBoardId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -44,21 +55,71 @@ export function CreateTaskModal({message, open, onClose }: Props) {
     enabled: open,
   });
 
+  // Mavjud Kanban doskalari (Buyurtmalar/Sifat/Ishlab chiqarish/Dizayn …).
+  // Vazifa qaysi doskaga tushishini foydalanuvchi tanlaydi (owner qarori).
+  const { data: boards = [] } = useQuery<KanbanBoardLite[]>({
+    queryKey: ["/api/kanban/boards"],
+    queryFn: () => apiRequest("GET", "/api/kanban/boards").then((r: unknown) => (Array.isArray(r) ? r as KanbanBoardLite[] : [])),
+    enabled: open,
+  });
+
+  // Tanlangan doska tafsiloti — 1-ustun (sort_order ASC) kartaning column_id'si bo'ladi.
+  const { data: boardDetail } = useQuery<KanbanBoardDetail | null>({
+    queryKey: [`/api/kanban/boards/${boardId}`],
+    queryFn: () => apiRequest("GET", `/api/kanban/boards/${boardId}`).then((r: unknown) => r as KanbanBoardDetail),
+    enabled: open && !!boardId,
+  });
+  const firstColumnId = Array.isArray(boardDetail?.columns) && boardDetail!.columns!.length > 0
+    ? String(boardDetail!.columns![0].id)
+    : "";
+
+  // Modal ochilganda sarlavhani xabardan to'ldirish + birinchi doskani default tanlash.
+  useEffect(() => {
+    if (open) setTitle(message?.content?.slice(0, 100) ?? "");
+  }, [open, message]);
+  useEffect(() => {
+    if (open && !boardId && boards.length > 0) setBoardId(String(boards[0].id));
+  }, [open, boards, boardId]);
+
   const filtered = search
     ? (Array.isArray(employees) ? employees : []).filter((e: Employee) => e.fullName.toLowerCase().includes(search.toLowerCase()))
     : employees;
 
+  const reset = () => { setAssignedTo(""); setDueDate(""); setSearch(""); setBoardId(""); };
+
   const handleCreate = async () => {
     if (!message || !title.trim()) return;
+    if (!boardId || !firstColumnId) {
+      toast({ title: t("doskaTanlang"), variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
-      await apiRequest("POST", "/api/chat/message-tasks", {
-        messageId: message.id,
+      // (1) Mavjud Kanban modulida haqiqiy karta yaratamiz.
+      const card = await apiRequest("POST", "/api/kanban/cards", {
         title: title.trim(),
+        boardId,
+        columnId: firstColumnId,
         assignedTo: assignedTo || undefined,
         dueDate: dueDate || undefined,
-      });
+        priority: "medium",
+      }) as { id: string | number };
+
+      // (2) Xabar↔karta bog'lami (traceability). Bog'lam ikkilamchi — karta
+      // yaratilgan bo'lsa vazifa muvaffaqiyatli hisoblanadi.
+      try {
+        await apiRequest("POST", "/api/chat/message-tasks", {
+          roomId: message.roomId,
+          messageId: message.id,
+          title: title.trim(),
+          assignedTo: assignedTo || undefined,
+          dueDate: dueDate || undefined,
+          kanbanCardId: card.id,
+        });
+      } catch { /* bog'lam ikkilamchi — karta baribir yaratildi */ }
+
       toast({ title: t("taskCreated"), description: title.trim() });
+      reset();
       onClose();
     } catch {
       toast({ title: t("xato"), variant: "destructive" });
@@ -94,6 +155,23 @@ export function CreateTaskModal({message, open, onClose }: Props) {
               placeholder={t('taskSarlavhasi')}
               className="text-sm"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="task-board" className="text-xs">{t("doska")}</Label>
+            <select
+              id="task-board"
+              value={boardId}
+              onChange={(e) => setBoardId(e.target.value)}
+              className="w-full h-9 rounded-md border border-border bg-background px-2 text-sm"
+            >
+              {(Array.isArray(boards) ? boards : []).map((b) => (
+                <option key={String(b.id)} value={String(b.id)}>{b.name}</option>
+              ))}
+            </select>
+            {boardId && !firstColumnId && (
+              <p className="text-xs text-destructive">{t("doskadaUstunYoq")}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -151,7 +229,7 @@ export function CreateTaskModal({message, open, onClose }: Props) {
           </Button>
           <Button
             onClick={handleCreate}
-            disabled={loading || !title.trim()}
+            disabled={loading || !title.trim() || !boardId || !firstColumnId}
             className="text-sm"
           >
             {loading ? t("creating") : t("createTask")}

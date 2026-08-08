@@ -6,7 +6,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { org_node_portret, node_hr_requests, appUsers } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 import { ensureOrgNodePortretTable, ensureNodeHrRequestsTable } from '@common/database/ddl-migrations';
@@ -59,12 +59,23 @@ export class NodePortretRepository {
     creatorId: number | null,
   ): Promise<Result<Row>> {
     return safeCall(async () => {
+      // BUG FIX (live-verified 2026-07-13): `idx_org_node_portret_node_id` was made a PARTIAL
+      // unique index (`WHERE card_id IS NULL`) by org-node-portret-card-key-2026-06-20.sql so
+      // card-keyed portret rows (card_id NOT NULL) could coexist with node-keyed rows without
+      // colliding on node_id. `onConflictDoUpdate({ target: node_id })` alone no longer matches
+      // any arbiter (Postgres needs the SAME predicate on the ON CONFLICT clause as the partial
+      // index), so every save 500'd with "no unique or exclusion constraint matching the ON
+      // CONFLICT specification" — the 7-step Portret wizard (OrgNodePortretTab.tsx) silently
+      // failed on every "Saqlash" click, and a reload's GET legitimately showed portret:null
+      // (nothing was ever persisted) — reproducing the exact "wizard wiped on reload" symptom.
+      // Fix: `targetWhere` mirrors the partial index predicate so Postgres can resolve the arbiter.
       const rows = await db.insert(org_node_portret).values({
         node_id:      nodeId,
         portret_data: portretData,
         creator_id:   creatorId,
       }).onConflictDoUpdate({
         target: org_node_portret.node_id,
+        targetWhere: sql`card_id IS NULL`,
         set: {
           portret_data: portretData,
           creator_id:   creatorId,
@@ -133,6 +144,60 @@ export class NodePortretRepository {
         created_at:   node_hr_requests.created_at,
       });
       return (rows[0] ?? {}) as Row;
+    }, 'DB_ERROR');
+  }
+
+  // ─── Portret PDF / Email ─────────────────────────────────────────────────────
+
+  /**
+   * Karta (org_departments — kanonik "node=karta" jadval, MASSIV-100) + razryad
+   * ma'lumotlarini o'qiydi: lavozim nomi, ЦКП target, oylik vilkasi, razryad.
+   * razryad_levels — ixtiyoriy FK (razryad_level_id NULL bo'lishi mumkin), shuning
+   * uchun LEFT JOIN. org_departments/razryad_levels — poydevor jadvallar (ensureTables
+   * shart emas, org_node_portret/node_hr_requests dan farqli — ular boot'da mavjud).
+   */
+  async getNodeCardInfo(nodeId: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          d.id, d.name, d.name_ru, d.description, d.node_type, d.parent_id,
+          d.tskp, d.tskp_ru, d.tskp_target, d.tskp_measurement_unit,
+          d.salary_type, d.min_salary, d.max_salary, d.razryad_level_id,
+          p.name AS parent_name,
+          r.level AS razryad_level, r.name AS razryad_name,
+          r.min_requirement AS razryad_min_requirement
+        FROM org_departments d
+        LEFT JOIN org_departments p ON p.id = d.parent_id
+        LEFT JOIN razryad_levels r ON r.id = d.razryad_level_id
+        WHERE d.id = ${nodeId}
+        LIMIT 1
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * Portret PDF/email qabul qiluvchilar ro'yxati: faol HR menejerlar (role
+   * hr/hr_manager) + shu kartaga biriktirilgan xodim(lar) (employee_org_departments,
+   * is_active=true). Email bo'sh yoki foydalanuvchi soft-delete bo'lsa chiqarib
+   * tashlanadi; DISTINCT — HR bo'lib, shu kartaga ham biriktirilgan xodim ikki marta
+   * kelmaydi.
+   */
+  async getPortretRecipientEmails(nodeId: number): Promise<Result<string[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<{ email: string }>(sql`
+        SELECT DISTINCT email FROM (
+          SELECT email FROM users
+          WHERE role IN ('hr', 'hr_manager') AND is_active = true
+            AND deleted_at IS NULL AND email IS NOT NULL
+          UNION
+          SELECT u.email FROM employee_org_departments eod
+          JOIN users u ON u.id = eod.user_id
+          WHERE eod.org_department_id = ${nodeId} AND eod.is_active = true
+            AND u.email IS NOT NULL AND u.deleted_at IS NULL
+        ) recipients
+      `);
+      return rows.rows.map((r) => r.email);
     }, 'DB_ERROR');
   }
 }

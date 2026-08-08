@@ -6,14 +6,21 @@
  *   on the passed-in app instance.
  */
 
-import { register as promRegister } from 'prom-client';
+import { register as promRegister, collectDefaultMetrics } from 'prom-client';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { HttpStatus, Logger, RequestMethod } from '@nestjs/common';
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { sql } from 'drizzle-orm';
 import { SentryInterceptor } from './common/monitoring/sentry.config';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { SECONDS_PER_YEAR, MS_PER_SECOND } from '@common/constants/app.constants';
+import { Database } from './infrastructure/database/database';
+import { REDIS_CLIENT } from './infrastructure/redis/redis.constants';
+
+// Prometheus default Node.js metrikalarini bir marta yoqish:
+// GC, event-loop lag, heap, CPU — Grafana/Prometheus uchun avtomatik.
+collectDefaultMetrics({ prefix: 'europrint_api_' });
 
 // ── Internal types — mirror fastify's raw adapter shape ─────────────────────
 export type RawFastify = {
@@ -213,10 +220,90 @@ export function configureSwagger(app: NestFastifyApplication, fastify: RawFastif
   logger.log(`Swagger UI: http://localhost:${port}/api/docs (secret required)`);
 }
 
-export function configureHealthRoutes(fastify: RawFastify): void {
+/**
+ * Berilgan promisega timeout qo'shadi. Vaqt o'tsa `timeoutMsg` xatosi tashlaydi.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMsg: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(timeoutMsg)), ms)),
+  ]);
+}
+
+/**
+ * Health + metrics Fastify route'lari.
+ *
+ * /health  — Docker/k8s health probe uchun DB + Redis liveness tekshiruvi.
+ *            - DB xato → 503 (kritik: trafik routelanmaydi)
+ *            - Redis xato → 200 degraded (xizmat ishlaydi, queue'lar o'chirilgan)
+ * /metrics — Prometheus scrape endpoint (prom-client default + custom metrikalar).
+ */
+export function configureHealthRoutes(fastify: RawFastify, app: NestFastifyApplication): void {
   fastify.get('/', (_req, reply) => reply.code(200).send({ status: 'ok', service: 'europrint-api' }));
-  fastify.get('/health', (_req, reply) => reply.code(200).send({ status: 'ok' }));
-  fastify.get('/metrics', async (_req, reply) => {
+
+  fastify.get('/health', async (_req, reply) => {
+    const checks: Record<string, { status: string; latencyMs?: number; error?: string }> = {};
+    let dbOk = true;
+
+    // ── 1. PostgreSQL liveness ───────────────────────────────────────────────
+    try {
+      const database = app.get(Database);
+      const t0 = Date.now();
+      await withTimeout(database.execute(sql`SELECT 1`), 3000, 'DB timeout (3s)');
+      checks.database = { status: 'ok', latencyMs: Date.now() - t0 };
+    } catch (e: unknown) {
+      dbOk = false;
+      checks.database = { status: 'error', error: e instanceof Error ? e.message : String(e) };
+    }
+
+    // ── 2. Redis liveness (ixtiyoriy — degraded mode ruxsat) ────────────────
+    try {
+      const redis = app.get<{ ping(): Promise<string> }>(REDIS_CLIENT);
+      const t0 = Date.now();
+      await withTimeout(redis.ping(), 2000, 'Redis timeout (2s)');
+      checks.redis = { status: 'ok', latencyMs: Date.now() - t0 };
+    } catch (e: unknown) {
+      // Redis yo'qligi tizimni to'xtatmaydi (lazyConnect mode).
+      // Queue'lar o'chiriladi, lekin sinxron API'lar ishlaydi.
+      checks.redis = { status: 'degraded', error: e instanceof Error ? e.message : String(e) };
+    }
+
+    // ── 3. Xotira holati ─────────────────────────────────────────────────────
+    const mem = process.memoryUsage();
+    const heapPct = Math.round((mem.heapUsed / mem.heapTotal) * 100);
+
+    const httpStatus = dbOk ? 200 : 503;
+    const overallStatus = dbOk ? (checks.redis?.status === 'ok' ? 'ok' : 'degraded') : 'error';
+
+    reply.code(httpStatus).send({
+      status: overallStatus,
+      uptime: Math.floor(process.uptime()),
+      version: process.env.SENTRY_RELEASE ?? process.env.npm_package_version ?? '2.0',
+      checks,
+      memory: {
+        rssMb: Math.round(mem.rss / 1024 / 1024),
+        heapUsedMb: Math.round(mem.heapUsed / 1024 / 1024),
+        heapTotalMb: Math.round(mem.heapTotal / 1024 / 1024),
+        heapPct,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // BLOCKER-3 fix: /metrics Prometheus scrape endpoint himoyasi.
+  // METRICS_SECRET env bo'lsa — X-Metrics-Secret header tekshiriladi.
+  // Bo'sh bo'lsa — internal faqat (Nginx tashqaridan /metrics ni bloklashi kerak).
+  // req: unknown — RawFastify.get imzosi shunga mos (RawReq annotatsiyasi contravariance buzadi); ishlatishda cast.
+  fastify.get('/metrics', async (req: unknown, reply) => {
+    const secret = process.env.METRICS_SECRET;
+    if (secret) {
+      const provided = (req as RawReq).headers['x-metrics-secret'];
+      const valid = Array.isArray(provided) ? provided[0] : provided;
+      if (valid !== secret) {
+        reply.code(403).send({ statusCode: 403, error: 'Forbidden', message: 'Invalid metrics secret' });
+        return;
+      }
+    }
     const metrics = await promRegister.metrics();
     reply.code(200).header('content-type', promRegister.contentType).send(metrics);
   });

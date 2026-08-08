@@ -9,28 +9,10 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
 
-export const employee360Assessments = pgTable("employee_360_assessments", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
-  assessmentPeriod: varchar("assessment_period", { length: 30 }),
-  assessmentYear: integer("assessment_year"),
-  selfRating: decimal("self_rating", { precision: 3, scale: 1 }),
-  managerRating: decimal("manager_rating", { precision: 3, scale: 1 }),
-  peerRating: decimal("peer_rating", { precision: 3, scale: 1 }),
-  subordinateRating: decimal("subordinate_rating", { precision: 3, scale: 1 }),
-  averageRating: decimal("average_rating", { precision: 3, scale: 1 }),
-  strengths: text("strengths"),
-  areasForImprovement: text("areas_for_improvement"),
-  developmentPlan: text("development_plan"),
-  status: varchar("status", { length: 20 }).default("draft"),
-  completedAt: timestamp("completed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (t) => [
-  check("employee_360_assessments_status_chk", sql`${t.status} IN ('draft','in_progress','completed','cancelled')`),
-  check("employee_360_assessments_avg_rating_chk", sql`${t.averageRating} IS NULL OR (${t.averageRating} >= 0 AND ${t.averageRating} <= 5)`),
-]);
-
+// ORFAN CLEANUP (2026-07-02): employee360Assessments pgTable removed — dead
+// lib/db duplicate, Q-29 verified: never imported via @workspace/db anywhere
+// in apps/. Canonical live snake_case stub is
+// apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts.
 
 export const employeeStrengthsWeaknesses = pgTable("employee_strengths_weaknesses", {
   id: serial("id").primaryKey(),
@@ -108,11 +90,6 @@ export const exitInterviews = pgTable("exit_interviews", {
   blocksSettlement: boolean("blocks_settlement").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
-export const insertEmployee360AssessmentSchema = createInsertSchema(employee360Assessments).omit({ id: true, createdAt: true, updatedAt: true } as never);
-export type InsertEmployee360Assessment = z.infer<typeof insertEmployee360AssessmentSchema>;
-export type Employee360Assessment = typeof employee360Assessments.$inferSelect;
-
 
 export const insertEmployeeStrengthsWeaknessesSchema = createInsertSchema(employeeStrengthsWeaknesses).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertEmployeeStrengthsWeaknesses = z.infer<typeof insertEmployeeStrengthsWeaknessesSchema>;

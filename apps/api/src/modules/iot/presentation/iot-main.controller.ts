@@ -16,7 +16,6 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotMainService } from '../application/iot-main.service';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import {
@@ -37,8 +36,14 @@ const PatchDeviceSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 }).passthrough();
 
-const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
-const IOT_WRITE = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin'];
+// 07-pp#38 — Director "eng yomon stanok" OEE reytingi: ixtiyoriy sana oralig'i (shift_date).
+const WorstMachineQuerySchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
+const IOT_READ = ['super_admin', 'director', 'production_manager', 'technologist'];
+const IOT_WRITE = ['super_admin', 'director', 'production_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -141,12 +146,21 @@ export class IotMainController {
   }
 
   @ApiOperation({ summary: 'Get energy consumption' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Energiya sensori o\'rnatilmagan (EP-IOT-018-PENDING)' })
   @Get('energy-consumption')
   @Roles(...IOT_READ)
   async getEnergyConsumption(@Query() raw: Record<string, unknown>) {
-    const q = DeviceIdQuerySchema.parse(raw);
-    return unwrapOrThrow(await this.svc.getEnvironmentData('energy', undefined, q.device_id));
+    // EP-IOT-018 (owner override, audit EP-IOT-018/030): energiya sensorlari
+    // FIZIKAN o'rnatilmagan. Bu endpoint AVVAL seed qilingan soxta sensor
+    // ma'lumotini (SNS-E-MAIN) 200 bilan qaytarardi — bu egasi taqiqlagan
+    // soxta javob. Owner MAJBURAN halol 501 talab qildi (Qoida 10/17 dan
+    // istisno: bu yagona, egasi-mandatli halol 501). Sensor o'rnatilganda
+    // shu yerda real query tiklanadi.
+    DeviceIdQuerySchema.parse(raw);
+    throw new HttpException(
+      { message: "Energiya sensori o'rnatilmagan", code: 'EP-IOT-018-PENDING' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @ApiOperation({ summary: 'Get temperature' })
@@ -218,6 +232,18 @@ export class IotMainController {
     return unwrapOrThrow(await this.svc.getOee(q.device_id, q.period));
   }
 
+  // 07-pp#38 — Director "eng yomon stanok": OEE% asosiy mezon (o'suvchi reyting),
+  // brak% ALOHIDA flag (brak% > work_centers.brak_limit_pct). Static path — 'oee'
+  // va 'oee/live' bilan to'qnashmaydi.
+  @ApiOperation({ summary: 'Get worst-machine OEE ranking (Director)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('oee/worst-machines')
+  @Roles(...IOT_READ)
+  async getWorstMachines(@Query() raw: Record<string, unknown>) {
+    const q = WorstMachineQuerySchema.parse(raw);
+    return unwrapOrThrow(await this.svc.getWorstMachineRanking(q.from, q.to));
+  }
+
   @ApiOperation({ summary: 'Get downtime' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime')
@@ -269,11 +295,29 @@ export class IotMainController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime-reason-codes') @Roles(...IOT_READ)
   async getDowntimeReasonCodes() {
+    // VISION-3340 16.60/16.61: repointed from the EMPTY downtime_reason_codes table
+    // (0 rows, name/name_ru columns) to the LIVE mes_downtime_reasons catalog (16 rows),
+    // so the tablet downtime picker renders real reasons (the submit button is disabled
+    // until one is selected — an empty list made downtime un-submittable). Mirrors
+    // legacy-iot.service.ts getIotTabletDefectReasons: id + code + name AS labelUz +
+    // COALESCE(drc.name_ru, name) AS labelRu (LEFT JOIN downtime_reason_codes for the RU
+    // fallback; that table is empty so it falls back to the Uzbek name — Russian appears
+    // automatically once seeded) + category AS stage. Returns a BARE ARRAY — the FE
+    // (useIoTTabletData) maps over it directly (a {items,total} object would not be an array).
     const r = await db.execute(sql`
-      SELECT * FROM downtime_reason_codes WHERE is_active=true ORDER BY sort_order, name
+      SELECT
+        dr.id                                     AS id,
+        dr.code                                   AS code,
+        dr.name                                   AS "labelUz",
+        COALESCE(drc.name_ru, dr.name)            AS "labelRu",
+        dr.category                               AS stage
+      FROM mes_downtime_reasons dr
+      LEFT JOIN downtime_reason_codes drc ON drc.code = dr.code
+      WHERE dr.is_active = true
+      ORDER BY dr.code
     `);
-    const items = ((r as { rows?: unknown[] }).rows) ?? [];
-    return { items, total: items.length };
+    const rows = (r as { rows?: unknown[] }).rows;
+    return Array.isArray(rows) ? rows : [];
   }
 
   // -- Device patch ------------------------------------------------------------
@@ -296,24 +340,56 @@ export class IotMainController {
     return { id: parseInt(id, 10), updated: true };
   }
 
-  // OEE live snapshot - real values come from sensor_readings + production_sessions
-  // aggregation; for now we serve a typed empty snapshot so the page renders.
+  // OEE live snapshot - aggregated from production_sessions (real data source).
+  // oee_records table exists but has 0 rows; production_sessions has availability/
+  // performance/quality/oee columns with real numeric values from IoT devices.
   @ApiOperation({ summary: 'Get oee live' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('oee/live') @Roles(...IOT_READ)
   async getOeeLive(@Query('device_id') deviceId?: string) {
-    // Aggregate the latest shift's OEE records from oee_records (real DB).
-    const r = await db.execute(sql`
+    // (1) AVG summary — recent active sessions (last 8 h or running/in_progress).
+    const machineIdFilter = deviceId
+      ? sql`AND machine_id = ${parseInt(deviceId, 10)}`
+      : sql``;
+
+    const summaryResult = await db.execute(sql`
       SELECT AVG(availability)::numeric(6,2) AS availability,
              AVG(performance)::numeric(6,2)  AS performance,
              AVG(quality)::numeric(6,2)      AS quality,
              AVG(oee)::numeric(6,2)          AS oee,
              COUNT(*)::int                   AS sample_size
-      FROM oee_records
-      WHERE date = (SELECT MAX(date) FROM oee_records)
-        ${deviceId ? sql`AND machine_id = ${parseInt(deviceId, 10)}` : sql``}
+      FROM production_sessions
+      WHERE deleted_at IS NULL
+        AND (
+          updated_at >= NOW() - INTERVAL '8 hours'
+          OR status IN ('running', 'in_progress')
+        )
+        ${machineIdFilter}
     `);
-    const row = ((r as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+    const summaryRows = (summaryResult as unknown as { rows: Record<string, unknown>[] }).rows ?? [];
+    const row = summaryRows[0];
+
+    // (2) GROUP BY machine_id for the by_machine breakdown.
+    const byMachineResult = await db.execute(sql`
+      SELECT machine_id,
+             AVG(availability)::numeric(6,2) AS availability,
+             AVG(performance)::numeric(6,2)  AS performance,
+             AVG(quality)::numeric(6,2)      AS quality,
+             AVG(oee)::numeric(6,2)          AS oee,
+             COUNT(*)::int                   AS sample_size
+      FROM production_sessions
+      WHERE deleted_at IS NULL
+        AND machine_id IS NOT NULL
+        AND (
+          updated_at >= NOW() - INTERVAL '8 hours'
+          OR status IN ('running', 'in_progress')
+        )
+        ${machineIdFilter}
+      GROUP BY machine_id
+      ORDER BY machine_id
+    `);
+    const byMachineRows = (byMachineResult as unknown as { rows: Record<string, unknown>[] }).rows ?? [];
+
     return {
       availability: Number(row?.availability ?? 0),
       performance:  Number(row?.performance  ?? 0),
@@ -321,7 +397,14 @@ export class IotMainController {
       oee:          Number(row?.oee          ?? 0),
       sample_size:  Number(row?.sample_size  ?? 0),
       generated_at: new Date().toISOString(),
-      by_machine: [],
+      by_machine: byMachineRows.map(m => ({
+        machine_id:   Number(m.machine_id),
+        availability: Number(m.availability ?? 0),
+        performance:  Number(m.performance  ?? 0),
+        quality:      Number(m.quality      ?? 0),
+        oee:          Number(m.oee          ?? 0),
+        sample_size:  Number(m.sample_size  ?? 0),
+      })),
     };
   }
 }

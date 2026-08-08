@@ -63,10 +63,10 @@ export interface MaterialCard {
   materialType?: string;
 }
 
-export interface GroupedParametersData {
-  grouped: Record<string, QcParameter[]>;
-  categoryLabels: Record<string, { uz: string; ru: string }>;
-}
+// GET /api/qc/parameters/grouped returns the grouped map directly
+// (e.g. { physical: [...], printing: [...] }) — NOT wrapped in a
+// `{ grouped: ... }` envelope. See QcParametersController.getParametersGrouped.
+export type GroupedParametersData = Record<string, QcParameter[]>;
 
 // ─── Zod schema ──────────────────────────────────────────────────────────────
 

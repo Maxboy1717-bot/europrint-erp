@@ -59,6 +59,7 @@ export function CreateRoomModal({ open, onClose }: Props) {
         "/api/chat/rooms/group",
         {
           name: name.trim(),
+          type,
           memberIds: (Array.isArray(selected) ? selected : []).map((e) => e.id),
         },
       );

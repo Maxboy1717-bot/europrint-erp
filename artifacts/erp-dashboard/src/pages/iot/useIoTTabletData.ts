@@ -11,29 +11,25 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, getQueryFn } from "@/lib/queryClient";
 import { safeStorage } from "@/lib/safeStorage";
 import { apiRequest } from "@/lib/queryClient";
+import { tabletFetch as sharedTabletFetch } from "./tabletFetch";
 import {
   ProductionOrder, Equipment, ProductionSession,
   DowntimeReasonCode, Employee,
 } from "./iot-types";
 
 // ---------------------------------------------------------------------------
-// Helper: typed fetch with tablet token
+// Helper: typed fetch with tablet token (401 → refresh → retry, see tabletFetch.ts)
 // ---------------------------------------------------------------------------
 
-function makeTabletFetch(tabletToken: string, t: (uz: string, ru: string) => string) {
+function makeTabletFetch(tabletToken: string, t: (key: string, params?: Record<string, string | number>) => string) {
   return async function tabletFetch(
     method: "GET" | "POST" | "PATCH",
     path: string,
     body?: unknown,
   ): Promise<Response> {
     const token = tabletToken || safeStorage.getItem("iot_tablet_token") || "";
-    if (!token) throw new Error(t("Sessiya muddati tugagan — iltimos qayta kiring", "Сессия истекла — войдите снова"));
-    // eslint-disable-next-line no-restricted-globals -- raw fetch: shared tablet-fetch helper; uses x-tablet-token auth, not ERP cookie
-    return fetch(path, {
-      method,
-      headers: { "Content-Type": "application/json", "x-tablet-token": token },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    if (!token) throw new Error(t("sessionExpired"));
+    return sharedTabletFetch(method, path, body, token);
   };
 }
 
@@ -46,7 +42,7 @@ export interface UseIoTTabletDataParams {
   workerId: string;
   tabletToken: string;
   showChecklistModal: boolean;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   setShiftInfo: React.Dispatch<React.SetStateAction<{
     name: string; nameRu: string; startTime: string; endTime: string;
     coWorkers?: { id: string; name: string }[];
@@ -94,11 +90,7 @@ export function useIoTTabletData({
   >({
     queryKey: ["/api/iot/tablet/defect-reasons"],
     queryFn: async () => {
-      const token = tabletToken || safeStorage.getItem("iot_tablet_token") || "";
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["x-tablet-token"] = token;
-      // eslint-disable-next-line no-restricted-globals -- raw fetch: IoT tablet uses x-tablet-token auth, not ERP session cookie
-      const res = await fetch("/api/iot/tablet/defect-reasons", { headers });
+      const res = await sharedTabletFetch("GET", "/api/iot/tablet/defect-reasons", undefined, tabletToken);
       if (!res.ok) return [];
       return res.json();
     },

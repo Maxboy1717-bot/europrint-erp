@@ -14,15 +14,18 @@ import {
   Post,
   Put,
   Query,
+  Res,
   UseGuards,
   UseInterceptors,
   InternalServerErrorException,
   UsePipes,
 } from '@nestjs/common';
+import { FastifyReply } from 'fastify';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
+import { Public } from '@common/decorators/public.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CrmBitrixCompatService } from '../application/crm-bitrix-compat.service';
@@ -37,6 +40,12 @@ const UpdateStageSchema = z.object({
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 const BITRIX_ROLES = ['admin', 'manager', 'hr_manager', 'director', 'super_admin'];
+
+// CRM-13#5: static 1x1 transparent GIF served by the public KP-view pixel endpoint below.
+const TRANSPARENT_GIF_1X1 = Buffer.from(
+  'R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+  'base64',
+);
 
 @UseGuards(RolesGuard)
 @Roles(...BITRIX_ROLES)
@@ -120,11 +129,32 @@ export class CrmBitrixCompatController {
     return unwrapOrThrow(await this.svc.updateProposalStage(parseInt(id, 10) || 0, status));
   }
 
+  // CRM-13#5 — KP pixel tracking: the emailed proposal (KP) embeds this URL as an <img> tag;
+  // when the recipient's mail client loads it, we idempotently stamp viewed_at once (mirrors
+  // CC #47 markViewed's "WHERE viewed_at IS NULL" first-view pattern — see
+  // cc-documents-write.repo.ts). The write is best-effort and its Result is intentionally not
+  // checked: the pixel must always render even if the DB write fails, so it never shows as a
+  // broken image. Public: the recipient has no ERP session to authenticate with.
+  @Public()
+  @Get('proposals/:id/view.gif')
+  async proposalViewPixel(@Param('id') id: string, @Res() res: FastifyReply) {
+    const proposalId = parseInt(id, 10) || 0;
+    if (proposalId > 0) {
+      await this.svc.markProposalViewed(proposalId);
+    }
+    res
+      .header('Content-Type', 'image/gif')
+      .header('Cache-Control', 'no-store, no-cache, must-revalidate')
+      .header('X-Content-Type-Options', 'nosniff')
+      .send(TRANSPARENT_GIF_1X1);
+  }
+
   @Patch('invoices/:id/stage')
   async updateInvoiceStage(@Param('id') id: string, @Body() body: unknown) {
     const dto = UpdateStageSchema.parse(body);
     const status = String(dto.status ?? dto.stageId ?? dto.stage_id ?? '');
-    return unwrapOrThrow(await this.svc.updateInvoiceStage(parseInt(id, 10) || 0, status));
+    // invoices.id is a uuid — pass the raw id (parseInt(id) -> NaN -> 0 matched nothing).
+    return unwrapOrThrow(await this.svc.updateInvoiceStage(id, status));
   }
 
   @Delete('proposals/:id')
@@ -136,6 +166,7 @@ export class CrmBitrixCompatController {
   @Delete('invoices/:id')
   @Roles('super_admin', 'director', 'manager')
   async deleteInvoice(@Param('id') id: string) {
-    return unwrapOrThrow(await this.svc.deleteInvoice(parseInt(id, 10) || 0));
+    // invoices.id is a uuid — pass the raw id (parseInt(id) -> NaN -> 0 matched nothing).
+    return unwrapOrThrow(await this.svc.deleteInvoice(id));
   }
 }

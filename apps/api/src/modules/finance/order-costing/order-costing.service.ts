@@ -4,12 +4,16 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IOrderCostingRepository, ORDER_COSTING_REPO } from './i-order-costing.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
 @Injectable()
 export class OrderCostingService {
-  constructor(@Inject(ORDER_COSTING_REPO) private readonly repo: IOrderCostingRepository) {}
+  constructor(
+    @Inject(ORDER_COSTING_REPO) private readonly repo: IOrderCostingRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -24,7 +28,7 @@ export class OrderCostingService {
   async findById(id: number) {
     const result = await this.repo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Buyurtma xarajati #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.orderCostingNotFoundWithId', { args: { id } }));
     return result.data;
   }
 

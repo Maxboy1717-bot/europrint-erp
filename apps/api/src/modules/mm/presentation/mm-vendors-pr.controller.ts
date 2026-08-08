@@ -10,6 +10,7 @@ import {
 BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -17,14 +18,17 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { MmVendorsPrService } from '../application/mm-vendors-pr.service';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import {
   MmCreateVendorSchema, MmCreateVendorDto,
   MmUpdateVendorSchema, MmUpdateVendorDto,
   MmCreateRequisitionSchema, MmCreateRequisitionDto,
   MmUpdateRequisitionSchema, MmUpdateRequisitionDto,
+  MmConvertRequisitionToPoSchema, MmConvertRequisitionToPoDto,
 } from '../dto/mm.dto';
 
-const MM_WRITE_ROLES = ['ERP_MANAGER', 'mm_manager', 'warehouse_manager', 'super_admin', 'director'];
+const MM_WRITE_ROLES = ['mm_manager', 'warehouse_manager', 'super_admin', 'director'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -33,7 +37,7 @@ const MM_WRITE_ROLES = ['ERP_MANAGER', 'mm_manager', 'warehouse_manager', 'super
 export class MmVendorsPrController {
   private readonly logger = new Logger(MmVendorsPrController.name);
 
-  constructor(private readonly svc: MmVendorsPrService) {}
+  constructor(private readonly svc: MmVendorsPrService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List vendors' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -43,17 +47,51 @@ export class MmVendorsPrController {
   }
 
   /**
-   * Alias for the integration module's vendor-performance endpoint so the
-   * VendorPerformance frontend page can call /api/mm/vendor-performance.
-   * Returns the same shape that integration-extended-hr.controller.ts emits.
-   * Real DB pull will land when vendor_performance schema is added; for now
-   * we serve an empty list (page renders empty state cleanly).
+   * List vendor performance ratings from mm_vendor_ratings (canonical write table).
+   * GET /api/mm/vendor-performance
+   * Score = quality*0.4 + delivery*0.3 + price*0.2 + document*0.1
+   * document_score is stored inside the notes JSON field (see POST createVendorPerformance).
    */
   @ApiOperation({ summary: 'List vendor performance' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('vendor-performance')
-  async listVendorPerformance() {
-    return [];
+  async listVendorPerformance(
+    @Query('period') period?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const lim = Math.min(parseInt(limit ?? '50', 10) || 50, 200);
+    try {
+      const r = await rawSql(sql`
+        SELECT
+          mvr.id::text AS id,
+          mvr.vendor_id AS "vendorId",
+          mv.name AS "vendorName",
+          ROUND(
+            (COALESCE(mvr.quality_score, 0) * 0.4 +
+             COALESCE(mvr.delivery_score, 0) * 0.3 +
+             COALESCE(mvr.price_score, 0) * 0.2 +
+             COALESCE(
+               (CASE
+                 WHEN mvr.notes IS NOT NULL AND mvr.notes ~ '^\s*\{'
+                 THEN ((mvr.notes::json)->>'document_score')::numeric
+                 ELSE NULL
+               END), 0
+             ) * 0.1)::numeric, 2
+          ) AS score,
+          ROUND((COALESCE(mvr.delivery_score, 0) / 100.0)::numeric, 4) AS "onTimeRate",
+          ROUND((COALESCE(mvr.quality_score, 0) / 100.0)::numeric, 4) AS "qualityRate",
+          mvr.rated_at::date::text AS period,
+          mvr.rated_at AS "createdAt"
+        FROM mm_vendor_ratings mvr
+        LEFT JOIN mm_vendors mv ON mv.id = mvr.vendor_id
+        WHERE (${period ?? null}::text IS NULL OR mvr.rated_at::date::text = ${period ?? null})
+        ORDER BY mvr.rated_at DESC LIMIT ${lim}
+      `);
+      return (r as { rows?: Record<string, unknown>[] }).rows ?? [];
+    } catch (e) {
+      this.logger.error('listVendorPerformance failed', e);
+      return [];
+    }
   }
 
   @ApiOperation({ summary: 'Get vendor' })
@@ -64,7 +102,7 @@ export class MmVendorsPrController {
     const _rR = await this.svc.getVendor(safeInt(id, 0));
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Vendor not found');
+    assertFound(r, await this.i18n.t('errors.vendorNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -75,7 +113,7 @@ export class MmVendorsPrController {
   @UsePipes(new ZodValidationPipe(MmCreateVendorSchema))
   @Roles(...MM_WRITE_ROLES)
   async createVendor(@Body() body: MmCreateVendorDto) {
-    assertRequired((body as Record<string, unknown>).name, 'name required');
+    assertRequired((body as Record<string, unknown>).name, await this.i18n.t('validation.nameRequired'));
     return unwrapOrThrow(await this.svc.createVendor(body));
   }
 
@@ -90,7 +128,7 @@ export class MmVendorsPrController {
     const _rR = await this.svc.updateVendor(safeInt(id, 0), body);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Vendor not found');
+    assertFound(r, await this.i18n.t('errors.vendorNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -121,7 +159,7 @@ export class MmVendorsPrController {
     const _rGetRequisition = await this.svc.getRequisition(safeInt(id, 0));
     assertOk(_rGetRequisition);
     const r = _rGetRequisition.data as Record<string, unknown>;
-    assertFound(r, 'Requisition not found');
+    assertFound(r, await this.i18n.t('errors.requisitionNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -132,8 +170,26 @@ export class MmVendorsPrController {
   @UsePipes(new ZodValidationPipe(MmCreateRequisitionSchema))
   @Roles(...MM_WRITE_ROLES)
   async createRequisition(@Body() body: MmCreateRequisitionDto, @CurrentUser() user: Record<string, unknown>) {
-    assertRequired((body as Record<string, unknown>).title, 'title required');
+    assertRequired((body as Record<string, unknown>).title, await this.i18n.t('errors.titleRequired'));
     return unwrapOrThrow(await this.svc.createRequisition(body.title, (user?.id as number) ?? null, body.needed_by, body.notes, (body.items ?? []) as Array<Record<string, unknown>>));
+  }
+
+  @ApiOperation({ summary: 'Convert approved requisition to purchase order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Already converted' })
+  @Post('purchase-requisitions/:id/convert-to-po')
+  @UsePipes(new ZodValidationPipe(MmConvertRequisitionToPoSchema))
+  @Roles(...MM_WRITE_ROLES)
+  async convertRequisitionToPo(
+    @Param('id') id: string,
+    @Body() body: MmConvertRequisitionToPoDto,
+    @CurrentUser() user: Record<string, unknown>,
+  ) {
+    return unwrapOrThrow(
+      await this.svc.convertRequisitionToPo(safeInt(id, 0), body.supplierId ?? null, (user?.id as number) ?? 0),
+    );
   }
 
   @ApiOperation({ summary: 'Update requisition' })
@@ -147,7 +203,7 @@ export class MmVendorsPrController {
     const _rR = await this.svc.updateRequisition(safeInt(id, 0), body);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Requisition not found');
+    assertFound(r, await this.i18n.t('errors.requisitionNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 

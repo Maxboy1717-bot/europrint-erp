@@ -10,7 +10,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { glDocuments } from "./fi-schema";
-import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, productionSessions, products } from "./pp-schema";
+import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, products } from "./pp-schema";
 import { warehouseBins, warehouseTransactions, warehouses } from "./wms-schema";
 import { materialCards } from "./mm-materials";
 
@@ -62,46 +62,6 @@ export const insertRawMaterialSchema = createInsertSchema(rawMaterials, {
 export type RawMaterial = typeof rawMaterials.$inferSelect;
 
 export type InsertRawMaterial = z.infer<typeof insertRawMaterialSchema>;
-
-
-// Purchase Invoices (xarid hujjatlari)
-export const purchaseInvoices = pgTable("purchase_invoices", {
-  id: serial("id").primaryKey(),
-  invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
-  invoiceDate: varchar("invoice_date", { length: 10 }).notNull(), // YYYY-MM-DD
-  supplierName: text("supplier_name").notNull(),
-  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
-  totalAmount: numericMoney("total_amount").notNull(),
-  paidAmount: numericMoney("paid_amount").notNull().default(0),
-  paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("unpaid"), // unpaid, partial, paid
-  dueDate: varchar("due_date", { length: 10 }), // YYYY-MM-DD
-  notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}, (t) => [
-  check("purchase_invoices_payment_status_chk", sql`${t.paymentStatus} IN ('unpaid','partial','paid')`),
-  check("purchase_invoices_total_amount_chk", sql`${t.totalAmount} >= 0`),
-  check("purchase_invoices_paid_amount_chk", sql`${t.paidAmount} >= 0`),
-  index("idx_purchase_invoices_vendor_id").on(t.vendorId),
-  index("idx_purchase_invoices_payment_status").on(t.paymentStatus),
-  index("idx_purchase_invoices_invoice_date").on(t.invoiceDate),
-  index("idx_purchase_invoices_created_at").on(t.createdAt),
-]);
-
-
-export const insertPurchaseInvoiceSchema = createInsertSchema(purchaseInvoices, {
-  invoiceNumber: z.string().min(1, "Hujjat raqami talab qilinadi"),
-  invoiceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak"),
-  supplierName: z.string().min(2, "Yetkazib beruvchi nomi kamida 2 ta belgidan iborat bo'lishi kerak"),
-  totalAmount: z.number().nonnegative("Umumiy summa 0 yoki katta bo'lishi kerak"),
-  paymentStatus: z.enum(["unpaid", "partial", "paid"]),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-
-export type PurchaseInvoice = typeof purchaseInvoices.$inferSelect;
-
-export type InsertPurchaseInvoice = z.infer<typeof insertPurchaseInvoiceSchema>;
 
 
 // Purchase requisition number sequence (xarid talabi raqami uchun)
@@ -202,48 +162,4 @@ export type Vendor = typeof vendors.$inferSelect;
 
 export type InsertVendor = z.infer<typeof insertVendorSchema>;
 
-
-// Purchase Orders (Xarid buyurtmalari)
-export const purchaseOrders = pgTable("purchase_orders", {
-  id: serial("id").primaryKey(),
-  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
-  // tenant 1 on migration; future writers MUST set this from TenantContext.
-  tenantId: integer("tenant_id").notNull().default(1),
-  poNumber: varchar("po_number", { length: 50 }).notNull().unique(),
-  vendorId: integer("vendor_id").references(() => vendors.id, { onDelete: "restrict" }).notNull(),
-  orderDate: varchar("order_date", { length: 10 }).notNull(), // YYYY-MM-DD
-  deliveryDate: varchar("delivery_date", { length: 10 }), // YYYY-MM-DD
-  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, sent, confirmed, received, cancelled
-  totalAmount: numericMoney("total_amount").default(0),
-  currency: varchar("currency", { length: 10 }).default("UZS"),
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
-  vendorName: text("vendor_name"), // denormalized vendor display name
-  items: jsonb("items"), // embedded line-items payload (legacy JSON storage)
-  approvedBy: integer("approved_by"),
-  approvedAt: timestamp("approved_at"),
-  goodsReceivedBy: integer("goods_received_by"),
-  goodsReceivedAt: timestamp("goods_received_at"),
-  invoiceMatched: boolean("invoice_matched").default(false),
-  threeWayMatched: boolean("three_way_matched").default(false),
-  notes: text("notes"),
-  updatedAt: timestamp("updated_at"),
-  supplierId: varchar("supplier_id"), // alternate supplier reference (string id)
-  expectedDeliveryDate: varchar("expected_delivery_date", { length: 10 }), // YYYY-MM-DD
-  actualDeliveryDate: varchar("actual_delivery_date", { length: 10 }), // YYYY-MM-DD
-  expectedDate: varchar("expected_date", { length: 10 }), // YYYY-MM-DD
-  referenceNumber: varchar("reference_number", { length: 100 }),
-  receivedBy: integer("received_by"),
-}, (t) => [
-  index("idx_purchase_orders_vendor_id").on(t.vendorId),
-  index("idx_purchase_orders_status").on(t.status),
-  index("idx_purchase_orders_created_at").on(t.createdAt),
-  index("idx_purchase_orders_tenant_id").on(t.tenantId),
-  index("idx_purchase_orders_created_by").on(t.createdBy),
-  index("idx_purchase_orders_deleted_at").on(t.deletedAt),
-  check("purchase_orders_status_chk", sql`${t.status} IN ('draft','sent','confirmed','received','cancelled')`),
-  check("purchase_orders_total_amount_chk", sql`${t.totalAmount} IS NULL OR ${t.totalAmount} >= 0`),
-]);
 

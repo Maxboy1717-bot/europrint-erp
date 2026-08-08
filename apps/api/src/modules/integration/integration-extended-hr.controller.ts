@@ -154,7 +154,18 @@ export class IntegrationExtendedHrController {
   @Roles(...VENDOR_ROLES)
   async getVendorPerformance() {
     const r = await this.repo.findVendorPerformance();
-    return r.ok ? r.data : [];
+    const rows = (r.ok && Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
+    return rows.map((row) => ({
+      id:               String(row['id'] ?? ''),
+      periodYear:       Number(row['period_year']  ?? 0),
+      periodMonth:      Number(row['period_month'] ?? 0),
+      totalOrders:      Number(row['total_orders'] ?? 0),
+      onTimeDeliveries: Number(row['on_time_deliveries'] ?? 0),
+      lateDeliveries:   Number(row['late_deliveries']    ?? 0),
+      qualityScore:     Number(row['quality_score']      ?? 0),
+      overallRating:    Number(row['overall_rating']     ?? 0),
+      vendor:           row['vendor_name'] ? { name: String(row['vendor_name']) } : null,
+    }));
   }
 
   @ApiOperation({ summary: 'Get vendor spend analysis' })

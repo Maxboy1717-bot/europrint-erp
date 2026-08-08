@@ -70,11 +70,11 @@ export function AccountsTab({ accounts, onSeedAccounts, isSeedingAccounts }: Acc
                   <TableCell className="text-muted-foreground">{account.accountNameRu}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={
-                      account.accountType === "asset" ? "bg-blue-50 text-[var(--ep-blue)]" :
-                      account.accountType === "liability" ? "bg-red-50 text-[var(--ep-red)]" :
-                      account.accountType === "equity" ? "bg-purple-50 text-[var(--ep-purple)]" :
-                      account.accountType === "revenue" ? "bg-green-50 text-[var(--ep-green)]" :
-                      "bg-orange-50 text-[var(--ep-primary)]"
+                      account.accountType === "asset" ? "bg-[var(--ep-blue-soft)] text-[var(--ep-blue)]" :
+                      account.accountType === "liability" ? "bg-[var(--ep-red-soft)] text-[var(--ep-red)]" :
+                      account.accountType === "equity" ? "bg-[var(--ep-purple-soft)] text-[var(--ep-purple)]" :
+                      account.accountType === "revenue" ? "bg-[var(--ep-green-soft)] text-[var(--ep-green)]" :
+                      "bg-[var(--ep-primary-soft)] text-[var(--ep-primary)]"
                     }>
                       {account.accountType === "asset" ? t('asset') :
                        account.accountType === "liability" ? t('liability') :

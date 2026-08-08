@@ -11,6 +11,7 @@ const CrmRfmClusters    = lazy(() => import("@/pages/CrmRfmClusters"));
 const CrmCohortAnalysis = lazy(() => import("@/pages/CrmCohortAnalysis"));
 const CRMActivities = lazy(() => import("@/pages/CRMActivities"));
 const CRMSettings = lazy(() => import("@/pages/CRMSettings"));
+const CRMFunnelSettings = lazy(() => import("@/pages/CRMFunnelSettings"));
 const CRMWorkspace = lazy(() => import("@/pages/CRMWorkspace"));
 const SalesOrders = lazy(() => import("@/pages/SalesOrders"));
 const SDEuroprint = lazy(() => import("@/pages/SDEuroprint"));
@@ -19,6 +20,7 @@ const SDCustomers = lazy(() => import("@/pages/SDCustomers"));
 const Customer360Page = lazy(() => import("@/pages/Customer360Page"));
 const SDSalesQuotes = lazy(() => import("@/pages/SDSalesQuotes"));
 const SDSalesOrders = lazy(() => import("@/pages/SDSalesOrders"));
+const SDOrderDetail = lazy(() => import("@/pages/SDOrderDetail"));
 const SDSalesPayments = lazy(() => import("@/pages/SDSalesPayments"));
 const SDSalesManagement = lazy(() => import("@/pages/SDSalesManagement"));
 const SDKpi = lazy(() => import("@/pages/SDKpi"));
@@ -26,6 +28,7 @@ const SDContracts = lazy(() => import("@/pages/SDContracts"));
 const SDSettings = lazy(() => import("@/pages/SDSettings"));
 const SDLeads = lazy(() => import("@/pages/SDLeads"));
 const SDDeliveries = lazy(() => import("@/pages/SDDeliveries"));
+const SDLostOrders = lazy(() => import("@/pages/SDLostOrders"));
 const SDDebitors = lazy(() => import("@/pages/SDDebitors"));
 const SDOverviewDashboard = lazy(() => import("@/pages/SDOverviewDashboard"));
 const SDQuotaDashboard = lazy(() => import("@/pages/SDQuotaDashboard"));
@@ -52,6 +55,7 @@ export const SALES_ROUTES: [string, React.ComponentType][] = [
   ['/crm/cohort',              CrmCohortAnalysis],
   ['/crm/activities',          CRMActivities],
   ['/crm/settings',            CRMSettings],
+  ['/crm/funnel-settings',     CRMFunnelSettings],
   ['/erp/sales',               SalesOrders],
   // STEP 2: legacy /sd/quotations now renders the canonical SDSalesQuotes page
   // (sd_quotations was a duplicate FE page over the SAME `quotations` table; sidebar uses sd/sales-quotes).
@@ -63,6 +67,7 @@ export const SALES_ROUTES: [string, React.ComponentType][] = [
   ['/crm/customer/:id',        Customer360Page],
   ['/sd/sales-quotes',         SDSalesQuotes],
   ['/sd/sales-orders',         SDSalesOrders],
+  ['/sd/orders/:id',           SDOrderDetail],
   ['/sd/sales-payments',       SDSalesPayments],
   ['/sd/sales-management',     SDSalesManagement],
   ['/sd/invoices',             SDSalesManagement],
@@ -80,6 +85,7 @@ export const SALES_ROUTES: [string, React.ComponentType][] = [
   ['/sd/advance-control',      SDExtended],
   ['/sd/leads',                SDLeads],
   ['/sd/deliveries',           SDDeliveries],
+  ['/sd/lost-orders',          SDLostOrders],
 ];
 
 export const MARKETING_ROUTES: [string, React.ComponentType][] = [

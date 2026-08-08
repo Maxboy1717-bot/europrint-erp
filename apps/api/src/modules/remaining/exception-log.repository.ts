@@ -17,6 +17,7 @@ export type ExceptionInsert = {
   relatedRecordId?: unknown;
   documentNumber?: unknown;
   description?: unknown;
+  reason?: unknown;
   requestedBy: number;
   meta?: unknown;
 };
@@ -78,7 +79,7 @@ export class ExceptionLogRepository {
   }
 
   async getOne(id: string): Promise<Result<Row | null>>  {
-  try {  
+  try {
       const r = await exec(sql`SELECT * FROM exception_logs WHERE id = ${id} LIMIT 1`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
@@ -86,9 +87,33 @@ export class ExceptionLogRepository {
 
   }
 
+  /**
+   * Q24 fix: latest MES machine_breakdown exception_logs row for a given order.
+   * related_record_id is compared as text since callers pass the sales-order id
+   * as a route-param string (avoids 22P02 on non-numeric orderId values).
+   */
+  async getMachineBreakdown(orderId: string): Promise<Result<Row | null>>  {
+  try {
+      const r = await exec(sql`
+        SELECT *
+        FROM exception_logs
+        WHERE module = 'MES'
+          AND exception_type = 'machine_breakdown'
+          AND related_record_id::text = ${orderId}
+        ORDER BY created_at DESC
+        LIMIT 1
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
   async insert(p: ExceptionInsert): Promise<Result<Row>>  {
   try {  
-      const r = await exec(sql`INSERT INTO exception_logs (module, exception_type, status, related_record_id, document_number, description, requested_by, meta, created_at) VALUES (${p.module}, ${p.exceptionType}, ${p.status}, ${p.relatedRecordId ?? null}, ${p.documentNumber ?? null}, ${p.description ?? null}, ${p.requestedBy}, ${p.meta ? JSON.stringify(p.meta) : null}::jsonb, NOW()) RETURNING *`);
+      const reason = p.reason ?? p.description ?? '';
+      const r = await exec(sql`INSERT INTO exception_logs (module, exception_type, status, related_record_id, document_number, description, reason, requested_by, meta, created_at) VALUES (${p.module}, ${p.exceptionType}, ${p.status}, ${p.relatedRecordId ?? null}, ${p.documentNumber ?? null}, ${p.description ?? null}, ${reason}, ${p.requestedBy}, ${p.meta ? JSON.stringify(p.meta) : null}::jsonb, NOW()) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

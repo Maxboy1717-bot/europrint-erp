@@ -162,6 +162,18 @@ describe('HrImportEmployeesSchema', () => {
     const result = HrImportEmployeesSchema.safeParse({});
     expect(result.success).toBe(true);
   });
+
+  it('rejects a batch larger than 1000 rows (C9.1 DoS cap)', () => {
+    const employees = Array.from({ length: 1001 }, () => ({ name: 'X' }));
+    const result = HrImportEmployeesSchema.safeParse({ employees });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts a batch of exactly 1000 rows', () => {
+    const employees = Array.from({ length: 1000 }, () => ({ name: 'X' }));
+    const result = HrImportEmployeesSchema.safeParse({ employees });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('HrCalculatePayrollSchema', () => {

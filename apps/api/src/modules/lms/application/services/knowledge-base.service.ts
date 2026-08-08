@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { z } from 'zod';
 import { KnowledgeBaseRepository } from '../../infrastructure/repositories/drizzle-knowledge-base.repo';
@@ -26,7 +27,10 @@ export type UpdateKnowledgeBaseDto = z.infer<typeof UpdateKnowledgeBaseSchema>;
 
 @Injectable()
 export class KnowledgeBaseService {
-  constructor(private readonly repo: KnowledgeBaseRepository) {}
+  constructor(
+    private readonly repo: KnowledgeBaseRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(category?: string, search?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -39,7 +43,7 @@ export class KnowledgeBaseService {
   async findById(id: string) {
     const result = await this.repo.findById(id);
     if (!result.ok) throw new BadRequestException(result.error.message);
-    if (!result.data) throw new NotFoundException(`Knowledge base #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.knowledgeBaseNotFoundWithId', { args: { id } }));
     return result.data;
   }
 
@@ -54,7 +58,7 @@ export class KnowledgeBaseService {
     const dto = UpdateKnowledgeBaseSchema.parse(body);
     const existing = await this.repo.findById(id);
     if (!existing.ok) throw new BadRequestException(existing.error.message);
-    if (!existing.data) throw new NotFoundException(`Knowledge base #${id} topilmadi`);
+    if (!existing.data) throw new NotFoundException(await this.i18n.t('errors.knowledgeBaseNotFoundWithId', { args: { id } }));
     const result = await this.repo.update(id, dto);
     if (!result.ok) throw new BadRequestException(result.error.message);
     return result.data;
@@ -63,7 +67,7 @@ export class KnowledgeBaseService {
   async remove(id: string) {
     const existing = await this.repo.findById(id);
     if (!existing.ok) throw new BadRequestException(existing.error.message);
-    if (!existing.data) throw new NotFoundException(`Knowledge base #${id} topilmadi`);
+    if (!existing.data) throw new NotFoundException(await this.i18n.t('errors.knowledgeBaseNotFoundWithId', { args: { id } }));
     const result = await this.repo.remove(id);
     if (!result.ok) throw new BadRequestException(result.error.message);
     return result.data;

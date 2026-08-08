@@ -24,6 +24,7 @@ import { Public } from '@common/decorators/public.decorator';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { I18nService } from 'nestjs-i18n';
 import { LegacyService, PapkaOrderUpdates } from '../services/legacy.service';
 import { safeInt } from '../../hr/common/db-rows';
 import {
@@ -51,6 +52,7 @@ export class GeneralLegacyAController {
   private readonly logger = new Logger(GeneralLegacyAController.name);
   constructor(
     private readonly svc: LegacyService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Get('face-embeddings')
@@ -206,12 +208,12 @@ export class GeneralLegacyAController {
     // and returns {filePath}. Served via the canonical storage route (GET /api/storage/<key>; the FE
     // proxies /storage/* -> /api/storage/*). @fastify/multipart is registered in main.ts.
     const mp = await (req as unknown as { file(): Promise<{ filename?: string; toBuffer(): Promise<Buffer> } | undefined> }).file();
-    if (!mp) throw new BadRequestException('Fayl topilmadi');
+    if (!mp) throw new BadRequestException(await this.i18n.t('errors.fileNotFound'));
     const ext = nodePath.extname(mp.filename || '').toLowerCase();
-    if (!LEGACY_ALLOWED_UPLOAD_EXT.has(ext)) throw new BadRequestException(`Fayl turi ruxsat etilmagan: ${ext || '(yo\'q)'}`);
+    if (!LEGACY_ALLOWED_UPLOAD_EXT.has(ext)) throw new BadRequestException(await this.i18n.t('errors.fileExtensionNotAllowed', { args: { ext: ext || "(yo'q)" } }));
     const buf = await mp.toBuffer();
-    if (!buf.length) throw new BadRequestException('Bo\'sh fayl');
-    if (buf.length > LEGACY_MAX_UPLOAD_BYTES) throw new BadRequestException('Fayl juda katta (maks 25MB)');
+    if (!buf.length) throw new BadRequestException(await this.i18n.t('errors.emptyFileUpload'));
+    if (buf.length > LEGACY_MAX_UPLOAD_BYTES) throw new BadRequestException(await this.i18n.t('errors.fileSizeExceededMax', { args: { maxMb: 25 } }));
     const safeName = (mp.filename || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
     const key = `lessons/${Date.now()}-${safeName}`;
     const dest = nodePath.join(LEGACY_UPLOADS_DIR, key);
@@ -223,8 +225,18 @@ export class GeneralLegacyAController {
 
   @Public()
   @Post('client-errors')
+  @HttpCode(200)
   @UsePipes(new ZodValidationPipe(LegacyClientErrorSchema))
-  async logClientError(@Body() _body: LegacyClientErrorDto) {
+  async logClientError(@Body() body: LegacyClientErrorDto) {
+    // Q25: was a black hole — validated the body then discarded it, returning
+    // {received:true} regardless. Now actually persists to system_error_logs so
+    // browser-side error telemetry is queryable (see insertClientErrorRaw for why
+    // raw SQL). Best-effort: a broken telemetry beacon must never surface as a
+    // browser-visible failure, so a DB error is logged server-side and swallowed.
+    const result = await this.svc.logClientError(body);
+    if (!result.ok) {
+      this.logger.error(`Failed to persist client error report: ${JSON.stringify(result.error)}`);
+    }
     return { received: true };
   }
 }

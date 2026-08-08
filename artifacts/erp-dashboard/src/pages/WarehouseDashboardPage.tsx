@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Warehouse, Wallet, Boxes, Layers, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tLabel } from "@/lib/i18n/tLabel";
+import { EPPageHeader } from "@/components/ep";
 import { warehouseApi, type WarehouseDashboard } from "@/lib/api/warehouse.api";
 
 const MOVEMENT_LABEL: Record<string, string> = {
@@ -50,10 +51,14 @@ export default function WarehouseDashboardPage() {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="flex items-center gap-2">
-        <Warehouse className="h-6 w-6 text-primary" />
-        <h1 className="text-xl font-semibold">{tLabel("common.whDash.title", "Ombor — Moliya nazorati")}</h1>
-      </div>
+      <EPPageHeader
+        title={
+          <span className="flex items-center gap-2">
+            <Warehouse className="h-6 w-6 text-primary" />
+            {tLabel("common.whDash.title", "Ombor — Moliya nazorati")}
+          </span>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {!data ? (

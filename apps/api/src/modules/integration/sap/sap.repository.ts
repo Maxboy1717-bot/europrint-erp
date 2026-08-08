@@ -51,7 +51,14 @@ export class SapRepository {
     return safeCall(async () => {
       const today = new Date().toISOString().split('T')[0] as string;
       const docNumber = `SAP-${Date.now()}`;
-      const totalAmount = parseFloat(String(body['totalAmount'] ?? '0')) || 0;
+      // Audit 2026-08-06 (SD/CRM): this read only `totalAmount`, but SalesOrders.tsx — the
+      // only caller — posts `netValue` / `totalValue` (it mirrors the sales_orders column
+      // names). Nothing ever matched, so every order created through this shim was written
+      // with 0.00 and the customer's order value silently vanished. Accept all three keys;
+      // net and total are captured separately since the form does send them separately.
+      const num = (v: unknown): number => parseFloat(String(v ?? '0')) || 0;
+      const netValue = num(body['netValue'] ?? body['totalAmount'] ?? body['totalValue']);
+      const totalValue = num(body['totalValue'] ?? body['totalAmount'] ?? body['netValue']);
       const customerId = body['customerId'] != null ? parseInt(String(body['customerId']), 10) : null;
       // Use only columns that exist in the live sales_orders table (net_value + total_value)
       // 'total_amount' and 'notes' are in Drizzle schema but not yet migrated to DB
@@ -59,7 +66,7 @@ export class SapRepository {
         INSERT INTO sales_orders
           (document_number, order_date, pricing_date, customer_id, net_value, total_value)
         VALUES
-          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount})
+          (${docNumber}, ${today}, ${today}, ${customerId}, ${netValue}, ${totalValue})
         RETURNING *
       `);
       return r[0] as Row;

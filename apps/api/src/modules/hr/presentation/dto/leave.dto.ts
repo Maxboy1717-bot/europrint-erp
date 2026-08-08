@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const CreateLeaveRequestDtoSchema = z.object({
   employeeId: z.string().uuid('Employee ID must be a valid UUID'),
@@ -30,7 +31,7 @@ export const RejectLeaveDtoSchema = z.object({
 export type RejectLeaveDto = z.infer<typeof RejectLeaveDtoSchema>;
 
 export const GetLeavesDtoSchema = z.object({
-  employeeId: z.string().uuid().optional(),
+  employeeId: IntegerIdSchema.optional(),
   status: z.enum(['pending', 'approved', 'rejected', 'cancelled']).optional(),
   leaveType: z.enum(['annual', 'sick', 'maternity', 'unpaid', 'study']).optional(),
   page: z.coerce.number().int().positive().default(1),

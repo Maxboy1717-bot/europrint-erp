@@ -18,7 +18,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Skill, Employee, EmployeeSkillRecord, SkillFormValues, EmployeeSkillFormValues } from "./skills-matrix/types";
-import { skillFormSchema, employeeSkillFormSchema, getLevelBadge } from "./skills-matrix/types";
+import { skillFormSchema, employeeSkillFormSchema, getLevelBadge, levelToString, levelToNumber } from "./skills-matrix/types";
 import { SkillDialog } from "./skills-matrix/SkillDialog";
 import { EmployeeSkillDialog } from "./skills-matrix/EmployeeSkillDialog";
 import { EPErrorState } from "@/components/ep";
@@ -65,8 +65,23 @@ export default function SkillsMatrix() {
     onError: () => { toast({ title: t("skills.deleteError"), variant: "destructive" }); },
   });
 
+  // Audit 2026-08-08: BE HrEmployeeSkillSchema {employee_id,skill_name,proficiency_level,
+  // proficiency_score} talab qiladi — forma avval FE-only {userId,skillId,level} yuborardi,
+  // har safar 400. skill_catalog.id ga FK yo'q (skill_name erkin matn), shuning uchun
+  // tanlangan skillId'dan HAQIQIY nom shu yerda hal qilinadi (fabrikatsiya emas — real
+  // katalogdan olingan nom).
   const createEmployeeSkillMutation = useMutation({
-    mutationFn: (data: EmployeeSkillFormValues) => apiRequest("POST", "/api/hr/employee-skills", data),
+    mutationFn: (data: EmployeeSkillFormValues) => {
+      const selectedSkill = skills.find((s) => s.id === data.skillId);
+      return apiRequest("POST", "/api/hr/employee-skills", {
+        employee_id: Number(data.userId),
+        skill_name: selectedSkill?.name ?? data.skillId,
+        skill_category: selectedSkill?.category ?? "other",
+        proficiency_level: levelToString(data.level),
+        proficiency_score: data.level * 20,
+        notes: data.notes || undefined,
+      });
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/employee-skills"] }); setIsEmployeeSkillDialogOpen(false); employeeSkillForm.reset(); toast({ title: t("skills.empAddedOk") }); },
     onError: () => { toast({ title: t("skills.empAddError"), variant: "destructive" }); },
   });
@@ -106,7 +121,7 @@ export default function SkillsMatrix() {
 
       <div className="grid gap-6 md:grid-cols-3">
         <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.totalSkills")}</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{skills.length || 0}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.skilledEmployees")}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{new Set((employeeSkills as EmployeeSkillRecord[] | undefined)?.map((es: EmployeeSkillRecord) => es.userId)).size || 0}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.skilledEmployees")}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{new Set((employeeSkills as EmployeeSkillRecord[] | undefined)?.map((es: EmployeeSkillRecord) => es.employee_id)).size || 0}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.totalAssigned")}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{(employeeSkills as EmployeeSkillRecord[] | undefined)?.length || 0}</div></CardContent></Card>
       </div>
 
@@ -151,14 +166,12 @@ export default function SkillsMatrix() {
             ) : (
               <div className="space-y-3">
                 {(employeeSkills as EmployeeSkillRecord[]).slice(0, 10).map((es: EmployeeSkillRecord) => {
-                  const employee = (Array.isArray(employees) ? (employees as Employee[]) : []).find((e: Employee) => e.id === es.userId);
-                  const skill = skills.find((s: Skill) => s.id === es.skillId);
-                  const levelInfo = getLevelBadge(es.level);
+                  const levelInfo = getLevelBadge(levelToNumber(es.proficiency_level));
                   return (
                     <div key={es.id} className="flex items-center justify-between py-2 border-b" data-testid={`row-employee-skill-${es.id}`}>
                       <div>
-                        <p className="font-medium text-sm">{employee?.fullName || es.userId}</p>
-                        <p className="text-xs text-muted-foreground">{skill?.name || es.skillId}</p>
+                        <p className="font-medium text-sm">{es.employee_name || `#${es.employee_id}`}</p>
+                        <p className="text-xs text-muted-foreground">{es.skill_name}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={levelInfo.variant}>{levelInfo.label}</Badge>

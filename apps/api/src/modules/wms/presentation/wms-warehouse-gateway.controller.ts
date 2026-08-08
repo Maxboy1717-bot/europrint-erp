@@ -4,10 +4,13 @@
  */
 
 import { assertInternal } from '@common/assertions';
+import { unwrapOrThrow } from '@common/http-result';
 import {
-  Body, Controller, Get, Param, Post, Patch,
+  Body, BadRequestException, Controller, Get, NotFoundException, Param, Post, Patch,
   UseGuards, UseInterceptors, Logger, Query, UsePipes,
 } from '@nestjs/common';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';
@@ -24,6 +27,11 @@ const GoodsReceiptLineSchema = z.object({
   unitCost: z.union([z.string(), z.number()]).optional(),
   unit_cost: z.union([z.string(), z.number()]).optional(),
 }).passthrough();
+
+const QcReceiptDecisionSchema = z.object({
+  decision: z.enum(['QABUL', 'REWORK', 'CHIQARISH']),
+  note: z.string().max(2000).optional(),
+}).passthrough();
 import {
   WmsCreateTransferSchema, WmsCreateTransferDto,
   WmsCreateInternalRequestSchema, WmsCreateInternalRequestDto,
@@ -36,12 +44,13 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { I18nService } from 'nestjs-i18n';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
 
-const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
-const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'manager', 'accountant', 'finance'];
+const WH_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 /**
  * WmsWarehouseGatewayController
@@ -60,7 +69,10 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
 export class WmsWarehouseGatewayController {
   private readonly logger = new Logger(WmsWarehouseGatewayController.name);
 
-  constructor(private readonly svc: WmsWarehouseGatewayService) {}
+  constructor(
+    private readonly svc: WmsWarehouseGatewayService,
+    private readonly i18n: I18nService,
+  ) {}
 
   // ── TRANSFERS ─────────────────────────────────────────────────────────────
 
@@ -76,7 +88,7 @@ export class WmsWarehouseGatewayController {
   ) {
     this.logger.log('POST warehouse transfer');
     const row = await this.svc.createTransfer(body, user?.id ?? null);
-    assertInternal(row, 'Transfer yaratishda xatolik');
+    assertInternal(row, await this.i18n.t('errors.transferCreationFailed'));
     return row;
   }
 
@@ -86,7 +98,15 @@ export class WmsWarehouseGatewayController {
   @Get('transfers/:id')
   @Roles(...WH_READ)
   async getTransferById(@Param('id') id: string) {
-    return { id, status: 'pending' };
+    const intId = safeInt(id, 0);
+    const r = await rawSql(sql`
+      SELECT id::text AS id, from_warehouse_id, to_warehouse_id, item_id, quantity, status, created_at
+      FROM warehouse_transfers
+      WHERE id = ${intId}
+    `);
+    const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.transferNotFoundWithId', { args: { id } }));
+    return row;
   }
 
   @ApiOperation({ summary: 'Update transfer status' })
@@ -99,7 +119,15 @@ export class WmsWarehouseGatewayController {
     @Body() body: unknown,
   ) {
     const dto = TransferStatusUpdateSchema.parse(body);
-    return { id, ...dto };
+    try {
+      const intId = parseInt(id, 10);
+      const r = await rawSql(sql`
+        UPDATE warehouse_transfers SET status = ${dto.status}
+        WHERE id = ${intId}
+        RETURNING id::text AS id, status, from_warehouse_id, to_warehouse_id, quantity
+      `);
+      return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? { id, ...dto };
+    } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
   // ── INTERNAL REQUESTS ─────────────────────────────────────────────────────
@@ -116,7 +144,7 @@ export class WmsWarehouseGatewayController {
   ) {
     this.logger.log('POST internal request');
     const row = await this.svc.createInternalRequest(body, user?.id ?? null);
-    assertInternal(row, "So'rov yaratishda xatolik");
+    assertInternal(row, await this.i18n.t('errors.internalRequestCreationFailed'));
     return row;
   }
 
@@ -151,7 +179,7 @@ export class WmsWarehouseGatewayController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const row = await this.svc.createGoodsReceipt(body, user?.id ?? null);
-    assertInternal(row, 'Tovar qabul qilishda xatolik');
+    assertInternal(row, await this.i18n.t('errors.goodsReceiptCreationFailed'));
     return row;
   }
 
@@ -205,7 +233,37 @@ export class WmsWarehouseGatewayController {
     return await this.svc.addGoodsReceiptLine(safeInt(id, 0), dto);
   }
 
-  @ApiOperation({ summary: 'Complete goods receipt' })
+  @ApiOperation({ summary: 'Send goods receipt to quarantine (DRAFT -> KARANTIN)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('goods-receipts/:id/quarantine')
+  @UseInterceptors(AuditInterceptor)
+  @Roles(...WH_WRITE)
+  async sendGoodsReceiptToQuarantine(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return unwrapOrThrow(await this.svc.sendToQuarantine(safeInt(id, 0), user?.id ?? null));
+  }
+
+  @ApiOperation({ summary: 'QC decision on goods receipt (QABUL/REWORK/CHIQARISH)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('goods-receipts/:id/qc-decision')
+  @UseInterceptors(AuditInterceptor)
+  @Roles(...WH_WRITE)
+  async qcReceiptDecision(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = QcReceiptDecisionSchema.parse(body);
+    return unwrapOrThrow(
+      await this.svc.qcReceiptDecision(safeInt(id, 0), dto.decision, user?.id ?? null, dto.note ?? null),
+    );
+  }
+
+  @ApiOperation({ summary: 'Complete goods receipt (QC_PASS -> MAIN; quarantine-gated)' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('goods-receipts/:id/complete')
@@ -215,6 +273,6 @@ export class WmsWarehouseGatewayController {
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return await this.svc.completeGoodsReceipt(safeInt(id, 0), user?.id ?? null);
+    return unwrapOrThrow(await this.svc.completeGoodsReceipt(safeInt(id, 0), user?.id ?? null));
   }
 }

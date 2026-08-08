@@ -4,6 +4,7 @@
  */
 
 import { Badge } from "@/components/ui/badge";
+import { EPStatusPill } from "@/components/ep";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -222,9 +223,9 @@ export function TransactionsTable({
                 <TableRow key={tx.id} className="hover:bg-muted/40 transition-colors border-none">
                   <TableCell className="py-3 px-6 text-foreground">{tx.transactionDate}</TableCell>
                   <TableCell className="py-3 px-6">
-                    <Badge className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${tx.transactionType === "inflow" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                    <EPStatusPill tone={tx.transactionType === "inflow" ? "success" : "danger"}>
                       {typeLabels[tx.transactionType as keyof typeof typeLabels]}
-                    </Badge>
+                    </EPStatusPill>
                   </TableCell>
                   <TableCell className="py-3 px-6 text-foreground">{categoryLabels[tx.category as keyof typeof categoryLabels] || tx.category}</TableCell>
                   <TableCell className={`py-3 px-6 text-right font-medium ${tx.transactionType === "inflow" ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>

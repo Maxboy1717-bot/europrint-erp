@@ -110,27 +110,33 @@ describe('QualifyLeadHandler', () => {
     if (!r.ok) expect(r.error.code).toBe('INTERNAL');
   });
 
-  it('returns INTERNAL when deal save fails after lead qualified', async () => {
+  it('returns Ok with lead id when lead qualifies (handler no longer creates a deal)', async () => {
+    // QualifyLeadHandler was updated to only transition lead status — deal creation
+    // was removed (it caused crm_deals.assigned_by_id NOT NULL → 500). The deal
+    // repo is no longer called by this handler; deal creation is done by
+    // ConvertLeadToDealCommand instead.
     leadRepo.findById.mockResolvedValue(Ok(makeLead('new')));
-    dealRepo.save.mockResolvedValue(Err('db gone'));
+    dealRepo.save.mockResolvedValue(Err('db gone'));  // irrelevant — not called
 
     const r = await handler.execute(cmd);
 
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe('INTERNAL');
+    // Handler succeeds with lead id; dealRepo.save is never invoked
+    expect(r.ok).toBe(true);
+    expect(dealRepo.save).not.toHaveBeenCalled();
   });
 
-  it('returns Ok with deal id when lead qualifies and deal saves', async () => {
+  it('returns Ok with lead id when lead qualifies and lead update succeeds', async () => {
+    // Handler now returns Ok(lead.getId()) — deal creation was removed from this
+    // handler (moved to ConvertLeadToDealCommand). dealRepo.save is not called.
     const lead = makeLead('contacted');
-    const persistedDeal = makeDeal();
-    Object.defineProperty(persistedDeal, 'id', { value: 999 });
     leadRepo.findById.mockResolvedValue(Ok(lead));
-    dealRepo.save.mockResolvedValue(Ok(persistedDeal));
+    // dealRepo.save is irrelevant here but kept in the mock setup for completeness
 
     const r = await handler.execute(cmd);
 
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.data).toBe(persistedDeal.getId());
+    if (r.ok) expect(r.data).toBe(lead.getId());
     expect(lead.getStatus()).toBe('qualified');
+    expect(dealRepo.save).not.toHaveBeenCalled();
   });
 });

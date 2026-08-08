@@ -11,20 +11,20 @@ import { OKR_REPO, type IOkrRepo } from '../domain/repositories/i-okr.repo';
 export class OkrService {
   constructor(@Inject(OKR_REPO) private readonly repo: IOkrRepo) {}
 
-  async listObjectives(type: string | null, year: number | null, quarter: string | null, status: string | null): Promise<Result<object, AppError>> {
-    return this.repo.listObjectives(type, year, quarter, status);
+  async listObjectives(type: string | null, year: number | null, quarter: string | null, status: string | null, parentGoalId?: number | null): Promise<Result<object, AppError>> {
+    return this.repo.listObjectives(type, year, quarter, status, parentGoalId ?? null);
   }
 
   async getObjective(id: number) {
     return this.repo.getObjective(id);
   }
 
-  async createObjective(title: string, type: string, year: number, quarter: string, description: string | null, ownerId: number) {
-    return this.repo.createObjective(title, type, year, quarter, description, ownerId);
+  async createObjective(title: string, type: string, year: number, quarter: string, description: string | null, ownerId: number, parentGoalId?: number | null, ownerCardId?: number | null) {
+    return this.repo.createObjective(title, type, year, quarter, description, ownerId, parentGoalId ?? null, ownerCardId ?? null);
   }
 
-  async updateObjective(id: number, title: string | null, status: string | null, description: string | null) {
-    return this.repo.updateObjective(id, title, status, description);
+  async updateObjective(id: number, title: string | null, status: string | null, description: string | null, updatedBy?: number | null) {
+    return this.repo.updateObjective(id, title, status, description, updatedBy ?? null);
   }
 
   async deleteObjective(id: number) {
@@ -39,8 +39,8 @@ export class OkrService {
     return this.repo.createKeyResult(objectiveId, title, targetValue, currentValue, unit, ownerId);
   }
 
-  async updateKeyResult(id: number, currentValue: number | null, status: string | null, title: string | null) {
-    return this.repo.updateKeyResult(id, currentValue, status, title);
+  async updateKeyResult(id: number, currentValue: number | null, status: string | null, title: string | null, updatedBy?: number | null) {
+    return this.repo.updateKeyResult(id, currentValue, status, title, updatedBy ?? null);
   }
 
   async deleteKeyResult(id: number) {
@@ -55,5 +55,10 @@ export class OkrService {
       ]);
       return { objectives: objs, keyResults: krs };
     });
+  }
+
+  // EP-DIR-016: kaskad daraxti (kompaniya→bo'lim→karta), rolled-up progress bilan.
+  async getCascade(year: number | null) {
+    return this.repo.getCascade(year);
   }
 }

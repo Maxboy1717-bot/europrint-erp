@@ -66,7 +66,7 @@ export function DateRangeCard({ dateFrom, dateTo, onDateFromChange, onDateToChan
           </div>
           <Button
             className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/erp/capacity"] })}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/erp/capacity/load-analysis"] })}
             data-testid="button-refresh"
           >
             <Search className="h-4 w-4 mr-2" />

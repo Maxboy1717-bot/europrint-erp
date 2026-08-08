@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { and, eq, or, isNull } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { safeCall, Result } from '@common/result';
@@ -14,7 +15,10 @@ import { InsightItem } from '../../presentation/dto/ai-insights.dto';
 
 @Injectable()
 export class DrizzleInsightsRepo {
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly i18n: I18nService,
+  ) {}
 
   private toItem(r: typeof aiInsights.$inferSelect): InsightItem {
     return {
@@ -47,7 +51,7 @@ export class DrizzleInsightsRepo {
         .insert(aiInsights)
         .values({ module, title, description, userId: Number(userId), insightType: 'ai_generated', priority: 'medium', isRead: false })
         .returning();
-      if (!row) throw new InternalServerErrorException('AI insight yaratishda xato: natija qaytmadi');
+      if (!row) throw new InternalServerErrorException(await this.i18n.t('errors.aiInsightCreationFailed'));
       return this.toItem(row);
     });
   }
@@ -59,7 +63,7 @@ export class DrizzleInsightsRepo {
         .set({ isRead: true, readAt: _time.now() })
         .where(and(eq(aiInsights.id, id), eq(aiInsights.userId, Number(userId))))
         .returning({ id: aiInsights.id });
-      if (updated.length === 0) throw new NotFoundException(`Tushuncha topilmadi: ${id}`);
+      if (updated.length === 0) throw new NotFoundException(await this.i18n.t('errors.aiInsightNotFound', { args: { id } }));
     });
   }
 }

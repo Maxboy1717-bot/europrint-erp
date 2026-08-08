@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { AccessRepository } from './access.repository';
 import { securityAccess } from '@europrint/schemas';
@@ -12,7 +13,10 @@ import { securityAccess } from '@europrint/schemas';
 export class AccessService {
   private readonly logger = new Logger(AccessService.name);
 
-  constructor(private readonly repo: AccessRepository) {}
+  constructor(
+    private readonly repo: AccessRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     const { page = 1, limit = 10 } = query;
@@ -24,7 +28,7 @@ export class AccessService {
 
   async findOne(id: number) {
     const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.recordNotFoundWithId', { args: { id } }));
     return row;
   }
 

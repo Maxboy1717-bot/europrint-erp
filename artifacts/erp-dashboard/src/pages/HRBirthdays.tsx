@@ -13,6 +13,7 @@ import {
   Avatar, AvatarFallback, AvatarImage,
 } from "@/components/ui/avatar";
 import { Cake, CalendarDays, Users } from "lucide-react";
+import { EPErrorState } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 
 interface BirthdayPerson {
@@ -26,10 +27,10 @@ interface BirthdayPerson {
 
 type TabValue = "today" | "7" | "30";
 
-const TABS: { value: TabValue; label: string }[] = [
-  { value: "today", label: "Bugun" },
-  { value: "7",     label: "7 kun" },
-  { value: "30",    label: "30 kun" },
+const TAB_VALUES: { value: TabValue; labelKey: string }[] = [
+  { value: "today", labelKey: "birthdays.today" },
+  { value: "7",     labelKey: "birthdays.days7" },
+  { value: "30",    labelKey: "birthdays.days30" },
 ];
 
 function getInitials(name: string): string {
@@ -58,7 +59,13 @@ function BirthdayCardSkeleton() {
   );
 }
 
-function BirthdayCard({ person, isToday }: { person: BirthdayPerson; isToday: boolean }) {
+function BirthdayCard({
+  person, isToday, t,
+}: {
+  person: BirthdayPerson;
+  isToday: boolean;
+  t: (key: string) => string;
+}) {
   const initials = getInitials(person.full_name || "?");
   return (
     <Card
@@ -72,7 +79,7 @@ function BirthdayCard({ person, isToday }: { person: BirthdayPerson; isToday: bo
         {isToday && (
           <span className="absolute top-2 right-2">
             <Badge variant="warning" className="text-[10px] px-1.5 py-0.5">
-              Bugun!
+              {t("birthdays.todayBang")}
             </Badge>
           </span>
         )}
@@ -92,7 +99,7 @@ function BirthdayCard({ person, isToday }: { person: BirthdayPerson; isToday: bo
           <Cake className="h-3 w-3" />
           <span>{formatBirthDate(person.birth_date)}</span>
           {person.age != null && (
-            <span className="ml-1 font-medium text-foreground">{person.age} yosh</span>
+            <span className="ml-1 font-medium text-foreground">{person.age} {t("birthdays.ageSuffix")}</span>
           )}
         </div>
       </CardContent>
@@ -101,18 +108,18 @@ function BirthdayCard({ person, isToday }: { person: BirthdayPerson; isToday: bo
 }
 
 export default function HRBirthdays() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("hr");
   const [tab, setTab] = useState<TabValue>("today");
 
-  const { data: rawToday, isLoading: loadingToday } = useQuery<BirthdayPerson[]>({
+  const { data: rawToday, isLoading: loadingToday, isError: errorToday, error: errToday, refetch: refetchToday } = useQuery<BirthdayPerson[]>({
     queryKey: ["/api/hr/birthdays/today"],
   });
 
-  const { data: raw7, isLoading: loading7 } = useQuery<BirthdayPerson[]>({
+  const { data: raw7, isLoading: loading7, isError: error7, error: err7, refetch: refetch7 } = useQuery<BirthdayPerson[]>({
     queryKey: ["/api/hr/birthdays/upcoming", 7],
   });
 
-  const { data: raw30, isLoading: loading30 } = useQuery<BirthdayPerson[]>({
+  const { data: raw30, isLoading: loading30, isError: error30, error: err30, refetch: refetch30 } = useQuery<BirthdayPerson[]>({
     queryKey: ["/api/hr/birthdays/upcoming", 30],
   });
 
@@ -126,6 +133,13 @@ export default function HRBirthdays() {
   const isLoading =
     tab === "today" ? loadingToday : tab === "7" ? loading7 : loading30;
 
+  const isError =
+    tab === "today" ? errorToday : tab === "7" ? error7 : error30;
+  const currentError =
+    tab === "today" ? errToday : tab === "7" ? err7 : err30;
+  const currentRefetch =
+    tab === "today" ? refetchToday : tab === "7" ? refetch7 : refetch30;
+
   const isCurrentToday = tab === "today";
   const bgClass = isCurrentToday
     ? "bg-amber-50/60 dark:bg-amber-950/10 rounded-lg p-4"
@@ -136,7 +150,7 @@ export default function HRBirthdays() {
       {/* Header */}
       <div className="border-b border-border/50 px-1 pb-4 flex items-center gap-3">
         <Cake className="h-5 w-5 text-amber-500" />
-        <h1 className="font-semibold text-base">Tug&apos;ilgan Kunlar</h1>
+        <h1 className="font-semibold text-base">{t("birthdays.title")}</h1>
       </div>
 
       <div className="flex-1 overflow-auto space-y-5">
@@ -149,7 +163,7 @@ export default function HRBirthdays() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-amber-600">{todayList.length}</div>
-                <div className="text-xs text-muted-foreground">Bugun</div>
+                <div className="text-xs text-muted-foreground">{t("birthdays.today")}</div>
               </div>
             </CardContent>
           </Card>
@@ -160,7 +174,7 @@ export default function HRBirthdays() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-blue)]">{list7.length}</div>
-                <div className="text-xs text-muted-foreground">Bu hafta</div>
+                <div className="text-xs text-muted-foreground">{t("birthdays.thisWeek")}</div>
               </div>
             </CardContent>
           </Card>
@@ -169,9 +183,9 @@ export default function HRBirthdays() {
         {/* Tabs */}
         <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)}>
           <TabsList>
-            {TABS.map((tabItem) => (
+            {TAB_VALUES.map((tabItem) => (
               <TabsTrigger key={tabItem.value} value={tabItem.value}>
-                {tabItem.label}
+                {t(tabItem.labelKey)}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -185,16 +199,18 @@ export default function HRBirthdays() {
                 <BirthdayCardSkeleton key={i} />
               ))}
             </div>
+          ) : isError ? (
+            <EPErrorState error={currentError} onRetry={() => currentRefetch()} />
           ) : currentList.length === 0 ? (
             <Card>
               <CardContent className="py-14 flex flex-col items-center gap-3 text-muted-foreground">
                 <Users className="h-10 w-10 opacity-25" />
                 <p className="text-sm font-medium">
                   {tab === "today"
-                    ? "Bugun tug'ilgan kun yo'q"
+                    ? t("birthdays.noneToday")
                     : tab === "7"
-                    ? "Keyingi 7 kunda tug'ilgan kun yo'q"
-                    : "Keyingi 30 kunda tug'ilgan kun yo'q"}
+                    ? t("birthdays.none7")
+                    : t("birthdays.none30")}
                 </p>
               </CardContent>
             </Card>
@@ -205,6 +221,7 @@ export default function HRBirthdays() {
                   key={person.id}
                   person={person}
                   isToday={isCurrentToday}
+                  t={t}
                 />
               ))}
             </div>

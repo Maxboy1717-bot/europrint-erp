@@ -52,7 +52,7 @@ export const HR_NAV_URL_KEYS: Record<string, string> = {
   "shift-schedule":              "hrShiftSchedule",
   "questionnaire":               "hrQuestionnaire",
   "questionnaire-templates":     "hrQuestionnaireTemplates",
-  "notifications":               "hrNotifications",
+  "settings/notifications":      "hrNotifications",
   "assets":                      "hrAssets",
   "hr/vacation-sick":            "hrVacationSick",
   "discipline":                  "hrDiscipline",

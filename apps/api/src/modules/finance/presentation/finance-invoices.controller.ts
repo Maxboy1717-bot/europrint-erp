@@ -4,8 +4,9 @@
  */
 
 import { Controller, Get, HttpCode, HttpStatus, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger, UsePipes, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus, EventBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -19,6 +20,11 @@ import {
   FinancePostInvoiceSchema, FinancePostInvoiceDto,
 } from './dto/finance.dto';
 import { FinanceInvoiceRepo } from '../infrastructure/repositories/drizzle-finance-invoice.repo';
+import { GlPostingService } from '../domain/services/gl-posting.service';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { FinanceInvoiceCreatedEvent } from '@modules/ai/domain/events/finance-invoice-created.event';
+
+interface AuthenticatedUser { id: number; sub?: number; }
 
 const CreateInvoiceRootSchema = z.object({
   customerId: z.union([z.string(), z.number()]).optional(),
@@ -47,7 +53,10 @@ export class FinanceInvoicesController {
   constructor(
     private commandBus: CommandBus,
     private queryBus: QueryBus,
+    private readonly eventBus: EventBus,
     private readonly invoiceRepo: FinanceInvoiceRepo,
+    private readonly gl: GlPostingService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List invoices' })
@@ -69,10 +78,12 @@ export class FinanceInvoicesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
-  async createInvoiceRoot(@Body() body: unknown) {
+  async createInvoiceRoot(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateInvoiceRootSchema.parse(body);
     this.logger.log(`Creating invoice (root POST)`);
-    const invoiceNumber = `INV-${Date.now()}`;
+    // C4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): invoice_number is now generated server-side by
+    // saveInvoice() via the invoice_number_seq sequence (collision-proof) — no client-side
+    // Date.now() value is computed or sent; the actual saved number comes back in `row`.
     const result = await this.invoiceRepo.saveInvoice({
       customer_id: dto.customerId ?? null,
       source_type: 'manual',
@@ -83,12 +94,23 @@ export class FinanceInvoicesController {
       due_date: dto.dueDate ?? null,
       notes: dto.notes ?? null,
       created_at: new Date(),
+      created_by: user?.sub ?? user?.id ?? null,
     } as Record<string, unknown>);
     if (!result.ok) {
-      throw new InternalServerErrorException('Invoice yaratilmadi');
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceNotCreated'));
     }
     const row = result.data as Record<string, unknown>;
-    return { invoiceId: row['id'], invoiceNumber, ...dto, created: true };
+    // AI-INVOICE-CLASSIFY (2026-07-07): AiInvoiceClassifyHandler was a dead-letter handler —
+    // nothing published FinanceInvoiceCreatedEvent. Publishing it here triggers the already-built
+    // auto-classification (category/subcategory/confidence) for every newly created invoice.
+    this.eventBus.publish(new FinanceInvoiceCreatedEvent({
+      invoiceId: Number(row['id']),
+      description: dto.notes ?? '',
+      amount: dto.amount ?? 0,
+      vendor: String(dto.customerId ?? row['customer_id'] ?? ''),
+      userId: user?.sub ?? user?.id ?? 0,
+    }));
+    return { invoiceId: row['id'], invoiceNumber: row['invoice_number'], ...dto, created: true };
   }
 
   @ApiOperation({ summary: 'Create invoice' })
@@ -97,9 +119,10 @@ export class FinanceInvoicesController {
   @Post('create')
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceCreateInvoiceSchema))
-  async createInvoice(@Body() body: FinanceCreateInvoiceDto) {
+  async createInvoice(@Body() body: FinanceCreateInvoiceDto, @CurrentUser() user: AuthenticatedUser) {
     this.logger.log(`Creating invoice for customer ${body.customerId}, Amount: ${body.amount}`);
-    const invoiceNumber = `INV-${Date.now()}`;
+    // C4: see createInvoiceRoot() above — invoice_number now comes from saveInvoice()'s
+    // sequence-based generation, not a client-side Date.now() value.
     const result = await this.invoiceRepo.saveInvoice({
       customer_id: body.customerId,
       source_type: 'manual',
@@ -110,32 +133,49 @@ export class FinanceInvoicesController {
       due_date: body.dueDate,
       notes: body.description,
       created_at: new Date(),
+      created_by: user?.sub ?? user?.id ?? null,
     } as Record<string, unknown>);
     if (!result.ok) {
-      throw new InternalServerErrorException('Invoice yaratilmadi');
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceNotCreated'));
     }
     const row = result.data as Record<string, unknown>;
-    return { invoiceId: row['id'], invoiceNumber };
+    // AI-INVOICE-CLASSIFY (2026-07-07): see createInvoiceRoot() above — wires the same
+    // already-built AiInvoiceClassifyHandler auto-classification for this creation path.
+    this.eventBus.publish(new FinanceInvoiceCreatedEvent({
+      invoiceId: Number(row['id']),
+      description: body.description,
+      amount: body.amount,
+      vendor: String(body.customerId),
+      userId: user?.sub ?? user?.id ?? 0,
+    }));
+    return { invoiceId: row['id'], invoiceNumber: row['invoice_number'] };
   }
 
-  @ApiOperation({ summary: 'Post invoice' })
+  @ApiOperation({ summary: 'Post invoice to GL' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':invoiceId/post')
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinancePostInvoiceSchema))
   async postInvoice(
-    @Param('invoiceId') invoiceId: number,
-    @Body() body: FinancePostInvoiceDto
+    @Param('invoiceId') invoiceId: string,
+    @Body() body: FinancePostInvoiceDto,
   ) {
-    const result = await this.invoiceRepo.updateInvoice(String(invoiceId), {
-      status: 'posted',
-      updated_at: new Date(),
-    } as Record<string, unknown>);
-    if (!result.ok) {
-      throw new InternalServerErrorException('Invoice postlanmadi');
+    // #10 GL-unify: post the GL legs through the ONE engine (DR AR / CR Revenue + VAT, resolved to
+    // entries._id via the chart of accounts), then flip the invoice status. Idempotency = invoice status.
+    const existing = await this.invoiceRepo.findInvoiceById(invoiceId);
+    if (existing.ok && existing.data && (existing.data as Record<string, unknown>)['status'] === 'posted') {
+      return { message: 'Invoice already posted to GL (idempotent)', invoiceId };
     }
-    return { message: 'Invoice posted to GL', invoiceId };
+    const glR = await this.gl.postSalesInvoice(invoiceId, body.amount, body.taxAmount ?? 0);
+    if (!glR.ok) {
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceGlNotPosted'));
+    }
+    const flip = await this.invoiceRepo.markInvoicePosted(invoiceId);
+    if (!flip.ok) {
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceStatusNotUpdated'));
+    }
+    return { message: 'Invoice posted to GL', invoiceId, entryId: glR.data };
   }
 
   @ApiOperation({ summary: 'Get invoice' })
@@ -146,10 +186,10 @@ export class FinanceInvoicesController {
   async getInvoice(@Param('invoiceId') invoiceId: number) {
     const result = await this.invoiceRepo.findInvoiceById(String(invoiceId));
     if (!result.ok) {
-      throw new InternalServerErrorException('Invoice topishda xatolik');
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceFetchFailed'));
     }
     if (!result.data) {
-      throw new NotFoundException(`Invoice ${invoiceId} topilmadi`);
+      throw new NotFoundException(await this.i18n.t('errors.invoiceNotFoundWithId', { args: { invoiceId } }));
     }
     return { data: result.data };
   }

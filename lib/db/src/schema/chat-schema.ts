@@ -12,7 +12,7 @@
  */
 
 import {
-  pgTable, text, boolean, timestamp, varchar, jsonb, integer,
+  pgTable, text, boolean, timestamp, varchar, jsonb, integer, serial,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
@@ -131,9 +131,31 @@ export const chatUserPresence = pgTable('chat_user_presence', {
   userId:       text('user_id').primaryKey(),
   status:       varchar('status').default('OFFLINE'),
   customStatus: text('custom_status'),
+  // Work-status shown in the employee info panel (ishda/band/tushlikda/
+  // tatilda/tashqarida) — distinct from the ONLINE/OFFLINE socket presence.
+  workStatus:   varchar('work_status', { length: 20 }),
   lastSeenAt:   timestamp('last_seen_at'),
   activeRoomId: varchar('active_room_id'),
   updatedAt:    timestamp('updated_at').defaultNow(),
+});
+
+// Conversation tags for the employee info panel (Muhim/Kutilmoqda/Tezkor …).
+// room_id is INTEGER to match the live chat_rooms.id column.
+export const chatRoomTags = pgTable('chat_room_tags', {
+  id:        serial('id').primaryKey(),
+  roomId:    integer('room_id').notNull(),
+  tag:       varchar('tag', { length: 40 }).notNull(),
+  createdBy: integer('created_by'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Internal per-conversation notes ("Izohlar" tab). room_id INTEGER (live chat_rooms.id).
+export const chatRoomNotes = pgTable('chat_room_notes', {
+  id:           serial('id').primaryKey(),
+  roomId:       integer('room_id').notNull(),
+  authorUserId: integer('author_user_id'),
+  body:         text('body').notNull(),
+  createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 export const chatEmojiPacks = pgTable('chat_emoji_packs', {
@@ -191,6 +213,19 @@ export const chatVideoCalls = pgTable('chat_video_calls', {
   durationSec:  integer('duration_sec'),
   participants: jsonb('participants').default(sql`'[]'::jsonb`),
   iceServers:   jsonb('ice_servers'),
+});
+
+// Per-user "delete for me" hide state. The message row itself is NEVER
+// hard-deleted (ERP chat = official audit channel, immutable at storage);
+// a hidden row just filters that message out of THIS user's view. NB:
+// message_id is INTEGER to match the live chat_messages.id column (the
+// Drizzle chatMessages.id def is drifted to varchar — see Phase-4 #23);
+// logical ref, no FK.
+export const chatMessageHiddenFor = pgTable('chat_message_hidden_for', {
+  id:        serial('id').primaryKey(),
+  messageId: integer('message_id').notNull(),
+  userId:    integer('user_id').notNull(),
+  hiddenAt:  timestamp('hidden_at', { withTimezone: true }).defaultNow(),
 });
 
 // ── Insert schemas ─────────────────────────────────────────────────────────────

@@ -15,6 +15,9 @@ const PapkaOrders = lazy(() => import("@/pages/PapkaOrders"));
 const OrderCreationWizard = lazy(() => import("@/pages/OrderCreationWizard"));
 const OrderApprovalWorkflow = lazy(() => import("@/pages/OrderApprovalWorkflow"));
 const PPDashboard = lazy(() => import("@/pages/PPDashboard"));
+const PPQueue = lazy(() => import("@/pages/PPQueue"));
+const PPReasonCodes = lazy(() => import("@/pages/PPReasonCodes"));
+const PPWeeklyPlan = lazy(() => import("@/pages/PPWeeklyPlan"));
 const BOMManagement = lazy(() => import("@/pages/BOMManagement"));
 const RoutingConfiguration = lazy(() => import("@/pages/RoutingConfiguration"));
 const CapacityPlanning = lazy(() => import("@/pages/CapacityPlanning"));
@@ -48,10 +51,16 @@ const MROExtended = lazy(() => import("@/pages/MROExtended"));
 const IoTTablet = lazy(() => import("@/pages/IoTTablet"));
 const IoTDashboard = lazy(() => import("@/pages/IoTDashboard"));
 const IoTExtended = lazy(() => import("@/pages/IoTExtended"));
+const IotSensorCapex = lazy(() => import("@/pages/IotSensorCapex"));
 const WarehouseMaterialKits = lazy(() => import("@/pages/WarehouseMaterialKits"));
 const WarehouseDailyView = lazy(() => import("@/pages/WarehouseDailyView"));
 const MrpMatrix = lazy(() => import("@/pages/MrpMatrix"));
 const CrpPage = lazy(() => import("@/pages/CrpPage"));
+const PPEquipmentPage = lazy(() => import("@/pages/PPEquipmentPage"));
+
+const GofraFluteConfig   = lazy(() => import("@/pages/GofraFluteConfig"));
+const GofraWasteConfig   = lazy(() => import("@/pages/GofraWasteConfig"));
+const WorkCenterNormsConfig = lazy(() => import("@/pages/WorkCenterNormsConfig"));
 
 // ARCHITECTURE.md §40 — TZ-06 AI Rejalashtirish dedicated sahifalar
 const AIShiftManagementPage = lazy(() => import("@/pages/ai-planning/AIShiftManagementPage"));
@@ -62,11 +71,15 @@ const RushOrderPage = lazy(() => import("@/pages/ai-planning/RushOrderPage"));
 
 // ARCHITECTURE.md §40 — TZ-04 QC dedicated
 const PaperParametersPage = lazy(() => import("@/pages/qc/PaperParametersPage"));
+const QcParametersConfig  = lazy(() => import("@/pages/qc/QcParametersConfig"));
 const SupplierQualityPage = lazy(() => import("@/pages/qc/SupplierQualityPage"));
 const DefectManagementPage = lazy(() => import("@/pages/qc/DefectManagementPage"));
 const ReclamationsPage = lazy(() => import("@/pages/qc/ReclamationsPage"));
 const QualityCertificatesPage = lazy(() => import("@/pages/qc/QualityCertificatesPage"));
 const QualityTrendPage = lazy(() => import("@/pages/qc/QualityTrendPage"));
+const QcDpmoCalculator = lazy(() => import("@/pages/qc/QcDpmoCalculator"));
+const InProcessQcPage = lazy(() => import("@/pages/qc/InProcessQcPage"));
+const RootCausesPage = lazy(() => import("@/pages/qc/RootCausesPage"));
 
 // ARCHITECTURE.md §40 — TZ-14 MRO dedicated
 const PreventiveMaintenancePage = lazy(() => import("@/pages/mro/PreventiveMaintenancePage"));
@@ -75,6 +88,8 @@ const UtilityReadingsPage = lazy(() => import("@/pages/mro/UtilityReadingsPage")
 const CleaningSchedulePage = lazy(() => import("@/pages/mro/CleaningSchedulePage"));
 const FacilityInventoryPage = lazy(() => import("@/pages/mro/FacilityInventoryPage"));
 const CanteenManagementPage = lazy(() => import("@/pages/mro/CanteenManagementPage"));
+// FAZA "Sozlama har bo'limda" (2026-07-01) — MRO sozlama-hub (SD/Marketing/QC pattern reuse).
+const MROSettings = lazy(() => import("@/pages/MROSettings"));
 
 export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/erp-production',             ERPProduction],
@@ -87,9 +102,15 @@ export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/order-create',               OrderCreationWizard],
   ['/order-approval',             OrderApprovalWorkflow],
   ['/pp/dashboard',               PPDashboard],
+  ['/pp/queue',                   PPQueue],
+  ['/pp/reason-codes',            PPReasonCodes],
+  ['/pp/weekly-plan',             PPWeeklyPlan],
   ['/erp/pp/bom',                 BOMManagement],
   ['/erp/pp/routing',             RoutingConfiguration],
   ['/erp/pp/capacity',            CapacityPlanning],
+  ['/pp/gofra-config',            GofraFluteConfig],
+  ['/pp/gofra-waste-config',      GofraWasteConfig],
+  ['/pp/work-center-norms',       WorkCenterNormsConfig],
   ['/technology',                 Technology],
   ['/tech/dashboard-home',        TechDashboard],
   ['/tech-approval',              TechApproval],
@@ -108,6 +129,7 @@ export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/pp/bottleneck',              BottleneckAnalysisPage],     // dedicated (TZ-06)
   ['/pp/mrp',                     MrpMatrix],
   ['/pp/crp',                     CrpPage],
+  ['/pp/equipment',               PPEquipmentPage],             // PP uskuna katalogi CRUD
   ['/pp/demand-forecast',         DemandForecastingPage],      // dedicated (TZ-06)
   ['/pp/what-if',                 TechPPExtended],
   ['/pp/delivery-calculator',     TechPPExtended],
@@ -137,6 +159,17 @@ export const MES_ROUTES: [string, React.ComponentType][] = [
 export const QC_ROUTES: [string, React.ComponentType][] = [
   ['/qc/dashboard-home',    QCDashboard],
   ['/qc-module',            QCModule],
+  ['/qc/standards',         QCModule],           // Normalar — renders QCModule directly so
+                                                  // getInitialTab() sees "/qc/standards" and
+                                                  // selects the dedicated "standards" tab
+                                                  // (QCStandardsTab). Previously redirected to
+                                                  // "/qc-module", erasing the URL hint.
+  ['/qc/parameters',        QcParametersConfig], // Parametrlar — dedicated config page
+                                                  // (min/maqsad/max inline-edit), same
+                                                  // component as /qc/parameters-config.
+                                                  // Previously redirected to "/qc-module"
+                                                  // (physical tab), identical to Material
+                                                  // Testlari.
   ['/print/ink-coverage',   InkCoverageCalculator],
   ['/print/imposition',     ImpositionCalculator],
   ['/qc/approval',          QCApproval],
@@ -149,9 +182,13 @@ export const QC_ROUTES: [string, React.ComponentType][] = [
   ['/qc/certificates',      QualityCertificatesPage],     // dedicated (TZ-04)
   ['/qc/iso',               QCExtended],
   ['/qc/trends',            QualityTrendPage],            // dedicated (TZ-04)
+  ['/qc/dpmo-calculator',   QcDpmoCalculator],           // dedicated (TZ-38 DPMO+Six Sigma)
+  ['/qc/in-process',        InProcessQcPage],            // dedicated (inline QC — MES→QC)
+  ['/qc/root-causes',       RootCausesPage],             // dedicated (sabab-katalog — 6M/Ishikawa)
   ['/qc/ai-analysis',       QCExtended],
   ['/qc/reports',           QCExtended],
   ['/qc/settings',          QCExtended],
+  ['/qc/parameters-config', QcParametersConfig],   // config-mexanizm: min/maqsad/max inline-edit
 ];
 
 export const DESIGN_ROUTES: [string, React.ComponentType][] = [
@@ -181,6 +218,7 @@ export const MRO_ROUTES: [string, React.ComponentType][] = [
   ['/mro/cleaning',           CleaningSchedulePage],        // dedicated (TZ-14)
   ['/mro/sanitation',         MROExtended],
   ['/mro/building-inventory', FacilityInventoryPage],       // dedicated (TZ-14)
+  ['/mro/settings',           MROSettings],                 // MRO sozlama-hub (SD/Marketing/QC pattern)
 ];
 
 export const IOT_ROUTES: [string, React.ComponentType][] = [
@@ -191,6 +229,7 @@ export const IOT_ROUTES: [string, React.ComponentType][] = [
   ['/iot/alerts',                 IoTExtended],
   ['/iot/tablet',                 IoTTablet],
   ['/iot/dashboard',              IoTDashboard],
+  ['/iot/sensor-capex',           IotSensorCapex],
   ['/iot/material-kits',          WarehouseMaterialKits],
   ['/iot/daily-view',             WarehouseDailyView],
 ];

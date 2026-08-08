@@ -12,9 +12,16 @@
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Ok, Err, AppError } from '@common/result';
-import { AutoBarcodeRepository } from '../../infrastructure/repositories/auto-barcode.repository';
+import { AutoBarcodeRepository, MovementLineForBarcode } from '../../infrastructure/repositories/auto-barcode.repository';
 
 export type { MovementLineForBarcode } from '../../infrastructure/repositories/auto-barcode.repository';
+
+// C8.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): pos_barcode_print_queue (view over
+// barcode_print_queue) now has a live UNIQUE constraint on barcode — a collision surfaces as a
+// Postgres 23505 instead of silently succeeding. Bounded retry with a fresh random suffix turns
+// that loud failure back into a successful print-queue entry without looping forever.
+const MAX_BARCODE_COLLISION_RETRIES = 3;
+const POSTGRES_UNIQUE_VIOLATION = '23505';
 
 @Injectable()
 export class AutoBarcodeService {
@@ -27,6 +34,33 @@ export class AutoBarcodeService {
     const date     = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const rnd      = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `${safeCode}-${date}-${rnd}`;
+  }
+
+  private async insertBarcodeWithRetry(
+    movementId: number,
+    toWarehouseId: number | null,
+    line: MovementLineForBarcode,
+  ): Promise<{ line: MovementLineForBarcode; barcode: string; insR: Result<void, AppError> }> {
+    let barcode = '';
+    let insR: Result<void, AppError> = Err({ message: 'not attempted', code: 'DB_ERROR' });
+    for (let attempt = 1; attempt <= MAX_BARCODE_COLLISION_RETRIES; attempt++) {
+      barcode = this.generateBarcode(line.materialCode, line.batchNumber);
+      insR = await this.repo.insertBarcode({
+        movementId,
+        movementLineId: line.movementLineId,
+        materialCardId: line.materialCardId,
+        warehouseId:    toWarehouseId,
+        batchNumber:    line.batchNumber,
+        quantity:       line.quantity,
+        unit:           line.unit ?? null,
+        barcode,
+      });
+      if (insR.ok) break;
+      const pgCode = (insR.error.details as { pgCode?: string } | undefined)?.pgCode;
+      if (pgCode !== POSTGRES_UNIQUE_VIOLATION) break; // a different failure kind — don't retry
+      this.logger.warn(`[AutoBarcode] Barkod to'qnashuvi (${barcode}), qayta urinish ${attempt}/${MAX_BARCODE_COLLISION_RETRIES}`);
+    }
+    return { line, barcode, insR };
   }
 
   async generateForMovement(movementId: number): Promise<Result<{ created: number }, AppError>> {
@@ -50,20 +84,9 @@ export class AutoBarcodeService {
       if (lines.length === 0) return Ok({ created: 0 });
 
       // Pattern 2: per-line barcode inserts are independent — fan out in parallel
-      const insResults = await Promise.all(lines.map(async (line) => {
-        const barcode = this.generateBarcode(line.materialCode, line.batchNumber);
-        const insR = await this.repo.insertBarcode({
-          movementId,
-          movementLineId: line.movementLineId,
-          materialCardId: line.materialCardId,
-          warehouseId:    mov.to_warehouse_id,
-          batchNumber:    line.batchNumber,
-          quantity:       line.quantity,
-          unit:           line.unit ?? null,
-          barcode,
-        });
-        return { line, barcode, insR };
-      }));
+      const insResults = await Promise.all(lines.map((line) =>
+        this.insertBarcodeWithRetry(movementId, mov.to_warehouse_id, line),
+      ));
       let created = 0;
       for (const { line, barcode, insR } of insResults) {
         if (insR.ok) {

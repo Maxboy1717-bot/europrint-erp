@@ -35,6 +35,8 @@ import { sdCustomers } from "./sd-europrint-schema";
 
 export const sdCustomerContacts = pgTable("sd_customer_contacts", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   customerId: integer("customer_id")
     .notNull()
     .references(() => sdCustomers.id, { onDelete: "cascade" }),
@@ -51,6 +53,9 @@ export const sdCustomerContacts = pgTable("sd_customer_contacts", {
   linkedinUrl: text("linkedin_url"),
   roleNote: text("role_note"),
   isActive: boolean("is_active").default(true),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
@@ -82,6 +87,8 @@ export type InsertSdCustomerContact = z.infer<typeof insertSdCustomerContactSche
 
 export const sdCustomerInteractions = pgTable("sd_customer_interactions", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   customerId: integer("customer_id")
     .notNull()
     .references(() => sdCustomers.id, { onDelete: "cascade" }),
@@ -104,6 +111,9 @@ export const sdCustomerInteractions = pgTable("sd_customer_interactions", {
   durationMinutes: integer("duration_minutes"),
   satisfactionRating: numeric("satisfaction_rating", { precision: 3, scale: 1 }),
   sentimentScore: numeric("sentiment_score", { precision: 4, scale: 3 }),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_sd_customer_interactions_customer_id").on(t.customerId),

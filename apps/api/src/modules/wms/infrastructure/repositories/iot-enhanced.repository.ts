@@ -20,9 +20,10 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 export class IotEnhancedRepository implements IIotEnhancedRepo {
   async getOrdersForKits(status?: string): Promise<Result<Row[]>>  {
   try {
+      // Soft-delete: production_orders has deleted_at — exclude logically-deleted orders from the list.
       return status
-        ? exec(sql`SELECT po.id, po.order_number AS reference_number, po.status, po.created_at FROM production_orders po WHERE po.status = ${status} ORDER BY po.created_at DESC LIMIT 100`)
-        : exec(sql`SELECT po.id, po.order_number AS reference_number, po.status, po.created_at FROM production_orders po ORDER BY po.created_at DESC LIMIT 100`);  } catch (_e) {
+        ? exec(sql`SELECT po.id, po.order_number AS reference_number, po.status, po.created_at FROM production_orders po WHERE po.status = ${status} AND po.deleted_at IS NULL ORDER BY po.created_at DESC LIMIT 100`)
+        : exec(sql`SELECT po.id, po.order_number AS reference_number, po.status, po.created_at FROM production_orders po WHERE po.deleted_at IS NULL ORDER BY po.created_at DESC LIMIT 100`);  } catch (_e) {
     return Err(String(_e));
   }
 

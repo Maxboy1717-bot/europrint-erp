@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts } from './schema-compat-helpers';
+import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts, serial } from './schema-compat-helpers';
 import { budgets as canonicalBudgets } from './schema-finance-budgets';
 import { accounts as canonicalAccounts } from './schema-ext-b-1';
 import { departments as canonicalDepartments, positions as canonicalPositions } from './schema-hr-lms';
@@ -11,6 +11,7 @@ import { sales_invoices as canonicalSalesInvoices } from './schema-business-c-2-
 import { sd_leads as canonicalSdLeads } from './schema-ext-b-2';
 import { payroll_periods_hr as canonicalPayrollPeriods } from './schema-business-c-2-hr-payroll';
 import { purchase_orders as canonicalPurchaseOrders } from './schema-wms';
+import { leaveRequests as canonicalLeaveRequests } from '@workspace/db';
 
 // payroll_periods: re-exported from canonical definition in schema-business-c-2-hr-payroll.ts
 export const payrollPeriods = canonicalPayrollPeriods;
@@ -39,21 +40,13 @@ export const attendance = pgTable('attendance', {
   createdAt: ts('created_at').defaultNow(),
 });
 
-export const leaveRequests = pgTable('leave_requests', {
-  id: integer('id').primaryKey(),
-  userId: integer('user_id'),
-  employeeId: text('employee_id').notNull(),
-  leaveType: text('leave_type').notNull(),
-  startDate: text('start_date').notNull(),
-  endDate: text('end_date').notNull(),
-  status: text('status').notNull().default('pending'),
-  reason: text('reason'),
-  approvedBy: text('approved_by'),
-  approvedAt: ts('approved_at'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-});
+// leaveRequests: re-exported from canonical definition in lib/db (schema/leave.ts).
+// Previously a hand-rolled stub with wrong types (employeeId/approvedBy as text
+// instead of integer) that also omitted real DB columns (manager_status, hr_status,
+// director_status, manager_notes, hr_notes, director_notes, totalDays, tenantId, ...)
+// — the same physical `leave_requests` table had TWO divergent Drizzle objects
+// (this one + leaveRequestsApp in schema-misc-app-a.ts). Unified into one object.
+export const leaveRequests = canonicalLeaveRequests;
 
 // departments / positions: re-exported from canonical schema-hr-lms.ts
 export const departments = canonicalDepartments;
@@ -152,16 +145,35 @@ export const vendors = pgTable('vendors', {
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
+  // APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — additive columns, live
+  // DB already has these (information_schema-verified); previously unmapped
+  // so MM readers (get-vendors.handler.ts, drizzle-mm.repo.ts) couldn't
+  // select/update them via this table.
+  tin: text('tin'),
+  paymentTerms: varchar('payment_terms', { length: 50 }),
+  rating: decimal('rating', { precision: 3, scale: 2 }),
 });
 
 export const warehouses = pgTable('warehouses', {
-  id: integer('id').primaryKey(),
+  // `serial()` (not plain `integer()`) so `id` is optional on INSERT,
+  // matching the live DB's `nextval('warehouses_id_seq')` default.
+  id: serial('id').primaryKey(),
   name: text('name').notNull(),
   code: text('code').unique(),
   location: text('location'),
   type: text('type').default('main'),
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
+  // APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — additive columns, live
+  // DB already has these (information_schema-verified); previously unmapped
+  // so WMS readers/writers (get-warehouses.handler.ts, drizzle-wms.repo.ts,
+  // create-warehouse.handler.ts) couldn't select/insert them via this table.
+  address: text('address'),
+  isFreeStorage: boolean('is_free_storage').default(false),
+  freeStorageDays: integer('free_storage_days').default(30),
+  monthlyRate: decimal('monthly_rate', { precision: 15, scale: 2 }),
+  deletedAt: ts('deleted_at'),
+  deletedBy: integer('deleted_by'),
 });
 
 export const warehouseZones = pgTable('warehouse_zones', {

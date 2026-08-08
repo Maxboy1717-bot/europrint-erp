@@ -69,6 +69,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 }         from '@nestjs/event-emitter';
+import { I18nService }           from 'nestjs-i18n';
 
 import { PosRequisitionWorkflowService } from '../src/modules/pos/application/services/pos-requisition-workflow.service';
 import { PosMovementService }            from '../src/modules/pos/application/services/pos-movement.service';
@@ -76,6 +77,27 @@ import { PosNotificationsService }       from '../src/modules/pos/application/se
 import { EmployeeLedgerService }         from '../src/modules/pos/employee-ledger.service';
 import { PosRequestExtRepository }       from '../src/modules/pos/pos-request-ext.repository';
 import { PosEmployeeBalanceRepository }  from '../src/modules/pos/infrastructure/repositories/pos-employee-balance.repository';
+
+// ─── i18n stub — returns the last segment of the key (post-final-dot) so existing
+// message-content regex assertions (/DRAFT/, /sabab|reason/i, etc.) keep matching
+// without needing real translation-file loading in this isolated unit-test module.
+const I18N_STUB_STRINGS: Record<string, string> = {
+  'errors.requisitionNotDraft':          "so'rov DRAFT holatida emas — joriy holat: {status}",
+  'errors.onlyRequesterCanSubmit':       "Faqat so'rov yaratuvchisi topshira oladi",
+  'errors.requisitionNotSubmitted':      "so'rov PENDING/SUBMITTED holatida emas — joriy holat: {status}",
+  'validation.reasonRequired':           'Sabab (reason) majburiy',
+  'errors.requisitionNotApproved':       "so'rov APPROVED holatida emas — joriy holat: {status}",
+  'errors.internalIssueMovementTypeNotFound': 'INTERNAL_ISSUE harakati turi topilmadi',
+  'errors.requisitionCannotBeCancelled': "so'rov bekor qilib bo'lmaydi — joriy holat: {status}",
+};
+function interpolate(template: string, args?: Record<string, unknown>): string {
+  if (!args) return template;
+  return template.replace(/\{(\w+)\}/g, (_m, k) => (k in args ? String(args[k]) : `{${k}}`));
+}
+const mockI18nService = {
+  t: jest.fn(async (key: string, options?: { args?: Record<string, unknown> }) =>
+    interpolate(I18N_STUB_STRINGS[key] ?? key, options?.args)),
+} as unknown as jest.Mocked<I18nService>;
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -193,6 +215,7 @@ describe('PosRequisitionWorkflowService', () => {
           }),
           barcodeExists: jest.fn().mockResolvedValue({ ok: true, data: false }),
         } },
+        { provide: I18nService, useValue: mockI18nService },
       ],
     }).compile();
 

@@ -50,15 +50,19 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
-              {aiTrend?.summary || "Ma'lumotlar yetarli emas. Tahlil uchun ko'proq QC testlari va brak ma'lumotlari kerak."}
+              {aiTrend?.summary
+                ? `Jami ${aiTrend.summary.totalTests} ta laboratoriya testi va ${aiTrend.summary.totalBraks} ta brak qayd etildi. O'rtacha pass darajasi: ${aiTrend.summary.avgPassRate}% (trend: ${
+                    aiTrend.summary.trend === 'improving' ? "yaxshilanmoqda" : aiTrend.summary.trend === 'declining' ? "yomonlashmoqda" : "barqaror"
+                  }).`
+                : "Ma'lumotlar yetarli emas. Tahlil uchun ko'proq QC testlari va brak ma'lumotlari kerak."}
             </p>
-            {aiTrend?.recommendations && aiTrend.recommendations.length > 0 && (
+            {Array.isArray(aiTrend?.aiInsights) && aiTrend.aiInsights.length > 0 && (
               <div className="pt-4 space-y-2">
                 <h4 className="text-sm font-semibold flex items-center gap-2 text-primary">
                   <AlertCircle className="h-4 w-4" /> {t("tavsiyalar")}
                 </h4>
                 <ul className="space-y-1.5">
-                  {(Array.isArray(aiTrend.recommendations) ? aiTrend.recommendations : []).map((rec, i) => (
+                  {aiTrend.aiInsights.map((rec, i) => (
                     <li key={`k-${i}`} className="text-sm flex items-start gap-2">
                       <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                       {rec}
@@ -78,7 +82,7 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
             <CardContent>
               <div className="flex items-end gap-2">
                 <div className="text-3xl font-bold text-[var(--ep-red)]">
-                  {aiTrend?.totalBraks || 0} <span className="text-sm font-normal text-muted-foreground">kg</span>
+                  {aiTrend?.summary?.totalBraks || 0} <span className="text-sm font-normal text-muted-foreground">ta</span>
                 </div>
                 <Badge variant="outline" className="mb-1 text-[var(--ep-red)] border-red-200 bg-red-50">
                   <TrendingUp className="h-3 w-3 mr-1" /> +12.4%
@@ -117,12 +121,16 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
                 <TableHead className="text-right">Ulush (%)</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {aiTrend?.byReason ? Object.entries(aiTrend.byReason).map(([reason, val], i) => (
-                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
-                    <TableCell className="text-sm">{reason}</TableCell>
-                    <TableCell className="text-right font-medium">{val}%</TableCell>
-                  </TableRow>
-                )) : (
+                {Array.isArray(aiTrend?.byReason) && aiTrend.byReason.length > 0 ? aiTrend.byReason.map((item, i) => {
+                  const totalBraks = aiTrend.summary?.totalBraks ?? 0;
+                  const pct = totalBraks > 0 ? ((item.count / totalBraks) * 100).toFixed(1) : '0.0';
+                  return (
+                    <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                      <TableCell className="text-sm">{item.reason}</TableCell>
+                      <TableCell className="text-right font-medium">{pct}%</TableCell>
+                    </TableRow>
+                  );
+                }) : (
                   <TableRow><TableCell colSpan={2} className="text-center py-6 text-[13px] text-muted-foreground">{t("malumotlarYoq")}</TableCell></TableRow>
                 )}
               </TableBody>

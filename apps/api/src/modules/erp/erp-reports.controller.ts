@@ -8,6 +8,7 @@ import {
   Controller, Get, Post, Put, Patch, Delete, Param, Body, Query,
   UseGuards, UseInterceptors, Logger, NotFoundException, InternalServerErrorException, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -30,7 +31,7 @@ const ERP_WRITE = ['super_admin', 'director', 'production_manager', 'technologis
 export class ErpReportsController {
   private readonly logger = new Logger(ErpReportsController.name);
 
-  constructor(private readonly svc: ErpReportsService) {}
+  constructor(private readonly svc: ErpReportsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List daily reports' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -57,7 +58,7 @@ export class ErpReportsController {
     const _rGetDailyReport = await this.svc.getDailyReport(safeInt(id, 0));
     assertOk(_rGetDailyReport);
     const r = _rGetDailyReport.data as Record<string, unknown>;
-    assertFound(r, 'Daily report not found');
+    assertFound(r, await this.i18n.t('errors.dailyReportNotFound', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -163,7 +164,7 @@ export class ErpReportsController {
     const _rGetDowntimeLog = await this.svc.getDowntimeLog(safeInt(id, 0));
     assertOk(_rGetDowntimeLog);
     const r = _rGetDowntimeLog.data as Record<string, unknown>;
-    assertFound(r, 'Downtime log not found');
+    assertFound(r, await this.i18n.t('errors.downtimeLogNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -209,8 +210,8 @@ export class ErpReportsController {
   @ApiOperation({ summary: 'Capacity load analysis' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('capacity/load-analysis')
-  async capacityLoadAnalysis() {
-    return unwrapOrThrow(await this.svc.capacityLoadAnalysis());
+  async capacityLoadAnalysis(@Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return unwrapOrThrow(await this.svc.capacityLoadAnalysis(startDate, endDate));
   }
 
   @ApiOperation({ summary: 'List shift calendars' })
@@ -255,7 +256,7 @@ export class ErpReportsController {
     const _rGetEmployeeWorkCenter = await this.svc.getEmployeeWorkCenter(safeInt(id, 0));
     assertOk(_rGetEmployeeWorkCenter);
     const r = _rGetEmployeeWorkCenter.data as Record<string, unknown>;
-    assertFound(r, 'Employee work center assignment not found');
+    assertFound(r, await this.i18n.t('errors.employeeWorkCenterNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -287,13 +288,20 @@ export class ErpReportsController {
     return unwrapOrThrow(await this.svc.workCenterCapacity());
   }
 
-  @ApiOperation({ summary: 'Create work center capacity' })
-  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiOperation({ summary: 'Create or update work center capacity' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('work-center-capacity')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
-  async createWorkCenterCapacity(@Body() _body: ErpBodyDto) {
-    return { message: 'Work center capacity updated', updatedAt: new Date().toISOString() };
+  async createWorkCenterCapacity(@Body() body: ErpBodyDto) {
+    const patch = body as Record<string, unknown>;
+    const id = patch['id'] !== undefined ? safeInt(String(patch['id']), 0) : 0;
+    if (!id) {
+      // No id — this is a brand-new capacity entry (FE "Quvvat qo'shildi" dialog);
+      // insert a real row into work_center_capacity instead of silently no-op'ing.
+      return unwrapOrThrow(await this.svc.createWorkCenterCapacity(patch));
+    }
+    return unwrapOrThrow(await this.svc.updateWorkCenterCapacity(id, patch));
   }
 }

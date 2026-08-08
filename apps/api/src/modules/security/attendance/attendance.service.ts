@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError, Err } from '@common/result';
 import { AttendanceRepository } from './attendance.repository';
 import { securityAttendance } from '@europrint/schemas';
@@ -14,7 +15,10 @@ import { securityAttendance } from '@europrint/schemas';
 export class AttendanceService {
   private readonly logger = new Logger(AttendanceService.name);
 
-  constructor(private readonly repo: AttendanceRepository) {}
+  constructor(
+    private readonly repo: AttendanceRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     const { page = 1, limit = 10 } = query;
@@ -26,7 +30,7 @@ export class AttendanceService {
 
   async findOne(id: number) {
     const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.recordNotFoundWithId', { args: { id } }));
     return row;
   }
 

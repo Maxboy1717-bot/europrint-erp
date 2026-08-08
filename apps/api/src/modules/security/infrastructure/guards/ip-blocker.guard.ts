@@ -4,12 +4,15 @@
  */
 
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 
 import { MS_PER_MINUTE } from '@common/constants/app.constants';
 @Injectable()
 export class IpBlockerGuard implements CanActivate {
   private readonly logger = new Logger(IpBlockerGuard.name);
   private readonly blockedIps = new Map<string, { until: number; reason: string }>();
+
+  constructor(private readonly i18n: I18nService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -21,7 +24,7 @@ export class IpBlockerGuard implements CanActivate {
     if (blocked) {
       if (Date.now() < blocked.until) {
         this.logger.warn(`Bloklangan IP urinishi: ${ip} — sabab: ${blocked.reason}`);
-        throw new ForbiddenException(`Bu IP manzil vaqtincha bloklangan. Sabab: ${blocked.reason}`);
+        throw new ForbiddenException(await this.i18n.t('errors.ipTemporarilyBlocked', { args: { reason: blocked.reason } }));
       }
       this.blockedIps.delete(ip);
     }

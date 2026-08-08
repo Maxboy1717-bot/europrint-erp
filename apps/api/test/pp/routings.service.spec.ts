@@ -7,6 +7,7 @@
  */
 
 import { NotFoundException } from '@nestjs/common';
+import type { I18nService } from 'nestjs-i18n';
 import { RoutingsService } from '../../src/modules/pp/routings/routings.service';
 import type { IPpRoutingsRepository } from '../../src/modules/pp/routings/i-pp-routings.repo';
 
@@ -22,12 +23,16 @@ function buildRepo(overrides: Partial<jest.Mocked<IPpRoutingsRepository>> = {}):
   };
 }
 
+function buildI18n(): I18nService {
+  return { t: jest.fn().mockResolvedValue('Routing topilmadi') } as unknown as I18nService;
+}
+
 describe('RoutingsService', () => {
   it('findAll applies default pagination of 10 per page', async () => {
     const repo = buildRepo({
       findAll: jest.fn().mockResolvedValue({ ok: true, data: { data: [{ id: 1 }], count: 1 } }),
     });
-    const svc = new RoutingsService(repo);
+    const svc = new RoutingsService(repo, buildI18n());
 
     const r = await svc.findAll({});
 
@@ -42,7 +47,7 @@ describe('RoutingsService', () => {
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 11, name: 'R-11' } }),
       findOperationsByRoutingId: jest.fn().mockResolvedValue({ ok: true, data: [{ seq: 1 }, { seq: 2 }] }),
     });
-    const svc = new RoutingsService(repo);
+    const svc = new RoutingsService(repo, buildI18n());
 
     const r = await svc.findOne(11);
 
@@ -52,7 +57,7 @@ describe('RoutingsService', () => {
 
   it('findOne throws NotFoundException when header is null', async () => {
     const repo = buildRepo();
-    const svc = new RoutingsService(repo);
+    const svc = new RoutingsService(repo, buildI18n());
 
     await expect(svc.findOne(999)).rejects.toBeInstanceOf(NotFoundException);
   });
@@ -61,7 +66,7 @@ describe('RoutingsService', () => {
     const repo = buildRepo({
       create: jest.fn().mockResolvedValue({ ok: true, data: { id: 5, name: 'New routing' } }),
     });
-    const svc = new RoutingsService(repo);
+    const svc = new RoutingsService(repo, buildI18n());
 
     const r = await svc.create({ name: 'New routing' });
 
@@ -75,7 +80,7 @@ describe('RoutingsService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 3 } }),
     });
-    const svc = new RoutingsService(repo);
+    const svc = new RoutingsService(repo, buildI18n());
 
     await svc.update(3, { name: 'renamed' });
 

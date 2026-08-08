@@ -10,7 +10,7 @@ import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, AppErr, Err } from '@common/result';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 
@@ -26,7 +26,7 @@ export class CrmExtendedCompatService {
     const result = await rawSql(sql`
       SELECT i.id, i.number, i.title, i.deal_id, i.company_id, i.contact_id,
              i.status, i.total_amount, i.paid_amount, i.currency,
-             i.issue_date, i.due_date, i.paid_date, i.created_at, i.updated_at
+             i.invoice_date, i.due_date, i.paid_date, i.created_at, i.updated_at
       FROM crm_invoices i
       ORDER BY i.created_at DESC LIMIT ${lim} OFFSET ${off}
     `);
@@ -106,12 +106,24 @@ export class CrmExtendedCompatService {
   
     });}
 
-  getMarketingSegments() {
-    return [
-      { id: 1, name: 'Premium mijozlar', count: 0, criteria: 'Yillik hajm > 500M UZS' },
-      { id: 2, name: "O'rta segment", count: 0, criteria: '50M — 500M UZS' },
-      { id: 3, name: 'Kichik mijozlar', count: 0, criteria: '< 50M UZS' },
-    ];
+  async getMarketingSegments(): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        SELECT
+          COUNT(*) FILTER (WHERE COALESCE(opportunity_amount, budget, 0) > 500000000)::int  AS premium_count,
+          COUNT(*) FILTER (WHERE COALESCE(opportunity_amount, budget, 0) BETWEEN 50000000 AND 500000000)::int AS mid_count,
+          COUNT(*) FILTER (WHERE COALESCE(opportunity_amount, budget, 0) < 50000000
+                            OR (budget IS NULL AND opportunity_amount IS NULL))::int AS small_count
+        FROM crm_leads
+        WHERE deleted_at IS NULL
+      `);
+      const row = (dbRows(r)[0] ?? {}) as { premium_count?: number; mid_count?: number; small_count?: number };
+      return [
+        { id: 1, name: 'Premium mijozlar', count: Number(row.premium_count ?? 0), criteria: 'Yillik hajm > 500M UZS' },
+        { id: 2, name: "O'rta segment",    count: Number(row.mid_count     ?? 0), criteria: '50M — 500M UZS' },
+        { id: 3, name: 'Kichik mijozlar',  count: Number(row.small_count   ?? 0), criteria: '< 50M UZS' },
+      ];
+    });
   }
 
   async getNextBestAction(): Promise<Result<Row[], AppError>> {
@@ -140,23 +152,28 @@ export class CrmExtendedCompatService {
     });
   }
 
-  createTask(body: Record<string, unknown>) {
-    return { id: null as number | null, status: 'created', title: String(body['title'] ?? ''), createdAt: _time.now() };
+  // audit 2026-08-06 T20 (Qoida 10/40): these five compat AI endpoints returned
+  // hardcoded fake-success ({id:null}, empty transcript, churnRisk:'low' score:0, …)
+  // to any caller — a green-lie worse than an honest 501. Until a real AI
+  // integration is wired (AiRouterService pattern exists in modules/ai), they now
+  // return NOT_IMPLEMENTED, which unwrapOrInternal maps to HTTP 501.
+  createTask(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'CRM AI vazifa-yaratish hali ulanmagan — tez orada'));
   }
 
-  processChat(body: Record<string, unknown>) {
-    return { response: '', sessionId: String(body['sessionId'] ?? ''), timestamp: _time.now() };
+  processChat(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'CRM AI chat hali ulanmagan — tez orada'));
   }
 
-  runAutoTasks(body: Record<string, unknown>) {
-    return { tasksCreated: 0, message: 'Auto-tasks queued', params: body };
+  runAutoTasks(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'CRM avto-vazifalar hali ulanmagan — tez orada'));
   }
 
-  churnAnalysis(body: Record<string, unknown>) {
-    return { churnRisk: 'low', score: 0, recommendations: ([] as { action: string; priority: number }[]), entityId: body['entityId'] };
+  churnAnalysis(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'Churn-tahlil hali ulanmagan — tez orada'));
   }
 
-  processVoice(body: Record<string, unknown>) {
-    return { transcript: '', intent: null as string | null, confidence: 0, entityId: body['entityId'] };
+  processVoice(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'Ovoz-tahlil hali ulanmagan — tez orada'));
   }
 }

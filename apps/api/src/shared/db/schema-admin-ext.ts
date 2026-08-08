@@ -28,15 +28,25 @@ export const system_alerts = pgTable('system_alerts', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// Item #119: `id` was declared uuid — live column is `integer` (serial, nextval sequence).
+// title/content/category/isActive were declared notNull — live columns are all nullable
+// (drift-fix-04a-missing-cols.sql added the compat-shim's generic fields onto what was
+// originally a file/position-based table; file_path/version/orgFunctionId are the
+// original model, now wired up alongside the compat fields — Q-46, not a new table).
 export const guidelines = pgTable('guidelines', {
-  id:          uuid('id').primaryKey().defaultRandom(),
-  title:       text('title').notNull(),
-  content:     text('content').notNull(),
-  category:    text('category').notNull().default('general'),
-  isActive:    boolean('is_active').notNull().default(true),
-  createdBy:   text('created_by'),
-  createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  id:            serial('id').primaryKey(),
+  title:         text('title'),
+  content:       text('content'),
+  category:      text('category'),
+  isActive:      boolean('is_active'),
+  createdBy:     text('created_by'),
+  createdAt:     timestamp('created_at').defaultNow().notNull(),
+  updatedAt:     timestamp('updated_at').defaultNow(),
+  filePath:      text('file_path').notNull(),
+  version:       varchar('version', { length: 20 }).notNull().default('1.0'),
+  orgFunctionId: integer('org_function_id'),
+  deletedAt:     timestamp('deleted_at'),
+  deletedBy:     integer('deleted_by'),
 }, (t) => [index('guidelines_category_idx').on(t.category)]);
 
 // Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md

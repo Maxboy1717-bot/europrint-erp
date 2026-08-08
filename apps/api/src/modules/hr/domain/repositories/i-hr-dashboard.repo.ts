@@ -21,8 +21,16 @@ export interface DailyReportsStatsRow {
 }
 
 export interface IHrDashboardRepo {
-  getBirthdaysToday(): Promise<Result<Row[]>>;
-  getBirthdaysUpcoming(d: number): Promise<Result<Row[]>>;
+  /**
+   * @param departmentId - when provided, restricts results to employees whose
+   *   PRIMARY org department matches this id. Used to scope PII (birth_date +
+   *   full name) for the `MANAGER` role to their own department instead of
+   *   company-wide (security fix — see hr-dashboard.controller.ts).
+   */
+  getBirthdaysToday(departmentId?: number): Promise<Result<Row[]>>;
+  getBirthdaysUpcoming(d: number, departmentId?: number): Promise<Result<Row[]>>;
+  /** Resolves the caller's own primary org_department_id (for MANAGER PII scoping). Null when unresolvable. */
+  getUserPrimaryDepartmentId(userId: number): Promise<Result<number | null>>;
   getMilestonesUpcoming(d: number): Promise<Result<unknown[]>>;
   getMonthlyTrend(): Promise<Result<unknown[]>>;
   getAbcAnalysis(): Promise<Result<unknown[]>>;
@@ -52,6 +60,10 @@ export interface IHrDashboardRepo {
   getAttendanceSummary(days?: number): Promise<Result<Row[]>>;
   getGamificationLeaderboard(period: string): Promise<Result<Row[]>>;
   getOffboardingStats(): Promise<Result<Row>>;
+  // ── Daily-report list endpoints (real DB reads) ────────────────────────────
+  getReportsByDate(date: string | undefined, type: string | undefined, limit: number): Promise<Result<Row[]>>;
+  getReportsByDepartment(departmentId: number | undefined, date: string | undefined): Promise<Result<{ submitted: Row[]; missing: Row[] }>>;
+  getMyReports(userId: number, limit: number): Promise<Result<Row[]>>;
 }
 
 export const HR_DASHBOARD_REPO = Symbol('HR_DASHBOARD_REPO');

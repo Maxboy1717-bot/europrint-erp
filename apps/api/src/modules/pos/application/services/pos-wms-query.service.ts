@@ -7,7 +7,7 @@
  * Asosiy pattern (ishlaydi):
  *   FROM warehouses w
  *   LEFT JOIN current_stock cs ON cs.warehouse_id::text = w.id::text
- *   WHERE w.is_active = true
+ *   WHERE w.is_active = true AND w.deleted_at IS NULL
  *   GROUP BY w.id ORDER BY w.name
  *
  * Type definitions live in `pos-wms-query.types.ts` so this file stays under
@@ -62,7 +62,7 @@ export class PosWmsQueryService {
           COALESCE(SUM(cs.quantity_on_hand), 0)::text   AS total_qty
         FROM warehouses w
         LEFT JOIN current_stock cs ON cs.warehouse_id::text = w.id::text
-        WHERE w.is_active = true
+        WHERE w.is_active = true AND w.deleted_at IS NULL
         GROUP BY w.id, w.code, w.name, w.type, w.is_active
         ORDER BY w.name
       `);

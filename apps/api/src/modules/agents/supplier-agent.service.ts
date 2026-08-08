@@ -106,20 +106,6 @@ export class SupplierAgentService {
     return r.rows.map(x => ({ orderId: x.id, risk: 'medium' as const }));
   }
 
-  /** Auto purchase request (kritik qoldiq aniqlanganda) */
-  async createPurchaseRequest(materialId: number, qty: number, reason: string): Promise<{ ok: boolean; id?: string }> {
-    return this.audit.wrap({ agentName: this.AGENT, action: 'create_purchase_request', targetType: 'material', targetId: String(materialId) }, async () => {
-      try {
-        const r = await runQuery<{ id: string }>(sql`
-          INSERT INTO purchase_requests (material_id, qty, reason, status, created_at)
-          VALUES (${materialId}, ${qty}, ${reason}, 'pending', NOW())
-          RETURNING id::text AS id
-        `);
-        return { ok: true, id: r.rows[0]?.id };
-      } catch { return { ok: false }; }
-    });
-  }
-
   @Cron('0 8 * * *', { timeZone: 'Asia/Tashkent' })
   async cron(): Promise<void> {
     try {

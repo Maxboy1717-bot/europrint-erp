@@ -32,6 +32,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { SodGuard } from './common/guards/sod.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
+import { TenantFilterGuard } from './common/guards/tenant-filter.guard';
 
 // Config
 import databaseConfig from './config/database.config';
@@ -43,17 +44,20 @@ import {
   DatabaseModule, RedisModule,
   CacheModule, QueueModule,
   AuthModule, AdminModule, CrmModule, SdModule, PpModule, MesModule,
-  WmsModule, QcModule, HrModule, LmsModule, FinanceModule, MmModule,
+  WmsModule, KnowledgeGraphModule, QcModule, HrModule, LmsModule, FinanceModule, MmModule,
   LogisticsModule, NotificationsModule, IotModule, DesignModule,
-  MarketingModule, MroModule, SecurityModule, KanbanModule, AiModule,
+  MarketingModule, MroModule, SecurityModule, KanbanModule, AiModule, AiFitModule,
   AiAgentsModule, BotGatewayModule, DirectorModule, AishaModule,
-  CommunicationCenterModule, AgentsModule, PosModule, PosV2Module,
+  CommunicationCenterModule, AgentsModule, PosModule,
   CoreModule, OrgStructureModule, ChatModule, StorageModule,
   EcommerceModule, LegacyModule, CompatibilityModule,
   CronModule, TelegramModule, RemainingModule, IntegrationModule,
-  ErpModule, ExportModule, OrderWorkflowModule,
+  ErpModule, ExportModule,
   SharedEventsModule, OutboxModule,
 } from './feature-modules';
+import { DocumentControlModule } from './common/document-control/document-control.module';
+import { ErpDocumentsModule } from './modules/erp-documents/erp-documents.module';
+import { ErpSpreadsheetsModule } from './modules/erp-spreadsheets/erp-spreadsheets.module';
 
 @Module({
   imports: [
@@ -111,7 +115,14 @@ import {
         new HeaderResolver(['x-lang']),
         AcceptLanguageResolver,
       ],
-      typesOutputPath: path.join(__dirname, '../src/generated/i18n.generated.ts'),
+      // 2026-07-14: MUST stay OUTSIDE src/ (sourceRoot) — nestjs-i18n's loader (watch:true above)
+      // rewrites this file on every dist/i18n/*.json change (incl. the asset-copy every build
+      // already does). When this path pointed into src/generated/, `nest start --watch` (which
+      // watches sourceRoot="src") saw that rewrite as a source change and rebuilt — which
+      // re-copied the i18n assets — which re-triggered the loader's rewrite — an infinite
+      // restart loop ("lokal tinimsiz yangilanadi"). Nothing imports I18nTranslations today
+      // (grep confirmed), so relocating it has zero call-site impact.
+      typesOutputPath: path.join(__dirname, '../i18n-types/i18n.generated.ts'),
     }),
 
     // ── Infrastructure ────────────────────────────────────────────────────────
@@ -122,6 +133,11 @@ import {
     CacheModule,
     QueueModule,
 
+    // ── Document Control (cross-cutting leak-prevention layer, owner 2026-07-13) ──
+    DocumentControlModule,
+    ErpDocumentsModule, // erkin hujjatlar — consumes DocumentControlModule
+    ErpSpreadsheetsModule, // jadvallar — consumes DocumentControlModule
+
     // ── Core Modullar (24 ta) ─────────────────────────────────────────────────
     AuthModule,
     AdminModule,
@@ -130,6 +146,7 @@ import {
     PpModule,
     MesModule,
     WmsModule,
+    KnowledgeGraphModule,
     QcModule,
     HrModule,  // HrV2Module is composed inside HrModule — single registration point
     LmsModule,
@@ -144,6 +161,7 @@ import {
     SecurityModule,
     KanbanModule,
     AiModule,
+    AiFitModule,
     AiAgentsModule,
     BotGatewayModule,
     DirectorModule,
@@ -151,7 +169,6 @@ import {
     CommunicationCenterModule,
     AgentsModule,
     PosModule,
-    PosV2Module,
     CoreModule,
     OrgStructureModule,
     ChatModule,
@@ -178,8 +195,10 @@ import {
     // ── Analytics & Export ────────────────────────────────────────────────────
     ExportModule,
 
-    // ── Sprint 4 — Order-to-Cash Workflow ─────────────────────────────────────
-    OrderWorkflowModule,
+    // NOTE: OrderWorkflowModule deregistered 2026-07-02 — DB table `ow_orders`
+    // does not exist; every route under /order-workflow/* returned 500 (Q-46
+    // dead/broken code). Module + files left in place under
+    // modules/order-workflow/ (rebuild scope not yet defined by vizyon).
 
     // ── PA0 event bridge (CQRS → EventEmitter2, Triggers 2/7/14/15/20) ────────
     SharedEventsModule,
@@ -195,6 +214,9 @@ import {
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: SodGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
+    // Item #122: guard existed fully-built but was never registered — always
+    // returns true (pure pass-through), only populates request.tenantFilter.
+    { provide: APP_GUARD, useClass: TenantFilterGuard },
 
     // ── Sprint 3 startup migration ─────────────────────────────────────────
     // Ensures rfm_clusters, churn_model_params, imposition_layouts.

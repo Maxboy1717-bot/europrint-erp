@@ -21,7 +21,6 @@ export * from './schema-misc';
 export * from './schema-misc-iot';
 export * from './schema-misc-qc';
 export * from './schema-pos-ext';
-export * from './schema-pos-retail';
 export * from './schema-rbac';
 export * from './schema-misc-app';
 export * from './schema-forecast';
@@ -56,7 +55,7 @@ import {
 } from './schema-misc-iot';
 import {
   deliveries, design_orders, maintenance_orders,
-  kanban_tasks, campaigns, security_incidents, notifications,
+  campaigns, security_incidents, notifications,
 } from './schema-misc';
 import {
   qc_defects, qc_reclamations,
@@ -156,7 +155,7 @@ export const schema = {
   budgets, budget_lines, approval_requests, ai_usage_logs,
   sensor_devices, sensor_readings,
   deliveries, design_orders, maintenance_orders,
-  kanban_tasks, campaigns, security_incidents, notifications,
+  campaigns, security_incidents, notifications,
   qc_defects, qc_reclamations,
   pos_movement_types, pos_movements, pos_movement_lines, pos_warehouse_access,
   inventory_counts, inventory_count_lines,

@@ -1,0 +1,23 @@
+-- APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35
+-- Notifications module gap (docs/audit/NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md):
+-- a 6-value notification-category taxonomy (buyruq/ogohlantirish/talab/tasdiqlash_sorovi/
+-- hisobot/elon) was already seeded into taxonomy_entries (category='notification_category', 6
+-- rows — verified live 2026-07-13, see taxonomy-seed-2026-07-11.sql:66-71) but the
+-- `notifications` table had no column referencing it.
+--
+-- category_code — soft-reference to taxonomy_entries.code (nullable TEXT). Same FK-less
+--                  convention as the sibling module_code/channel/status columns added on this
+--                  same table earlier the same day (see
+--                  notifications-module-channel-status-immutable-2026-07-13.sql) and the same
+--                  convention already used elsewhere in this codebase for taxonomy
+--                  soft-references (ow_molds.code_prefix, technology_cards.decoration_type,
+--                  kanban_cards.task_type) — taxonomy_entries has zero incoming FK constraints
+--                  by design, validated at the application layer instead. Wired as a new
+--                  optional field on CreateNotificationCommand
+--                  (create-notification.handler.ts), mirroring exactly how module_code was
+--                  wired. Scope is deliberately narrow: column + command support only — NOT
+--                  backfilled on existing notification-creation call sites (separate follow-up).
+--
+-- Human-readable mirror of the SCHEMA_MIGRATIONS entry in
+-- apps/api/src/shared/db/invariants/migrations-schema.ts (actual boot-time loader).
+ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS category_code TEXT;

@@ -62,4 +62,33 @@ export class DrizzleDesignOrdersSvcRepository implements IDesignOrdersSvcReposit
       return Err((e as Error)?.message || 'Holat yangilashda xatolik');
     }
   }
+
+  async ensureForSalesOrder(
+    salesOrderId: string,
+    data: { orderNumber: string; title: string },
+  ): Promise<Result<{ created: boolean; id: number }>> {
+    try {
+      // Idempotency: one design task per (live) sales order — dedupe on the link.
+      const existing = await db
+        .select({ id: designOrders.id })
+        .from(designOrders)
+        .where(and(eq(designOrders.salesOrderId, salesOrderId), isNull(designOrders.deletedAt)))
+        .limit(1);
+      if (existing[0]) return Ok({ created: false, id: existing[0].id });
+
+      const inserted = await db
+        .insert(designOrders)
+        .values({
+          salesOrderId,
+          orderNumber: data.orderNumber,
+          title: data.title,
+          status: 'new',
+          priority: 'normal',
+        } as typeof designOrders.$inferInsert)
+        .returning({ id: designOrders.id });
+      return Ok({ created: true, id: inserted[0]?.id ?? 0 });
+    } catch (e: unknown) {
+      return Err((e as Error)?.message || 'Dizayn buyurtmasini ta\'minlashda xatolik');
+    }
+  }
 }

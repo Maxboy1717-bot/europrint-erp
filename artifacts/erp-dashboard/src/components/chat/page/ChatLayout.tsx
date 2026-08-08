@@ -11,12 +11,18 @@ import { useCallback, useState } from "react";
 import { useChatStore, ChatMessage, ChatRoom } from "@/store/chatStore";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { RoomInfoPanel } from "./RoomInfoPanel";
+import { ChatEmployeeInfoPanel, ChatPanelEmployee } from "./ChatEmployeeInfoPanel";
+import { useAuth } from "@/hooks/useAuth";
+import { useRoomMembers } from "@/hooks/chat/useRooms";
 import { ThreadPanel } from "./ThreadPanel";
 import { PollCreator } from "./PollCreator";
 import { ForwardModal } from "./ForwardModal";
 import { CreateTaskModal } from "./CreateTaskModal";
 import { SocketReconnectBanner } from "@/components/chat/SocketReconnectBanner";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { getChatApiBase } from "@/lib/apiBase";
 import { apiRequest } from "@/lib/queryClient";
 import { ChatLayoutSidebar } from "./ChatLayoutSidebar";
@@ -45,6 +51,7 @@ export function ChatLayout() {
   const rooms = useChatStore((s) => s.rooms);
   const members = useChatStore((s) => s.members);
   const onlineUserIds = useChatStore((s) => s.onlineUserIds);
+  const { user } = useAuth();
   const infoOpen = useChatStore((s) => s.infoOpen);
   const setInfoOpen = useChatStore((s) => s.setInfoOpen);
   const toggleInfo = useChatStore((s) => s.toggleInfo);
@@ -86,6 +93,27 @@ export function ChatLayout() {
     : [];
   const isChannelReadOnly =
     activeRoom?.type === "channel" && activeRoom?.memberRole === "MEMBER";
+  // For a 1:1 (direct) room the info panel shows the OTHER participant's
+  // employee profile (Crisp/Intercom-style). Members come from a fetch (the
+  // Zustand `members` map is never populated) so the panel actually resolves.
+  // Live data has both 'direct' and 'DIRECT' — match case-insensitively.
+  const isDirectRoom = (activeRoom?.type ?? "").toLowerCase() === "direct";
+  const directRoomId = isDirectRoom ? (activeRoom?.id ?? null) : null;
+  const { data: directMembersData } = useRoomMembers(directRoomId);
+  const directMembers = (Array.isArray(directMembersData) ? directMembersData : []) as Array<{
+    userId?: string | number; fullName?: string; avatarUrl?: string | null; employeeId?: string | number | null; role?: string;
+  }>;
+  const panelMember = directMembers.find((m) => String(m.userId) !== String(user?.id));
+  const panelEmployee: ChatPanelEmployee | undefined = panelMember
+    ? {
+        userId: Number(panelMember.userId),
+        fullName: String(panelMember.fullName ?? ""),
+        role: String(panelMember.role ?? "MEMBER"),
+        avatarUrl: panelMember.avatarUrl ?? undefined,
+        employeeId: panelMember.employeeId != null ? String(panelMember.employeeId) : undefined,
+        isOnline: onlineUserIds.has(Number(panelMember.userId)),
+      }
+    : undefined;
   const memberCount = activeRoomId ? (members[activeRoomId] ?? []).length : 0;
   const typingText = (() => {
     if (!typingUsers || typingUsers.size === 0) return null;
@@ -277,10 +305,11 @@ export function ChatLayout() {
     setActiveRoomId(null as unknown as string);
   }, [setActiveRoomId]);
 
-  const handleVideoCall = useCallback(async () => {
+  const handleVideoCall = useCallback(async (audioOnly = false) => {
     if (!activeRoomId || !activeRoom) return;
     if (videoCallUrl) { setVideoCallUrl(null); return; }
     setVideoLoading(true);
+    const label = audioOnly ? "🎙️ Audio" : "🎥 Video";
     try {
       const data = await apiRequest<{
         token: string | null;
@@ -289,28 +318,33 @@ export function ChatLayout() {
         embedUrl: string;
       }>('POST', `${getChatApiBase()}/video/token`, { roomId: activeRoomId });
       const separator = data.embedUrl.includes("#") ? "&" : "#";
+      // Audio-only: kamera o'chirilgan + startAudioOnly=true; toolbar'da kamera yo'q.
       const configFlags = [
         "config.prejoinPageEnabled=false",
         "config.startWithAudioMuted=false",
-        "config.startWithVideoMuted=false",
+        `config.startWithVideoMuted=${audioOnly ? "true" : "false"}`,
+        ...(audioOnly ? ["config.startAudioOnly=true"] : []),
         "config.disableDeepLinking=true",
         "config.hideConferenceSubject=false",
         "interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false",
-        'interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","hangup","tileview","fullscreen"]',
+        audioOnly
+          ? 'interfaceConfig.TOOLBAR_BUTTONS=["microphone","hangup","tileview","fullscreen"]'
+          : 'interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","hangup","tileview","fullscreen"]',
       ].join("&");
       const callUrl = data.embedUrl.includes("config.prejoinPageEnabled")
         ? data.embedUrl
         : `${data.embedUrl}${separator}${configFlags}`;
       sendMessage(
         activeRoomId,
-        `🎥 Video qo'ng'iroq boshlandi. Qo'shilish: ${data.embedUrl.split("#")[0].split("?jwt=")[0]}`
+        `${label} qo'ng'iroq boshlandi. Qo'shilish: ${data.embedUrl.split("#")[0].split("?jwt=")[0]}`
       );
       setVideoCallUrl(callUrl);
       setVideoMinimized(false);
     } catch {
       const roomSlug = `europrint-room-${activeRoomId}`;
-      const callUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true`;
-      sendMessage(activeRoomId, `🎥 Video qo'ng'iroq: https://meet.jit.si/${roomSlug}`);
+      const audioFlag = audioOnly ? "&config.startWithVideoMuted=true&config.startAudioOnly=true" : "&config.startWithVideoMuted=false";
+      const callUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false${audioFlag}&config.disableDeepLinking=true`;
+      sendMessage(activeRoomId, `${label} qo'ng'iroq: https://meet.jit.si/${roomSlug}`);
       setVideoCallUrl(callUrl);
       setVideoMinimized(false);
     } finally {
@@ -365,7 +399,8 @@ export function ChatLayout() {
         videoLoading={videoLoading}
         videoHeight={videoHeight}
         videoMinimized={videoMinimized}
-        onVideoCall={handleVideoCall}
+        onVideoCall={() => handleVideoCall(false)}
+        onAudioCall={() => handleVideoCall(true)}
         onVideoClose={() => { setVideoCallUrl(null); setVideoMinimized(false); }}
         onVideoToggleMinimize={() => setVideoMinimized((v) => !v)}
         onVideoToggleHeight={() =>
@@ -408,8 +443,15 @@ export function ChatLayout() {
         </aside>
       )}
 
-      {/* Right panel: Room info */}
-      {infoOpen && activeRoom && !threadRootMsg && (
+      {/* Right panel: employee profile — ALWAYS shown for a 1:1 room (Crisp/
+          Intercom 3-column layout, no toggle needed). */}
+      {activeRoom && !threadRootMsg && isDirectRoom && panelEmployee && (
+        <aside className="hidden md:flex w-full sm:w-[340px] lg:w-[380px] flex-shrink-0 border-l border-[var(--ep-border)] flex-col">
+          <ChatEmployeeInfoPanel employee={panelEmployee} roomId={String(activeRoom.id)} onClose={() => setInfoOpen(false)} />
+        </aside>
+      )}
+      {/* Right panel: room info (groups/channels) — toggle-gated. */}
+      {infoOpen && activeRoom && !threadRootMsg && !isDirectRoom && (
         <aside className="hidden lg:flex w-full sm:w-[380px] flex-shrink-0 border-l border-[var(--tg-border)] bg-[var(--tg-sidebar-bg)] flex-col">
           <RoomInfoPanel room={activeRoom} onClose={() => setInfoOpen(false)} />
         </aside>
@@ -424,16 +466,31 @@ export function ChatLayout() {
         <ForwardModal message={forwardMsg} onClose={() => setForwardMsg(null)} />
       )}
 
-      <ConfirmDialog
+      <AlertDialog
         open={confirmDeleteMsg !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteMsg(null); }}
-        title={t("xabarniOchirish")}
-        description={t("ushbuXabarniOchirishniTasdiqlaysizmi")}
-        confirmText="O'chirish"
-        cancelText="Bekor qilish"
-        variant="destructive"
-        onConfirm={() => { if (confirmDeleteMsg) deleteMsg(confirmDeleteMsg.id); }}
-      />
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("xabarniOchirish")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("ushbuXabarniOchirishniTasdiqlaysizmi")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (confirmDeleteMsg) deleteMsg(confirmDeleteMsg.id, "me"); setConfirmDeleteMsg(null); }}
+            >
+              {t("ozimUchunOchirish")}
+            </AlertDialogAction>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => { if (confirmDeleteMsg) deleteMsg(confirmDeleteMsg.id, "everyone"); setConfirmDeleteMsg(null); }}
+            >
+              {t("hammaUchunOchirish")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <CreateTaskModal
         message={taskMsg}

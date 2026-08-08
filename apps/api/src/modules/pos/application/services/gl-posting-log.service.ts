@@ -95,9 +95,13 @@ export class GlPostingLogService {
   }
 
   /**
-   * BOSQICH 2 — post the approved movement's GL to the canonical `entries` ledger.
+   * FAZA Auto-GL (I) — post the APPROVED movement's GL to the canonical `entries` ledger.
    * Non-fatal: a missing account mapping (gl_account_mappings is owner/accountant data) just logs a
    * warning and posts nothing, rather than failing the approval or inventing accounts (Q-40).
+   * Called ONLY from approveEntry/approveByMovement below — the movement must first sit in
+   * gl_posting_log with status=AWAITING_REVIEW (written by PosMovementStatusService on completion)
+   * and a human must approve it via POST /api/pos/gl/entry/:id/approve or /pos/gl/approve/:movementId.
+   * There is no auto-post path straight to `entries` (removed — it bypassed the review gate).
    */
   private async postToLedger(movementId: number, approvedBy: number): Promise<void> {
     const post = await this.repo.postMovementToLedger(movementId, approvedBy);

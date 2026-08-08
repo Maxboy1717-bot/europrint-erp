@@ -155,13 +155,40 @@ export class WmsCrudRepository implements IWmsCrudRepo {
     return Ok(r.data[0]);
   }
 
+  async listGoodsIssues(limit: number, offset: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT gi.*, mc.xom_ashyo AS material_name, mc.unit_of_measure,
+             w.name AS warehouse_name
+      FROM wms_goods_issues gi
+      LEFT JOIN material_cards mc ON gi.material_id = mc.id
+      LEFT JOIN warehouses w ON gi.warehouse_id = w.id
+      WHERE gi.deleted_at IS NULL
+      ORDER BY gi.issued_at DESC, gi.id DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `);
+  }
+
+  async getGoodsIssueById(id: number): Promise<Result<Row>> {
+    const r = await this.exec(sql`
+      SELECT gi.*, mc.xom_ashyo AS material_name, mc.unit_of_measure,
+             w.name AS warehouse_name
+      FROM wms_goods_issues gi
+      LEFT JOIN material_cards mc ON gi.material_id = mc.id
+      LEFT JOIN warehouses w ON gi.warehouse_id = w.id
+      WHERE gi.id = ${id} AND gi.deleted_at IS NULL
+    `);
+    if (!r.ok) return Err(r.error);
+    if (!Array.isArray(r.data) || r.data.length === 0) return Err('NOT_FOUND');
+    return Ok(r.data[0]);
+  }
+
   async getStockById(id: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
       SELECT ws.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, w.name AS warehouse_name
-      FROM wms_stock ws
-      LEFT JOIN material_cards mc ON ws.material_card_id = mc.id
+      FROM warehouse_stock ws
+      LEFT JOIN material_cards mc ON ws.material_id = mc.id
       LEFT JOIN warehouses w ON ws.warehouse_id = w.id
-      WHERE ws.id = ${id} AND ws.deleted_at IS NULL
+      WHERE ws.id = ${id}
     `);
     if (!r.ok) return Err(r.error);
     return Ok(Array.isArray(r.data) && r.data.length > 0 ? r.data[0] : null);

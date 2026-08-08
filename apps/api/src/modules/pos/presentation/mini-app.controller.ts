@@ -9,7 +9,8 @@ import { assertAuth } from '@common/assertions';
  * POS — Telegram Mini App Controller
  * Auth, Barcode, Materials, Requests endpoints
  */
-import { Controller, Get, Post, Patch, Param, Body, Query, Headers, UnauthorizedException, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, Headers, UnauthorizedException, ForbiddenException, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -42,12 +43,35 @@ class TgApproveDto extends createZodDto(TgApproveSchema) {}
 const TgRejectSchema = z.object({ reason: z.string().min(1) });
 class TgRejectDto extends createZodDto(TgRejectSchema) {}
 
+// NOTE (F4-2 batch 2, 2026-07-07): message left hardcoded intentionally.
+// This is a plain exported function (no DI), also imported by
+// mini-app-history.controller.ts (out of scope for this batch) — adding an
+// i18n param here would force a signature change onto that out-of-scope
+// file. Revisit together with mini-app-history.controller.ts if localized.
 export async function resolveSession(
   telegramService: PosTelegramService,
   token: string | undefined,
 ): Promise<{ userId: number; telegramUserId: bigint }> {
   assertAuth(token, "Mini App sessiya tokeni yo'q");
   return telegramService.validateSession(token.replace('Bearer ', ''));
+}
+
+/**
+ * Approve/reject gate: mini-app is @Public() so there is no JWT-populated
+ * request.user for RolesGuard/PermissionGuard to read. Resolves the caller's
+ * role+department directly (admin-tier roles bypass department scoping;
+ * 'manager' role may only act on requests from their own department).
+ */
+export async function assertCanManageRequest(
+  miniAppService: PosMiniAppService,
+  userId: number,
+  requestId: number,
+  i18n: I18nService,
+): Promise<void> {
+  const result = await miniAppService.canManageRequest(userId, requestId);
+  if (!result.ok || !result.data) {
+    throw new ForbiddenException(await i18n.t('errors.cannotManageRequest'));
+  }
 }
 
 @ApiTags('POS — Telegram Mini App')
@@ -62,6 +86,7 @@ export class MiniAppController {
     private readonly barcodeService: PosBarcodeService,
     private readonly requestService: PosRequestService,
     private readonly miniAppService: PosMiniAppService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Post('auth')
@@ -70,10 +95,10 @@ export class MiniAppController {
   async authenticate(@Body() dto: TgAuthDto) {
     const params = new URLSearchParams(dto.initData);
     const userStr = params.get('user');
-    assertAuth(userStr, "initData da user yo'q");
+    assertAuth(userStr, await this.i18n.t('errors.telegramInitDataNoUser'));
     let tgUser: { id: number; first_name?: string; last_name?: string; username?: string };
     const parsed = safeJsonParse<{ id: number; first_name?: string; last_name?: string; username?: string } | null>(userStr, null);
-    assertAuth(parsed?.id, "initData dan foydalanuvchi ma'lumotlari o'qib bo'lmadi");
+    assertAuth(parsed?.id, await this.i18n.t('errors.telegramInitDataUserUnreadable'));
     tgUser = parsed;
     const session = await this.telegramService.createOrRenewSession({ telegramUserId: BigInt(tgUser.id), initData: dto.initData });
     const _rUser = await this.miniAppService.getUserDetails(session.userId);
@@ -110,6 +135,7 @@ export class MiniAppController {
   @ApiHeader({ name: 'x-tg-session', description: 'Mini App sessiya tokeni' })
   async approveRequest(@Headers('x-tg-session') sessionToken: string, @Param('id', ParseIntPipe) id: number, @Body() dto: TgApproveDto) {
     const { userId } = await resolveSession(this.telegramService, sessionToken);
+    await assertCanManageRequest(this.miniAppService, userId, id, this.i18n);
     return unwrapOrInternal(await this.requestService.approveRequest({ requestId: id, notes: dto.notes }, userId));
   }
 
@@ -118,6 +144,7 @@ export class MiniAppController {
   @ApiHeader({ name: 'x-tg-session', description: 'Mini App sessiya tokeni' })
   async rejectRequest(@Headers('x-tg-session') sessionToken: string, @Param('id', ParseIntPipe) id: number, @Body() dto: TgRejectDto) {
     const { userId } = await resolveSession(this.telegramService, sessionToken);
+    await assertCanManageRequest(this.miniAppService, userId, id, this.i18n);
     return unwrapOrInternal(await this.requestService.rejectRequest({ requestId: id, rejectionReason: dto.reason }, userId));
   }
 }

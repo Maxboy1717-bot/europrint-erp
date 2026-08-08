@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { eq, desc } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { safeCall, Result } from '@common/result';
@@ -49,7 +50,10 @@ const DEFAULT_CONFIG: PlanningConfig = {
 export class DrizzleAiPlanningRepo {
   private config: PlanningConfig = { ...DEFAULT_CONFIG };
 
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly i18n: I18nService,
+  ) {}
 
   private toRecord(r: typeof aiPlanningPlans.$inferSelect): PlanRecord {
     return {
@@ -102,14 +106,19 @@ export class DrizzleAiPlanningRepo {
           planDate,
           planType,
           status:           'draft',
-          confidenceScore:  87,
+          // M3 (2026-07-05): confidenceScore/optimizationMetrics used to be fabricated
+          // (87 / {84,76,32}) at creation time, before any real analysis ran -- no method
+          // anywhere in this repo ever recomputes them afterward, so every plan carried a
+          // permanent fake "already analyzed" result. Honest default: 0/{} until a real
+          // optimization pass exists to populate them.
+          confidenceScore:  0,
           autoApproved:     false,
           planData:         [],
-          optimizationMetrics: { machineUtilization: 84, energyEfficiency: 76, changeoverReduction: 32 },
+          optimizationMetrics: {},
           aiRecommendations:   [{ type: 'info', message: 'AI reja yaratildi' }],
         })
         .returning();
-      if (!row) throw new InternalServerErrorException('AI reja yaratishda xato: natija qaytmadi');
+      if (!row) throw new InternalServerErrorException(await this.i18n.t('errors.aiPlanCreationFailed'));
       return this.toRecord(row);
     });
   }
@@ -121,7 +130,7 @@ export class DrizzleAiPlanningRepo {
         .set({ status })
         .where(eq(aiPlanningPlans.id, id))
         .returning();
-      if (!row) throw new NotFoundException(`Reja topilmadi: ${id}`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.aiPlanNotFound', { args: { id } }));
       return this.toRecord(row);
     });
   }
@@ -133,7 +142,7 @@ export class DrizzleAiPlanningRepo {
         .set({ planDate, status: 'rescheduled' })
         .where(eq(aiPlanningPlans.id, id))
         .returning();
-      if (!row) throw new NotFoundException(`Reja topilmadi: ${id}`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.aiPlanNotFound', { args: { id } }));
       return this.toRecord(row);
     });
   }

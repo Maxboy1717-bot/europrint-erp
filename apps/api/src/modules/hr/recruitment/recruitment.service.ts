@@ -29,6 +29,7 @@ export class RecruitmentService {
   listFunnels(query: ListFunnelDto) { return this.funnelSvc.listFunnels(query); }
   getFunnelById(id: number) { return this.funnelSvc.getFunnelById(id); }
   getFunnelKanban(vacancyId?: number) { return this.funnelSvc.getFunnelKanban(vacancyId); }
+  getFunnelKanbanHc(vacancyId?: number) { return this.funnelSvc.getFunnelKanbanHc(vacancyId); }
   moveFunnelStage(funnelId: number, dto: MoveFunnelStageDto, changedById: number) { this.logger.log(`Funnel #${funnelId} bosqich o'zgardi -> ${dto.newStage ?? ''}`); return this.funnelSvc.moveFunnelStage(funnelId, dto, changedById); }
   quickScreening(funnelId: number, dto: QuickScreeningDto, userId: number) { return this.funnelSvc.quickScreening(funnelId, dto, userId); }
 

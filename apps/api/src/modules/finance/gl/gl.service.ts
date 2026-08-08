@@ -8,7 +8,7 @@
  */
 
 import { GL } from "../domain/constants/gl-accounts.constants";
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { IFinanceGlRepository, FINANCE_GL_REPO } from './i-finance-gl.repo';
 import { safeCall, Result, AppError } from '@common/result';
@@ -70,27 +70,6 @@ export class GlService {
       throw new NotFoundException(notFoundMsg);
     }
     if (!result.data) throw new NotFoundException(notFoundMsg);
-    return result.data;
-
-    });}
-
-  /**
-   * Persists a new GL document. Enforces the balanced-entry invariant:
-   * `totalDebit === totalCredit`. WHY: an unbalanced entry corrupts the
-   * trial-balance and downstream financial statements — better to fail
-   * loudly at write-time than to spend hours reconciling later.
-   * @param dto - the journal entry: header + lines
-   * @returns Result.ok({ id }) on success
-   * @throws (via wrapped safeCall → Result.err) BadRequestException-equivalent when unbalanced
-   */
-  async postDocument(dto: Record<string, unknown>){
-    const debitCreditMismatchMsg = await this.i18n.t('errors.debitCreditMismatch');
-    return safeCall(async () => {
-    if (dto.totalDebit !== dto.totalCredit) {
-      throw new BadRequestException(debitCreditMismatchMsg);
-    }
-    const result = await this.financeGlRepo.postDocument(dto);
-    if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
 
     });}

@@ -39,6 +39,10 @@ export interface QuickCreateFormState {
   description: string;
   amount: string;
   currency: string;
+  // SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3 §2.1 (2026-08-06 fix): a deal must be
+  // traceable to a company (CRM-FK-01, QuickDealSchema.companyId is required) — this
+  // modal never collected one, so every "quick create deal" attempt was rejected.
+  companyId: string;
 }
 
 export const INITIAL_FORM_STATE: QuickCreateFormState = {
@@ -50,4 +54,5 @@ export const INITIAL_FORM_STATE: QuickCreateFormState = {
   description: "",
   amount: "",
   currency: "UZS",
+  companyId: "",
 };

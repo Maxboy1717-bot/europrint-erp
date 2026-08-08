@@ -137,16 +137,16 @@ export class EcommerceService {
   }
 
   async listProducts(q: Record<string, unknown>) { return ecommerceListProducts(q); }
-  async getProduct(id: string) { return ecommerceGetProduct(id); }
-  async createProduct(body: Record<string, unknown>) { return ecommerceCreateProduct(body); }
-  async updateProduct(id: string, body: Record<string, unknown>) { return ecommerceUpdateProduct(id, body); }
+  async getProduct(id: string) { return ecommerceGetProduct(id, this.i18n); }
+  async createProduct(body: Record<string, unknown>) { return ecommerceCreateProduct(body, this.i18n); }
+  async updateProduct(id: string, body: Record<string, unknown>) { return ecommerceUpdateProduct(id, body, this.i18n); }
   async listCategories() { return ecommerceListCategories(); }
-  async getCategoryById(id: string) { return ecommerceGetCategoryById(id); }
-  async createCategory(body: Record<string, unknown>) { return ecommerceCreateCategory(body); }
-  async updateCategory(id: string, body: Record<string, unknown>) { return ecommerceUpdateCategory(id, body); }
-  async checkCategoryEmpty(id: string) { return ecommerceCheckCategoryEmpty(id); }
+  async getCategoryById(id: string) { return ecommerceGetCategoryById(id, this.i18n); }
+  async createCategory(body: Record<string, unknown>) { return ecommerceCreateCategory(body, this.i18n); }
+  async updateCategory(id: string, body: Record<string, unknown>) { return ecommerceUpdateCategory(id, body, this.i18n); }
+  async checkCategoryEmpty(id: string) { return ecommerceCheckCategoryEmpty(id, this.i18n); }
   async getPublicCategories() { return ecommerceGetPublicCategories(); }
-  async getPublicProductBySlug(slug: string) { return ecommerceGetPublicProductBySlug(slug); }
+  async getPublicProductBySlug(slug: string) { return ecommerceGetPublicProductBySlug(slug, this.i18n); }
 
   async createPublicOrderFromBody(body: Record<string, unknown>, loggerRef: { error: (msg: string, ctx: unknown) => void }) {
     return safeCall(async () => {

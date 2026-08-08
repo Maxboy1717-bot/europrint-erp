@@ -18,6 +18,7 @@ import {
   UseGuards,
   UseInterceptors, BadRequestException, NotFoundException} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@common/guards/roles.guard';
@@ -32,6 +33,8 @@ import {
  GetMaterialsDtoSchema,
 } from './dto/material.dto';
 import { LayerFormulaService } from '../application/layer-formula.service';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 enum Role {
  WAREHOUSE_MANAGER = 'warehouse_manager',
@@ -49,7 +52,8 @@ export class MmMaterialsController {
  constructor(
  private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus,
- private readonly layerFormula: LayerFormulaService) {}
+ private readonly layerFormula: LayerFormulaService,
+ private readonly i18n: I18nService) {}
 
  @ApiOperation({ summary: 'kg<->list konvertatsiya (qatlam formulasi, vision #7)' })
  @ApiResponse({ status: 200, description: 'OK' })
@@ -61,7 +65,7 @@ export class MmMaterialsController {
  @Query('sheets') sheets?: string) {
  // Ombor kg bilan kirim/chiqim qiladi -> material config'i bo'yicha list-soni hisoblanadi.
  const materialId = parseInt(id, 10);
- if (!Number.isFinite(materialId)) throw new BadRequestException('Material id raqam bo\'lishi kerak');
+ if (!Number.isFinite(materialId)) throw new BadRequestException(await this.i18n.t('validation.materialIdMustBeNumber'));
  const opts: { totalKg?: number; sheetCount?: number } = {};
  if (kg != null && kg !== '') opts.totalKg = Number(kg);
  if (sheets != null && sheets !== '') opts.sheetCount = Number(sheets);
@@ -127,7 +131,7 @@ export class MmMaterialsController {
 
  return {
  statusCode: HttpStatus.OK,
- data: unwrapOrNotFoundDefined(result, 'Material not found'),
+ data: unwrapOrNotFoundDefined(result, await this.i18n.t('errors.materialNotFound')),
 };
 
 }
@@ -137,7 +141,7 @@ export class MmMaterialsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.WAREHOUSE_MANAGER, Role.SUPER_ADMIN)
- async createMaterial(@Body() body: unknown) {
+ async createMaterial(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
  const parsed = CreateMaterialDtoSchema.parse(body);
  const cmd = new CreateMaterialCommand(
@@ -147,7 +151,8 @@ export class MmMaterialsController {
  parsed.unitOfMeasure,
  parsed.minStock,
  parsed.maxStock,
- parsed.unitCost);
+ parsed.unitCost,
+ user.id);
 
  const result = await this.commandBus.execute(cmd);
 
@@ -166,7 +171,7 @@ export class MmMaterialsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Put(':id')
  @Roles(Role.WAREHOUSE_MANAGER, Role.SUPER_ADMIN)
- async updateMaterial(@Param('id') id: string, @Body() body: unknown) {
+ async updateMaterial(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
  const parsed = UpdateMaterialDtoSchema.parse(body);
  const cmd = new UpdateMaterialCommand(
@@ -177,7 +182,8 @@ export class MmMaterialsController {
  parsed.minStock,
  parsed.maxStock,
  parsed.unitCost,
- parsed.isActive);
+ parsed.isActive,
+ user.id);
 
  const result = await this.commandBus.execute(cmd);
 

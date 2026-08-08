@@ -18,6 +18,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AiModule } from '../ai/ai.module';
 import { AgentsModule } from '../agents/agents.module';
+// 20-cc#49 (P0, owner 2026-07-11): CcApprovedGlPostingListener needs GlPostingService (the ONE
+// canonical `entries` posting engine) — mirrors pos.module.ts / sd.module.ts's FinanceModule import.
+import { FinanceModule } from '@modules/finance/finance.module';
+import { NotificationsModule } from '@modules/notifications/notifications.module';
 
 // Repositories
 import { CcBasketsRepository }            from './infrastructure/repositories/cc-baskets.repo';
@@ -33,7 +37,9 @@ import { CcDocumentNumberService } from './application/cc-document-number.servic
 import { CcOrgResolverService }    from './application/cc-org-resolver.service';
 import { CcAiInterviewService }    from './application/cc-ai-interview.service';
 import { CcPdfService }            from './application/cc-pdf.service';
+import { CcRetentionService }      from './application/cc-retention.service';
 import { CcStatsService }          from './application/cc-stats.service';
+import { CcKanbanBridgeService }   from './application/cc-kanban-bridge.service';
 
 // Presentation
 import { CcBasketsController }            from './presentation/cc-baskets.controller';
@@ -48,12 +54,16 @@ import { CcGateway }                      from './presentation/cc.gateway';
 import { CcSlaCron }       from './cron/cc-sla.cron';
 import { CcBotService }    from './telegram/cc-bot.service';
 import { CcEventListener } from './events/cc-event.listener';
+import { CcApprovedKassirListener } from './events/cc-approved-kassir.listener';
+import { CcApprovedGlPostingListener } from './events/cc-approved-gl-posting.listener';
 
 @Module({
   imports: [
     CqrsModule,
     AiModule,
     AgentsModule,                  // CcBotService → DirectorAgentService + StrategicAgentService
+    FinanceModule,                 // CcApprovedGlPostingListener → GlPostingService (20-cc#49)
+    NotificationsModule,           // CcSlaCron → TELEGRAM_SENDER (T24C: escalation Telegram delivery)
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
@@ -85,12 +95,16 @@ import { CcEventListener } from './events/cc-event.listener';
     CcOrgResolverService,
     CcAiInterviewService,
     CcPdfService,
+    CcRetentionService,
     CcStatsService,
+    CcKanbanBridgeService,
     // realtime + cron + telegram + events
     CcGateway,
     CcSlaCron,
     CcBotService,
     CcEventListener,
+    CcApprovedKassirListener,   // G4: approve→kassir bildirishnoma ko'prigi
+    CcApprovedGlPostingListener, // 20-cc#49: approve→GL auto-post (P0)
   ],
   exports: [
     CcBasketsService,

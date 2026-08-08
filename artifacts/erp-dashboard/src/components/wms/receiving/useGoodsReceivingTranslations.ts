@@ -10,6 +10,9 @@ export function useGoodsReceivingTranslations() {
   const { t: tCommon } = useTranslation('common');
   return {
     title: t('grTitle'),
+    dashboardBreadcrumb: tCommon('dashboard9'),
+    pageTitle: tCommon('tovarlarQabuli'),
+    errorLoadingData: tCommon('malumotlarniYuklashdaXatolikYuzBerdi'),
     subtitle: t('grSubtitle'),
     todayReceipts: t('grTodayReceipts'),
     pendingQc: t('grPendingQc'),

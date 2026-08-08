@@ -5,10 +5,13 @@
 
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bullmq';
 
 import { DatabaseModule } from '@/infrastructure/database/database.module';
 import { AuthModule } from '../auth/auth.module';
 import { CronModule } from '../../cron/cron.module';
+import { QueueModule } from '../queue/queue.module';
+import { QUEUE_NAMES } from '../queue/queue.constants';
 
 import { AdminUsersController } from './presentation/controllers/admin-users.controller';
 import { AdminSettingsController } from './presentation/controllers/admin-settings.controller';
@@ -33,12 +36,25 @@ import { USER_REPO, SETTINGS_REPO } from './admin.tokens';
 import { QUERY_TIMEOUT_MS } from '@common/constants/app.constants';
 export { USER_REPO, SETTINGS_REPO } from './admin.tokens';
 import { AdminQueueService } from './application/services/admin-queue.service';
+// Global biznes-sozlamalar CRUD (OWNER-JAVOBLAR-2026-07-11 — global CRUD qoidasi).
+import { BusinessSettingsController } from './settings/business-settings.controller';
+import { BusinessSettingsService } from './settings/business-settings.service';
+import { BusinessSettingsRepository } from './settings/business-settings.repo';
+// §2 Taksonomiya CRUD (nomli ro'yxatlar — mahsulot turi, chegirma, bezash...).
+import { TaxonomyController } from './settings/taxonomy.controller';
+import { TaxonomyService } from './settings/taxonomy.service';
+import { TaxonomyRepository } from './settings/taxonomy.repo';
 
 @Module({
   imports: [
     DatabaseModule,
     AuthModule,
     CronModule,
+    // Item #118: real BullMQ access for AdminQueueService (Queue Monitor was 100% mocked).
+    // Re-importing QueueModule does not duplicate its processors — Nest dedupes static
+    // module imports across the graph (same pattern as cron.module.ts + app.module.ts).
+    QueueModule,
+    BullModule.registerQueue({ name: QUEUE_NAMES.KANBAN_CRON }),
     ThrottlerModule.forRoot([
       {
         name: 'admin',
@@ -47,7 +63,7 @@ import { AdminQueueService } from './application/services/admin-queue.service';
       },
     ]),
   ],
-  controllers: [AdminUsersController, AdminSettingsController, AdminCronStatusController, AdminQueueController, AdminExtraController],
+  controllers: [AdminUsersController, AdminSettingsController, AdminCronStatusController, AdminQueueController, AdminExtraController, BusinessSettingsController, TaxonomyController],
   providers: [
     CreateUserService,
     UpdateUserRoleService,
@@ -64,9 +80,13 @@ import { AdminQueueService } from './application/services/admin-queue.service';
     AdminQueueService,
     AdminExtraService,
     AdminExtraRepository,
+    BusinessSettingsService,
+    BusinessSettingsRepository,
+    TaxonomyService,
+    TaxonomyRepository,
     RolesGuard,
     AuditInterceptor,
   ],
-  exports: [USER_REPO, SETTINGS_REPO],
+  exports: [USER_REPO, SETTINGS_REPO, BusinessSettingsService, TaxonomyService],
 })
 export class AdminModule {}

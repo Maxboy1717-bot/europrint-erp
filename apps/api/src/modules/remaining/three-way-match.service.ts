@@ -7,6 +7,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
+import { getBusinessSettingNumber } from '../../shared/config/business-settings.reader';
 
 export interface IThreeWayMatchRepo {
   getResults(poId: number | null, limit: number): Promise<unknown>;
@@ -15,7 +16,11 @@ export interface IThreeWayMatchRepo {
   insertResult(data: Record<string, unknown>): Promise<unknown>;
 }
 
-const TOLERANCE_PCT = 0.05;
+// Audit 2026-08-06: this was a bare 0.05 with no way for the owner to change it, while the
+// MM module's matcher reads the same threshold from business_settings. Both now read
+// mm.three_way_amount_tolerance_pct so the two paths cannot disagree about what counts as a
+// variance. The constant stays as the fallback when the row is missing.
+const TOLERANCE_PCT_DEFAULT = 0.05;
 
 @Injectable()
 export class ThreeWayMatchService {
@@ -39,7 +44,8 @@ export class ThreeWayMatchService {
     const grAmount = grRes.data;
 
     const variance = Math.abs(invoiceAmount - poAmount) / Math.max(poAmount, 1);
-    const paymentBlocked = variance > TOLERANCE_PCT;
+    const tolerance = await getBusinessSettingNumber('mm.three_way_amount_tolerance_pct', TOLERANCE_PCT_DEFAULT);
+    const paymentBlocked = variance > tolerance;
     const status = paymentBlocked ? 'discrepancy' : 'matched';
 
     await this.repo.insertResult({

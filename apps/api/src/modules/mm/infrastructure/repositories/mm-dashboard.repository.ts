@@ -27,7 +27,7 @@ export class MmDashboardRepository implements IMmDashboardRepo {
 
   async getVendorRatings(): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT v.id, v.name, v.contact_email, COALESCE(AVG(vr.quality_score), 0)::numeric(4,2) AS avg_quality, COALESCE(AVG(vr.delivery_score), 0)::numeric(4,2) AS avg_delivery, COALESCE(AVG(vr.price_score), 0)::numeric(4,2) AS avg_price, COUNT(vr.id)::int AS rating_count, MAX(vr.rated_at) AS last_rated FROM mm_vendors v LEFT JOIN mm_vendor_ratings vr ON vr.vendor_id = v.id WHERE v.is_active = true GROUP BY v.id, v.name, v.contact_email ORDER BY avg_quality DESC`);  } catch (_e) {
+      return exec(sql`SELECT v.id, v.name, v.email, COALESCE(AVG(vr.quality_score), 0)::numeric(4,2) AS avg_quality, COALESCE(AVG(vr.delivery_score), 0)::numeric(4,2) AS avg_delivery, COALESCE(AVG(vr.price_score), 0)::numeric(4,2) AS avg_price, COUNT(vr.id)::int AS rating_count, MAX(vr.rated_at) AS last_rated FROM mm_vendors v LEFT JOIN mm_vendor_ratings vr ON vr.vendor_id = v.id WHERE v.is_active = true GROUP BY v.id, v.name, v.email ORDER BY avg_quality DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -90,7 +90,9 @@ export class MmDashboardRepository implements IMmDashboardRepo {
 
   async getSupplierPerformance(): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT v.id, v.name, COUNT(po.id)::int AS total_orders, COUNT(po.id) FILTER (WHERE po.status = 'completed')::int AS completed_orders, COALESCE(SUM(po.total_amount), 0)::numeric(15,2) AS total_spend, COALESCE(AVG(EXTRACT(EPOCH FROM (gr.received_at - po.expected_delivery_date))/${SECONDS_PER_DAY}), 0)::numeric(5,1) AS avg_delay_days FROM mm_vendors v LEFT JOIN mm_purchase_orders po ON po.vendor_id = v.id LEFT JOIN mm_goods_receipts gr ON gr.purchase_order_id = po.id WHERE v.is_active = true GROUP BY v.id, v.name ORDER BY total_spend DESC`);  } catch (_e) {
+      // NOTE: mm_goods_receipts is empty; actual_delivery_date and expected_date columns
+      // on mm_purchase_orders are the canonical source for delay calculation.
+      return exec(sql`SELECT v.id, v.name, COUNT(po.id)::int AS total_orders, COUNT(po.id) FILTER (WHERE po.status = 'completed')::int AS completed_orders, COALESCE(SUM(po.total_amount), 0)::numeric(15,2) AS total_spend, COALESCE(AVG(EXTRACT(EPOCH FROM (po.actual_delivery_date - po.expected_date::timestamptz))/${SECONDS_PER_DAY}), 0)::numeric(5,1) AS avg_delay_days FROM mm_vendors v LEFT JOIN mm_purchase_orders po ON po.vendor_id = v.id WHERE v.is_active = true GROUP BY v.id, v.name ORDER BY total_spend DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -98,7 +100,86 @@ export class MmDashboardRepository implements IMmDashboardRepo {
 
   async getPriceHistory(materialId: number): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT pol.unit_price, pol.quantity, po.created_at, v.name AS vendor_name FROM mm_purchase_order_lines pol JOIN mm_purchase_orders po ON po.id = pol.purchase_order_id JOIN mm_vendors v ON v.id = po.vendor_id WHERE pol.material_id = ${materialId} ORDER BY po.created_at DESC LIMIT 50`);  } catch (_e) {
+      return exec(sql`SELECT pol.unit_price, pol.quantity, po.created_at, v.name AS vendor_name FROM purchase_order_items pol JOIN mm_purchase_orders po ON po.id = pol.purchase_order_id JOIN mm_vendors v ON v.id = po.vendor_id WHERE pol.material_id = ${materialId} ORDER BY po.created_at DESC LIMIT 50`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getFleetMaintenance(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT vm.*, fv.plate_number AS vehicle_plate_number FROM mm_vehicle_maintenance vm LEFT JOIN mm_vehicles fv ON fv.id = vm.vehicle_id ORDER BY vm.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getVehicleLocations(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT DISTINCT ON (vl.vehicle_id) vl.*, fv.plate_number AS vehicle_plate_number FROM vehicle_locations vl LEFT JOIN mm_vehicles fv ON fv.id = vl.vehicle_id ORDER BY vl.vehicle_id, vl.recorded_at DESC`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getDriverExpenses(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT de.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS driver_name FROM mm_driver_expenses de LEFT JOIN mm_drivers d ON d.id = de.driver_id LEFT JOIN employees e ON e.id = d.employee_id ORDER BY de.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getVendorInvoices(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT vi.*, v.name AS vendor_name FROM vendor_invoices vi LEFT JOIN mm_vendors v ON v.id = vi.vendor_id ORDER BY vi.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getVendorInvoiceById(id: number): Promise<Result<Row | null>>  {
+  try {
+      const r = await exec(sql`SELECT vi.*, v.name AS vendor_name FROM vendor_invoices vi LEFT JOIN mm_vendors v ON v.id = vi.vendor_id WHERE vi.id = ${id}`);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getThreeWayMatch(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT vi.id AS invoice_id, vi.invoice_number, vi.invoice_no, vi.vendor_id, v.name AS vendor_name, vi.purchase_order_id, vi.goods_receipt_id, vi.total_amount, vi.amount, vi.match_status, vi.match_score, vi.price_variance, vi.quantity_variance FROM vendor_invoices vi LEFT JOIN mm_vendors v ON v.id = vi.vendor_id ORDER BY vi.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  // FX-2: mm_deliveries (lib/db/src/schema/mm-logistics.ts:198) — waybill CRUD for
+  // LogisticsDashboard.tsx + MMExtended.tsx (ScheduleTab). Previously an unwired 501 stub.
+  async getFleetDeliveries(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT * FROM mm_deliveries ORDER BY created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async createFleetDelivery(body: Row): Promise<Result<Row>>  {
+  try {
+      const vehicleId = (body.vehicleId ?? body.vehicle_id ?? null) as string | null;
+      const eta = (body.estimatedArrival ?? body.estimated_arrival) as string | undefined;
+      const r = await exec(sql`INSERT INTO mm_deliveries (order_no, customer_name, address, vehicle_id, plate_number, driver_name, estimated_arrival, weight, cost, status) VALUES (${body.orderNo ?? body.order_no ?? null}, ${body.customerName ?? body.customer_name ?? null}, ${body.address ?? null}, ${vehicleId}, (SELECT plate_number FROM mm_vehicles WHERE id::varchar = ${vehicleId}), ${body.driverName ?? body.driver_name ?? null}, ${eta && eta !== '' ? eta : null}, ${body.weight ?? null}, ${body.cost ?? null}, 'planned') RETURNING *`);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async updateFleetDeliveryStatus(id: number, status: string): Promise<Result<Row | null>>  {
+  try {
+      const r = await exec(sql`UPDATE mm_deliveries SET status = ${status}, updated_at = NOW(), actual_arrival = CASE WHEN ${status} = 'delivered' THEN NOW() ELSE actual_arrival END WHERE id = ${id} RETURNING *`);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
 

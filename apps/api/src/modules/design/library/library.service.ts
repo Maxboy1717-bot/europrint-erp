@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { designLibraryItems } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
 import { LibraryRepository } from './library.repository';
@@ -12,7 +13,10 @@ import { LibraryRepository } from './library.repository';
 export class LibraryService {
   private readonly logger = new Logger(LibraryService.name);
 
-  constructor(private readonly repo: LibraryRepository) {}
+  constructor(
+    private readonly repo: LibraryRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     const { page = 1, limit = 10 } = query;
@@ -24,7 +28,7 @@ export class LibraryService {
 
   async findOne(id: number) {
     const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.designLibraryItemNotFoundWithId', { args: { id } }));
     return row;
   }
 

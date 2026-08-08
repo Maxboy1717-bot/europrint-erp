@@ -29,10 +29,14 @@ export const sensorDevices = pgTable("sensor_devices", {
   isActive: boolean("is_active").notNull().default(true),
   lastHeartbeat: timestamp("last_heartbeat"),
   status: varchar("status", { length: 20 }).notNull().default("offline"),
+  // install_status = CAPEX (kapital xarajat) o'qi: qurilma kerak/rejalashtirilgan/o'rnatilgan.
+  // `status` (online/offline heartbeat) dan ALOHIDA o'q — aralashtirilmaydi. (Batch 5 Item 2)
+  installStatus: varchar("install_status", { length: 20 }).notNull().default("installed"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   check("sensor_devices_device_type_chk", sql`${t.deviceType} IN ('inductive','optical','encoder','plc_digital')`),
   check("sensor_devices_connection_type_chk", sql`${t.connectionType} IN ('http','mqtt','websocket')`),
+  check("chk_sensor_devices_install_status", sql`${t.installStatus} IN ('needed','planned','installed')`),
 ]);
 
 export const insertSensorDeviceSchema = createInsertSchema(sensorDevices, {
@@ -47,108 +51,24 @@ export const insertSensorDeviceSchema = createInsertSchema(sensorDevices, {
 export type SensorDevice = typeof sensorDevices.$inferSelect;
 export type InsertSensorDevice = z.infer<typeof insertSensorDeviceSchema>;
 
-// Production Sessions (Ishlab chiqarish sessiyalari)
-export const productionSessions = pgTable("production_sessions", {
-  id: serial("id").primaryKey(),
-  sessionNumber: varchar("session_number", { length: 50 }).notNull().unique(),
-  productionOrderId: integer("production_order_id").references(() => productionOrders.id, { onDelete: "cascade" }).notNull(),
-  equipmentId: integer("equipment_id").references(() => equipment.id, { onDelete: "cascade" }).notNull(),
-  deviceId: integer("device_id").references(() => sensorDevices.id, { onDelete: "set null" }),
-  workerId: integer("worker_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
-  status: varchar("status", { length: 20 }).notNull().default("pending"),
-  targetQuantity: integer("target_quantity").notNull(),
-  actualQuantity: integer("actual_quantity").notNull().default(0),
-  defectQuantity: integer("defect_quantity").notNull().default(0),
-  startedAt: timestamp("started_at"),
-  endedAt: timestamp("ended_at"),
-  lastSignalAt: timestamp("last_signal_at"),
-  runningTimeSeconds: integer("running_time_seconds").notNull().default(0),
-  stoppedTimeSeconds: integer("stopped_time_seconds").notNull().default(0),
-  workerNotes: text("worker_notes"),
-  availability: numericMoney("availability"),
-  performance: numericMoney("performance"),
-  quality: numericMoney("quality"),
-  oee: numericMoney("oee"),
-  // ── ADD-ONLY: live DB superset columns ──
-  orderId: varchar("order_id"),
-  sessionId: varchar("session_id"),
-  operatorId: integer("operator_id"),
-  machineId: varchar("machine_id"),
-  shiftId: varchar("shift_id"),
-  workCenterId: integer("work_center_id"),
-  sessionDate: varchar("session_date", { length: 10 }),
-  producedQty: integer("produced_qty"),
-  defectQty: integer("defect_qty"),
-  startTime: timestamp("start_time"),
-  endTime: timestamp("end_time"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-}, (t) => [
-  check("production_sessions_status_chk", sql`${t.status} IN ('pending','running','paused','stopped','completed')`),
-]);
-
-export const insertProductionSessionSchema = createInsertSchema(productionSessions, {
-  sessionNumber: z.string().min(1, "Sessiya raqami kerak"),
-  targetQuantity: z.number().min(1, "Reja miqdori kerak"),
-  status: z.enum(["pending", "running", "paused", "stopped", "completed"]),
-}).omit({ id: true, createdAt: true, updatedAt: true, deletedAt: true } as never);
-
-export type ProductionSession = typeof productionSessions.$inferSelect;
-export type InsertProductionSession = z.infer<typeof insertProductionSessionSchema>;
-
 // Sensor Readings (Xom signal ma'lumotlari)
 export const sensorReadings = pgTable("sensor_readings", {
   id: serial("id").primaryKey(),
   deviceId: varchar("device_id").references(() => sensorDevices.id, { onDelete: "cascade" }).notNull(),
   pulseCount: integer("pulse_count").notNull().default(1),
   readingTime: timestamp("reading_time").notNull().defaultNow(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "set null" }),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id"),
   isProcessed: boolean("is_processed").notNull().default(false),
 });
 
 export type SensorReading = typeof sensorReadings.$inferSelect;
 
-// Downtime Events (To'xtash hodisalari)
-export const downtimeEvents = pgTable("downtime_events", {
-  id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
-  eventType: varchar("event_type", { length: 20 }).notNull(),
-  startedAt: timestamp("started_at").notNull(),
-  endedAt: timestamp("ended_at"),
-  durationSeconds: integer("duration_seconds"),
-  reasonCode: varchar("reason_code", { length: 20 }).notNull().default("unknown"),
-  reasonDescription: text("reason_description"),
-  reasonDescriptionRu: text("reason_description_ru"),
-  reportedBy: varchar("reported_by").references(() => users.id, { onDelete: "set null" }),
-  isPlanned: boolean("is_planned").notNull().default(false),
-  notes: text("notes"),
-  // ── ADD-ONLY: live DB superset columns ──
-  workCenterId: integer("work_center_id"),
-  reasonCodeId: integer("reason_code_id"),
-  durationMinutes: integer("duration_minutes"),
-  durationMin: integer("duration_min"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("downtime_events_event_type_chk", sql`${t.eventType} IN ('auto_detected','manual_entry')`),
-  check("downtime_events_reason_code_chk", sql`${t.reasonCode} IN ('unknown','material_shortage','tool_change','machine_breakdown','quality_issue','shift_change','break','setup','maintenance','no_order','other')`),
-]);
-
-export const insertDowntimeEventSchema = createInsertSchema(downtimeEvents, {
-  eventType: z.enum(["auto_detected", "manual_entry"]),
-  reasonCode: z.enum([
-    "unknown", "material_shortage", "tool_change", "machine_breakdown",
-    "quality_issue", "shift_change", "break", "setup", "maintenance", "no_order", "other"
-  ]),
-}).omit({ id: true, createdAt: true } as never);
-
-export type DowntimeEvent = typeof downtimeEvents.$inferSelect;
-export type InsertDowntimeEvent = z.infer<typeof insertDowntimeEventSchema>;
-
 // Worker Session Events
 export const workerSessionEvents = pgTable("worker_session_events", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id").notNull(),
   workerId: varchar("worker_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
   eventType: varchar("event_type", { length: 30 }).notNull(),
   defectQuantity: integer("defect_quantity"),

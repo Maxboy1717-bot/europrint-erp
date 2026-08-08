@@ -19,7 +19,9 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
 export class KaizenRepository implements IKaizenRepo {
   async createSuggestion(title: string, description: string, category: string, expectedBenefit: string | null, submittedBy: number): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO kaizen_suggestions (title, description, expected_benefit, employee_id, status) VALUES (${title}, ${description}, ${expectedBenefit}, ${String(submittedBy)}, 'submitted') RETURNING *`);
+      // Real column is `expected_impact` (not expected_benefit → 42703); created_at is NOT NULL with no
+      // DB default (omitted → 23502). Both fixed.
+      const r = await exec(sql`INSERT INTO kaizen_suggestions (title, description, expected_impact, employee_id, status, created_at) VALUES (${title}, ${description}, ${expectedBenefit}, ${String(submittedBy)}, 'submitted', NOW()) RETURNING *`);
       return Ok(r[0]);
     } catch (_e) {
       return Err(String(_e));

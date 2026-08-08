@@ -58,7 +58,7 @@ export class IotCameraController {
   @Get('cameras/:id')
   async getCamera(@Param('id', ParseIntPipe) id: number) {
     const data = await this.svc.getCamera(id);
-    assertFound(data, 'Kamera topilmadi');
+    assertFound(data, await this.i18n.t('errors.cameraNotFound'));
     return Array.isArray(data) ? data[0] : data;
   }
 
@@ -69,7 +69,7 @@ export class IotCameraController {
   @UseGuards(RolesGuard)
   @Roles(...MANAGER_ROLES)
   async createCamera(@Body() body: unknown) {
-    const dto = parseOrThrow(CreateCameraBodySchema, body);
+    const dto = parseOrThrow(CreateCameraBodySchema, body, await this.i18n.t('validation.validationFailed'));
     const _rCreateCamera = await this.svc.createCamera(
       dto.name,
       dto.location ?? null,

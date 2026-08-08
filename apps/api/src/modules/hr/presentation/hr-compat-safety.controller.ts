@@ -21,13 +21,12 @@ import {
   HrHazardZoneSchema, HrHazardZoneDto,
   HrPpeComplianceSchema, HrPpeComplianceDto,
   HrHealthLeaveSchema, HrHealthLeaveDto,
+  HrAdaptationProgramCreateSchema, HrAdaptationProgramCreateDto,
+  HrAdaptationRecordCreateSchema, HrAdaptationRecordCreateDto,
+  HrAdaptationMilestoneUpdateSchema, HrAdaptationMilestoneUpdateDto,
 } from './dto/hr.dto';
 
 interface AuthenticatedUser { id: number; sub?: number; }
-
-const GenerateMilestonesSchema = z.object({
-  employeeId: z.union([z.string(), z.number()]).optional(),
-}).passthrough();
 
 // P1.12.2: EMPLOYEE added so leave-requests endpoints are accessible to regular employees
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER', 'EMPLOYEE'] as const;
@@ -130,7 +129,11 @@ export class HrCompatSafetyController {
     const completed_date = body.completed_date ?? body.scheduledDate;
     const expiry_date    = body.expiry_date   ?? body.expiryDate;
     const { score, is_passed } = body;
-    const data = await this.svc.createSafetyTraining(training_id, employee_id, completed_date, expiry_date, score, is_passed);
+    // HR Nazorat fix (2026-07-13): free-text training name (courses.length===0 fallback in
+    // TrainingDialog) was never extracted — silently dropped even though the FE collects it
+    // and requires either trainingId OR trainingName (HRSafetyTypes.TrainingSchema refine).
+    const training_name = body.trainingName ?? null;
+    const data = await this.svc.createSafetyTraining(training_id, employee_id, completed_date, expiry_date, score, is_passed, training_name);
     return { data };
   }
 
@@ -149,7 +152,12 @@ export class HrCompatSafetyController {
     const hazard_level = body.hazard_level ?? body.riskLevel;
     const required_ppe = body.required_ppe ?? body.requiredPpe;
     const max_occupancy = body.max_occupancy ?? body.maxOccupancy;
-    const data = await this.svc.createHazardZone(zone_name, zone_code, department_id, hazard_level, required_ppe, max_occupancy);
+    // HR Nazorat fix (2026-07-13): ZoneDialog collects `location` (required) and
+    // `hazardType` (required, free-text hazard category — distinct from hazard_level's
+    // severity enum) plus optional `description`; none were extracted here — silently
+    // dropped on submit even though the FE form validated them as mandatory.
+    const { location, hazardType, description } = body;
+    const data = await this.svc.createHazardZone(zone_name, zone_code, department_id, hazard_level, required_ppe, max_occupancy, location, hazardType, description);
     return { data };
   }
 
@@ -192,7 +200,9 @@ export class HrCompatSafetyController {
     const startDate  = dto.start_date ?? dto.startDate;
     const endDate    = dto.end_date   ?? dto.endDate;
     const reason     = dto.reason     ?? '';
-    const data = await this.svc.createLeaveRequest(employeeId, startDate, endDate, reason);
+    const leaveType  = dto.type ?? dto.leaveType ?? dto.leave_type;
+    const userId     = user?.id ?? user?.sub ?? null;
+    const data = await this.svc.createLeaveRequest(employeeId, startDate, endDate, reason, leaveType, userId);
     return { data };
   }
 
@@ -202,16 +212,16 @@ export class HrCompatSafetyController {
     return { data: { period: 'monthly', entries } };
   }
 
-  @Get('milestones/generate')
-  async generateMilestones(@Query('employeeId') employeeId?: string) {
+  // Q10 fix: this route only ever read existing adaptation_milestones rows —
+  // it never generated/inserted anything, so the old "generate" name (and the
+  // POST variant that implied a write) was misleading (Q-40). Real milestone
+  // generation happens in createAdaptationRecord() → repo.createAdaptationMilestones()
+  // (triggered by POST /api/hr/adaptation/records). No FE caller references
+  // "milestones/generate" (grep confirmed) — renamed to reflect read-only intent
+  // and dropped the no-op POST variant instead of leaving it half-fake.
+  @Get('milestones/list')
+  async listMilestones(@Query('employeeId') employeeId?: string) {
     const data = await this.svc.getAdaptationMilestones(employeeId);
-    return { data };
-  }
-
-  @Post('milestones/generate')
-  async postGenerateMilestones(@Body() body: unknown) {
-    const dto = GenerateMilestonesSchema.parse(body ?? {});
-    const data = await this.svc.getAdaptationMilestones(dto.employeeId ? String(dto.employeeId) : undefined);
     return { data };
   }
 
@@ -220,5 +230,62 @@ export class HrCompatSafetyController {
   async putBrandSettings(@Body() body: HrBrandSettingsDto) {
     await this.svc.updateBrandSettings(body);
     return { data: { updated: true } };
+  }
+
+  // ── 3.14: adaptatsiya (moslashuv) checklist — CRUD + status-flow ─────────
+
+  @Get('adaptation/programs')
+  async getAdaptationPrograms() {
+    return unwrapOrInternal(await this.svc.getAdaptationPrograms());
+  }
+
+  @Post('adaptation/programs')
+  @UsePipes(new ZodValidationPipe(HrAdaptationProgramCreateSchema))
+  async createAdaptationProgram(@Body() body: HrAdaptationProgramCreateDto, @CurrentUser() user: AuthenticatedUser) {
+    const data = await this.svc.createAdaptationProgram({ ...body, created_by: user?.id ?? user?.sub ?? null });
+    return { data };
+  }
+
+  @Get('adaptation/records')
+  async getAdaptationRecords(@Query('employeeId') employeeId?: string, @Query('status') status?: string) {
+    return unwrapOrInternal(await this.svc.getAdaptationRecords(employeeId, status));
+  }
+
+  // P3.14: create a new adaptation (moslashuv) checklist process for an employee.
+  // Auto-generates 4 milestone rows (kun1/hafta1/oy1/oy3) via the service.
+  @Post('adaptation/records')
+  @UsePipes(new ZodValidationPipe(HrAdaptationRecordCreateSchema))
+  async createAdaptationRecord(@Body() body: HrAdaptationRecordCreateDto, @CurrentUser() user: AuthenticatedUser) {
+    const createdBy = user?.id ?? user?.sub ?? null;
+    const data = await this.svc.createAdaptationRecord(
+      body.employee_id,
+      body.program_id ?? null,
+      body.mentor_id ?? null,
+      body.start_date ?? null,
+      createdBy,
+    );
+    return { data };
+  }
+
+  @Get('adaptation/records/:id/milestones')
+  async getAdaptationRecordMilestones(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrInternal(await this.svc.getAdaptationRecordMilestones(id));
+  }
+
+  // P3.14: mark a checklist step (kun1/hafta1/oy1/oy3) completed/skipped — status-flow tracking.
+  @Patch('adaptation/milestones/:id')
+  @UsePipes(new ZodValidationPipe(HrAdaptationMilestoneUpdateSchema))
+  async updateAdaptationMilestone(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: HrAdaptationMilestoneUpdateDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const data = await this.svc.updateAdaptationMilestoneStatus(
+      id,
+      body.status ?? 'completed',
+      body.notes ?? null,
+      body.verified_by ?? user?.id ?? user?.sub ?? null,
+    );
+    return { data };
   }
 }

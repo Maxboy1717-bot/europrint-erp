@@ -15,12 +15,44 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 @Injectable()
 export class PosReportsRepository {
   async getKpi(): Promise<Result<Row>>  {
-  try {  
-      const rows = await exec(sql`SELECT (SELECT COUNT(*) FROM pos_movements WHERE status = 'pending') AS pending_approvals, (SELECT COUNT(*) FROM pos_movements WHERE status = 'qc_pending') AS qc_pending, (SELECT COUNT(*) FROM pos_material_requests WHERE status = 'pending') AS pending_requests, (SELECT COUNT(*) FROM employee_liability_cases WHERE status IN ('OPEN', 'UNDER_REVIEW')) AS open_liabilities, (SELECT COUNT(*) FROM material_card_suggestions WHERE status = 'PENDING') AS ai_suggestions_pending, (SELECT COUNT(*) FROM pos_inventory_counts WHERE status IN ('draft', 'in_progress', 'review')) AS active_counts, (SELECT COUNT(*) FROM pos_barcode_print_queue WHERE status = 'QUEUED') AS print_queue, (SELECT COALESCE(SUM(quantity_on_hand), 0) FROM current_stock) AS total_stock_qty, (SELECT COUNT(*) FROM pos_movements WHERE created_at >= NOW() - INTERVAL '24 hours') AS movements_today`);
-      return rows.ok ? Ok(rows.data[0] ?? {}) : Err(rows.error);  } catch (_e) {
+  try {
+      // WHY: PosDashboard.tsx reads todayMovementsCount, todayTotalAmount,
+      // pendingApprovalCount, lowStockCount — the old query returned
+      // movements_today/pending_approvals (mismatched names) and was missing
+      // todayTotalAmount and lowStockCount entirely, so all 4 stat cards showed 0
+      // even when real data existed in DB.  Fixed by aliasing to the camelCase
+      // field names the FE expects and adding the two missing subqueries.
+      const rows = await exec(sql`
+        SELECT
+          (SELECT COUNT(*) FROM pos_movements WHERE created_at >= NOW() - INTERVAL '24 hours')
+            AS "todayMovementsCount",
+          (SELECT COALESCE(SUM(total_amount), 0) FROM pos_movements WHERE created_at >= NOW() - INTERVAL '24 hours')
+            AS "todayTotalAmount",
+          (SELECT COUNT(*) FROM pos_movements WHERE status = 'pending')
+            AS "pendingApprovalCount",
+          (SELECT COUNT(*) FROM pos_stock_alerts WHERE alert_type = 'LOW_STOCK' AND resolved = false)
+            AS "lowStockCount",
+          -- 'karantin'/'qc_review' — jonli/ulangan karantin-QC oqimi statuslari; 'qc_pending'ga
+          -- qo'shib hisoblanmasa, karantindagi kirimlar "QC kutmoqda" KPI'da ko'rinmay qoladi.
+          (SELECT COUNT(*) FROM pos_movements WHERE status IN ('qc_pending','karantin','qc_review'))
+            AS qc_pending,
+          (SELECT COUNT(*) FROM pos_material_requests WHERE status = 'pending')
+            AS pending_requests,
+          (SELECT COUNT(*) FROM employee_liability_cases WHERE status IN ('OPEN', 'UNDER_REVIEW'))
+            AS open_liabilities,
+          (SELECT COUNT(*) FROM material_card_suggestions WHERE status = 'PENDING')
+            AS ai_suggestions_pending,
+          (SELECT COUNT(*) FROM pos_inventory_counts WHERE status IN ('draft', 'in_progress', 'review'))
+            AS active_counts,
+          (SELECT COUNT(*) FROM pos_barcode_print_queue WHERE status = 'QUEUED')
+            AS print_queue,
+          (SELECT COALESCE(SUM(quantity_on_hand), 0) FROM current_stock)
+            AS total_stock_qty
+      `);
+      return rows.ok ? Ok(rows.data[0] ?? {}) : Err(rows.error);
+  } catch (_e) {
     return Err(String(_e));
   }
-
   }
 
   async getStockReport(warehouseId?: string, category?: string): Promise<Result<Row[]>>  {
@@ -37,7 +69,7 @@ export class PosReportsRepository {
 
   async getMovementStats(interval: string): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT pmt.code AS movement_type, pmt.name AS movement_type_name, COUNT(*) AS count, SUM(CASE WHEN pm.status = 'completed' THEN 1 ELSE 0 END) AS completed, SUM(CASE WHEN pm.status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled FROM pos_movements pm JOIN pos_movement_types pmt ON pmt.id = pm.movement_type_id WHERE pm.created_at >= NOW() - (${interval})::interval GROUP BY pmt.code, pmt.name ORDER BY count DESC`);  } catch (_e) {
+      return exec(sql`SELECT movement_type AS movement_type, movement_type AS movement_type_name, COUNT(*) AS count, COUNT(*) AS completed, 0 AS cancelled FROM material_movements WHERE created_at >= NOW() - (${interval})::interval GROUP BY movement_type ORDER BY count DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -45,7 +77,9 @@ export class PosReportsRepository {
 
   async getTopMaterials(): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT mc.id, mc.xom_ashyo AS material_name, mc.unit_of_measure, SUM(pml.quantity::numeric) AS total_issued_qty, COUNT(DISTINCT pm.id) AS movement_count FROM pos_movement_lines pml JOIN pos_movements pm ON pm.id = pml.movement_id JOIN pos_movement_types pmt ON pmt.id = pm.movement_type_id JOIN material_cards mc ON mc.id = pml.material_id WHERE pm.created_at >= NOW() - INTERVAL '30 days' AND pmt.code = 'INTERNAL_ISSUE' AND pm.status = 'completed' GROUP BY mc.id, mc.xom_ashyo, mc.unit_of_measure ORDER BY total_issued_qty DESC LIMIT 20`);  } catch (_e) {
+      // NOTE: pos_movements.movement_type_id is NULL for all rows (type stored in TEXT column movement_type).
+      // The old join on pos_movement_types permanently returned []. Using material_movements (canonical) instead.
+      return exec(sql`SELECT mm.material_id AS id, mc.xom_ashyo AS material_name, COALESCE(mc.unit_of_measure, 'dona') AS unit_of_measure, SUM(mm.quantity) AS total_issued_qty, COUNT(*) AS movement_count FROM material_movements mm JOIN material_cards mc ON mc.id = mm.material_id WHERE mm.created_at >= NOW() - INTERVAL '30 days' AND mm.movement_type = 'ISSUE' GROUP BY mm.material_id, mc.xom_ashyo, mc.unit_of_measure ORDER BY total_issued_qty DESC LIMIT 20`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -80,9 +114,9 @@ export class PosReportsRepository {
             mc.unit_of_measure,
             mc.material_type,
             COALESCE(cs.quantity_on_hand, 0)    AS qty_on_hand,
-            COALESCE(mc.last_purchase_price, 0) AS unit_price,
-            COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.last_purchase_price, 0) AS total_value,
-            SUM(COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.last_purchase_price, 0))
+            COALESCE(mc.unit_price, mc.last_purchase_price, 0) AS unit_price,
+            COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.unit_price, mc.last_purchase_price, 0) AS total_value,
+            SUM(COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.unit_price, mc.last_purchase_price, 0))
               OVER () AS grand_total
           FROM current_stock cs
           JOIN material_cards mc ON mc.id = cs.material_id

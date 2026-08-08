@@ -56,9 +56,12 @@ export class SdDashboardRepository implements ISdDashboardRepo {
 
   async getQuotaStats(mid: number | null): Promise<Result<Row[]>>  {
   try {
+      // Soft-delete: sales_orders has deleted_at — exclude logically-deleted orders from the revenue
+      // aggregation (consistent with the other methods in this repo). On a LEFT JOIN the predicate
+      // lives in the join condition so managers with no orders still appear.
       return mid
-        ? exec(sql`SELECT e.id AS manager_id, CONCAT(e.first_name, ' ', e.last_name) AS manager_name, COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS achieved, 0::numeric(15,2) AS target, COUNT(o.id)::int AS order_count FROM employees e LEFT JOIN crm_leads l ON l.manager_id = e.id LEFT JOIN sales_orders o ON o.customer_id = l.customer_id AND DATE(o.created_at) >= DATE_TRUNC('month', NOW()) WHERE e.id = ${mid} GROUP BY e.id, e.first_name, e.last_name ORDER BY achieved DESC`)
-        : exec(sql`SELECT e.id AS manager_id, CONCAT(e.first_name, ' ', e.last_name) AS manager_name, COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS achieved, 0::numeric(15,2) AS target, COUNT(o.id)::int AS order_count FROM employees e LEFT JOIN crm_leads l ON l.manager_id = e.id LEFT JOIN sales_orders o ON o.customer_id = l.customer_id AND DATE(o.created_at) >= DATE_TRUNC('month', NOW()) GROUP BY e.id, e.first_name, e.last_name ORDER BY achieved DESC LIMIT 20`);  } catch (_e) {
+        ? exec(sql`SELECT e.id AS manager_id, CONCAT(e.first_name, ' ', e.last_name) AS manager_name, COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS achieved, COALESCE(MAX(q.quota_amount), 0)::numeric(15,2) AS target, COUNT(o.id)::int AS order_count FROM employees e LEFT JOIN crm_leads l ON l.manager_id = e.id LEFT JOIN sales_orders o ON o.customer_id = l.customer_id AND DATE(o.created_at) >= DATE_TRUNC('month', NOW()) AND o.deleted_at IS NULL LEFT JOIN sd_manager_quotas q ON q.manager_id = e.id AND q.year = EXTRACT(YEAR FROM NOW())::int AND q.month = EXTRACT(MONTH FROM NOW())::int WHERE e.id = ${mid} GROUP BY e.id, e.first_name, e.last_name ORDER BY achieved DESC`)
+        : exec(sql`SELECT e.id AS manager_id, CONCAT(e.first_name, ' ', e.last_name) AS manager_name, COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS achieved, COALESCE(MAX(q.quota_amount), 0)::numeric(15,2) AS target, COUNT(o.id)::int AS order_count FROM employees e LEFT JOIN crm_leads l ON l.manager_id = e.id LEFT JOIN sales_orders o ON o.customer_id = l.customer_id AND DATE(o.created_at) >= DATE_TRUNC('month', NOW()) AND o.deleted_at IS NULL LEFT JOIN sd_manager_quotas q ON q.manager_id = e.id AND q.year = EXTRACT(YEAR FROM NOW())::int AND q.month = EXTRACT(MONTH FROM NOW())::int GROUP BY e.id, e.first_name, e.last_name ORDER BY achieved DESC LIMIT 20`);  } catch (_e) {
     return Ok([]);
   }
 
@@ -100,5 +103,34 @@ export class SdDashboardRepository implements ISdDashboardRepo {
       `);
       return r.ok ? (r.data[0] ?? {}) : {};
     });
+  }
+
+  async getManagerLeaderboard(period: string | null, lim: number): Promise<Result<Row[]>> {
+    try {
+      // SB0592: manager KPI leaderboard for the SD dashboard. Reuses the same
+      // employees -> crm_leads.manager_id -> sales_orders join used by getQuotaStats
+      // (the sales.repository.getLeaderboard variant filters on employees.department='Sales',
+      // which is empty/stale here — crm_leads.manager_id is the live linkage in this DB).
+      const interval = period === 'quarterly' ? '3 months' : period === 'yearly' ? '12 months' : '1 month';
+      return exec(sql`
+        SELECT
+          e.id AS manager_id,
+          CONCAT(e.first_name, ' ', e.last_name) AS manager_name,
+          COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS total_revenue,
+          COUNT(o.id)::int AS order_count,
+          RANK() OVER (ORDER BY COALESCE(SUM(o.total_value), 0) DESC)::int AS rank
+        FROM employees e
+        LEFT JOIN crm_leads l ON l.manager_id = e.id
+        LEFT JOIN sales_orders o
+          ON o.customer_id = l.customer_id
+          AND o.created_at >= NOW() - ${interval}::interval
+          AND o.deleted_at IS NULL
+        GROUP BY e.id, e.first_name, e.last_name
+        ORDER BY total_revenue DESC
+        LIMIT ${lim}
+      `);
+    } catch (_e) {
+      return Err(String(_e));
+    }
   }
 }

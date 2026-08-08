@@ -100,7 +100,7 @@ export default function KanbanBoard() {
   return (
     <div
       className="flex flex-col -m-4 lg:-m-6 overflow-hidden"
-      style={{ background: "#F0F4FF", height: "calc(100dvh - 3.5rem)" }}
+      style={{ background: "var(--ep-bg)", height: "calc(100dvh - 3.5rem)" }}
     >
       {/* Header row: view tabs + board controls */}
       <div style={{ padding: "12px 16px 0", flexShrink: 0 }}>
@@ -142,7 +142,7 @@ export default function KanbanBoard() {
       <div
         className="flex-1 overflow-hidden"
         style={{
-          background: "#F0F4FF",
+          background: "var(--ep-bg)",
           padding: "0 16px 16px",
           display: "flex",
           flexDirection: "column",

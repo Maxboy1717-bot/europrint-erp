@@ -7,12 +7,13 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { and, eq, gte, lte, desc, sql } from 'drizzle-orm';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { Ok, Err, Result } from '@common/result';
 import {
   marketingLeads,
   blogPosts,
-  marketingBudgetLines,
+  marketingBudgetItems,
   marketingCalendarEvents,
   marketingLeadContacts,
   sdCustomerCompetitors,
@@ -26,6 +27,60 @@ const _time = new TashkentTimeService();
 @Injectable()
 export class DrizzleMarketingGroup2Repository {
   private readonly logger = new Logger(DrizzleMarketingGroup2Repository.name);
+
+  // ── Papka repeat lookup (Item 14-75) ──────────────────────────────────────
+  // Resolve a papka № (PT/KT/E) to its linked sales order so the marketing
+  // "takror qil" button can drive the EXISTING SD repeat flow. The @europrint
+  // barrel resolves papka_orders to a messaging stub; the live prod-master
+  // columns (papka_no, sales_order_id) are queried with parametrised raw SQL
+  // (Qoida 4 exception — ORM object cannot express these columns).
+  async resolvePapkaOrder(papkaNo: string): Promise<Result<{
+    papkaNo: string;
+    salesOrderId: number;
+    orderNumber: string | null;
+    mijozNomi: string;
+    mahsulotNomi: string;
+    mahsulotTuri: string | null;
+    tiraj: number;
+    status: string;
+  }>> {
+    try {
+      const rows = await typedExecute<{
+        papka_no: string;
+        sales_order_id: number | null;
+        mijoz_nomi: string;
+        mahsulot_nomi: string;
+        mahsulot_turi: string | null;
+        tiraj: number;
+        status: string;
+        order_number: string | null;
+      }>(sql`
+        SELECT p.papka_no, p.sales_order_id, p.mijoz_nomi, p.mahsulot_nomi,
+               p.mahsulot_turi, p.tiraj, p.status, so.order_number
+        FROM papka_orders p
+        LEFT JOIN sales_orders so ON so.id = p.sales_order_id
+        WHERE p.papka_no = ${papkaNo} AND p.deleted_at IS NULL
+        LIMIT 1
+      `);
+      const row = Array.isArray(rows) ? rows[0] : undefined;
+      if (!row) return Err({ code: 'NOT_FOUND' as const, message: `Papka topilmadi: ${papkaNo}` });
+      if (row.sales_order_id == null) {
+        return Err({ code: 'CONFLICT' as const, message: `Papka №${papkaNo} biror buyurtmaga bog'lanmagan — takrorlash uchun manba yo'q` });
+      }
+      return Ok({
+        papkaNo: row.papka_no,
+        salesOrderId: row.sales_order_id,
+        orderNumber: row.order_number ?? null,
+        mijozNomi: row.mijoz_nomi,
+        mahsulotNomi: row.mahsulot_nomi,
+        mahsulotTuri: row.mahsulot_turi ?? null,
+        tiraj: row.tiraj,
+        status: row.status,
+      });
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
 
   // ── Blog ──────────────────────────────────────────────────────────────────
 
@@ -85,6 +140,10 @@ export class DrizzleMarketingGroup2Repository {
           bodyUz: data['bodyUz'] as string | undefined,
           bodyRu: data['bodyRu'] as string | undefined,
           excerpt: data['excerpt'] as string | undefined,
+          coverImage: data['coverImage'] as string | undefined,
+          tags: (data['tags'] as unknown[] | undefined) ?? [],
+          seoTitle: data['seoTitle'] as string | undefined,
+          seoDescription: data['seoDescription'] as string | undefined,
           isPublished: false,
           authorId: data['authorId'] as string | undefined,
         })
@@ -105,6 +164,10 @@ export class DrizzleMarketingGroup2Repository {
           ...(data['bodyUz'] !== undefined && { bodyUz: String(data['bodyUz']) }),
           ...(data['bodyRu'] !== undefined && { bodyRu: String(data['bodyRu']) }),
           ...(data['excerpt'] !== undefined && { excerpt: String(data['excerpt']) }),
+          ...(data['coverImage'] !== undefined && { coverImage: String(data['coverImage']) }),
+          ...(data['tags'] !== undefined && { tags: data['tags'] as unknown[] }),
+          ...(data['seoTitle'] !== undefined && { seoTitle: String(data['seoTitle']) }),
+          ...(data['seoDescription'] !== undefined && { seoDescription: String(data['seoDescription']) }),
           updatedAt: _time.now(),
         })
         .where(eq(blogPosts.id, id))
@@ -148,14 +211,14 @@ export class DrizzleMarketingGroup2Repository {
     try {
       const rows = await db
         .select()
-        .from(marketingBudgetLines)
+        .from(marketingBudgetItems)
         .where(
           and(
-            opts.year !== undefined ? eq(marketingBudgetLines.year, opts.year) : undefined,
-            opts.month !== undefined ? eq(marketingBudgetLines.month, opts.month) : undefined,
+            opts.year !== undefined ? eq(marketingBudgetItems.year, opts.year) : undefined,
+            opts.month !== undefined ? eq(marketingBudgetItems.month, opts.month) : undefined,
           ),
         )
-        .orderBy(desc(marketingBudgetLines.year), marketingBudgetLines.month);
+        .orderBy(desc(marketingBudgetItems.year), marketingBudgetItems.month);
       return Ok(Array.isArray(rows) ? rows : []);
     } catch (e) {
       return Err(String(e));
@@ -166,8 +229,8 @@ export class DrizzleMarketingGroup2Repository {
     try {
       const rows = await db
         .select()
-        .from(marketingBudgetLines)
-        .where(eq(marketingBudgetLines.id, id))
+        .from(marketingBudgetItems)
+        .where(eq(marketingBudgetItems.id, id))
         .limit(1);
       if (!rows[0]) return Err({ code: 'NOT_FOUND' as const, message: `Byudjet qatori topilmadi: ${id}` });
       return Ok(rows[0]);
@@ -178,15 +241,17 @@ export class DrizzleMarketingGroup2Repository {
 
   async createBudgetLine(data: Record<string, unknown>): Promise<Result<unknown>> {
     try {
+      // marketing_budget_items has `name` column — maps directly from FE form
       const [row] = await db
-        .insert(marketingBudgetLines)
+        .insert(marketingBudgetItems)
         .values({
           year: Number(data['year']),
           month: data['month'] != null ? Number(data['month']) : null,
           category: String(data['category'] ?? 'other'),
+          name: String(data['name'] ?? data['description'] ?? ''),
           plannedAmount: String(data['plannedAmount'] ?? data['planned_amount'] ?? '0'),
           actualAmount: String(data['actualAmount'] ?? data['actual_amount'] ?? '0'),
-          description: data['description'] as string | undefined,
+          notes: (data['notes'] as string | undefined) ?? (data['description'] as string | undefined),
         })
         .returning();
       return Ok(row);
@@ -197,17 +262,21 @@ export class DrizzleMarketingGroup2Repository {
 
   async updateBudgetLine(id: string, data: Record<string, unknown>): Promise<Result<unknown>> {
     try {
-      const updateData: Partial<typeof marketingBudgetLines.$inferInsert> = {};
+      const updateData: Partial<typeof marketingBudgetItems.$inferInsert> = {};
       if (data['year'] !== undefined) updateData.year = Number(data['year']);
       if (data['month'] !== undefined) updateData.month = data['month'] != null ? Number(data['month']) : null;
       if (data['category'] !== undefined) updateData.category = String(data['category']);
+      if (data['name'] !== undefined) updateData.name = String(data['name']);
       if (data['plannedAmount'] !== undefined) updateData.plannedAmount = String(data['plannedAmount']);
       if (data['actualAmount'] !== undefined) updateData.actualAmount = String(data['actualAmount']);
-      if (data['description'] !== undefined) updateData.description = String(data['description']);
+      if (data['notes'] !== undefined) updateData.notes = String(data['notes']);
+      if (data['description'] !== undefined && updateData.notes === undefined) {
+        updateData.notes = String(data['description']);
+      }
       const [row] = await db
-        .update(marketingBudgetLines)
+        .update(marketingBudgetItems)
         .set(updateData)
-        .where(eq(marketingBudgetLines.id, id))
+        .where(eq(marketingBudgetItems.id, id))
         .returning();
       if (!row) return Err({ code: 'NOT_FOUND' as const, message: `Byudjet qatori topilmadi: ${id}` });
       return Ok(row);
@@ -294,6 +363,38 @@ export class DrizzleMarketingGroup2Repository {
     }
   }
 
+  // ── Design workload (kanban yuki — read-only signal for marketing) ──────────
+
+  /**
+   * Live per-column card load across kanban boards. Read-only aggregate over
+   * kanban_columns / kanban_cards / kanban_boards so marketing can gauge design
+   * busyness (bandlik) BEFORE quoting delivery dates. No writes, no owner input.
+   * vision 14-marketing#87 (EP-MKT-109).
+   */
+  async getDesignWorkload(): Promise<Result<unknown[]>> {
+    try {
+      const rows = await runQuery(sql`
+        SELECT
+          col.id       AS column_id,
+          col.name     AS column_name,
+          col.board_id AS board_id,
+          b.name       AS board_name,
+          count(c.id) FILTER (WHERE c.deleted_at IS NULL)::int AS active_cards,
+          count(c.id) FILTER (WHERE c.deleted_at IS NULL AND c.priority = 'urgent')::int AS urgent_cards
+        FROM kanban_columns col
+        JOIN kanban_boards b ON b.id = col.board_id
+        LEFT JOIN kanban_cards c ON c.column_id = col.id
+        WHERE col.deleted_at IS NULL AND b.deleted_at IS NULL
+        GROUP BY col.id, col.name, col.board_id, b.name, col.sort_order
+        ORDER BY col.board_id, col.sort_order
+      `);
+      return Ok(Array.isArray(rows) ? rows : []);
+    } catch (e) {
+      this.logger.error('getDesignWorkload error', e);
+      return Err(String(e));
+    }
+  }
+
   // ── Lead Contacts ─────────────────────────────────────────────────────────
 
   async getLeadContacts(leadId: string): Promise<Result<unknown[]>> {
@@ -330,10 +431,22 @@ export class DrizzleMarketingGroup2Repository {
 
   async softDeleteLead(id: string): Promise<Result<{ message: string }>> {
     try {
-      await db
+      // marketing_leads.id is varchar (slug ids like "demo-lead-004"); Number(id)=NaN
+      // matched 0 rows yet still returned success (fake delete). Bind the string id via
+      // sql`` (the @europrint/schemas def mistypes id as integer so eq() can't take a
+      // string — same pattern as the canonical leads.repository.softDelete), and confirm
+      // a row was actually flagged before reporting success.
+      const rows = await db
         .update(marketingLeads)
         .set({ deletedAt: _time.now() })
-        .where(eq(marketingLeads.id, Number(id)));
+        .where(sql`${marketingLeads.id} = ${id}`)
+        .returning({ id: marketingLeads.id });
+      if (!Array.isArray(rows) || rows.length === 0) {
+        // Structured NOT_FOUND (not a bare string) so unwrapOrThrow maps it to HTTP 404,
+        // matching every other method in this repo. A bare Err(string) becomes code
+        // 'INTERNAL' -> 500, which is wrong for a missing lead and noisy in monitoring.
+        return Err({ code: 'NOT_FOUND' as const, message: `Lead topilmadi: ${id}` });
+      }
       return Ok({ message: "Lead o'chirildi" });
     } catch (e) {
       return Err(String(e));

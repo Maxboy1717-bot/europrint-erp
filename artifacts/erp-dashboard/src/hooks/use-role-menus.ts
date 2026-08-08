@@ -20,8 +20,8 @@ interface RoleMenu {
 // Har bir rol qaysi URL prefikslarini ko'ra olishi mumkin
 const ROLE_MODULE_MAP: Record<string, string[]> = {
   // TZ-01: Savdo va CRM
-  sales:      ["sd-", "sd/", "crm", "customers", "orders", "quotations", "contracts", "debitors", "papka", "order-workflow"],
-  crm:        ["sd-", "sd/", "crm", "customers", "orders", "quotations", "contracts", "debitors", "papka", "order-workflow"],
+  sales:      ["sd-", "sd/", "crm", "customers", "orders", "quotations", "contracts", "debitors", "papka"],
+  crm:        ["sd-", "sd/", "crm", "customers", "orders", "quotations", "contracts", "debitors", "papka"],
 
   // TZ-02: Marketing
   marketing:  ["marketing", "social", "campaign", "seo", "ab-test"],
@@ -106,6 +106,11 @@ export function useRoleMenus() {
 
     // Chat — barcha xodimlar uchun universal modul
     if (menuPath === 'chat' || menuPath === '/chat' || menuPath.startsWith('chat')) return true;
+
+    // Erkin hujjatlar (Mening hujjatlarim / Yangi hujjat) — hamma xodim uchun ochiq (owner).
+    // NB: 'director/document-audit' bu shartga TUSHMAYDI ('documents' bilan boshlanmaydi) —
+    // u Admin Panel modulida qoladi va faqat admin/super_admin ko'radi.
+    if (menuPath === 'documents' || menuPath.startsWith('documents')) return true;
 
     // DB da sozlangan ruxsatlar bo'lsa, o'shani ishlatamiz
     if (allowedMenus && allowedMenus.length > 0) {

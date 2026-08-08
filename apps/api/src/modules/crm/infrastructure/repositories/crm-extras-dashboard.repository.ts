@@ -10,9 +10,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
-import { crm_activities, crm_lead_stages, crmDeals, crmLeads } from '@shared/db';
+import { sql, eq, and, isNull } from 'drizzle-orm';
+import { crm_activities, crm_lead_stages, crmLeads } from '@shared/db';
 import { safeCall, Result } from '@common/result';
+import type { CrmActivityRow } from '../../domain/repositories/i-crm-extras.repo';
 
 type Row = Record<string, unknown>;
 
@@ -23,10 +24,13 @@ export class CrmExtrasDashboardRepository {
   async getDashboardLeads(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       try {
+        // Soft-delete filter: exclude rows the user has deleted (deleted_at set),
+        // mirroring getDashboardDeals()/getPipeline() in this same file. Without it the
+        // dashboard status breakdown counts soft-deleted leads and overstates each stage.
         return db.select({
           status: crmLeads.status_description,
           count:  sql<number>`COUNT(*)::int`,
-        }).from(crmLeads).groupBy(crmLeads.status_description).then(r => castTo<Row[]>(r));
+        }).from(crmLeads).where(isNull(crmLeads.deleted_at)).groupBy(crmLeads.status_description).then(r => castTo<Row[]>(r));
       } catch (err) {
         this.logger.warn(`getDashboardLeads: ${(err as Error).message}`);
         return [];
@@ -35,19 +39,24 @@ export class CrmExtrasDashboardRepository {
   }
 
   async getDashboardDeals(): Promise<Result<Row>> {
+    // MUHIM-5 fix: ichki try/catch `return {}` xatoni yashirar edi.
+    // safeCall o'zi xatoni ushlab Err(AppErr('DB_ERROR', ...)) qaytaradi.
+    // Chaqiruvchi (controller/handler) Err ni ko'rib loglash/qayta urinish qilsin.
     return safeCall(async () => {
-      try {
-        const rows = await db.select({
-          total:    sql<number>`COUNT(*)::int`,
-          pipeline: sql<number>`COALESCE(SUM(${crmDeals.expected_amount}), 0)`,
-        })
-          .from(crmDeals)
-          .where(sql`${crmDeals.status} != 'won' AND ${crmDeals.status} != 'lost'`);
-        return (rows[0] ?? {}) as Row;
-      } catch (err) {
-        this.logger.warn(`getDashboardDeals: ${(err as Error).message}`);
-        return {};
-      }
+      // Live crm_deals real columns: `status` (lowercase business status —
+      // proposal/negotiation/won/lost), `opportunity` (Bitrix canonical deal value),
+      // `deleted_at`. Raw SQL with the real column names: the @shared/db compat def
+      // aliases the `status` field to the `stage_id` column and names the soft-delete
+      // field `deleted_at` (not `deletedAt`), so the ORM path produced invalid SQL
+      // (undefined column → threw → empty result). runQuery mirrors getPipeline below.
+      const r = await runQuery<Row>(sql`
+        SELECT COUNT(*)::int AS total,
+               COALESCE(SUM(opportunity), 0)::float8 AS pipeline
+        FROM crm_deals
+        WHERE deleted_at IS NULL
+          AND (status IS NULL OR status NOT IN ('won', 'lost'))
+      `);
+      return (r.rows[0] ?? { total: 0, pipeline: 0 }) as Row;
       }, 'DB_ERROR');
   }
 
@@ -76,7 +85,7 @@ export class CrmExtrasDashboardRepository {
                  COUNT(l.id)::int AS lead_count,
                  COALESCE(SUM(d.forecast_amount), 0) AS pipeline_value
           FROM crm_lead_stages ls
-          LEFT JOIN crm_leads l ON l.stage_id = ls.id AND l.status_description != 'converted'
+          LEFT JOIN crm_leads l ON l.status_description = ls.stage_id AND l.status_description != 'CONVERTED'
             AND (${stageId ?? null}::int IS NULL OR ls.id = ${stageId ?? null})
           LEFT JOIN crm_deals d ON (d.metadata->>'lead_id')::int = l.id AND d.stage_semantic_id NOT IN ('won','lost')
           GROUP BY ls.id, ls.name, ls.order_index
@@ -100,5 +109,38 @@ export class CrmExtrasDashboardRepository {
         return [];
       }
       }, 'DB_ERROR');
+  }
+
+  /**
+   * Returns last 5 activities for a given entity (lead/deal) ordered by created_at DESC.
+   * Used by getNba() to derive real next-best-action from live DB state.
+   */
+  async getEntityActivities(entityType: string, entityId: number): Promise<Result<CrmActivityRow[]>> {
+    return safeCall(async () => {
+      try {
+        const rows = await db.select({
+          id:          crm_activities.id,
+          entity_type: crm_activities.entity_type,
+          entity_id:   crm_activities.entity_id,
+          type:        crm_activities.type,
+          status:      crm_activities.status,
+          due_date:    crm_activities.due_date,
+          created_at:  crm_activities.created_at,
+        })
+          .from(crm_activities)
+          .where(
+            and(
+              eq(crm_activities.entity_type, entityType),
+              eq(crm_activities.entity_id, entityId),
+            ),
+          )
+          .orderBy(sql`${crm_activities.created_at} DESC NULLS LAST`)
+          .limit(5);
+        return rows as CrmActivityRow[];
+      } catch (err) {
+        this.logger.warn(`getEntityActivities: ${(err as Error).message}`);
+        return [];
+      }
+    }, 'DB_ERROR');
   }
 }

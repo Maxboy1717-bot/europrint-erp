@@ -1,7 +1,7 @@
 /** @module MESExtendedTypes @description Interfaces, types, constants, and Zod schemas for the MES Extended page. No JSX. */
 
 import { z } from "zod";
-import { type LucideIcon, Activity, AlertTriangle, Wrench, Trophy, Settings, Clock, ClipboardList } from "lucide-react";
+import { type LucideIcon, Activity, AlertTriangle, Wrench, Trophy, Settings, Clock, ClipboardList, AlertOctagon } from "lucide-react";
 
 import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Domain interfaces ───────────────────────────────────────────────────────
@@ -25,6 +25,9 @@ export interface MESMachine {
 export interface MESShift {
   shiftName?: string;
   operatorName?: string;
+  operatorId?: number;
+  /** Raw snake_case field from the live mes_sessions row (no camelCase transform on the wire). */
+  operator_id?: number;
   producedQty?: number | string;
   brakQty?: number | string;
   oee?: number | string;
@@ -89,6 +92,23 @@ export interface MESLeaderboard {
   qualityRate?: number | string;
 }
 
+export interface SosEvent {
+  id: number;
+  session_id: number | null;
+  employee_id: number | null;
+  reason: string;
+  work_center_id: number | null;
+  created_at: string;
+  work_center_name?: string;
+  employee_name?: string;
+}
+
+export const SosSchema = z.object({
+  reason:         z.string().min(1, "Sabab kiritilishi shart").max(500),
+  work_center_id: z.number().int().positive().optional(),
+});
+export type SosFormValues = z.infer<typeof SosSchema>;
+
 // ─── Route → tab mapping ─────────────────────────────────────────────────────
 
 export const URL_TAB_MAP: Record<string, string> = {
@@ -109,6 +129,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   gamification: { title: "Gamifikatsiya",                 icon: Trophy },
   norms:        { title: "Uskuna Normalari",              icon: Settings },
   smena:        { title: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish"),               icon: Clock },
+  sos:          { title: "SOS Signallar",                                                              icon: AlertOctagon },
 };
 
 export const MES_PILLS: Array<{ key: string; label: string }> = [
@@ -119,23 +140,15 @@ export const MES_PILLS: Array<{ key: string; label: string }> = [
   { key: "gamification", label: "Gamifikatsiya" },
   { key: "norms",        label: "Normalari" },
   { key: "smena",        label: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish") },
+  { key: "sos",          label: "SOS" },
 ];
-
-/** Static norms data shown on the Norms tab (no API yet). */
-export const MACHINE_NORMS = [
-  { m: "Heidelberg CD102", speed: "13,000/h", setup: "45 min", brak: "1.5%", oee: "85%" },
-  { m: "KBA Rapida 106",   speed: "16,000/h", setup: "40 min", brak: "1.2%", oee: "88%" },
-  { m: "Folding Machine",  speed: "8,000/h",  setup: "30 min", brak: "2.0%", oee: "80%" },
-  { m: "Die Cutting",      speed: "12,000/h", setup: "35 min", brak: "1.0%", oee: "90%" },
-  { m: "UV Lak",           speed: "6,000/h",  setup: "50 min", brak: "0.8%", oee: "85%" },
-] as const;
 
 // ─── Zod schemas ─────────────────────────────────────────────────────────────
 
 export const MaintSchema = z.object({
-  machineId: z.string().min(1),
-  issue:     z.string().min(1),
-  priority:  z.string().min(1),
+  title:          z.string().min(1),
+  work_center_id: z.number().int().positive().optional(),
+  priority:       z.string().min(1),
 });
 
 export type MaintFormValues = z.infer<typeof MaintSchema>;

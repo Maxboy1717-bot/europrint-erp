@@ -57,7 +57,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
   // Edit rejimida: xodim allaqachon biriktirilgan funksiyalarni olamiz
   // (rahbar bo'lgan + ishlovchi bo'lgan barcha funksiyalar)
   const { data: assignedDeptsData } = useQuery<{ orgDepartmentIds: string[] }>({
-    queryKey: [`/api/hr/employees/${employee?.id}/org-departments`],
+    queryKey: [`/api/employees/${employee?.id}/org-departments`],
     enabled: open === true && !!employee?.id,
   });
 
@@ -80,7 +80,6 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       hireDate: "",
       address: "",
       attestationDate: "",
-      age: "",
       gender: "",
       childrenCount: "",
       maritalStatus: "",
@@ -90,6 +89,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       housingType: "",
       latitude: "",
       longitude: "",
+      geoConsent: false,
     },
   });
 
@@ -134,7 +134,6 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         hireDate: employee.hireDate || "",
         address: employee.address || "",
         attestationDate: employee.attestationDate || "",
-        age: employee.age?.toString() || "",
         gender: employee.gender || "",
         childrenCount: employee.childrenCount?.toString() || "",
         maritalStatus: employee.maritalStatus || "",
@@ -144,6 +143,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         housingType: employee.housingType || "",
         latitude: employee.latitude?.toString() || "",
         longitude: employee.longitude?.toString() || "",
+        geoConsent: employee.geoConsent ?? false,
       });
       
       // Xodim'ning barcha biriktirilgan funksiyalari (rahbar + ishlovchi)
@@ -173,7 +173,6 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         hireDate: "",
         address: "",
         attestationDate: "",
-        age: "",
         gender: "",
         childrenCount: "",
         maritalStatus: "",
@@ -183,6 +182,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         housingType: "",
         latitude: "",
         longitude: "",
+        geoConsent: false,
       });
       setPreviewUrl(null);
       setSelectedFile(null);
@@ -192,19 +192,25 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
   }, [open, employee, form, orgDepartments, assignedDeptsData]);
 
   const handleAfterSubmit = async (empId: string) => {
-    // Profile image — FormData (Content-Type avtomatik), faqat Authorization header
+    // Profile image — 2-step upload (bug fix: FormData was built but never sent, and the
+    // profile-image endpoint expects {imageUrl}, not a raw file, so a fixed single-call
+    // version still couldn't have worked). Same PUT /storage/upload -> POST {imageUrl}
+    // pattern already used by FolderTab.tsx/CashierHub.tsx.
     if (selectedFile) {
-      const formData = new FormData();
-      formData.append("image", selectedFile);
       try {
-        await apiRequest('POST', `/api/hr/employees/${empId}/profile-image`);
+        const safeName = selectedFile.name.replace(/[^\w.\-]+/g, "_");
+        const key = `hr-employees/${empId}/${Date.now()}-${safeName}`;
+        const fd = new FormData();
+        fd.append("file", selectedFile, selectedFile.name);
+        await apiRequest('PUT', `/api/storage/upload?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(selectedFile.type || "application/octet-stream")}`, fd);
+        await apiRequest('POST', `/api/hr/employees/${empId}/profile-image`, { imageUrl: `/api/storage/${key}` });
       } catch {
         // Silently fail — asosiy xodim yaratilgan, rasm yuklash optional
       }
     }
     // Org functions — JSON, apiRequest throws on non-2xx
     try {
-      await apiRequest('POST', `/api/hr/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
+      await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
     } catch (e) {
       const msg = (e as { message?: string })?.message;
       toast({

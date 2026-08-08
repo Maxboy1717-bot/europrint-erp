@@ -8,15 +8,18 @@ import {
   Check, CheckCheck, Pencil, Trash2, Paperclip,
   MessageSquare, CornerUpRight, Pin, Smile,
   Download, CornerDownRight, CheckSquare, Star,
+  Clock, AlertCircle,
 } from "lucide-react";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "@/store/chatStore";
+import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { ChatAvatar } from "./ChatAvatar";
 import { formatMsgTime } from "./ChatUtils";
 import { MessageReactions, EmojiPicker } from "./MessageReactions";
 import { MessagePoll } from "./MessagePoll";
 import { ImageLightbox } from "./ImageLightbox";
+import { EPDocumentPreview } from "@/components/ep";
 import { CreateTaskModal } from "./CreateTaskModal";
 import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
 import { apiRequest } from '@/lib/queryClient';
@@ -44,23 +47,26 @@ export function MessageBubble({
   onEdit, onDelete, onReply, onReact, onThread, onForward, onPin, onScrollTo,
 }: Props) {
   const { t } = useTranslation("common");
+  const { retryMessage } = useChatSocket();
   const [hover, setHover] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<{ url: string; name?: string; type?: string } | null>(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [isStarred, setIsStarred] = useState(false);
+  const [isStarred, setIsStarred] = useState(msg.isStarred ?? false);
 
   const handleStar = useCallback(async () => {
     try {
-      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`);
-      {
-        const data = (res as { starred: boolean });
-        setIsStarred(data.starred);
-      }
+      // Send the desired next state so the BE can toggle (star AND unstar). With no body
+      // the BE defaulted to always-star (body?.starred !== false === true).
+      const next = !isStarred;
+      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`, { starred: next });
+      const data = (res as { starred: boolean });
+      setIsStarred(data.starred);
     } catch {
       // ignore
     }
-  }, [msg.id]);
+  }, [msg.id, isStarred]);
 
   const handleReact = useCallback((messageId: string, emoji: string) => {
     onReact?.(messageId, emoji);
@@ -96,6 +102,15 @@ export function MessageBubble({
           src={lightboxSrc}
           alt={msg.fileName}
           onClose={() => setLightboxSrc(null)}
+        />
+      )}
+
+      {previewFile && (
+        <EPDocumentPreview
+          fileUrl={previewFile.url}
+          fileName={previewFile.name}
+          fileType={previewFile.type}
+          onClose={() => setPreviewFile(null)}
         />
       )}
 
@@ -323,14 +338,13 @@ export function MessageBubble({
                     <VoiceMessagePlayer src={msg.fileUrl} isMe={isMe} />
                   )}
 
-                  {/* File (non-voice) */}
+                  {/* File (non-voice) — office-style inline preview instead of raw download link */}
                   {isFile && !isVoice && msg.fileUrl && (
-                    <a
-                      href={msg.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => setPreviewFile({ url: msg.fileUrl ?? '', name: msg.fileName, type: msg.fileType })}
                       className={cn(
-                        "flex items-center gap-2 p-2 rounded-xl transition-colors",
+                        "flex items-center gap-2 p-2 rounded-xl transition-colors w-full text-left",
                         isMe
                           ? "bg-[var(--tg-bubble-out-darker)]/30 hover:bg-[var(--tg-bubble-out-darker)]/50"
                           : "bg-[var(--tg-bubble-reply-bg)] hover:bg-black/[0.06]"
@@ -351,7 +365,7 @@ export function MessageBubble({
                         )}
                       </div>
                       <Download className="w-5 h-5 text-[var(--tg-text-secondary)] flex-shrink-0" />
-                    </a>
+                    </button>
                   )}
                 </>
               )}
@@ -370,10 +384,22 @@ export function MessageBubble({
                 {formatMsgTime(msg.createdAt)}
                 {isMe && (
                   <span className="ml-0.5 flex-shrink-0">
-                    {isRead
-                      ? <CheckCheck className="w-[14px] h-[14px] text-[#4fae4e]" />
-                      : <Check className="w-[14px] h-[14px]" />
-                    }
+                    {msg.status === "sending" ? (
+                      <Clock className="w-[13px] h-[13px] opacity-70" />
+                    ) : msg.status === "failed" ? (
+                      <button
+                        type="button"
+                        onClick={() => msg.clientMsgId && retryMessage(msg)}
+                        title={t("qaytaYuborish")}
+                        className="flex items-center"
+                      >
+                        <AlertCircle className="w-[14px] h-[14px] text-red-500" />
+                      </button>
+                    ) : isRead ? (
+                      <CheckCheck className="w-[14px] h-[14px] text-[#4fae4e]" />
+                    ) : (
+                      <Check className="w-[14px] h-[14px]" />
+                    )}
                   </span>
                 )}
               </span>

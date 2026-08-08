@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { castTo } from '@common/db-rows';
 import { db , runQuery, rawSql } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
@@ -16,6 +17,8 @@ type Row = Record<string, unknown>;
 
 @Injectable()
 export class AiInterviewV2Repository {
+  constructor(private readonly i18n: I18nService) {}
+
   async createSession(dto: { token: string; expiresAt: string; candidateName: string; candidateLanguage: string; candidateId?: number | null; vacancyId?: number | null; createdBy: number }): Promise<Result<Row>> {
     return safeCall(async () => {
       // Use rawSql to avoid Drizzle schema/DB column mismatch issues
@@ -58,7 +61,7 @@ export class AiInterviewV2Repository {
         status:     'active',
         started_at: _time.now(),
       }).where(sql`${hr_interview_sessions.id} = ${sessionId} AND ${hr_interview_sessions.status} IN ('pending')`).returning();
-      if (!rows[0]) throw new NotFoundException(`Session #${sessionId} not found or already active`);
+      if (!rows[0]) throw new NotFoundException(await this.i18n.t('errors.interviewSessionNotFoundOrActive', { args: { id: sessionId } }));
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
   }
@@ -140,7 +143,7 @@ export class AiInterviewV2Repository {
         .from(hr_interview_sessions)
         .where(eq(hr_interview_sessions.id, id))
         .limit(1);
-      if (!rows[0]) throw new NotFoundException(`Session #${id} not found`);
+      if (!rows[0]) throw new NotFoundException(await this.i18n.t('errors.interviewSessionNotFound', { args: { id } }));
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
   }

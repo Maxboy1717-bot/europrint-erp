@@ -22,6 +22,7 @@ import { DrizzleCameraAiRepo } from './infrastructure/repositories/drizzle-camer
 import { SENSOR_REPO } from './domain/repositories/i-sensor.repo';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { IotGateway } from './presentation/iot.gateway';
 import { IotSensorsController } from './presentation/iot-sensors.controller';
 import { IotCameraController } from './presentation/iot-camera.controller';
 import { IotCameraEventsController } from './presentation/iot-camera-events.controller';
@@ -45,6 +46,9 @@ import { IotMainController } from './presentation/iot-main.controller';
 import { IotAlertsController } from './presentation/iot-alerts.controller';
 import { IotTabletController } from './presentation/iot-tablet.controller';
 import { IotSensorsMainController } from './presentation/iot-sensors-main.controller';
+import { SensorCapexController } from './presentation/sensor-capex.controller';
+import { SensorCapexService } from './application/sensor-capex.service';
+import { DrizzleSensorCapexRepo } from './infrastructure/repositories/drizzle-sensor-capex.repo';
 import { IotCameraService } from './application/iot-camera.service';
 import { IotCameraRepository } from './infrastructure/repositories/iot-camera.repository';
 import { IOT_CAMERA_REPO } from './domain/repositories/i-iot-camera.repo';
@@ -58,6 +62,18 @@ import { IotMainService } from './application/iot-main.service';
 import { IotSensorsExtendedService } from './application/iot-sensors-extended.service';
 import { IotTabletService } from './application/iot-tablet.service';
 import { DrizzleIotTabletRepo } from './infrastructure/repositories/drizzle-iot-tablet.repo';
+import { OeeCalculatorService } from './oee/oee-calculator.service';
+import { PredictiveMaintenanceService } from './oee/predictive-maintenance.service';
+// FAZA Q — Ombor AI-kamera nazorati (noqonuniy olib chiqish / ruxsatsiz kirish).
+import { HrModule } from '../hr/hr.module';
+import { AiModule } from '../ai/ai.module';
+import { WarehouseExitGuardController } from './presentation/warehouse-exit-guard.controller';
+import { WarehouseExitGuardService } from './application/warehouse-exit-guard.service';
+import { DrizzleWarehouseExitGuardRepo } from './infrastructure/repositories/drizzle-warehouse-exit-guard.repo';
+import { WAREHOUSE_EXIT_GUARD_REPO } from './domain/repositories/i-warehouse-exit-guard.repo';
+// 3.2-brak-ushlanma-zanjiri — IotTabletController.reportProductionDefect gate (MesModule kanonik egasi,
+// bu yerda faqat DI uchun to'g'ridan provide qilinadi — IotModule MesModule'ni import qilmaydi).
+import { MesBrakLimitRepository } from '@modules/mes/infrastructure/repositories/mes-brak-limit.repo';
 
 const commandHandlers = [RecordSensorReadingHandler, RegisterDeviceHandler, UpdateDeviceThresholdsHandler];
 const eventHandlers = [AnomalyDetectedHandler];
@@ -82,6 +98,7 @@ const newControllers = [
   IotAlertsController,
   IotTabletController,
   IotSensorsMainController,
+  SensorCapexController,
 ];
 
 const newRepositories = [
@@ -92,15 +109,17 @@ const newRepositories = [
   DrizzleIotSensorsRepo,
   DrizzleCameraAiRepo,
   DrizzleIotTabletRepo,
+  DrizzleSensorCapexRepo,
 ];
 
 @Module({
-  imports: [AuthModule, CqrsModule, NotificationsModule],
+  imports: [AuthModule, CqrsModule, NotificationsModule, HrModule, AiModule],
   controllers: [
     IotSensorsController,
     IotCameraController,
     IotCameraEventsController,
     CameraAiController,
+    WarehouseExitGuardController,
     ...newControllers,
   ],
   providers: [
@@ -119,9 +138,20 @@ const newRepositories = [
     CameraExtendedService,
     CameraDashboardService,
     IotMainService,
+    SensorCapexService,
     IotSensorsExtendedService,
     IotTabletService,
+    OeeCalculatorService,
+    PredictiveMaintenanceService,
+    // FAZA Q
+    { provide: WAREHOUSE_EXIT_GUARD_REPO, useClass: DrizzleWarehouseExitGuardRepo },
+    WarehouseExitGuardService,
+    // 3.2-brak-ushlanma-zanjiri
+    MesBrakLimitRepository,
+    // SB0315 — IotGateway (/iot WS namespace) registered so live sensor/equipment
+    // push (pushSensorUpdate/pushEquipmentAlert) is DI-injectable by cron/handlers.
+    IotGateway,
   ],
-  exports: [SENSOR_REPO],
+  exports: [SENSOR_REPO, IotGateway],
 })
 export class IotModule {}

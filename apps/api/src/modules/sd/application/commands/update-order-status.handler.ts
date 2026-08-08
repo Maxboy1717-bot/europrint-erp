@@ -8,7 +8,11 @@ import { Result, Ok, Err, AppErr } from '@common/result';
 import { Inject, Logger } from '@nestjs/common';
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 import { OrderStatusChangedEvent } from '../../domain/events/order-status-changed.event';
+import { OrderCancelledEvent } from '../../domain/events/order-cancelled.event';
 import { AdvanceCheckFailedEvent } from '../../domain/events/advance-check-failed.event';
+import { OutboxRepository } from '../../../shared/outbox/outbox.repository';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { db } from '@shared/db';
 
 export class UpdateOrderStatusCommand {
   constructor(public readonly orderId: number,
@@ -21,6 +25,7 @@ export class UpdateOrderStatusHandler implements ICommandHandler<UpdateOrderStat
   constructor(
     @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly eventBus: EventBus,
+    private readonly outboxRepo: OutboxRepository,
   ) {}
 
   async execute(command: UpdateOrderStatusCommand): Promise<Result<void>> {
@@ -57,13 +62,62 @@ export class UpdateOrderStatusHandler implements ICommandHandler<UpdateOrderStat
 
     const previousStatus = transition.data.previousStatus;
 
-    const updateResult = await this.orderRepo.update(order);
-    if (!updateResult.ok) {
+    // A43 — golden-thread durability. The status UPDATE and the
+    // `sd.order.status_changed` outbox row commit in ONE transaction (mirrors
+    // create-order.handler PA0-6). Before this, the status change reached
+    // `domain_events` only via the in-memory EventBus, so a crash after the DB
+    // commit lost the SD→PP trigger entirely and downstream replay keyed on the
+    // canonical `sd.order.status_changed` name saw nothing. With the atomic
+    // insert, every real order that transitions to `ready_for_planning` durably
+    // drives the PP listener (outbox publisher re-emits on its tick).
+    try {
+      await db.transaction(async (tx) => {
+        const updateResult = await this.orderRepo.update(order, tx);
+        if (!updateResult.ok) {
+          // Throw to roll back: status write and outbox insert are all-or-nothing.
+          throw new Error(updateResult.error?.message ?? 'Failed to update order');
+        }
+
+        const outboxInsert = await this.outboxRepo.insertBatch(
+          [
+            {
+              aggregate_type: 'SalesOrder',
+              aggregate_id: String(order.getId()),
+              event_name: ERP_EVENTS.ORDER_STATUS_CHANGED,
+              payload: {
+                orderId: order.getId(),
+                previousStatus,
+                newStatus: command.newStatus,
+              },
+            },
+          ],
+          tx,
+        );
+        if (!outboxInsert.ok) {
+          throw new Error(outboxInsert.error.message);
+        }
+      });
+    } catch (err) {
+      const message = (err as Error)?.message ?? 'Transaction failed';
+      this.logger.error({ msg: 'Order status update transaction rolled back', orderId: command.orderId, error: message });
       return Err(AppErr('INTERNAL', 'Failed to update order'));
     }
 
+    // Direct in-process publish (Q-46): in-memory @OnEvent / CQRS listeners fire
+    // immediately. The durable row above guarantees the outbox publisher re-emits
+    // on its tick too; downstream handlers are idempotent (PP skips if a PO
+    // already references the sales order).
     const statusEvent = new OrderStatusChangedEvent(order.getId(), previousStatus, command.newStatus);
     this.eventBus.publish(statusEvent);
+
+    // Kanban dead-listener fix (P0): OrderCancelledKanbanHandler is @EventsHandler(OrderCancelledEvent)
+    // and moves/soft-deletes the order's linked kanban card(s), but until now nothing in the codebase
+    // ever constructed OrderCancelledEvent — cancellation only ever fired OrderStatusChangedEvent, so a
+    // cancelled order's card silently stayed active forever. Publish it here (in-process, same
+    // best-effort semantics as the kanban handler itself — never blocks/undoes the status change).
+    if (command.newStatus === 'cancelled') {
+      this.eventBus.publish(new OrderCancelledEvent(order.getId(), order.getOrderNumber()));
+    }
 
     this.logger.log({
       msg: 'Order status updated',

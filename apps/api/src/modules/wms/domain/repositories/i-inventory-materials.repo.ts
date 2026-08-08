@@ -19,6 +19,7 @@ export interface IInventoryMaterialsRepo {
     offset: number,
   ): Promise<Result<Row[]>>;
   countMaterials(search?: string): Promise<Result<number>>;
+  createMaterial(body: Row): Promise<Result<Row>>;
   getMaterial(id: number): Promise<Result<Row | null>>;
   getMaterialStock(id: number): Promise<Result<Row[]>>;
   getMaterialRecentPurchases(id: number): Promise<Result<Row[]>>;

@@ -90,6 +90,77 @@ export class AutoGlPostingRepository {
     }, 'DB_ERROR');
   }
 
+  /**
+   * A86 — ATOMIC POS→GL posting. All legs of ONE movement are written inside a SINGLE
+   * db.transaction so the subledger is never left half-written / unbalanced: either every
+   * leg lands or none does (Q-40 — a partial write would be a "green but wrong" ledger).
+   *
+   * Guarantees:
+   *  - Idempotency re-checked INSIDE the tx (countExistingPostings race window between the
+   *    service's pre-check and the write is closed here) → at most one set of legs per movement.
+   *  - Balanced-pair invariant: each posted leg is a balanced Dr/Cr pair (one `amount`, both accounts
+   *    set & distinct), so ΣDr == ΣCr == Σamount by construction. Legs that carry NO GL value —
+   *    amount<=0, or a same-account wash (debit==credit, e.g. INTERNAL_TRANSFER 1010↔1010) — are
+   *    SKIPPED, never written (Q-40: a wash/zero row would be "green but wrong"). A skipped leg is a
+   *    legitimate no-op (no error), matching the canonical-ledger A65 rule and the GL_ACCOUNTS seed intent.
+   *
+   * Returns the number of legs actually inserted (0 = skipped: already posted / nothing balanced).
+   */
+  async insertPostingsAtomic(entries: GlPostingInsert[]): Promise<Result<number>> {
+    return safeCall(async () => {
+      if (entries.length === 0) return 0;
+      const movementId = entries[0].movementId;
+
+      // Keep only GL-meaningful legs: positive amount AND distinct debit/credit accounts.
+      const balanced = entries.filter(
+        (e) => Number.isFinite(e.amount) && e.amount > 0 && e.debitAccount !== e.creditAccount,
+      );
+      if (balanced.length === 0) return 0;
+
+      return db.transaction(async (tx) => {
+        // Idempotency re-check inside the tx (closes the race vs. the service-level pre-check).
+        const existing = await tx.execute(sql`
+          SELECT COUNT(*)::int AS cnt FROM pos_gl_postings WHERE movement_id = ${movementId}
+        `);
+        const cnt = Number((existing.rows?.[0] as { cnt?: number } | undefined)?.cnt ?? 0);
+        if (cnt > 0) return 0;
+
+        let posted = 0;
+        for (const e of balanced) {
+          await tx.execute(sql`
+            INSERT INTO pos_gl_postings
+              (movement_id, debit_account, credit_account, amount, currency,
+               exchange_rate, amount_base, description, posted_by, posting_date, created_at)
+            VALUES
+              (${e.movementId}, ${e.debitAccount}, ${e.creditAccount}, ${e.amount},
+               ${e.currency}, ${e.exchangeRate}, ${e.amountBase},
+               ${e.description}, 'AI', CURRENT_DATE, NOW())
+          `);
+          posted++;
+        }
+        return posted;
+      });
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * FAZA Auto-GL (I) — Finance tasdig'i: pos_gl_postings.is_approved=false → true.
+   * Bu subledger `entries` kanonik ledgeridan MUSTAQIL (Material360/warehouse-features
+   * `/gl-post` orqali yaratilgan preview-yozuvlar); tasdiqlash faqat belgini o'zgartiradi,
+   * qayta yozuv yaratmaydi (idempotent — allaqachon tasdiqlangan bo'lsa 0 qaytaradi).
+   */
+  async approveByMovement(movementId: number, approvedBy: number): Promise<Result<number>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<{ id: number }>(sql`
+        UPDATE pos_gl_postings
+        SET is_approved = true, approved_by = ${approvedBy}, approved_at = NOW()
+        WHERE movement_id = ${movementId} AND is_approved = false
+        RETURNING id
+      `);
+      return rows.length;
+    }, 'DB_ERROR');
+  }
+
   async listForMovement(movementId: number): Promise<Result<unknown[]>> {
     return safeCall(async () => typedExecute<unknown>(sql`
       SELECT id, debit_account, credit_account, amount, currency,
@@ -131,6 +202,32 @@ export class AutoGlPostingRepository {
         AND (${filters?.creditAccount?? null}::text IS NULL OR gl.credit_account = ${filters?.creditAccount?? null})
       ORDER BY gl.posting_date DESC, gl.id DESC
       LIMIT ${lim}
+    `), 'DB_ERROR');
+  }
+
+  /**
+   * Discovery sweep 2026-08-03 fix ("GL kanonik 'entries' mirror atomik emas — best-effort,
+   * avto-reconciliation yo'q"): postForMovement() (above, same module) writes the atomic
+   * pos_gl_postings subledger, then best-effort mirrors the same balanced legs into the
+   * canonical `entries` ledger via GlPostingService.postJournal — a failure there is only
+   * logger.warn'd, so the two ledgers can silently diverge with no way to find or fix it later.
+   *
+   * Finds movements that DO have a subledger posting but have NO matching canonical entry —
+   * entries.entry_number is `POS-<movement_number>-<ts>-<n>` (see
+   * DrizzleGlPostingRepository.findEntryIdByReference), so a LIKE-prefix anti-join is the same
+   * matching rule the idempotency check itself uses. Bounded by `limit` (cron safety — this is a
+   * backlog sweep, not a live-path query).
+   */
+  async findMovementsMissingCanonicalEntry(limit: number): Promise<Result<Array<{ movementId: number; movementNumber: string }>>> {
+    return safeCall(async () => typedExecute<{ movementId: number; movementNumber: string }>(sql`
+      SELECT DISTINCT gl.movement_id AS "movementId", pm.movement_number AS "movementNumber"
+      FROM pos_gl_postings gl
+      JOIN pos_movements pm ON pm.id = gl.movement_id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM entries e WHERE e.entry_number LIKE ('POS-' || pm.movement_number || '-%')
+      )
+      ORDER BY gl.movement_id
+      LIMIT ${limit}
     `), 'DB_ERROR');
   }
 }

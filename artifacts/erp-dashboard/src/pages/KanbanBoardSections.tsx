@@ -54,7 +54,7 @@ export function EmptyBoardState({
           width: 80,
           height: 80,
           borderRadius: 24,
-          background: "#FFFFFF",
+          background: "var(--ep-surface)",
           boxShadow:
             "8px 8px 20px rgba(163,177,198,0.45), -5px -5px 14px rgba(255,255,255,0.85)",
           display: "flex",
@@ -63,13 +63,13 @@ export function EmptyBoardState({
           marginBottom: 24,
         }}
       >
-        <FolderKanban style={{ width: 36, height: 36, color: "#5B9BD5", opacity: 0.75 }} />
+        <FolderKanban style={{ width: 36, height: 36, color: "var(--ep-blue)", opacity: 0.75 }} />
       </div>
 
-      <h3 style={{ fontSize: 18, fontWeight: 700, color: "#2D3748", marginBottom: 8 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: "var(--ep-text)", marginBottom: 8 }}>
         {t.empty.selectBoard}
       </h3>
-      <p style={{ fontSize: 13, color: "#A0AEC0", marginBottom: 28, maxWidth: 360 }}>
+      <p style={{ fontSize: 13, color: "var(--ep-muted)", marginBottom: 28, maxWidth: 360 }}>
         {tLabel("kanban.birinchiDoskangizniYaratingYokiEuroprint", "Birinchi doskangizni yarating yoki EuroPrint shabloni ishlatib boshlang.")}
       </p>
 
@@ -88,8 +88,8 @@ export function EmptyBoardState({
             cursor: isQuickStartPending ? "wait" : "pointer",
             fontSize: 14,
             fontWeight: 700,
-            background: "#5B9BD5",
-            color: "#FFFFFF",
+            background: "var(--ep-blue)",
+            color: "var(--ep-surface)",
             boxShadow:
               "5px 5px 14px rgba(91,155,213,0.45), -2px -2px 6px rgba(255,255,255,0.50)",
             transition: "box-shadow 0.18s, opacity 0.18s",
@@ -106,7 +106,9 @@ export function EmptyBoardState({
           }}
         >
           <FolderKanban style={{ width: 16, height: 16 }} />
-          {isQuickStartPending ? "Yaratilmoqda..." : "⚡ Europrint tezkor boshlash"}
+          {isQuickStartPending
+            ? tLabel("kanban.yaratilmoqda", "Yaratilmoqda...")
+            : tLabel("kanban.europrintTezkorBoshlash", "⚡ Europrint tezkor boshlash")}
         </button>
 
         <button
@@ -122,8 +124,8 @@ export function EmptyBoardState({
             cursor: "pointer",
             fontSize: 14,
             fontWeight: 600,
-            background: "#FFFFFF",
-            color: "#718096",
+            background: "var(--ep-surface)",
+            color: "var(--ep-muted)",
             boxShadow:
               "4px 4px 12px rgba(163,177,198,0.40), -3px -3px 8px rgba(255,255,255,0.80)",
             transition: "box-shadow 0.18s",
@@ -142,7 +144,7 @@ export function EmptyBoardState({
         </button>
       </div>
 
-      <p style={{ fontSize: 11, color: "#B0BEC5", marginTop: 16 }}>
+      <p style={{ fontSize: 11, color: "var(--ep-muted)", marginTop: 16 }}>
         {tLabel("kanban.tezkorBoshlashKiruvchiRejadaJarayonda", "Tezkor boshlash: Kiruvchi, Rejada, Jarayonda, Yakunlangan ustunlari avtomatik yaratiladi.")}
       </p>
     </div>
@@ -303,7 +305,7 @@ export function BoardContent({
   }
 
   if (viewMode === "dashboard") {
-    return <DashboardPanel t={t} />;
+    return <DashboardPanel t={t} boardId={selectedBoardId} />;
   }
 
   if (viewMode === "allocation") {

@@ -83,3 +83,19 @@
   background-size: 32px 32px;
   pointer-events: none;
 }
+
+/* Neumorphic soft tab-bar (xodim profili tab navigatsiyasi).
+   Token-aware: surface var() bilan dark-mode'da ham to'g'ri ishlaydi. */
+.ep-tabbar-soft {
+  background: var(--ep-surface);
+  box-shadow:
+    4px 4px 14px rgba(163, 177, 198, 0.35),
+    -2px -2px 8px rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+  padding: 4px 6px;
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  gap: 2px;
+  border: none;
+}

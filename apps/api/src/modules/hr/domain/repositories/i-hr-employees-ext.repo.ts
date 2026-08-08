@@ -42,6 +42,10 @@ export interface IHrEmployeesExtRepo {
   getEmployeeDocuments(employeeId: number): Promise<Result<Row[]>>;
   getEmployeeDocumentById(employeeId: number, docId: number): Promise<Result<Row | null>>;
   deleteEmployeeDocument(employeeId: number, docId: number): Promise<Result<boolean>>;
+  /** Assign employee to an org_function (karta). Razryad flows: employee→karta→razryad_level. */
+  assignCard(employeeId: number, orgFunctionId: number): Promise<Result<Row>>;
+  /** Returns all hr_documents with status='pending', newest first, limit 100. */
+  getPendingDocuments(): Promise<Result<Row[]>>;
 }
 
 export const HR_EMPLOYEES_EXT_REPO = Symbol('HR_EMPLOYEES_EXT_REPO');

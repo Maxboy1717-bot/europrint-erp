@@ -5,17 +5,31 @@
 
 import { z } from 'zod';
 
+// Matches the real createPo contract (FE MMPurchaseOrders.tsx + CreatePurchaseOrderCommand):
+// camelCase supplierId + items[{materialId,quantity,unitPrice}]. The prior snake_case shape
+// (vendor_id/material_id/unit_price) never matched the handler or the FE and was never wired.
+// createdBy is intentionally NOT accepted from the body — it is set from the session (SoD).
 export const MmCreatePurchaseOrderSchema = z.object({
-  vendor_id:     z.number().int().positive(),
-  expected_date: z.string().optional(),
-  notes:         z.string().optional(),
-  items:         z.array(z.object({
-    material_id: z.number().int().positive(),
-    quantity:    z.number().positive(),
-    unit_price:  z.number().positive().optional(),
-  })).optional(),
+  supplierId: z.number().int().positive(),
+  items:      z.array(z.object({
+    materialId: z.number().int().positive(),
+    quantity:   z.number().positive(),
+    unitPrice:  z.number().nonnegative(),
+  })).min(1),
+  // MM-11 #11.25 — Incoterms/delivery-terms free-text note (e.g. "EXW Toshkent", "DAP 5 kun").
+  // .max(500) matches the existing free-text-note convention in this file (see vehicle
+  // schema's `notes: z.string().max(500).optional()` below).
+  deliveryTerms: z.string().max(500).optional(),
 });
 export type MmCreatePurchaseOrderDto = z.infer<typeof MmCreatePurchaseOrderSchema>;
+
+// §11-MM #23 — Narx-variance tekshirish (price-warning). Read-only: taklif qilingan PO
+// satr unitPrice ni material reference narxi (price-list yoki oxirgi PO) bilan solishtiradi.
+export const MmPriceVarianceCheckSchema = z.object({
+  materialId: z.number().int().positive(),
+  unitPrice:  z.number().nonnegative(),
+});
+export type MmPriceVarianceCheckDto = z.infer<typeof MmPriceVarianceCheckSchema>;
 
 export const MmApprovePurchaseOrderSchema = z.object({
   notes: z.string().optional(),
@@ -30,19 +44,33 @@ export type MmGoodsReceiptFromOrderDto = z.infer<typeof MmGoodsReceiptFromOrderS
 
 export const MmCreateGoodsReceiptSchema = z.object({
   purchase_order_id: z.number().int().positive(),
+  warehouse_id:      z.number().int().positive().optional(), // receiving warehouse — needed to post stock (kirim)
   received_date:     z.string().optional(),
   received_by:       z.string().optional(),
   delivery_note:     z.string().optional(),
   notes:             z.string().optional(),
   items:             z.array(z.object({
-    material_id: z.number().int().positive(),
-    quantity:    z.number().positive(),
+    material_id:  z.number().int().positive(),
+    quantity:     z.number().positive(),
+    received_qty: z.number().nonnegative().optional(),
+    zone_id:         z.number().int().positive().optional(),        // vision 10-wms#5: FK warehouse_zones
+    bin_location_id: z.number().int().positive().optional(),        // vision 10-wms#5: FK warehouse_bins
   })).optional(),
 });
 export type MmCreateGoodsReceiptDto = z.infer<typeof MmCreateGoodsReceiptSchema>;
 
+// vision 10-wms#5: assign a real zone (+optional bin) to a draft receipt line so it can be confirmed.
+export const MmAssignReceiptLocationSchema = z.object({
+  zone_id:         z.number().int().positive(),
+  bin_location_id: z.number().int().positive().optional(),
+});
+export type MmAssignReceiptLocationDto = z.infer<typeof MmAssignReceiptLocationSchema>;
+
 export const MmUpdateGoodsReceiptSchema = z.object({
-  status:        z.enum(['draft', 'pending', 'approved', 'rejected']).optional(),
+  // 'conditional' = §11-MM#59: receipt accepted with a caveat (e.g. partial defect / pending QC
+  // re-check) rather than a clean 'approved'. No downstream branch keys off this value yet — it is
+  // stored/read like any other status (goods_receipts.status is varchar, no DB CHECK constraint).
+  status:        z.enum(['draft', 'pending', 'approved', 'rejected', 'conditional']).optional(),
   notes:         z.string().optional(),
   received_date: z.string().optional(),
 });
@@ -73,6 +101,7 @@ export const MmCreateVendorSchema = z.object({
   phone:   z.string().optional(),
   email:   z.string().email().optional(),
   address: z.string().optional(),
+  is_vat_payer: z.boolean().optional(), // MM-11 #11.44 -- QQS to'lovchi; omit => DB default true
 });
 export type MmCreateVendorDto = z.infer<typeof MmCreateVendorSchema>;
 
@@ -83,6 +112,7 @@ export const MmUpdateVendorSchema = z.object({
   email:   z.string().email().optional(),
   address: z.string().optional(),
   status:  z.enum(['active', 'inactive', 'blacklisted']).optional(),
+  is_vat_payer: z.boolean().optional(), // MM-11 #11.44 -- QQS to'lovchi
 });
 export type MmUpdateVendorDto = z.infer<typeof MmUpdateVendorSchema>;
 
@@ -96,6 +126,7 @@ export const MmCreateRequisitionSchema = z.object({
     material_id:  z.number().int().positive(),
     quantity:     z.number().positive(),
     unit_of_measure: z.string().optional(),
+    unit_price:   z.number().nonnegative().optional(),
   })).optional(),
 });
 export type MmCreateRequisitionDto = z.infer<typeof MmCreateRequisitionSchema>;
@@ -108,12 +139,20 @@ export const MmUpdateRequisitionSchema = z.object({
 });
 export type MmUpdateRequisitionDto = z.infer<typeof MmUpdateRequisitionSchema>;
 
+// #11.13 — convert an APPROVED requisition into a PO. supplierId is optional:
+// when omitted, the service falls back to the requisition's own supplier_id.
+export const MmConvertRequisitionToPoSchema = z.object({
+  supplierId: z.number().int().positive().optional(),
+});
+export type MmConvertRequisitionToPoDto = z.infer<typeof MmConvertRequisitionToPoSchema>;
+
 export const MmCreateFleetVehicleSchema = z.object({
-  registration_number: z.string().min(1).max(50),
-  model:               z.string().max(100).optional(),
-  year:                z.number().int().min(1900).max(2100).optional(),
-  fuel_type:           z.enum(['petrol', 'diesel', 'electric', 'gas']).optional(),
-  status:              z.enum(['active', 'maintenance', 'inactive']).optional(),
+  plate_number: z.string().min(1).max(50),
+  model:        z.string().max(100).optional(),
+  year:         z.number().int().min(1900).max(2100).optional(),
+  type:         z.enum(['own', 'rent', 'truck']).optional(),
+  status:       z.enum(['active', 'maintenance', 'inactive']).optional(),
+  notes:        z.string().max(500).optional(),
 });
 export type MmCreateFleetVehicleDto = z.infer<typeof MmCreateFleetVehicleSchema>;
 
@@ -125,3 +164,24 @@ export const MmCreateFuelLogSchema = z.object({
   odometer:   z.number().int().min(0).optional(),
 });
 export type MmCreateFuelLogDto = z.infer<typeof MmCreateFuelLogSchema>;
+
+// FX-2 fleet/deliveries — FE (LogisticsDashboard.tsx deliveryForm) sends all fields as
+// strings (controlled <Input> values, incl. type="number"), so weight/cost use
+// z.coerce.number() to accept the real wire shape rather than requiring pre-converted JSON.
+export const MmCreateFleetDeliverySchema = z.object({
+  orderNo:          z.string().max(50).optional(),
+  customerName:     z.string().max(200).optional(),
+  address:          z.string().optional(),
+  vehicleId:        z.string().optional(),
+  driverName:       z.string().max(100).optional(),
+  estimatedArrival: z.string().optional(),
+  weight:           z.coerce.number().nonnegative().optional(),
+  cost:             z.coerce.number().nonnegative().optional(),
+});
+export type MmCreateFleetDeliveryDto = z.infer<typeof MmCreateFleetDeliverySchema>;
+
+// mm_deliveries_status_chk CHECK constraint enum (lib/db/src/schema/mm-logistics.ts:240)
+export const MmUpdateFleetDeliveryStatusSchema = z.object({
+  status: z.enum(['planned', 'in_transit', 'delivered', 'failed', 'cancelled']),
+});
+export type MmUpdateFleetDeliveryStatusDto = z.infer<typeof MmUpdateFleetDeliveryStatusSchema>;

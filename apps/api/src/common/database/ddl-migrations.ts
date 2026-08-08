@@ -199,6 +199,37 @@ export async function ensureNotificationTables(): Promise<void> {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  // Granular per-type × per-channel matrix (owner-decisions batch item 7, 2026-07-09).
+  // See migration notification-type-preferences-2026-07-09.sql.
+  await ddlRun(sql`
+    CREATE TABLE IF NOT EXISTS notification_type_preferences (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      notification_type TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      enabled BOOLEAN NOT NULL DEFAULT TRUE,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, notification_type, channel)
+    )
+  `);
+  // Per-module/per-alert-type configurable trigger thresholds (Q-35 schema-gap
+  // close — NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md §1.3/§6 P0-4).
+  // Boot-time guard so a fresh/reset DB always has this table; seed defaults
+  // live in migration alert-thresholds-2026-08-03.sql (idempotent, run once).
+  // APPROVED: owner 2026-08-03 (autonomous vision-gap-closure mandate).
+  await ddlRun(sql`
+    CREATE TABLE IF NOT EXISTS alert_thresholds (
+      id SERIAL PRIMARY KEY,
+      alert_type TEXT NOT NULL UNIQUE,
+      threshold_value NUMERIC NOT NULL,
+      unit VARCHAR(20) NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      description TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMPTZ
+    )
+  `);
 }
 
 export async function ensureTechnologyTables(): Promise<void> {
@@ -302,15 +333,22 @@ export async function ensureOrgNodePortretTable(): Promise<void> {
   await ddlRun(sql`
     CREATE TABLE IF NOT EXISTS org_node_portret (
       id SERIAL PRIMARY KEY,
-      node_id INTEGER NOT NULL REFERENCES org_departments(id) ON DELETE CASCADE,
+      node_id INTEGER REFERENCES org_departments(id) ON DELETE CASCADE,
+      card_id INTEGER REFERENCES org_functions(id) ON DELETE SET NULL,
       portret_data JSONB NOT NULL DEFAULT '{}'::jsonb,
       creator_id INTEGER,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-  // One portret per node — upsert keyed on node_id.
-  await ddlRun(sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_org_node_portret_node_id ON org_node_portret(node_id)`);
+  // Card-centric portret: rows are either node-level (card_id NULL) or card-level
+  // (card_id set). node_id is nullable so card rows need no department.
+  // See migration org-node-portret-card-key-2026-06-20.sql.
+  await ddlRun(sql`ALTER TABLE org_node_portret ALTER COLUMN node_id DROP NOT NULL`);
+  await ddlRun(sql`ALTER TABLE org_node_portret ADD COLUMN IF NOT EXISTS card_id INTEGER REFERENCES org_functions(id) ON DELETE SET NULL`);
+  // node-level uniqueness only over node rows; card-level natural key over card rows.
+  await ddlRun(sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_org_node_portret_node_id ON org_node_portret(node_id) WHERE card_id IS NULL`);
+  await ddlRun(sql`CREATE UNIQUE INDEX IF NOT EXISTS uq_org_node_portret_card_id ON org_node_portret(card_id) WHERE card_id IS NOT NULL`);
 }
 
 export async function ensureNodeHrRequestsTable(): Promise<void> {

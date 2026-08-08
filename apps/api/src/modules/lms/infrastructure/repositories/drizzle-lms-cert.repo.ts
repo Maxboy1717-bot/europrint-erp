@@ -3,6 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
+import { createHash } from 'crypto';
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -30,9 +31,39 @@ export class LmsCertRepo {
     }
   }
 
+  /**
+   * Trigger 17 daily-sweep source: certificates that are GENUINELY EXPIRED
+   * (expiry_date < NOW()), still active, and not yet flagged 'expired'. Each row
+   * becomes a CertificateExpiredEvent so the MES skill-block + notification
+   * listeners fire. Returns the fields the event needs (id/employee/course/name).
+   */
+  async findExpiredToFlag(): Promise<Result<object[]>> {
+    try {
+      const r = await exec(sql`SELECT cert.id AS certificate_id, cert.employee_id, cert.course_id, c.title_uz AS course_name, cert.expiry_date AS expires_at FROM certificates cert JOIN courses c ON c.id = cert.course_id WHERE cert.is_active = true AND cert.expiry_date IS NOT NULL AND cert.expiry_date < NOW() AND COALESCE(cert.status, '') <> 'expired' ORDER BY cert.expiry_date ASC`);
+      return Ok(r);
+    } catch (error: unknown) {
+      this.logger.error(`findExpiredToFlag: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   async saveCertificate(certificate: Row, issuedBy?: number): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO certificates (employee_id, course_id, issued_date, expiry_date, score, is_active, created_at) VALUES (${certificate.employeeId ?? certificate.employee_id}, ${certificate.courseId ?? certificate.course_id}, NOW(), ${certificate.expiresAt ?? certificate.expiry_date ?? null}, ${certificate.score ?? null}, true, NOW()) ON CONFLICT DO NOTHING RETURNING *`);
+      // certificates: user_id + certificate_number are NOT NULL (no default); the old insert wrote only
+      // the legacy employee_id and omitted both -> 23502. user_id := employee, certificate_number generated.
+      const emp = certificate.employeeId ?? certificate.employee_id;
+      const courseId = certificate.courseId ?? certificate.course_id;
+      const expiresAt = certificate.expiresAt ?? certificate.expiry_date ?? null;
+      const certNumber = 'CERT-' + Date.now();
+      // LMS-12 #30 (legal-minimal cert fields, vision docs/audit/vision-1000-answers/12-lms.md
+      // #30): issued_ip captures the requester IP at issuance time; cert_hash is a SHA-256
+      // digest over the immutable cert payload — digital-signature substitute (F5 principle),
+      // not a secret, so a plain digest (no HMAC key) is sufficient here.
+      const issuedIp = certificate.issuedIp ? String(certificate.issuedIp) : null;
+      const certHash = createHash('sha256')
+        .update(`${emp}|${courseId}|${certNumber}|${expiresAt ?? ''}|${issuedBy ?? ''}`)
+        .digest('hex');
+      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_date, expiry_date, score, is_active, created_at, issued_ip, cert_hash) VALUES (${emp}, ${emp}, ${courseId}, ${certNumber}, NOW(), ${expiresAt}, ${certificate.score ?? null}, true, NOW(), ${issuedIp}, ${certHash}) ON CONFLICT DO NOTHING RETURNING *`);
       return Ok(r[0]);
     } catch (error: unknown) {
       this.logger.error(`saveCertificate: ${(error as Error).message}`);
@@ -113,7 +144,9 @@ export class LmsCertRepo {
 
   async saveCertificateLegacy(certificate: Row, issuedBy: number): Promise<number> {
     try {
-      const r = await exec(sql`INSERT INTO certificates (employee_id, course_id, issued_date, expiry_date, is_active, created_at) VALUES (${certificate.employeeId ?? certificate['employeeId']}, ${certificate.courseId ?? certificate['courseId']}, NOW(), ${certificate.expiresAt ?? null}, true, NOW()) ON CONFLICT DO NOTHING RETURNING id`);
+      // user_id + certificate_number NOT NULL (no default) — supply both (was omitted -> 23502).
+      const emp = certificate.employeeId ?? certificate['employeeId'];
+      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_date, expiry_date, is_active, created_at) VALUES (${emp}, ${emp}, ${certificate.courseId ?? certificate['courseId']}, ${'CERT-' + Date.now()}, NOW(), ${certificate.expiresAt ?? null}, true, NOW()) ON CONFLICT DO NOTHING RETURNING id`);
       return Number(r[0]?.id ?? 0);
     } catch (error: unknown) {
       this.logger.error(`saveCertificateLegacy: ${(error as Error).message}`);
@@ -123,7 +156,7 @@ export class LmsCertRepo {
 
   async updateCertificateStatus(certificateId: number, status: string): Promise<void> {
     try {
-      await execLmsCertificateStatusUpdate(certificateId, status === 'active');
+      await execLmsCertificateStatusUpdate(certificateId, status);
     } catch (error: unknown) {
       this.logger.error(`updateCertificateStatus: ${(error as Error).message}`);
     }

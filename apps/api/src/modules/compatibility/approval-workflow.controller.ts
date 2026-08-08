@@ -17,11 +17,6 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { ApprovalWorkflowService } from './approval-workflow.service';
-import {
-  ApprovalRequestAclTranslator,
-  type LegacyApprovalRow,
-  type ApprovalRequestDto,
-} from './acl/approval-request-acl';
 
 const ApproveSchema = z.object({ notes: z.string().optional() });
 const RejectSchema  = z.object({ rejectionReason: z.string().min(1) });
@@ -48,28 +43,11 @@ type TokenUser = { id: string; sub?: string };
 @UseInterceptors(AuditInterceptor)
 @Controller('approval-workflow')
 export class ApprovalWorkflowController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly acl = new ApprovalRequestAclTranslator();
-
   constructor(private readonly svc: ApprovalWorkflowService) {}
 
   @Get()
   async getAll() {
     return unwrapOrBadRequest(await this.svc.getPending());
-  }
-
-  /**
-   * PA2-14 ACL-translated variant of pending approvals. New BC-7 (Finance)
-   * consumers should target this route; `/pending` stays for backwards-compat.
-   */
-  @Get('pending/v2')
-  async getPendingV2(): Promise<ApprovalRequestDto[]> {
-    const rows = unwrapOrBadRequest(await this.svc.getPending()) as unknown as LegacyApprovalRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.acl.toDomain(row))
-      .filter((r): r is { ok: true; data: ApprovalRequestDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Get('dashboard')

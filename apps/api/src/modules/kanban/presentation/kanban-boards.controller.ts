@@ -49,27 +49,35 @@ export class KanbanBoardsController {
   // ─── Boards ───────────────────────────────────────────────────────────────
 
   @Get('boards')
-  @ApiOperation({ summary: 'Barcha boardlar (departmentId bo\'yicha filtrlash ixtiyoriy)' })
-  async getBoards(@Query('departmentId') departmentId?: string) {
-    const result = await this.boardsSvc.getBoards();
-    if (!result.ok) return unwrapOrThrow(result);
-    if (!departmentId) return result.data;
-    // departmentId filtrini qo'llash — null departmentId ham qabul qilinadi
-    return (result.data as unknown as Record<string, unknown>[]).filter(
-      (b: Record<string, unknown>) => b.department_id === departmentId || b.departmentId === departmentId,
-    );
+  @ApiOperation({ summary: 'Barcha boardlar' })
+  async getBoards() {
+    // NOTE (M0): `departmentId` JS-filtri bu yerda ilgari mavjud edi, lekin
+    // kanban_boards jadvalida department_id ustuni umuman yo'q — filtr HAR
+    // DOIM bo'sh natija qaytarardi (o'lik/buzuq kod, FE hech qachon
+    // chaqirmagan — Q-46: to'g'ri ishlamaydigan kod olib tashlanadi). Board
+    // ro'yxati umumiy qoladi; kartalar darajasidagi org-sxema ko'rinishi
+    // getBoardById/getBoardCards/getAllCards'da haqiqiy SQL predicate bilan
+    // amalga oshirilgan (kanban-visibility.helper.ts).
+    return unwrapOrThrow(await this.boardsSvc.getBoards());
   }
 
   @Get('boards/:boardId')
-  @ApiOperation({ summary: 'Board tafsiloti (ustunlar + kartalar)' })
-  async getBoardById(@Param('boardId') boardId: string) {
-    return unwrapOrThrow(await this.boardsSvc.getBoardById(boardId));
+  @ApiOperation({ summary: 'Board tafsiloti (ustunlar + kartalar, org-sxema bo\'yicha ko\'rinish)' })
+  async getBoardById(
+    @Param('boardId') boardId: string,
+    @CurrentUser() user: { id: number; role?: string },
+  ) {
+    return unwrapOrThrow(await this.boardsSvc.getBoardById(boardId, user && { id: Number(user.id), role: user.role }));
   }
 
   @Post('boards')
   @HttpCode(HttpStatus.CREATED)
+  // G4 governance (vizyon, egasi #16603): "doskalari standart, faqat super admin" —
+  // board yaratish faqat super_admin/director. Metod-darajali @Roles klass-darajalini
+  // OVERRIDE qiladi (RolesGuard getAllAndOverride); o'qish routelari keng qoladi (Q-39).
+  @Roles('super_admin', 'director')
   @UsePipes(new ZodValidationPipe(KanbanCreateBoardSchema))
-  @ApiOperation({ summary: 'Yangi board yaratish' })
+  @ApiOperation({ summary: 'Yangi board yaratish (faqat super_admin/director)' })
   async createBoard(@Body() body: KanbanCreateBoardDto) {
     return unwrapOrThrow(await this.boardsSvc.createBoard(body));
   }
@@ -78,8 +86,11 @@ export class KanbanBoardsController {
 
   @Post('boards/:boardId/columns')
   @HttpCode(HttpStatus.CREATED)
+  // G4 governance: ustun qo'shish ham standart doska tuzilmasini o'zgartiradi —
+  // faqat super_admin/director (vizyon, egasi #16603).
+  @Roles('super_admin', 'director')
   @UsePipes(new ZodValidationPipe(KanbanAddColumnSchema))
-  @ApiOperation({ summary: 'Boardga ustun qo\'shish' })
+  @ApiOperation({ summary: 'Boardga ustun qo\'shish (faqat super_admin/director)' })
   async addColumn(@Param('boardId') boardId: string, @Body() body: KanbanAddColumnDto) {
     return unwrapOrThrow(await this.boardsSvc.addColumn(boardId, body));
   }
@@ -112,9 +123,13 @@ export class KanbanBoardsController {
   @Post('boards/:boardId/cards')
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(KanbanAddCardSchema))
-  @ApiOperation({ summary: 'Boardga karta qo\'shish' })
-  async addCard(@Param('boardId') boardId: string, @Body() body: KanbanAddCardDto) {
-    return unwrapOrThrow(await this.boardsSvc.addCard(boardId, body));
+  @ApiOperation({ summary: 'Boardga karta qo\'shish (yaratuvchi = topshiruvchi/assigner)' })
+  async addCard(
+    @Param('boardId') boardId: string,
+    @Body() body: KanbanAddCardDto,
+    @CurrentUser() user: { id: number },
+  ) {
+    return unwrapOrThrow(await this.boardsSvc.addCard(boardId, body, user?.id));
   }
 
   @Put('cards/:id')
@@ -126,9 +141,13 @@ export class KanbanBoardsController {
 
   @Put('cards/:id/move')
   @UsePipes(new ZodValidationPipe(KanbanMoveCardSchema))
-  @ApiOperation({ summary: 'Kartani ko\'chirish' })
-  async moveCard(@Param('id') id: string, @Body() body: KanbanMoveCardDto) {
-    return unwrapOrThrow(await this.boardsSvc.moveCard(id, body));
+  @ApiOperation({ summary: 'Kartani ko\'chirish (assigner-confirm: Bajarildiga faqat topshiruvchi; WIP-limitni faqat supervisor bypass qila oladi)' })
+  async moveCard(
+    @Param('id') id: string,
+    @Body() body: KanbanMoveCardDto,
+    @CurrentUser() user: { id: number; role?: string },
+  ) {
+    return unwrapOrThrow(await this.boardsSvc.moveCard(id, body, user?.id, user?.role));
   }
 
   @Delete('cards/:id')
@@ -235,7 +254,10 @@ export class KanbanBoardsController {
   }
 
   @Post('templates/:templateId/apply')
-  @ApiOperation({ summary: 'Shablonni boardga qo\'llash' })
+  // G4 governance: shablon qo'llash boardga ustunlar YARATADI (addColumn yo'li) —
+  // aks holda column-yaratish cheklovi chetlab o'tilardi. Faqat super_admin/director.
+  @Roles('super_admin', 'director')
+  @ApiOperation({ summary: 'Shablonni boardga qo\'llash (faqat super_admin/director)' })
   async applyTemplate(
     @Param('templateId') templateId: string,
     @Body() body: unknown,

@@ -103,7 +103,15 @@ export class DrizzleDowntimeRepository {
 
   async save(event: DowntimeEvent): Promise<Result<DowntimeEvent>> {
     try {
-       
+      // Audit 2026-08-08: this gate rejected EVERY downtime event created via
+      // MESDowntimes.tsx's "to'xtash qayd etish" dialog — that form has no
+      // work-center field and never sends workCenterId, so `save()` always
+      // returned Err here before an insert was even attempted. The domain
+      // aggregate itself (DowntimeEvent) already types workCenterId as
+      // `string | null` and the live `downtime_events.work_center_id` column
+      // is nullable — this repo-level requirement contradicted both. Removed;
+      // null is passed straight through to the insert, matching the schema.
+
       await db.insert(downtimeEvents).values({
         sessionId: event.sessionId,
         workCenterId: event.workCenterId,
@@ -115,7 +123,7 @@ export class DrizzleDowntimeRepository {
         reportedBy: event.reportedBy,
         notes: event.notes,
         createdAt: event.createdAt,
-      } as any);  
+      });
 
       return Ok(event);
     } catch (error: unknown) {

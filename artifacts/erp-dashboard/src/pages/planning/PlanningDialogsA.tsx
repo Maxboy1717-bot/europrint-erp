@@ -11,9 +11,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import type { InsertPlanningOperation, InsertProductionPlanHeader } from "@shared/schema";
-import type { PapkaOrder, Equipment, WorkCenter, PlanningTranslations } from "./planning-types";
+import type { PapkaOrder, Equipment, WorkCenter } from "./planning-types";
 
-import { tLabel } from '@/lib/i18n/tLabel';
+type TFunc = (key: string, params?: Record<string, string | number>) => string;
+
 // ─── Operation Form Dialog ────────────────────────────────────────────────────
 
 interface OperationDialogProps {
@@ -25,29 +26,28 @@ interface OperationDialogProps {
   isSaving: boolean;
   papkaOrdersList: PapkaOrder[];
   equipmentList: Equipment[];
-  lang: "uz" | "ru";
-  t: PlanningTranslations;
+  t: TFunc;
 }
 
 export function OperationFormDialog({
   open, onOpenChange, editingOperation, form, onSubmit, isSaving,
-  papkaOrdersList, equipmentList, lang, t,
+  papkaOrdersList, equipmentList, t,
 }: OperationDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">{editingOperation ? t.editTitle : t.createTitle}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{editingOperation ? t("PlanningBoard.editTitle") : t("PlanningBoard.createTitle")}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="papkaOrderId" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t.papkaNo}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.papkaNo")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-form-papka" className="h-9"><SelectValue placeholder={t.papkaNo} /></SelectTrigger>
+                      <SelectTrigger data-testid="select-form-papka" className="h-9"><SelectValue placeholder={t("PlanningBoard.papkaNo")} /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {(Array.isArray(papkaOrdersList) ? papkaOrdersList : []).map((p: PapkaOrder) => (
@@ -60,24 +60,24 @@ export function OperationFormDialog({
               )} />
               <FormField control={form.control} name="operationCode" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t.operationNo}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.operationNo")}</FormLabel>
                   <FormControl><Input {...field} data-testid="input-form-op-code" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="operationName" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang === "uz" ? "Operatsiya nomi" : "Название операции"}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.operationName")}</FormLabel>
                   <FormControl><Input {...field} data-testid="input-form-op-name" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="equipmentId" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t.workCenter}</FormLabel>
+                  <FormLabel>{t("workCenter")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-form-equipment" className="h-9"><SelectValue placeholder={t.workCenter} /></SelectTrigger>
+                      <SelectTrigger data-testid="select-form-equipment" className="h-9"><SelectValue placeholder={t("workCenter")} /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {(Array.isArray(equipmentList) ? equipmentList : []).map((e: Equipment) => (
@@ -90,7 +90,7 @@ export function OperationFormDialog({
               )} />
               <FormField control={form.control} name="plannedDate" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang === "uz" ? "Sana" : "Дата"}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.date")}</FormLabel>
                   <FormControl><Input type="date" {...field} data-testid="input-form-date" /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -98,14 +98,14 @@ export function OperationFormDialog({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <FormField control={form.control} name="plannedStartTime" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.plannedStart}</FormLabel>
+                    <FormLabel>{t("PlanningBoard.plannedStart")}</FormLabel>
                     <FormControl><Input type="time" {...field} data-testid="input-form-start-time" /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="plannedEndTime" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.plannedEnd}</FormLabel>
+                    <FormLabel>{t("PlanningBoard.plannedEnd")}</FormLabel>
                     <FormControl><Input type="time" {...field} data-testid="input-form-end-time" /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,7 +113,7 @@ export function OperationFormDialog({
               </div>
               <FormField control={form.control} name="plannedQuantity" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t.plannedQty}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.plannedQty")}</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} data-testid="input-form-qty" />
                   </FormControl>
@@ -122,16 +122,16 @@ export function OperationFormDialog({
               )} />
               <FormField control={form.control} name="status" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t.status}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.status")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-form-status" className="h-9"><SelectValue placeholder={t.status} /></SelectTrigger>
+                      <SelectTrigger data-testid="select-form-status" className="h-9"><SelectValue placeholder={t("PlanningBoard.status")} /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="planned">{t.planned}</SelectItem>
-                      <SelectItem value="in_progress">{t.inProgress}</SelectItem>
-                      <SelectItem value="completed">{t.completed}</SelectItem>
-                      <SelectItem value="cancelled">{t.cancelled}</SelectItem>
+                      <SelectItem value="planned">{t("PlanningBoard.planned")}</SelectItem>
+                      <SelectItem value="in_progress">{t("inProcess")}</SelectItem>
+                      <SelectItem value="completed">{t("PlanningBoard.completed")}</SelectItem>
+                      <SelectItem value="cancelled">{t("PlanningBoard.cancelled")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -139,8 +139,8 @@ export function OperationFormDialog({
               )} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t.cancel}</Button>
-              <Button type="submit" disabled={isSaving} data-testid="button-save-operation">{t.save}</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("PlanningBoard.cancel")}</Button>
+              <Button type="submit" disabled={isSaving} data-testid="button-save-operation">{t("PlanningBoard.save")}</Button>
             </DialogFooter>
           </form>
         </Form>
@@ -159,34 +159,33 @@ interface PlanDialogProps {
   onSubmit: (data: InsertProductionPlanHeader) => void;
   isSaving: boolean;
   workCenters: WorkCenter[];
-  lang: "uz" | "ru";
-  t: PlanningTranslations;
+  t: TFunc;
 }
 
 export function PlanFormDialog({
-  open, onOpenChange, editingPlan, planForm, onSubmit, isSaving, workCenters, lang, t,
+  open, onOpenChange, editingPlan, planForm, onSubmit, isSaving, workCenters, t,
 }: PlanDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] p-6">
         <DialogHeader>
           <DialogTitle className="text-[18px] font-semibold"> {editingPlan
-              ? (lang === "uz" ? "Rejani tahrirlash" : "Редактировать план")
-              : (lang === "uz" ? "Yangi reja" : "Новый план")}</DialogTitle>
+              ? t("PlanningBoard.editPlanTitle")
+              : t("PlanningBoard.newPlanTitle")}</DialogTitle>
         </DialogHeader>
         <Form {...planForm}>
           <form onSubmit={planForm.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={planForm.control} name="planNumber" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang === "uz" ? "Reja raqami" : "№ плана"}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.planNumber")}</FormLabel>
                   <FormControl><Input {...field} data-testid="input-plan-number" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={planForm.control} name="planDate" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang === "uz" ? "Sana" : "Дата"}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.date")}</FormLabel>
                   <FormControl><Input type="date" {...field} data-testid="input-plan-date" /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -195,13 +194,13 @@ export function PlanFormDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={planForm.control} name="planType" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang === "uz" ? "Reja turi" : "Тип плана"}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.planType")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger data-testid="select-plan-type" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="daily">{lang === "uz" ? "Kunlik" : "Дневной"}</SelectItem>
-                      <SelectItem value="weekly">{lang === "uz" ? "Haftalik" : "Недельный"}</SelectItem>
-                      <SelectItem value="monthly">{lang === "uz" ? "Oylik" : "Месячный"}</SelectItem>
+                      <SelectItem value="daily">{t("PlanningBoard.planTypeDaily")}</SelectItem>
+                      <SelectItem value="weekly">{t("PlanningBoard.planTypeWeekly")}</SelectItem>
+                      <SelectItem value="monthly">{t("PlanningBoard.planTypeMonthly")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -209,7 +208,7 @@ export function PlanFormDialog({
               )} />
               <FormField control={planForm.control} name="workCenterId" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang === "uz" ? "Ish markazi" : "Рабочий центр"}</FormLabel>
+                  <FormLabel>{t("workCenter")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl><SelectTrigger data-testid="select-plan-work-center" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
@@ -225,13 +224,13 @@ export function PlanFormDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={planForm.control} name="shift" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang === "uz" ? "Smena" : "Смена"}</FormLabel>
+                  <FormLabel>{t("shift")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl><SelectTrigger data-testid="select-plan-shift" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="1-smena">{tLabel('planning.PlanningDialogsA.1Smena', "1-smena")}</SelectItem>
-                      <SelectItem value="2-smena">{tLabel('planning.PlanningDialogsA.2Smena', "2-smena")}</SelectItem>
-                      <SelectItem value="3-smena">{tLabel('planning.PlanningDialogsA.3Smena', "3-smena")}</SelectItem>
+                      <SelectItem value="1-smena">{t("PlanningBoard.shift1")}</SelectItem>
+                      <SelectItem value="2-smena">{t("PlanningBoard.shift2")}</SelectItem>
+                      <SelectItem value="3-smena">{t("PlanningBoard.shift3")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -239,14 +238,14 @@ export function PlanFormDialog({
               )} />
               <FormField control={planForm.control} name="status" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t.status}</FormLabel>
+                  <FormLabel>{t("PlanningBoard.status")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger data-testid="select-plan-status" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="draft">{lang === "uz" ? "Qoralama" : "Черновик"}</SelectItem>
-                      <SelectItem value="approved">{lang === "uz" ? "Tasdiqlangan" : "Утверждён"}</SelectItem>
-                      <SelectItem value="in_progress">{lang === "uz" ? "Bajarilmoqda" : "В процессе"}</SelectItem>
-                      <SelectItem value="completed">{lang === "uz" ? "Yakunlandi" : "Завершён"}</SelectItem>
+                      <SelectItem value="draft">{t("PlanningBoard.planStatusDraft")}</SelectItem>
+                      <SelectItem value="approved">{t("PlanningBoard.planStatusApproved")}</SelectItem>
+                      <SelectItem value="in_progress">{t("PlanningBoard.planStatusInProgress")}</SelectItem>
+                      <SelectItem value="completed">{t("PlanningBoard.planStatusCompleted")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -255,13 +254,13 @@ export function PlanFormDialog({
             </div>
             <FormField control={planForm.control} name="notes" render={({ field }) => (
               <FormItem>
-                <FormLabel>{lang === "uz" ? "Izoh" : "Примечание"}</FormLabel>
+                <FormLabel>{t("PlanningBoard.notes")}</FormLabel>
                 <FormControl><Textarea {...field} data-testid="input-plan-notes" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <DialogFooter>
-              <Button type="submit" disabled={isSaving} data-testid="button-save-plan">{t.save}</Button>
+              <Button type="submit" disabled={isSaving} data-testid="button-save-plan">{t("PlanningBoard.save")}</Button>
             </DialogFooter>
           </form>
         </Form>

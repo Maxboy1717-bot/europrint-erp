@@ -22,7 +22,7 @@ import {
 } from "./ProductProfitabilityTypes";
 import { KpiSummaryCards, DistributionSection } from "./ProductProfitabilitySections";
 import { TopProfitableSection, TopLossSection } from "./ProductProfitabilityCharts";
-import { EPErrorState } from "@/components/ep";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 import { useTranslation } from '@/lib/i18n';
 export default function ProductProfitability() {
@@ -89,77 +89,64 @@ export default function ProductProfitability() {
   }
 
   return (
-    <div data-testid="product-profitability-page">
-      {/* Page header */}
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <BarChart3 className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">{t("mahsulotRentabelligi")}</h1>
-                <p className="text-white/75 text-sm">{t('productProfitabilityAnalysis')}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-card/10 border-white/30 text-white hover:bg-card/20"
-                onClick={() => exportMutation.mutate()}
-                disabled={exportMutation.isPending}
-                data-testid="button-export-csv"
-              >
-                <Download className={`h-4 w-4 mr-2 ${exportMutation.isPending ? "animate-spin" : ""}`} />
-                Export
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-card/10 border-white/30 text-white hover:bg-card/20"
-                onClick={() => recalculateMutation.mutate()}
-                disabled={recalculateMutation.isPending}
-                data-testid="button-recalculate"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${recalculateMutation.isPending ? "animate-spin" : ""}`} />
-                {t("qaytaHisoblash")}
-              </Button>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="bg-card/10 border-white/30 text-white hover:bg-card/20 gap-2"
-                    data-testid="button-date-filter"
-                  >
-                    <CalendarIcon className="h-4 w-4" />
-                    {dateRange.from ? (
-                      dateRange.to ? (
-                        <>
-                          {format(dateRange.from, "dd.MM.yyyy")} - {format(dateRange.to, "dd.MM.yyyy")}
-                        </>
-                      ) : (
-                        format(dateRange.from, "dd.MM.yyyy")
-                      )
+    <div className="space-y-6" data-testid="product-profitability-page">
+      <EPPageHeader
+        icon={<BarChart3 className="h-5 w-5" />}
+        title={t("mahsulotRentabelligi")}
+        subtitle={t('productProfitabilityAnalysis')}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportMutation.mutate()}
+              disabled={exportMutation.isPending}
+              data-testid="button-export-csv"
+            >
+              <Download className={`h-4 w-4 mr-2 ${exportMutation.isPending ? "animate-spin" : ""}`} />
+              Export
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => recalculateMutation.mutate()}
+              disabled={recalculateMutation.isPending}
+              data-testid="button-recalculate"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${recalculateMutation.isPending ? "animate-spin" : ""}`} />
+              {t("qaytaHisoblash")}
+            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2" data-testid="button-date-filter">
+                  <CalendarIcon className="h-4 w-4" />
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "dd.MM.yyyy")} - {format(dateRange.to, "dd.MM.yyyy")}
+                      </>
                     ) : (
-                      "Sana tanlang"
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={dateRange.from}
-                    selected={{ from: dateRange.from, to: dateRange.to }}
-                    onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+                      format(dateRange.from, "dd.MM.yyyy")
+                    )
+                  ) : (
+                    "Sana tanlang"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange.from}
+                  selected={{ from: dateRange.from, to: dateRange.to }}
+                  onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Page body */}
       <div className="space-y-6 pt-6">

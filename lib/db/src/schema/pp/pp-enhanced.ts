@@ -5,44 +5,20 @@
 
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, type AnyPgColumn, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, date, uniqueIndex, index, type AnyPgColumn, check, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, unitOfMeasures, users } from "../core-schema";
 import { materialCategories, materialKits, rawMaterials } from "../mm-schema";
-import { qcMaterialTests } from "../qc-schema";
 import { warehouses } from "../wms-schema";
 import { equipment, products } from "./pp-production";
-import { productionSessions } from "./pp-iot";
 import { papkaOrders } from "./pp-papka";
-
-// Machine Crews (Mashina jamoalari)
-export const machineCrews = pgTable("machine_crews", {
-  id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
-  masterId: integer("master_id").notNull(),
-  polmasterId: integer("polmaster_id"),
-  shogirdId: integer("shogird_id"),
-  roklerId: integer("rokler_id"),
-  // ── ADD-ONLY: live DB superset columns ──
-  workCenterId: integer("work_center_id"),
-  employeeId: integer("employee_id"),
-  productionOrderId: integer("production_order_id"),
-  role: varchar("role", { length: 30 }),
-  startDate: varchar("start_date", { length: 10 }),
-  endDate: varchar("end_date", { length: 10 }),
-  isActive: boolean("is_active"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertMachineCrewSchema = createInsertSchema(machineCrews).omit({ id: true, createdAt: true } as never);
-export type MachineCrew = typeof machineCrews.$inferSelect;
-export type InsertMachineCrew = z.infer<typeof insertMachineCrewSchema>;
 
 // Setup Checklists (Sozlash oldi cheklistlari)
 export const setupChecklists = pgTable("setup_checklists", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id").notNull(),
   kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "set null" }),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
@@ -85,7 +61,8 @@ export type InsertChecklistItem = z.infer<typeof insertChecklistItemSchema>;
 // Material Consumption (Sarflangan materiallar hisobi)
 export const materialConsumption = pgTable("material_consumption", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id").notNull(),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
   kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "set null" }),
   materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
@@ -108,7 +85,8 @@ export type InsertMaterialConsumption = z.infer<typeof insertMaterialConsumption
 // Defect Reports (Brak hisobotlari)
 export const defectReports = pgTable("defect_reports", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id").notNull(),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   quantity: integer("quantity").notNull(),
   defectType: varchar("defect_type", { length: 50 }).notNull(),
@@ -143,6 +121,9 @@ export const bomTemplates = pgTable("bom_templates", {
 export type BomTemplate = typeof bomTemplates.$inferSelect;
 
 // Technology Cards
+// EP-PP-131 (§07 #131) — Maket status cycle: draft -> sent -> revision_requested -> approved.
+export const maketStatusEnum = pgEnum("maket_status", ["draft", "sent", "revision_requested", "approved"]);
+
 export const technologyCards = pgTable("technology_cards", {
   id: serial("id").primaryKey(),
   productId: varchar("product_id").references(() => products.id, { onDelete: "set null" }),
@@ -162,6 +143,16 @@ export const technologyCards = pgTable("technology_cards", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
+  // EP-PP-131 (§07 #131) — maket status cycle + auto deadline shift (accumulated revision minutes).
+  maketStatus: maketStatusEnum("maket_status").notNull().default("draft"),
+  maketSentAt: timestamp("maket_sent_at", { withTimezone: true }),
+  maketRevisionStartedAt: timestamp("maket_revision_started_at", { withTimezone: true }),
+  maketRevisionMinutes: integer("maket_revision_minutes").notNull().default(0),
+  // 07-pp#119 owner-correction (docs/audit/QARORLAR-JURNALI-2026-07-11.md:85) — decoration
+  // type MUST be a structured field (taxonomy_entries.code, category='decoration_type'), not
+  // free text. Nullable: not every card decorates. Feeds PP AI-planning step 6 shift-assign +
+  // operator-assignment visibility (pp-ai-planning.service.ts).
+  decorationType: varchar("decoration_type", { length: 50 }),
 });
 
 export const insertTechnologyCardSchema = createInsertSchema(technologyCards).omit({ id: true, createdAt: true, updatedAt: true } as never);
@@ -184,6 +175,16 @@ export const materialNorms = pgTable("material_norms", {
   averageActualConsumption: numericMoney("average_actual_consumption"),
   calculatedByAI: boolean("calculated_by_ai").default(true),
   formula: text("formula"),
+  // APPROVED: egasi vizyon-qurish 2026-07-01, FAZA J (Bo'lim ombori + AI norma).
+  // Bo'lim-darajasidagi norma override (NULL = global/barcha bo'lim uchun norma).
+  // Qiymat-fazosi pos_movements.bulim bilan bir xil (erkin matn, FK yo'q).
+  departmentCode: varchar("department_code", { length: 50 }),
+  // 08-mes #4 / #106 — norma versiyalash (retro-buzilmaslik). version = norma avlodi;
+  // effective_date = o'sha avlod amalga kirgan sana. Sessiya started_at'da amalda bo'lgan
+  // (effective_date <= started_at) versiya start-session.handler tomonidan snapshot qilinadi.
+  // Migration: mes-norma-version-snapshot-2026-07-11.sql (material_norms ADD version/effective_date).
+  version: integer("version").notNull().default(1),
+  effectiveDate: date("effective_date").default(sql`CURRENT_DATE`),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -199,7 +200,8 @@ export type InsertMaterialNorm = z.infer<typeof insertMaterialNormSchema>;
 export const orderProductionHistory = pgTable("order_production_history", {
   id: serial("id").primaryKey(),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "set null" }),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id"),
   equipmentId: varchar("equipment_id").references(() => equipment.id, { onDelete: "set null" }),
   equipmentName: text("equipment_name"),
   masterId: integer("master_id"),
@@ -335,42 +337,8 @@ export type ProductMaster = typeof productMasters.$inferSelect;
 export const insertProductMasterSchema = createInsertSchema(productMasters).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertProductMaster = z.infer<typeof insertProductMasterSchema>;
 
-// Order Approvals (Buyurtma tasdiqlash tarixi)
-export const orderApprovals = pgTable("order_approvals", {
-  id: serial("id").primaryKey(),
-  orderId: varchar("order_id").notNull().references(() => papkaOrders.id, { onDelete: "cascade" }),
-  stage: varchar("stage", { length: 30 }).notNull(),
-  status: varchar("status", { length: 20 }).notNull().default("pending"),
-  approvedBy: integer("approved_by"),
-  approvedAt: timestamp("approved_at"),
-  stageData: jsonb("stage_data"),
-  designFileUrl: text("design_file_url"),
-  designVersion: varchar("design_version", { length: 20 }),
-  bomApproved: boolean("bom_approved"),
-  routingApproved: boolean("routing_approved"),
-  techCardApproved: boolean("tech_card_approved"),
-  qcTestId: varchar("qc_test_id").references(() => qcMaterialTests.id, { onDelete: "set null" }),
-  materialApproved: boolean("material_approved"),
-  advancePercentage: numericMoney("advance_percentage"),
-  advanceAmount: numericMoney("advance_amount"),
-  creditLimitOk: boolean("credit_limit_ok"),
-  debtStatusOk: boolean("debt_status_ok"),
-  comments: text("comments"),
-  rejectionReason: text("rejection_reason"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
-}, (t) => [
-  check("order_approvals_stage_chk", sql`${t.stage} IN ('design','technical','qc','finance')`),
-  check("order_approvals_status_chk", sql`${t.status} IN ('pending','approved','rejected','revision_requested')`),
-]);
-
-export const insertOrderApprovalSchema = createInsertSchema(orderApprovals, {
-  stage: z.enum(["design", "technical", "qc", "finance"]),
-  status: z.enum(["pending", "approved", "rejected", "revision_requested"]),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export type OrderApproval = typeof orderApprovals.$inferSelect;
-export type InsertOrderApproval = z.infer<typeof insertOrderApprovalSchema>;
+// NOTE: order_approvals jadvali kod-darajasida ulanmagan (dead) — Drizzle e'loni
+// olib tashlandi (2026-07-02). Jadvalning o'zi DB'da qoladi (Q-39: DROP TABLE yo'q).
 
 // Waste Records
 export const wasteRecords = pgTable("waste_records", {
@@ -486,66 +454,13 @@ export const aiPlanningDecisions = pgTable("ai_planning_decisions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const aiPlanningConfig = pgTable("ai_planning_config", {
-  id: serial("id").primaryKey(),
-  configKey: varchar("config_key", { length: 50 }).notNull().unique(),
-  configValue: text("config_value").notNull(),
-  description: text("description"),
-  // ── ADD-ONLY: live DB superset columns ──
-  autoApprovalThreshold: numericMoney("auto_approval_threshold"),
-  maxShiftHours: numericMoney("max_shift_hours"),
-  batchGroupingEnabled: boolean("batch_grouping_enabled"),
-  energyOptimizationWeight: numericMoney("energy_optimization_weight"),
-  changeoverMinutes: integer("changeover_minutes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
-});
-
 export const insertAiProductionPlanSchema = createInsertSchema(aiProductionPlans).omit({ id: true, createdAt: true, updatedAt: true, approvedAt: true } as never);
 export const insertAiPlanningDecisionSchema = createInsertSchema(aiPlanningDecisions).omit({ id: true, createdAt: true, executedAt: true } as never);
-export const insertAiPlanningConfigSchema = createInsertSchema(aiPlanningConfig).omit({ id: true, createdAt: true, updatedAt: true } as never);
 
 export type AiProductionPlan = typeof aiProductionPlans.$inferSelect;
 export type InsertAiProductionPlan = z.infer<typeof insertAiProductionPlanSchema>;
 export type AiPlanningDecision = typeof aiPlanningDecisions.$inferSelect;
 export type InsertAiPlanningDecision = z.infer<typeof insertAiPlanningDecisionSchema>;
-export type AiPlanningConfig = typeof aiPlanningConfig.$inferSelect;
-export type InsertAiPlanningConfig = z.infer<typeof insertAiPlanningConfigSchema>;
-
-// Equipment Maintenance
-export const equipmentMaintenance = pgTable("equipment_maintenance", {
-  id: serial("id").primaryKey(),
-  equipmentName: varchar("equipment_name", { length: 255 }).notNull(),
-  equipmentCode: varchar("equipment_code", { length: 50 }),
-  location: varchar("location", { length: 200 }),
-  maintenanceType: varchar("maintenance_type", { length: 30 }).notNull(),
-  scheduledDate: varchar("scheduled_date", { length: 20 }),
-  completedDate: varchar("completed_date", { length: 20 }),
-  frequency: varchar("frequency", { length: 30 }),
-  lastMaintenanceDate: varchar("last_maintenance_date", { length: 20 }),
-  nextMaintenanceDate: varchar("next_maintenance_date", { length: 20 }),
-  assignedTo: varchar("assigned_to"),
-  status: varchar("status", { length: 20 }).notNull().default("scheduled"),
-  cost: numericMoney("cost").default(0),
-  notes: text("notes"),
-  // ── ADD-ONLY: live DB superset columns ──
-  workCenterId: integer("work_center_id"),
-  type: varchar("type", { length: 30 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("equip_maint_type_chk", sql`${t.maintenanceType} IN ('PREVENTIVE','CORRECTIVE','PREDICTIVE','EMERGENCY')`),
-  check("equip_maint_freq_chk", sql`${t.frequency} IS NULL OR ${t.frequency} IN ('DAILY','WEEKLY','MONTHLY','QUARTERLY','SEMI_ANNUAL','ANNUAL')`),
-  check("equip_maint_status_chk", sql`${t.status} IN ('scheduled','in_progress','completed','overdue','cancelled')`),
-]);
-
-export const insertEquipmentMaintenanceSchema = createInsertSchema(equipmentMaintenance, {
-  maintenanceType: z.enum(["PREVENTIVE", "CORRECTIVE", "PREDICTIVE", "EMERGENCY"]),
-  frequency: z.enum(["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMI_ANNUAL", "ANNUAL"]).optional(),
-  status: z.enum(["scheduled", "in_progress", "completed", "overdue", "cancelled"]).default("scheduled"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type EquipmentMaintenance = typeof equipmentMaintenance.$inferSelect;
-export type InsertEquipmentMaintenance = z.infer<typeof insertEquipmentMaintenanceSchema>;
 
 // SOS Alerts
 export const sosAlerts = pgTable("sos_alerts", {
@@ -645,3 +560,177 @@ export const insertAssetInsuranceSchema = createInsertSchema(assetInsurance, {
 
 export type AssetInsurance = typeof assetInsurance.$inferSelect;
 export type InsertAssetInsurance = z.infer<typeof insertAssetInsuranceSchema>;
+
+// ============================================================
+// TECH CARD MASTER — child tables (docs/migration/06-pp-tech-card-master.sql)
+// APPROVED: owner (2026-06-18) — tables already live in DB (created by that migration);
+// this is the Drizzle mirror only (additive, no DDL). FK -> technologyCards.id (integer PK).
+// ============================================================
+
+// BOM (EP-PP-089) — MRP reads this.
+export const techCardBom = pgTable("tech_card_bom", {
+  id: serial("id").primaryKey(),
+  technologyCardId: integer("technology_card_id").notNull().references(() => technologyCards.id),
+  materialCode: varchar("material_code", { length: 50 }).notNull(),
+  quantity: numericMoney("quantity").notNull(),
+  unit: varchar("unit", { length: 10 }).notNull().default("kg"),
+  layer: varchar("layer", { length: 20 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTechCardBomSchema = createInsertSchema(techCardBom).omit({ id: true, createdAt: true } as never);
+export type TechCardBom = typeof techCardBom.$inferSelect;
+export type InsertTechCardBom = z.infer<typeof insertTechCardBomSchema>;
+
+// EP-PP-126 (§07 #132) — Konstruktor bosqichi marshrut holati (chizma → qolip → tayyor).
+export const constructionPhaseStatus = pgEnum("construction_phase_status", ["not_started", "drawing", "mold_making", "completed"]);
+
+// Marshrut (EP-PP-032..036) — 10/20/30 ops; machine bind + alt + norm + setup + scrap + min razryad.
+export const techCardRoutes = pgTable("tech_card_routes", {
+  id: serial("id").primaryKey(),
+  technologyCardId: integer("technology_card_id").notNull().references(() => technologyCards.id),
+  opSeq: integer("op_seq").notNull(),
+  operation: varchar("operation", { length: 100 }).notNull(),
+  machineId: integer("machine_id"),
+  altMachineId: integer("alt_machine_id"),
+  normPerHour: numericMoney("norm_per_hour"),
+  setupMinutes: integer("setup_minutes"),
+  scrapFixed: integer("scrap_fixed"),
+  scrapPct: numericMoney("scrap_pct"),
+  minRazryad: integer("min_razryad"),
+  // EP-PP-112 (§07 #118) — Oynakcha (PVC window) = alohida bosqich. operationSubtype='pvc_window'
+  // flags a route op as the window-patch stage; materialId links the PVX film it consumes
+  // (plain integer + DB-level FK to material_cards — same no-cross-file-FK convention as machineId).
+  operationSubtype: varchar("operation_subtype", { length: 30 }),
+  materialId: integer("material_id"),
+  isCore: boolean("is_core").default(false),
+  // EP-PP-126 (§07 #132) — Konstruktor/dizayn bosqichi (chizma+qolip): oldindan, alohida holat + davomiylik.
+  isConstructionPhase: boolean("is_construction_phase").notNull().default(false),
+  constructionStatus: constructionPhaseStatus("construction_status"),
+  constructionDurationMin: integer("construction_duration_min"),
+  // EP-PP-119 (§07 #125) — external stages (material prep / delivery): an external route step
+  // does NOT occupy a work center (machine_id NULL) and instead contributes lead time.
+  isExternal: boolean("is_external").notNull().default(false),
+  externalLeadTimeHours: numericMoney("external_lead_time_hours"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTechCardRouteSchema = createInsertSchema(techCardRoutes).omit({ id: true, createdAt: true } as never);
+export type TechCardRoute = typeof techCardRoutes.$inferSelect;
+export type InsertTechCardRoute = z.infer<typeof insertTechCardRouteSchema>;
+
+// Versiyalash (EP-PP-014/037) — every change = a new version snapshot.
+export const techCardVersions = pgTable("tech_card_versions", {
+  id: serial("id").primaryKey(),
+  technologyCardId: integer("technology_card_id").notNull().references(() => technologyCards.id),
+  version: integer("version").notNull(),
+  snapshot: jsonb("snapshot").notNull(),
+  changedBy: integer("changed_by"),
+  changedAt: timestamp("changed_at").defaultNow(),
+});
+
+export const insertTechCardVersionSchema = createInsertSchema(techCardVersions).omit({ id: true, changedAt: true } as never);
+export type TechCardVersion = typeof techCardVersions.$inferSelect;
+export type InsertTechCardVersion = z.infer<typeof insertTechCardVersionSchema>;
+
+// ============================================================
+// VISION-3340 #23 — PP order-level reason codes + real shift-plan persistence
+// APPROVED: egasi (owner) 2026-07-08 VISION-3340 #23. DDL mirror of
+// apps/api/src/shared/db/migrations/pp-reason-codes-shift-plans-2026-07-08.sql.
+// ============================================================
+
+// PP Reason Codes (buyurtma-darajasidagi sabab lug'ati) — structured, reusable
+// replacement for the free-text `reason` on the /pp/orders/:id/flags path.
+// Column shape mirrors downtime_reason_codes (pp-iot.ts). Seed nothing — the
+// reason vocabulary is owner master-data (Q-40).
+export const ppReasonCodes = pgTable("pp_reason_codes", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 30 }).notNull().unique(),
+  name: text("name").notNull(),
+  nameRu: text("name_ru"),
+  category: varchar("category", { length: 30 }).notNull(),
+  color: varchar("color", { length: 10 }).default("#808080"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_pp_reason_codes_active").on(t.isActive, t.sortOrder),
+]);
+
+export const insertPpReasonCodeSchema = createInsertSchema(ppReasonCodes, {
+  code: z.string().min(1, "Kod kerak"),
+  name: z.string().min(2, "Nom kerak"),
+  // No enum: PP reason categories are owner-defined master-data (not fabricated).
+  category: z.string().min(1, "Kategoriya kerak"),
+}).omit({ id: true, createdAt: true } as never);
+
+export type PpReasonCode = typeof ppReasonCodes.$inferSelect;
+export type InsertPpReasonCode = z.infer<typeof insertPpReasonCodeSchema>;
+
+// PP Shift Plans — real persistence target for the AI 7-step planner's step 6
+// (shift-assign), replacing its former hardcoded stub. One plan per
+// (work_center, shift_date, shift_type). work_center_id references the SERIAL
+// work_centers.id; the FK is enforced at DB level (kept as a plain integer here,
+// same as techCardRoutes.machineId, to avoid a cross-file FK import cycle).
+export const ppShiftPlans = pgTable("pp_shift_plans", {
+  id: serial("id").primaryKey(),
+  workCenterId: integer("work_center_id"),
+  shiftDate: date("shift_date"),
+  shiftType: varchar("shift_type", { length: 20 }),
+  targetQuantity: numericMoney("target_quantity"),
+  assignedEmployees: jsonb("assigned_employees"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("uq_pp_shift_plans_wc_date_type").on(t.workCenterId, t.shiftDate, t.shiftType),
+  index("idx_pp_shift_plans_shift_date").on(t.shiftDate),
+]);
+
+export const insertPpShiftPlanSchema = createInsertSchema(ppShiftPlans).omit({ id: true, createdAt: true } as never);
+export type PpShiftPlan = typeof ppShiftPlans.$inferSelect;
+export type InsertPpShiftPlan = z.infer<typeof insertPpShiftPlanSchema>;
+
+// ============================================================
+// VISION 07-pp #37 — Gang-run per-order acceptance act + lot-split brak
+// APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+// DDL mirror of apps/api/src/shared/db/migrations/pp-gang-runs-acceptance-brak-2026-07-11.sql.
+// A gang run groups several production orders printed on one physical gang sheet
+// (print_job_ref); on acceptance the run-total brak is split proportionally by each
+// member order's quantity (vision default proportional-by-quantity) and each order gets
+// its own generated acceptance-act reference. Mechanism-only — no owner data (Q-40).
+// ============================================================
+
+// Gang-run header — one physical print job over several production orders.
+export const ppGangRuns = pgTable("pp_gang_runs", {
+  id: serial("id").primaryKey(),
+  printJobRef: varchar("print_job_ref", { length: 80 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("open"),
+  totalBrakQty: numericMoney("total_brak_qty").notNull().default(0),
+  notes: text("notes"),
+  createdBy: integer("created_by"),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPpGangRunSchema = createInsertSchema(ppGangRuns).omit({ id: true, createdAt: true } as never);
+export type PpGangRun = typeof ppGangRuns.$inferSelect;
+export type InsertPpGangRun = z.infer<typeof insertPpGangRunSchema>;
+
+// Gang-run member — per-order acceptance act + this order's share of the run brak.
+export const ppGangRunOrders = pgTable("pp_gang_run_orders", {
+  id: serial("id").primaryKey(),
+  gangRunId: integer("gang_run_id").notNull().references(() => ppGangRuns.id, { onDelete: "cascade" }),
+  productionOrderId: integer("production_order_id").notNull(),
+  orderQuantity: numericMoney("order_quantity").notNull().default(0),
+  acceptanceActId: varchar("acceptance_act_id", { length: 60 }),
+  brakQty: numericMoney("brak_qty").notNull().default(0),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("uq_pp_gang_run_orders_run_order").on(t.gangRunId, t.productionOrderId),
+  index("idx_pp_gang_run_orders_order").on(t.productionOrderId),
+]);
+
+export const insertPpGangRunOrderSchema = createInsertSchema(ppGangRunOrders).omit({ id: true, createdAt: true } as never);
+export type PpGangRunOrder = typeof ppGangRunOrders.$inferSelect;
+export type InsertPpGangRunOrder = z.infer<typeof insertPpGangRunOrderSchema>;

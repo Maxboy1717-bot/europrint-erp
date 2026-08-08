@@ -12,6 +12,7 @@ import {
   KPI_RATING_THRESHOLDS,
   FORECAST,
   SLA_RESPONSE_HOURS,
+  DEFAULT_ADVANCE_PERCENT,
   SAFETY_STOCK_FACTOR,
   QUEUE_POLL_INTERVAL_MS,
   SMS_TOKEN_TTL_MS,
@@ -136,6 +137,14 @@ describe('business.constants', () => {
       ABC_SCORE_WEIGHT.margin +
       ABC_SCORE_WEIGHT.longevity;
     expect(total).toBeCloseTo(1.0, 10);
+  });
+
+  it('pins SD advance default to the owner-vision 70% (V-3340 #48 drift guard)', () => {
+    // Bug fixed by #48: the quotation->order conversion used a 30% fallback while the
+    // canonical new-order INSERT used 70%. Both now share DEFAULT_ADVANCE_PERCENT.
+    // If this ever changes, the two code paths must move together — hence the pin.
+    expect(DEFAULT_ADVANCE_PERCENT).toBe(70);
+    expect(typeof DEFAULT_ADVANCE_PERCENT).toBe('number');
   });
 
   it('exposes scalar misc constants with expected values when read', () => {

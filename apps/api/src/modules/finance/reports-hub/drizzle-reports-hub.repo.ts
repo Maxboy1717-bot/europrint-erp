@@ -5,7 +5,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { invoices, payments, budgets, gl_entries } from '@shared/db';
+import { invoices, payments, budgets, entries } from '@shared/db';
 import { count, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IReportsHubRepository } from './i-reports-hub.repo';
@@ -24,7 +24,10 @@ export class DrizzleReportsHubRepository implements IReportsHubRepository {
           total: count(),
           approved: sql<number>`COUNT(*) FILTER (WHERE status = 'approved')`,
         }).from(budgets),
-        db.select({ total: count() }).from(gl_entries),
+        // GL two-world (2026-07-14 fix): gl_entries has zero writers since the
+        // 2026-06-17..07-02 SAP#76 consolidation onto `entries` (ADR-003 canonical).
+        // Read from `entries` so this stat isn't permanently frozen at 0.
+        db.select({ total: count() }).from(entries),
       ]);
       return Ok({
         invoices: {

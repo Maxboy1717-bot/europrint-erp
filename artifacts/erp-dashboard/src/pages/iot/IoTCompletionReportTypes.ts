@@ -3,10 +3,9 @@
  * @description Types for IoTCompletionReport component.
  */
 
-import { CompletionReportData, IotLang } from "./iot-types";
+import { CompletionReportData } from "./iot-types";
 
 export interface IoTCompletionReportProps {
-  lang: IotLang;
   open: boolean;
   onClose: () => void;
   completionReport: CompletionReportData | null;
@@ -20,5 +19,4 @@ export interface StarRatingProps {
   value: number;
   onChange: (v: number) => void;
   label: string;
-  lang: IotLang;
 }

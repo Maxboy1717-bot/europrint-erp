@@ -42,4 +42,16 @@ export class SdOrderDepartmentsService {
   setMaterialStatus(orderId: number, reqId: string, status: string) {
     return this.repo.setMaterialStatus(orderId, reqId, status);
   }
+
+  setDieCode(orderId: number, moldId: string, dieCode: string) {
+    return this.repo.setDieCode(orderId, moldId, dieCode);
+  }
+
+  getSharedDieWarnings() {
+    return this.repo.getSharedDieWarnings();
+  }
+
+  setCodePrefix(orderId: number, moldId: string, codePrefix: string) {
+    return this.repo.setCodePrefix(orderId, moldId, codePrefix);
+  }
 }

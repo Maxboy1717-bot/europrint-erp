@@ -16,10 +16,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Globe, Pencil, Trash2, Eye, Sparkles, Send, Newspaper } from "lucide-react";
+import { Plus, Globe, Pencil, Trash2, Eye, Sparkles, Send, Newspaper, Package } from "lucide-react";
 import type { BlogPost } from "@shared/schema";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { NewsItem } from "./MarketingWebsiteCMSTypes";
+import { MarketingWebsiteCMSCatalog } from "./MarketingWebsiteCMSCatalog";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -54,9 +55,9 @@ export default function MarketingWebsiteCMS() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/website/blog"] });
       setOpen(false); resetForm();
-      toast({ title: "Blog post yaratildi" });
+      toast({ title: t("blogPostYaratildi") });
     },
-    onError: (e: unknown) => toast({ title: "Xatolik", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: t("xatolik"), description: (e as Error).message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -64,7 +65,7 @@ export default function MarketingWebsiteCMS() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/website/blog"] });
       setOpen(false); resetForm();
-      toast({ title: "Post yangilandi" });
+      toast({ title: t("postYangilandi") });
     },
   });
 
@@ -72,7 +73,7 @@ export default function MarketingWebsiteCMS() {
     mutationFn: (id: string) => apiRequest("DELETE", `/api/marketing/website/blog/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/website/blog"] });
-      toast({ title: "Post o'chirildi" });
+      toast({ title: t("postOchirildi") });
     },
   });
 
@@ -80,7 +81,7 @@ export default function MarketingWebsiteCMS() {
     mutationFn: (id: string) => apiRequest("POST", `/api/marketing/website/blog/${id}/publish`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/website/blog"] });
-      toast({ title: "Post nashr qilindi" });
+      toast({ title: t("postNashrQilindi") });
     },
   });
 
@@ -96,9 +97,9 @@ export default function MarketingWebsiteCMS() {
         seoDescription: (data.seoDescription as string) || prev.seoDescription,
         tags: Array.isArray(data.tags) ? (data.tags as string[]).join(", ") : prev.tags,
       }));
-      toast({ title: "AI maqola tayyor" });
+      toast({ title: t("aiMaqolaTayyor") });
     },
-    onError: () => toast({ title: "AI xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("aiXatolik"), variant: "destructive" }),
   });
 
   const resetForm = () => {
@@ -146,7 +147,7 @@ export default function MarketingWebsiteCMS() {
               <Button data-testid="button-create-blog"><Plus className="h-4 w-4 mr-1" />{t("yangiMaqola")}</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-              <DialogHeader><DialogTitle className="text-[18px] font-semibold">{editId ? "Maqolani tahrirlash" : "Yangi Blog Maqola"}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="text-[18px] font-semibold">{editId ? t("maqolaniTahrirlash") : t("yangiBlogMaqola")}</DialogTitle></DialogHeader>
               <Tabs defaultValue="content">
                 <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
                   <TabsTrigger value="content">{t("kontent")}</TabsTrigger>
@@ -174,12 +175,12 @@ export default function MarketingWebsiteCMS() {
                     <Button variant={aiLang === "ru" ? "default" : "outline"} onClick={() => setAiLang("ru")}>{t("ruscha")}</Button>
                   </div>
                   <Button onClick={() => aiMutation.mutate({ topic: aiTopic, language: aiLang })} disabled={!aiTopic || aiMutation.isPending} data-testid="button-ai-generate-blog">
-                    <Sparkles className="h-4 w-4 mr-1" />{aiMutation.isPending ? "Yaratilmoqda..." : "AI bilan yaratish"}
+                    <Sparkles className="h-4 w-4 mr-1" />{aiMutation.isPending ? t("yaratilmoqda") : t("aiBilanYaratish")}
                   </Button>
                 </TabsContent>
               </Tabs>
               <Button onClick={handleSubmit} disabled={!form.titleUz || createMutation.isPending || updateMutation.isPending} className="w-full mt-3" data-testid="button-submit-blog">
-                {editId ? "Saqlash" : "Yaratish"}
+                {editId ? t("saqlash") : t("yaratishAmal")}
               </Button>
             </DialogContent>
           </Dialog>
@@ -190,6 +191,7 @@ export default function MarketingWebsiteCMS() {
         <TabsList>
           <TabsTrigger value="blog">{t("blogMaqolalar")}</TabsTrigger>
           <TabsTrigger value="news"><Newspaper className="h-4 w-4 mr-1" />{t("yangiliklar")}</TabsTrigger>
+          <TabsTrigger value="catalog"><Package className="h-4 w-4 mr-1" />{t("katalog", "Katalog")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="blog" className="space-y-4 mt-4">
@@ -231,7 +233,7 @@ export default function MarketingWebsiteCMS() {
                   <CardContent>
                     {p.excerpt && <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{p.excerpt}</p>}
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant={p.isPublished ? "default" : "secondary"}>{p.isPublished ? "Nashr qilingan" : "Qoralama"}</Badge>
+                      <Badge variant={p.isPublished ? "default" : "secondary"}>{p.isPublished ? t("nashrQilinganBadge") : t("qoralamaBadge")}</Badge>
                       {p.isAiGenerated && <Badge variant="outline"><Sparkles className="h-3 w-3 mr-1" />AI</Badge>}
                       <Badge variant="outline"><Eye className="h-3 w-3 mr-1" />{p.viewCount || 0}</Badge>
                       {Array.isArray(p.tags) && (p.tags as string[]).map((t, i) => (
@@ -259,7 +261,7 @@ export default function MarketingWebsiteCMS() {
                       <CardTitle className="text-base">{item.title}</CardTitle>
                       {item.is_published !== undefined && (
                         <Badge variant={item.is_published ? "default" : "secondary"}>
-                          {item.is_published ? "Nashr qilingan" : "Qoralama"}
+                          {item.is_published ? t("nashrQilinganBadge") : t("qoralamaBadge")}
                         </Badge>
                       )}
                     </div>
@@ -280,13 +282,17 @@ export default function MarketingWebsiteCMS() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="catalog" className="mt-4">
+          <MarketingWebsiteCMSCatalog />
+        </TabsContent>
       </Tabs>
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
         title={t("maqolaniOchirish")}
         description={t("ushbuBlogMaqolasiniOchirishniTasdiqlaysizmi")}
-        confirmText="O'chirish"
+        confirmText={t("ochirishAmal")}
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}
       />

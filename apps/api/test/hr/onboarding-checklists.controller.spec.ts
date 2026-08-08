@@ -10,6 +10,7 @@
  */
 
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { OnboardingChecklistsController } from '../../src/modules/hr/onboarding-checklists/onboarding-checklists.controller';
 import { OnboardingChecklistsService } from '../../src/modules/hr/onboarding-checklists/onboarding-checklists.service';
 import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
@@ -17,6 +18,7 @@ import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
 describe('OnboardingChecklistsController — Phase 4 Task 4.5', () => {
   let controller: OnboardingChecklistsController;
   let svc: jest.Mocked<OnboardingChecklistsService>;
+  const i18n = { t: jest.fn((key: string) => key) } as unknown as I18nService;
 
   beforeEach(() => {
     svc = {
@@ -25,7 +27,7 @@ describe('OnboardingChecklistsController — Phase 4 Task 4.5', () => {
       createForUser: jest.fn(),
       updateProgress: jest.fn(),
     } as unknown as jest.Mocked<OnboardingChecklistsService>;
-    controller = new OnboardingChecklistsController(svc);
+    controller = new OnboardingChecklistsController(svc, i18n);
   });
 
   describe('list', () => {

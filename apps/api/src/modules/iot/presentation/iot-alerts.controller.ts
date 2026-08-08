@@ -17,7 +17,6 @@ import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { IotMainService } from '../application/iot-main.service';
 import { CameraAlertsQuerySchema } from './dto/iot-camera.dto';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 const CreateAlertSchema = z.object({
   type:     z.string().max(100).optional(),
@@ -26,8 +25,8 @@ const CreateAlertSchema = z.object({
   source:   z.string().max(200).optional(),
 }).passthrough();
 
-const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
-const IOT_WRITE = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin'];
+const IOT_READ = ['super_admin', 'director', 'production_manager', 'technologist'];
+const IOT_WRITE = ['super_admin', 'director', 'production_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

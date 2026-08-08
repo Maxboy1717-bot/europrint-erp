@@ -3,11 +3,35 @@
  * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
  */
 
-import { serial, pgTable, varchar, text, integer, timestamp, numeric } from "drizzle-orm/pg-core";
+import { serial, pgTable, varchar, text, integer, timestamp, numeric, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
 
+
+
+// RESTORED (2026-07-02): aiProviderConfigs pgTable — this table definition was
+// missing from lib/db while its real, live consumer
+// (apps/api/src/modules/ai/infrastructure/repositories/drizzle-ai-provider-config.repo.ts)
+// still performs real select/insert/upsert DB queries against ai_provider_configs
+// via @workspace/db (Q-29 verified: NOT dead code — pre-existing regression,
+// unrelated to the orfan-cleanup pass; columns match live DB exactly).
+export const aiProviderConfigs = pgTable("ai_provider_configs", {
+  id: serial("id").primaryKey(),
+  provider: varchar("provider", { length: 50 }).notNull().unique(),
+  apiKeyHint: varchar("api_key_hint", { length: 100 }),
+  defaultModel: varchar("default_model", { length: 100 }),
+  dailyBudgetUsd: numeric("daily_budget_usd", { precision: 10, scale: 2 }).notNull().default("50.00"),
+  isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedByUserId: integer("updated_by_user_id").references(() => users.id, { onDelete: "set null" }),
+});
+
+export const insertAiProviderConfigSchema = createInsertSchema(aiProviderConfigs).omit({ id: true, updatedAt: true } as never);
+
+export type AiProviderConfig = typeof aiProviderConfigs.$inferSelect;
+export type InsertAiProviderConfig = z.infer<typeof insertAiProviderConfigSchema>;
 
 
 export const aiUsageLogs = pgTable("ai_usage_logs", {

@@ -15,7 +15,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export type EPModuleColor = "sd" | "pp" | "hr" | "warehouse" | "fi" | "primary";
+export type EPModuleColor = "sd" | "pp" | "hr" | "warehouse" | "fi" | "org" | "primary";
 
 interface EPCardProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Enable hover-lift + icon tile rotation on hover. */
@@ -34,6 +34,7 @@ const moduleVar: Record<EPModuleColor, string> = {
   hr:        "var(--mod-hr)",
   warehouse: "var(--mod-warehouse)",
   fi:        "var(--mod-fi)",
+  org:       "var(--mod-org)",
   primary:   "var(--ep-primary)",
 };
 

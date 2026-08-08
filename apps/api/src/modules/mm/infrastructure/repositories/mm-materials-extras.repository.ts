@@ -16,11 +16,15 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 @Injectable()
 export class MmMaterialsExtrasRepository implements IMmMaterialsExtrasRepo {
   async listRawMaterials(limit: number, offset: number, search?: string): Promise<Result<Row[]>>  {
+  // T21-B1 #24 master-data converge: raw_materials (10) ╳ material_cards (31, kanonik).
+  // ADDITIV int-link rm.material_card_id → material_cards.id surfaced via LEFT JOIN
+  // (mc.kod AS canonical_card_kod) so consumers see the canonical card without
+  // breaking the working raw_materials valuation. Q-39/Q-46: behavior preserved.
   try {
       const pat = search ? `%${search}%` : null;
       return pat
-        ? exec(sql`SELECT rm.*, w.name AS warehouse_name FROM raw_materials rm LEFT JOIN warehouses w ON w.id = rm.warehouse_id WHERE rm.name ILIKE ${pat} AND rm.is_active = true ORDER BY rm.name LIMIT ${limit} OFFSET ${offset}`)
-        : exec(sql`SELECT rm.*, w.name AS warehouse_name FROM raw_materials rm LEFT JOIN warehouses w ON w.id = rm.warehouse_id WHERE rm.is_active = true ORDER BY rm.name LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+        ? exec(sql`SELECT rm.*, w.name AS warehouse_name, mc.kod AS canonical_card_kod FROM raw_materials rm LEFT JOIN warehouses w ON w.id = rm.warehouse_id LEFT JOIN material_cards mc ON mc.id = rm.material_card_id WHERE rm.name ILIKE ${pat} AND rm.is_active = true ORDER BY rm.name LIMIT ${limit} OFFSET ${offset}`)
+        : exec(sql`SELECT rm.*, w.name AS warehouse_name, mc.kod AS canonical_card_kod FROM raw_materials rm LEFT JOIN warehouses w ON w.id = rm.warehouse_id LEFT JOIN material_cards mc ON mc.id = rm.material_card_id WHERE rm.is_active = true ORDER BY rm.name LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 

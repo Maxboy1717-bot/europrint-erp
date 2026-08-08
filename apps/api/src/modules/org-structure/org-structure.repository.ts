@@ -24,14 +24,21 @@ export class OrgStructureRepository {
   findOneWithDetails = (id: number) => this.queries.findOneWithDetails(id);
   getParentLevel = (pid: unknown) => this.queries.getParentLevel(pid);
   existsById = (id: number) => this.queries.existsById(id);
+  availableUsers = () => this.queries.availableUsers();
   getApprovalChain = (id: number) => this.queries.getApprovalChain(id);
   getDirectManager = (id: number) => this.queries.getDirectManager(id);
   getTelegramGroupForNode = (id: number) => this.queries.getTelegramGroupForNode(id);
+  // P51 — derive manager up the parent chain (vizyon §2.3 Q1/Q4)
+  deriveManagerForNode = (nodeId: number) => this.queries.deriveManagerForNode(nodeId);
 
   // ─── Mutations ───────────────────────────────────────────────────────────
   create = (dto: Record<string, unknown>, lvl: number) => this.mutations.create(dto, lvl);
   updateFromDto = (id: number, dto: Record<string, unknown>) => this.mutations.updateFromDto(id, dto);
   deactivate = (id: number) => this.mutations.deactivate(id);
   move = (id: number, parent: number | null, lvl: number) => this.mutations.move(id, parent, lvl);
-  assignUser = (uid: number, nid: number) => this.mutations.assignUser(uid, nid);
+  assignUser = (uid: number, nid: number, stake: number | null = null, overload = false) =>
+    this.mutations.assignUser(uid, nid, stake, overload);
+  removeUser = (uid: number, nid: number) => this.mutations.removeUser(uid, nid);
+  // P51 — backfill manager_id from the org tree (DATA-gated, idempotent)
+  backfillManagerIds = (dryRun: boolean) => this.mutations.backfillManagerIds(dryRun);
 }

@@ -13,10 +13,10 @@ import {
 import {
   History, Eye, Clock, Ban, CheckCircle, XCircle,
 } from "lucide-react";
-import { ReservationRequestData, Translations } from "./types";
+import { ReservationRequestData, TFunc, STATUS_I18N_KEY } from "./types";
 
 interface HistoryTabProps {
-  t: Translations;
+  t: TFunc;
   requests: ReservationRequestData[];
   isLoading: boolean;
   STATUS_COLORS: Record<string, string>;
@@ -43,7 +43,7 @@ export function HistoryTab({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <History className="w-5 h-5" />
-          {t.history.title}
+          {t("Reservation.historyTitle")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -58,14 +58,14 @@ export function HistoryTab({
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">{t.history.id}</TableHead>
-                  <TableHead>{t.history.type}</TableHead>
-                  <TableHead>{t.history.qty}</TableHead>
-                  <TableHead>{t.history.reserved}</TableHead>
-                  <TableHead>{t.history.confidence}</TableHead>
-                  <TableHead>{t.history.status}</TableHead>
-                  <TableHead>{t.history.date}</TableHead>
-                  <TableHead className="text-right">{t.history.actions}</TableHead>
+                  <TableHead className="w-[100px]">{t("Reservation.historyId")}</TableHead>
+                  <TableHead>{t("Reservation.historyType")}</TableHead>
+                  <TableHead>{t("Reservation.historyQty")}</TableHead>
+                  <TableHead>{t("Reservation.historyReserved")}</TableHead>
+                  <TableHead>{t("Reservation.historyConfidence")}</TableHead>
+                  <TableHead>{t("Reservation.historyStatus")}</TableHead>
+                  <TableHead>{t("Reservation.historyDate")}</TableHead>
+                  <TableHead className="text-right">{t("Reservation.historyActions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -90,7 +90,7 @@ export function HistoryTab({
                     </TableCell>
                     <TableCell>
                       <Badge className={STATUS_COLORS[req.status] || ""}>
-                        {t.statuses[req.status as keyof typeof t.statuses] || req.status}
+                        {STATUS_I18N_KEY[req.status] ? t(STATUS_I18N_KEY[req.status]) : req.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs">
@@ -133,7 +133,7 @@ export function HistoryTab({
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-12">
                       <History className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground">{t.history.noRequests}</p>
+                      <p className="text-muted-foreground">{t("Reservation.historyNoRequests")}</p>
                     </TableCell>
                   </TableRow>
                 )}

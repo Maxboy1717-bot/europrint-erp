@@ -12,6 +12,11 @@ import type { Result } from '@common/result';
 
 type Row = Record<string, unknown>;
 
+export interface SafetyKpis {
+  ppeCompliancePercent: number;
+  expiringTrainings: number;
+}
+
 export interface IHrDashboardExtraRepo {
   getResignationStats(): Promise<Result<Row[]>>;
   getRiskScores(): Promise<Result<Row[]>>;
@@ -19,6 +24,8 @@ export interface IHrDashboardExtraRepo {
   getSafetyIncidents(): Promise<Result<Row[]>>;
   getOffboardingStats(): Promise<Result<Row>>;
   getContractsExpiring(days: number): Promise<Result<Row[]>>;
+  getContracts(page: number, limit: number): Promise<Result<Row[]>>;
+  getSafetyKpis(): Promise<Result<SafetyKpis>>;
 }
 
 export const HR_DASHBOARD_EXTRA_REPO = Symbol('HR_DASHBOARD_EXTRA_REPO');

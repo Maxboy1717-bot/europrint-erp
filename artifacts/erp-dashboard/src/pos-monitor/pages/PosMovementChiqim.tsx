@@ -1,224 +1,280 @@
-/** @module PosMovementChiqim @description Route-level page component for barcode-driven outbound movements (chiqim). Owns all state, scan logic, validation, and submission. */
+/**
+ * @module PosMovementChiqim
+ * @description Scanner-only outbound (CHIQIM) terminal page — egasi spec 2026-06-27.
+ *
+ * Oqim (FAQAT SKANER, qo'lda material-tanlash YO'Q):
+ *   skaner/Enter → GET /api/pos/stock/issuable/:barcode → material + jami qoldiq + bron →
+ *   bo'sh qoldiq ko'rsatiladi. Bron > 0 → QIZIL ogohlantirish 'bron qilingan, faqat bo'sh
+ *   qoldiq'; super_admin/direktor "Bronni buzish" tugmasi bilan override qiladi.
+ *   Keyin: miqdor (ekran-klaviatura/tarozi) → sabab/buyurtma → katta qizil TASDIQ.
+ *
+ * Q-43 real saqlash: TASDIQ → movementsApi.create (movementTypeCode=EXTERNAL_OUT,
+ * fromWarehouseId, lines[], notes=sabab) → mavjud chiqim BE oqimi (buzilmaydi, Q-46).
+ */
 
 import { useState, useCallback, useRef } from "react";
-import { useLocation } from "wouter";
-import { barcodeApi, movementsApi, notificationsApi } from "../api/pos-monitor.api";
-import { useBarcode } from "../hooks/useBarcode";
+import { useLocation, useSearch } from "wouter";
+import { stockApi, movementsApi, type IssuableResult } from "../api/pos-monitor.api";
+import { useHardwareScanner } from "../hooks/useHardwareScanner";
 import PosBarcodeScanner from "../components/PosBarcodeScanner";
 
 import {
-  type MovementTypeCode, type ScannedLine, type Toast, type BarcodeResult,
-  mkKey, playBeep,
+  type ScannedLine, type Toast,
+  CHIQIM_REASONS, CHIQIM_TYPE_META, resolveChiqimType,
+  mkKey, playBeep, exceedsAllowed,
 } from "./PosMovementChiqimTypes";
-import { ToastContainer, NoStockModal } from "./PosMovementChiqimHelpers";
-import { MovementTypeSelector, ScanZone, ContextFields, BottomBar } from "./PosMovementChiqimLeft";
+import {
+  ToastContainer, ScanNotFoundModal, NumericKeypad,
+  initialReason, type ReasonState,
+} from "./PosMovementChiqimHelpers";
+import { WarehouseBar, DestinationWarehouseBar, ScanZone } from "./PosMovementChiqimLeft";
 import { LinesPanel, SuccessScreen } from "./PosMovementChiqimRight";
 import { useTranslation } from '@/lib/i18n';
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function PosMovementChiqim() {
   const { t } = useTranslation("common");
   const [, navigate] = useLocation();
 
-  // Movement type
-  const [selectedType, setSelectedType] = useState<MovementTypeCode>("EXTERNAL_OUT");
+  // PosHome tugmalari ?type= bilan keladi (KOCHIRISH=INTERNAL_TRANSFER, QAYTARISH=
+  // INTERNAL_RETURN, ZARAR=DAMAGE); ruxsat-ro'yxatdan tashqari qiymat → EXTERNAL_OUT.
+  const search = useSearch();
+  const movementType = resolveChiqimType(new URLSearchParams(search).get("type"));
+  const typeMeta = CHIQIM_TYPE_META[movementType];
 
-  // Scanned lines
-  const [lines, setLines] = useState<ScannedLine[]>([]);
-
-  // Warehouse / employee / reason
   const [fromWarehouseId, setFromWarehouseId] = useState("");
+  // Audit 2026-08-08: INTERNAL_TRANSFER uchun manzil ombor — avval umuman yo'q edi
+  // (docs/audit/POS-KIRIM-CHIQIM-VA-MES-JADVAL-TAHLILI-2026-08-08.md §A.3).
   const [toWarehouseId, setToWarehouseId] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
-  const [employeeName, setEmployeeName] = useState("");
-  const [returnReason, setReturnReason] = useState("");
-  const [notes, setNotes] = useState("");
-  const [damagePhotos, setDamagePhotos] = useState<File[]>([]);
+  const isTransfer = movementType === "INTERNAL_TRANSFER";
+  const [lines, setLines] = useState<ScannedLine[]>([]);
+  const [reason, setReason] = useState<ReasonState>(initialReason());
+  // VISION-3340 #60: ixtiyoriy foto-dalil URL → pos_movements.photo_evidence_url.
+  const [photoUrl, setPhotoUrl] = useState("");
 
-  // UI state
+  // Skan + UI holati
+  const [scanValue, setScanValue] = useState("");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [scanFlash, setScanFlash] = useState<"success" | "error" | null>(null);
-  const [noStockModal, setNoStockModal] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [globalError, setGlobalError] = useState("");
   const [submitted, setSubmitted] = useState<{ id: number; documentNumber?: string } | null>(null);
 
-  const qtyInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  // Ekran-klaviatura (qty) target qator
+  const [keypadKey, setKeypadKey] = useState<string | null>(null);
+  const [keypadDraft, setKeypadDraft] = useState("");
 
-  // ── Toast helpers ──────────────────────────────────────────────────────────
+  const scanningRef = useRef(false);
 
+  // ── Toast ────────────────────────────────────────────────────────────────
   const addToast = useCallback((message: string, type: Toast["type"]) => {
     const id = crypto.randomUUID();
     setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+    setTimeout(() => setToasts(prev => prev.filter(x => x.id !== id)), 4000);
+  }, []);
+  const dismissToast = useCallback((id: string) => setToasts(prev => prev.filter(x => x.id !== id)), []);
+
+  const flash = useCallback((kind: "success" | "error") => {
+    playBeep(kind === "success");
+    setScanFlash(kind);
+    setTimeout(() => setScanFlash(null), 600);
   }, []);
 
-  const dismissToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  }, []);
-
-  // ── Scan handler ───────────────────────────────────────────────────────────
-
+  // ── Scan handler — issuable (material + qoldiq + bron) ─────────────────────
   const handleScan = useCallback(async (barcode: string) => {
-    if (!barcode.trim()) return;
-    if (!fromWarehouseId.trim()) { addToast("Avval manba omborini tanlang", "error"); return; }
-    if (scanning) return;
+    const code = barcode.trim();
+    if (!code) return;
+    if (!fromWarehouseId.trim()) { addToast(t("avvalManbaOmboriniTanlang", "Avval manba omborini tanlang"), "error"); return; }
+    if (scanningRef.current) return;
 
+    scanningRef.current = true;
     setScanning(true);
+    setScanValue("");
     try {
-      const scan = await barcodeApi.scan({ barcode: barcode.trim(), warehouseId: fromWarehouseId });
-      const mc = scan && scan.found ? scan.materialCard : undefined;
-      const result: BarcodeResult | null = mc
-        ? {
-            id: mc.id, materialCardId: mc.id, name: mc.xomAshyo, nameUz: mc.xomAshyo,
-            code: mc.kod, sku: mc.kod, unit: mc.unitOfMeasure,
-            currentQty: mc.currentStock, availableQty: mc.availableStock,
-            materialType: mc.materialType, unitPrice: mc.unitPrice, lastPrice: mc.lastPurchasePrice,
-          }
-        : null;
+      const res: IssuableResult = await stockApi.getIssuable(code, fromWarehouseId);
 
-      if (!result || (!result.id && !result.materialCardId)) {
-        playBeep(false); setScanFlash("error"); setTimeout(() => setScanFlash(null), 600);
-        addToast(`Barcode topilmadi: ${barcode}`, "error");
-        void notificationsApi.getAll().catch(() => { /* noop */ });
+      if (!res || !res.found || !res.materialCardId) {
+        flash("error");
+        setNotFound(code);
         return;
       }
 
-      const matId    = result.materialCardId ?? result.id ?? 0;
-      const matName  = result.nameUz ?? result.name ?? "Noma'lum material";
-      const matCode  = result.code ?? result.sku ?? "";
-      const avail    = result.availableQty ?? result.currentQty ?? 0;
-      const matType  = (result.materialType?.toLowerCase() ?? "consumable") as "asset" | "consumable";
-      const price    = result.unitPrice ?? result.lastPrice ?? 0;
-
-      if (matType === "asset" && avail <= 0) {
-        playBeep(false); setScanFlash("error"); setTimeout(() => setScanFlash(null), 600);
-        setNoStockModal(matName); return;
-      }
-      if (avail <= 0) addToast(`Qoldiq yo'q: ${matName}`, "warning");
-
+      const matId = res.materialCardId;
       const existing = lines.find(l => l.materialCardId === matId);
       if (existing) {
-        setLines(prev => prev.map(l => l.materialCardId === matId ? { ...l, quantity: l.quantity + 1 } : l));
-        playBeep(true); setScanFlash("success"); setTimeout(() => setScanFlash(null), 600);
-        addToast(`${matName} miqdori oshirildi`, "success"); return;
+        // Bir xil material qayta skanlandi → miqdorni 1 oshir (cheklov ichida)
+        setLines(prev => prev.map(l => {
+          if (l.materialCardId !== matId) return l;
+          const cap = l.overridden ? l.onHand : l.freeStock;
+          const next = Math.min(l.quantity + 1, cap > 0 ? cap : l.quantity + 1);
+          return { ...l, quantity: next };
+        }));
+        flash("success");
+        addToast(t("materialMiqdoriOshirildi", { material: existing.materialName }), "success");
+        return;
       }
 
       const newLine: ScannedLine = {
-        _key: mkKey(), barcode: barcode.trim(), materialCardId: matId, materialName: matName,
-        materialCode: matCode, availableQty: avail, materialType: matType,
-        quantity: 1, unitPrice: price, batchId: result.batchId, batchNumber: result.batchNumber,
+        _key: mkKey(),
+        barcode: code,
+        materialCardId: matId,
+        materialName: res.materialName ?? t("nomalumMaterial", "Noma'lum material"),
+        materialCode: res.materialCode ?? "",
+        unit: res.unit ?? "dona",
+        warehouseId: res.warehouseId,
+        warehouseCode: res.warehouseCode,
+        onHand: res.onHand,
+        reserved: res.reserved,
+        freeStock: res.freeStock,
+        blocked: res.blocked,
+        canOverride: res.canOverride,
+        overridden: false,
+        reservations: res.reservations,
+        quantity: res.freeStock > 0 ? 1 : 0,
       };
       setLines(prev => [...prev, newLine]);
-      playBeep(true); setScanFlash("success"); setTimeout(() => setScanFlash(null), 600);
-      addToast(`${matName} qo'shildi`, "success");
-      setTimeout(() => { const ref = qtyInputRefs.current[newLine._key]; if (ref) { ref.focus(); ref.select(); } }, 80);
-
+      flash("success");
+      if (res.blocked) {
+        addToast(`${newLine.materialName} — ${t("bronOgohlantirish", "bron qilingan, faqat bo'sh qoldiq")}`, "warning");
+      } else {
+        addToast(t("materialQoshildi", { material: newLine.materialName }), "success");
+      }
     } catch {
-      playBeep(false); setScanFlash("error"); setTimeout(() => setScanFlash(null), 600);
-      addToast(`Barcode topilmadi: ${barcode}`, "error");
+      flash("error");
+      setNotFound(code);
     } finally {
+      scanningRef.current = false;
       setScanning(false);
     }
-  }, [fromWarehouseId, scanning, lines, addToast]);
+  }, [fromWarehouseId, lines, addToast, flash, t]);
 
-  useBarcode(async (m) => { await handleScan(m.barcode ?? m.code ?? ""); });
+  // USB/Bluetooth skaner (wedge+HID+Serial) — avval useBarcode ikki marta lookup qilardi
+  // (o'zining barcodeApi.scan() + shu yerdagi stockApi.getIssuable(), natija tashlanardi).
+  // useHardwareScanner sof input-detektor — bitta lookup, kamroq kechikish (Q-46: handleScan
+  // biznes-mantig'i o'zgarmadi, faqat wedge-input mexanizmi almashtirildi).
+  useHardwareScanner({ onScan: (e) => { void handleScan(e.barcode); } });
 
-  // ── Line helpers ───────────────────────────────────────────────────────────
-
-  function updateQty(key: string, val: string) {
-    const n = parseFloat(val);
-    if (isNaN(n) || n < 0) return;
-    setLines(prev => prev.map(l => l._key === key ? { ...l, quantity: n } : l));
+  // ── Line ops ───────────────────────────────────────────────────────────────
+  function openKeypad(key: string) {
+    const line = lines.find(l => l._key === key);
+    setKeypadKey(key);
+    setKeypadDraft(line ? String(line.quantity) : "");
   }
-
-  function removeLine(key: string) {
-    setLines(prev => prev.filter(l => l._key !== key));
+  function commitKeypad() {
+    if (!keypadKey) return;
+    const n = parseFloat(keypadDraft || "0");
+    if (!isNaN(n) && n >= 0) {
+      setLines(prev => prev.map(l => l._key === keypadKey ? { ...l, quantity: n } : l));
+    }
+    setKeypadKey(null); setKeypadDraft("");
   }
-
-  // ── Totals ─────────────────────────────────────────────────────────────────
-
-  const totalItems = lines.reduce((s, l) => s + l.quantity, 0);
-  const totalValue = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+  function overrideLine(key: string) {
+    setLines(prev => prev.map(l => l._key === key ? { ...l, overridden: true } : l));
+    addToast(t("bronBuzildiToast", "Bron buzildi — favqulodda ruxsat berildi"), "warning");
+  }
+  function removeLine(key: string) { setLines(prev => prev.filter(l => l._key !== key)); }
 
   // ── Validation ─────────────────────────────────────────────────────────────
-
   function validate(): string | null {
-    if (lines.length === 0) return "Kamida bitta mahsulot skanerlangan bo'lishi shart";
-    if (!fromWarehouseId.trim()) return "Manba omborini tanlang";
-    if ((selectedType === "INTERNAL_ISSUE" || selectedType === "INTERNAL_TRANSFER") && !toWarehouseId.trim())
-      return "Manzil omborini tanlang";
-    if (selectedType === "INTERNAL_RETURN" && !returnReason.trim()) return "Qaytarish sababi kiritilishi shart";
-    if (selectedType === "DAMAGE" && !notes.trim()) return "Zarar tavsifi kiritilishi shart";
-    const assetNoStock = lines.find(l => l.materialType === "asset" && l.availableQty <= 0);
-    if (assetNoStock) return `"${assetNoStock.materialName}" — qoldiq yo'q, harakatni olib tashlab yuboring`;
+    if (lines.length === 0) return t("kamidaBittaMahsulotSkanerlangan", "Kamida bitta mahsulot skanerlang");
+    if (!fromWarehouseId.trim()) return t("manbaOmboriniTanlang", "Manba omborini tanlang");
+    // Audit 2026-08-08: transfer uchun manzil ombor MAJBURIY — bo'lmasa material
+    // manba ombordan kamayadi-yu, hech qayerga real qo'shilmaydi (§A.3).
+    if (isTransfer && !toWarehouseId.trim()) return t("manzilOmboriniTanlang", "Manzil omborini tanlang");
+    if (isTransfer && toWarehouseId.trim() === fromWarehouseId.trim()) return t("manzilManbadanFarqliBolsin", "Manzil ombori manba ombordan farqli bo'lsin");
+    const zero = lines.find(l => l.quantity <= 0);
+    if (zero) return `${zero.materialName}: ${t("miqdorNolBolmasin", "miqdor 0 dan katta bo'lsin")}`;
+    const over = lines.find(l => exceedsAllowed(l));
+    if (over) {
+      return over.blocked && !over.overridden
+        ? `${over.materialName}: ${t("bronBlokTasdiqlanmaydi", "bron qilingan, faqat bo'sh qoldiq chiqariladi")}`
+        : `${over.materialName}: ${t("miqdorQoldiqdanKopXato", "miqdor mavjud qoldiqdan ko'p")}`;
+    }
+    if (reason.reasonCode === "ORDER" && !reason.orderRef.trim()) return t("buyurtmaRaqamiMajburiy", "Buyurtma raqami majburiy");
+    if (reason.reasonCode === "OTHER" && !reason.note.trim()) return t("sababIzohMajburiy", "Sabab izohi majburiy");
     return null;
   }
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
+  function buildNotes(): string {
+    const r = CHIQIM_REASONS.find(x => x.code === reason.reasonCode);
+    const parts = [r?.label ?? reason.reasonCode];
+    if (reason.reasonCode === "ORDER" && reason.orderRef.trim()) parts.push(`#${reason.orderRef.trim()}`);
+    if (reason.note.trim()) parts.push(reason.note.trim());
+    if (lines.some(l => l.overridden)) parts.push(t("bronOverrideIzoh", "[bron buzildi — favqulodda]"));
+    return parts.join(" — ");
+  }
 
-  const handleSubmit = useCallback(async (submit: boolean) => {
+  // ── Submit (Q-43 real saqlash → mavjud BE chiqim oqimi) ───────────────────
+  const handleSubmit = useCallback(async () => {
     const err = validate();
     if (err) { setGlobalError(err); return; }
     setGlobalError(""); setSubmitting(true);
 
     const payload: Record<string, unknown> = {
-      movementTypeCode: selectedType, fromWarehouseId, notes: notes || undefined,
-      lines: lines.map(l => ({ materialCardId: l.materialCardId, quantity: l.quantity, unitPrice: l.unitPrice, batchId: l.batchId })),
-      submit,
+      movementTypeCode: movementType,
+      fromWarehouseId,
+      // Audit 2026-08-08: avval hech qachon yuborilmasdi — transfer manzilsiz yaratilardi.
+      ...(isTransfer ? { toWarehouseId } : {}),
+      notes: buildNotes(),
+      // VISION-3340 #60: ixtiyoriy foto-dalil URL (bo'lmasa yuborilmaydi → BE NULL yozadi).
+      photoEvidenceUrl: photoUrl.trim() || undefined,
+      // BE (pos-movement.service): INTERNAL_RETURN uchun returnReason MAJBURIY —
+      // sabab-katalog matni (buildNotes) qaytarish sababi sifatida yoziladi.
+      ...(movementType === "INTERNAL_RETURN" ? { returnReason: buildNotes() } : {}),
+      lines: lines.map(l => ({ materialCardId: l.materialCardId, quantity: l.quantity })),
+      submit: true,
+      // Savdo-sity referens H-8 naqshi: double-tap "Tasdiqlash" bir xil chiqimni ikki marta yaratmasin.
+      idempotencyKey: crypto.randomUUID(),
     };
-    if (selectedType === "INTERNAL_ISSUE" || selectedType === "INTERNAL_TRANSFER") payload.toWarehouseId = toWarehouseId;
-    if (selectedType === "INTERNAL_ISSUE" && employeeId) payload.receivedByEmployeeId = parseInt(employeeId, 10);
-    if (selectedType === "INTERNAL_RETURN") payload.returnReason = returnReason;
 
     try {
       const result = await movementsApi.create(payload) as { id: number; documentNumber?: string };
       setSubmitted(result ?? { id: 0 });
     } catch (e) {
-      setGlobalError(e instanceof Error ? e.message : "Xatolik yuz berdi");
+      setGlobalError(e instanceof Error ? e.message : t("xatolikYuzBerdi", "Xatolik yuz berdi"));
     } finally {
       setSubmitting(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedType, fromWarehouseId, toWarehouseId, employeeId, returnReason, notes, lines]);
+  }, [fromWarehouseId, lines, reason, movementType, photoUrl]);
 
   function resetForm() {
-    setLines([]); setSubmitted(null); setFromWarehouseId("");
-    setToWarehouseId(""); setNotes(""); setReturnReason("");
+    setLines([]); setSubmitted(null); setReason(initialReason()); setScanValue(""); setPhotoUrl(""); setToWarehouseId("");
   }
 
-  // ── Success screen ─────────────────────────────────────────────────────────
-
+  // ── Success ────────────────────────────────────────────────────────────────
   if (submitted) {
     return (
       <SuccessScreen
         documentNumber={submitted.documentNumber}
-        selectedType={selectedType}
+        successTitle={t(typeMeta.successKey, typeMeta.successFallback)}
+        typeBadge={t(typeMeta.badgeKey, typeMeta.badgeFallback)}
         onNewChiqim={resetForm}
         onGoToList={() => navigate("/pos-monitor/movements")}
       />
     );
   }
 
+  const keypadLine = keypadKey ? lines.find(l => l._key === keypadKey) : null;
+  const keypadMax = keypadLine ? (keypadLine.overridden ? keypadLine.onHand : keypadLine.freeStock) : 0;
+
   // ── Render ─────────────────────────────────────────────────────────────────
-
-  const selectedTypeInfo = { label: "", color: "" };
-  const found = [
-    { code: "EXTERNAL_OUT", label: "Tashqi chiqim", color: "#EF4444" },
-    { code: "INTERNAL_ISSUE", label: "Ichki berish", color: "#F59E0B" },
-    { code: "INTERNAL_RETURN", label: "Ichki qaytarish", color: "#06B6D4" },
-    { code: "INTERNAL_TRANSFER", label: "Ichki ko'chirish", color: "#8B5CF6" },
-    { code: "DAMAGE", label: "Zarar", color: "#DC2626" },
-  ].find(t => t.code === selectedType);
-  if (found) { selectedTypeInfo.label = found.label; selectedTypeInfo.color = found.color; }
-
   return (
     <div className="pos-fade-in">
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-      {noStockModal && <NoStockModal materialName={noStockModal} onClose={() => setNoStockModal(null)} />}
+      {notFound && <ScanNotFoundModal barcode={notFound} onClose={() => setNotFound(null)} />}
+      {keypadLine && (
+        <NumericKeypad
+          value={keypadDraft}
+          unit={keypadLine.unit}
+          maxAllowed={keypadMax}
+          onChange={setKeypadDraft}
+          onConfirm={commitKeypad}
+          onClose={() => { setKeypadKey(null); setKeypadDraft(""); }}
+        />
+      )}
       {showCamera && (
         <PosBarcodeScanner
           onResult={async r => { setShowCamera(false); if (r.barcode) await handleScan(r.barcode); }}
@@ -226,60 +282,70 @@ export default function PosMovementChiqim() {
         />
       )}
 
-      {/* Page header */}
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <button className="pos-btn pos-btn-ghost" style={{ padding: "6px 12px" }} onClick={() => navigate("/pos-monitor/movements")}>{t("orqaga")}</button>
+        <button className="pos-btn pos-btn-ghost" style={{ padding: "6px 12px" }} onClick={() => navigate("/pos-monitor/movements")}>
+          {t("orqaga", "Orqaga")}
+        </button>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("chiqimBarcodeSkaner")}</h2>
-          <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 2 }}>{t("faqatBarcodeSkanerOrqaliQolda")}</div>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t(typeMeta.titleKey, typeMeta.titleFallback)}</h2>
+          <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 2 }}>
+            {t("faqatSkanerChiqim", "Chiqim faqat skaner orqali — qo'lda material tanlash yo'q")}
+          </div>
         </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-          <span className="pos-badge" style={{ background: `${selectedTypeInfo.color}18`, color: selectedTypeInfo.color, fontSize: 11 }}>
-            {selectedTypeInfo.label}
-          </span>
-          {scanning && <span className="pos-badge pos-badge-blue pos-live" style={{ fontSize: 11 }}>{t("skanerlanyapti")}</span>}
+          <span className="pos-badge pos-badge-red" style={{ fontSize: 11 }}>{t(typeMeta.badgeKey, typeMeta.badgeFallback)}</span>
+          {scanning && <span className="pos-badge pos-badge-blue pos-live" style={{ fontSize: 11 }}>{t("skanerlanyapti", "Skanerlanyapti")}</span>}
         </div>
       </div>
 
       {/* Error banner */}
       {globalError && (
-        <div className="pos-offline-banner" style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)", color: "var(--pos-danger)", marginBottom: 16 }}>
+        <div className="pos-offline-banner" style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)", color: "var(--pos-action-chiqim-dark)", marginBottom: 16 }}>
           ⚠️ {globalError}
           <button className="pos-btn pos-btn-ghost" style={{ marginLeft: "auto", padding: "2px 8px", fontSize: 11 }} onClick={() => setGlobalError("")}>✕</button>
         </div>
       )}
 
       {/* Two-column layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "60fr 40fr", gap: 16, alignItems: "start" }}>
-        {/* Left panel */}
+      <div style={{ display: "grid", gridTemplateColumns: "55fr 45fr", gap: 16, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <MovementTypeSelector selectedType={selectedType} onSelect={setSelectedType} />
-          <ScanZone fromWarehouseId={fromWarehouseId} scanFlash={scanFlash} scanning={scanning} onCameraOpen={() => setShowCamera(true)} />
-          <ContextFields
-            selectedType={selectedType}
-            returnReason={returnReason} onReturnReasonChange={setReturnReason}
-            notes={notes} onNotesChange={setNotes}
-            damagePhotos={damagePhotos} onDamagePhotosChange={setDamagePhotos}
+          <WarehouseBar fromWarehouseId={fromWarehouseId} onFromWarehouseChange={setFromWarehouseId} />
+          {isTransfer && (
+            <DestinationWarehouseBar
+              fromWarehouseId={fromWarehouseId}
+              toWarehouseId={toWarehouseId}
+              onToWarehouseChange={setToWarehouseId}
+            />
+          )}
+          <ScanZone
+            fromWarehouseId={fromWarehouseId}
+            scanValue={scanValue}
+            onScanValueChange={setScanValue}
+            onScanSubmit={handleScan}
+            scanFlash={scanFlash}
+            scanning={scanning}
+            onCameraOpen={() => setShowCamera(true)}
           />
         </div>
-        {/* Right panel */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <LinesPanel lines={lines} totalItems={totalItems} totalValue={totalValue} qtyInputRefs={qtyInputRefs} onUpdateQty={updateQty} onRemoveLine={removeLine} />
+          <LinesPanel
+            lines={lines}
+            reason={reason}
+            onReasonChange={setReason}
+            photoUrl={photoUrl}
+            onPhotoUrlChange={setPhotoUrl}
+            reasons={CHIQIM_REASONS}
+            onOpenQty={openKeypad}
+            onOverride={overrideLine}
+            onRemove={removeLine}
+            submitting={submitting}
+            confirmLabel={t(typeMeta.confirmKey, typeMeta.confirmFallback)}
+            onSubmit={() => void handleSubmit()}
+          />
         </div>
       </div>
 
-      <BottomBar
-        selectedType={selectedType}
-        fromWarehouseId={fromWarehouseId} onFromWarehouseChange={setFromWarehouseId}
-        toWarehouseId={toWarehouseId} onToWarehouseChange={setToWarehouseId}
-        employeeName={employeeName} onEmployeeChange={(id, name) => { setEmployeeId(id); setEmployeeName(name); }}
-        notes={notes} onNotesChange={setNotes}
-        submitting={submitting} linesCount={lines.length}
-        onSaveDraft={() => void handleSubmit(false)}
-        onSubmit={() => void handleSubmit(true)}
-      />
-
-      {/* CSS animations */}
       <style>{`
         @keyframes chiqim-scan-beam {
           0%   { top: 20%; opacity: 0.9; }

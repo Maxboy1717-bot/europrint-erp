@@ -28,6 +28,7 @@ export class ChatNotificationRepository {
         room_name:   chatRooms.name,
         sender_name: appUsers.full_name,
         last_read_at: chatMembers.lastReadAt,
+        mentioned_user_ids: chatMessages.mentionedUserIds,
       })
         .from(chatMessages)
         .innerJoin(chatMembers, and(
@@ -47,7 +48,9 @@ export class ChatNotificationRepository {
     if (isErr(res)) return Err(res.error);
     const items: ChatNotificationItem[] = Array.isArray(res.data) ? (Array.isArray(res.data) ? res.data : []).map((r) => ({
       id:        String(r.id),
-      type:      'MESSAGE' as const,
+      type:      (Array.isArray(r.mentioned_user_ids) && (r.mentioned_user_ids as unknown[]).map(String).includes(String(userId)))
+        ? 'MENTION' as const
+        : 'MESSAGE' as const,
       roomId:    String(r.room_id),
       messageId: String(r.id),
       roomName:  String(r.room_name ?? ''),
@@ -130,40 +133,33 @@ export class ChatNotificationRepository {
   }
 
   async findTasksForUser(userId: number): Promise<Result<MessageTask[]>> {
-    const res = await safeCall(async () => {
-      return db.select({
-        id:          chatMessageTasks.id,
-        room_id:     chatMessageTasks.roomId,
-        message_id:  chatMessageTasks.messageId,
-        title:       chatMessageTasks.title,
-        assigned_to: chatMessageTasks.assignedTo,
-        due_date:    chatMessageTasks.dueDate,
-        priority:    chatMessageTasks.priority,
-        status:      chatMessageTasks.status,
-        created_at:  chatMessageTasks.createdAt,
-      })
-        .from(chatMessageTasks)
-        .innerJoin(chatMessages, eq(chatMessages.id, chatMessageTasks.messageId))
-        .innerJoin(chatMembers, and(
-          eq(chatMembers.roomId, chatMessages.roomId),
-          sql`${chatMembers.userId}::int = ${userId}`,
-        ))
-        .orderBy(sql`${chatMessageTasks.createdAt} DESC`)
-        .limit(50);
-    });
-    if (isErr(res)) return Ok([]);
-    const tasks: MessageTask[] = Array.isArray(res.data) ? (Array.isArray(res.data) ? res.data : []).map((r) => ({
-      id:         String(r.id),
-      roomId:     String(r.room_id ?? ''),
-      messageId:  String(r.message_id ?? ''),
-      title:      String(r.title ?? ''),
-      assignedTo: r.assigned_to ? String(r.assigned_to) : null,
-      dueDate:    r.due_date ? String(r.due_date) : null,
-      priority:   String(r.priority ?? 'medium'),
-      status:     String(r.status ?? 'open'),
-      createdAt:  String(r.created_at),
-    })) : [];
-    return Ok(tasks);
+    try {
+      // Raw SQL: DB has integer types (id, message_id, assigned_to) — Drizzle schema has varchar (mismatch)
+      const r = await db.execute(sql`
+        SELECT
+          t.id, t.room_id, t.message_id, t.title, t.assigned_to,
+          t.due_date, t.priority, t.status, t.created_at, t.created_by
+        FROM chat_message_tasks t
+        INNER JOIN chat_messages m ON m.id = t.message_id
+        INNER JOIN chat_members mb ON mb.room_id::text = m.room_id::text AND mb.user_id::int = ${userId}
+        ORDER BY t.created_at DESC
+        LIMIT 50
+      `);
+      const rows: Row[] = ((r as { rows?: Row[] }).rows ?? []);
+      const tasks: MessageTask[] = Array.isArray(rows) ? rows.map((row) => ({
+        id:         String(row['id'] ?? ''),
+        roomId:     String(row['room_id'] ?? ''),
+        messageId:  String(row['message_id'] ?? ''),
+        title:      String(row['title'] ?? ''),
+        assignedTo: row['assigned_to'] ? String(row['assigned_to']) : null,
+        dueDate:    row['due_date'] ? String(row['due_date']) : null,
+        priority:   String(row['priority'] ?? 'medium'),
+        status:     String(row['status'] ?? 'open'),
+        createdAt:  String(row['created_at'] ?? ''),
+        createdBy:  row['created_by'] ? String(row['created_by']) : null,
+      })) : [];
+      return Ok(tasks);
+    } catch (e: unknown) { return Ok([]); }
   }
 
   async checkMemberForRoom(callerId: number, roomId: string): Promise<Result<boolean>> {
@@ -177,25 +173,50 @@ export class ChatNotificationRepository {
   }
 
   async messageInRoom(messageId: string, roomId: string): Promise<Result<boolean>> {
+    // chat_messages.id is integer in DB (Drizzle schema has varchar) — cast for safety
     const res = await safeCall(async () =>
       db.select({ id: chatMessages.id }).from(chatMessages)
-        .where(and(eq(chatMessages.id, messageId), eq(chatMessages.roomId, roomId)))
+        .where(and(
+          sql`${chatMessages.id}::text = ${messageId}`,
+          sql`${chatMessages.roomId}::text = ${roomId}`,
+        ))
         .limit(1)
     );
     if (isErr(res)) return Err(res.error);
     return Ok(Array.isArray(res.data) && res.data.length > 0);
   }
 
-  async insertTask(messageId: string, title: string, assignedTo: string | null, dueDate: string | null, priority: string): Promise<Result<Row>> {
+  async insertTask(
+    messageId: string, title: string, assignedTo: string | null,
+    dueDate: string | null, priority: string, roomId?: string,
+    createdBy?: string, kanbanCardId?: string | null,
+  ): Promise<Result<Row>> {
     try {
-      const rows = await db.insert(chatMessageTasks).values({
-        messageId:  messageId,
-        title,
-        assignedTo: assignedTo ?? null,
-        dueDate:    dueDate ?? null,
-        priority,
-      }).returning();
-      return Ok((rows[0] ?? {}) as Row);
+      // DB has integer types (id SERIAL, message_id int, assigned_to int)
+      // Drizzle schema has varchar — use raw SQL to match actual DB schema
+      const msgIdInt = parseInt(messageId, 10);
+      if (isNaN(msgIdInt)) return Err("messageId raqam bo'lishi kerak");
+      const assignedToInt = assignedTo ? parseInt(assignedTo, 10) : null;
+      const createdByStr = createdBy ?? null;
+      // Owner 2026-07-13: yaratilgan haqiqiy Kanban kartaga bog'lam (traceability).
+      const kanbanCardInt = kanbanCardId ? parseInt(kanbanCardId, 10) : null;
+      const r = await db.execute(sql`
+        INSERT INTO chat_message_tasks (message_id, title, assigned_to, due_date, priority, status, room_id, created_by, kanban_card_id)
+        VALUES (
+          ${msgIdInt},
+          ${title},
+          ${assignedToInt},
+          ${dueDate ? sql`${dueDate}::date` : sql`NULL`},
+          ${priority ?? 'medium'},
+          'open',
+          ${roomId ?? null},
+          ${createdByStr},
+          ${kanbanCardInt}
+        )
+        RETURNING id, message_id, title, assigned_to, due_date, priority, status, created_at, room_id, created_by, kanban_card_id
+      `);
+      const row = ((r as { rows?: Row[] }).rows ?? [])[0] ?? {};
+      return Ok(row as Row);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
 

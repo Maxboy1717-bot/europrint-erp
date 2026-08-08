@@ -1,0 +1,12 @@
+-- APPROVED: egasi 2026-07-02 vizyonni toliq qilish (MASTER-REJA-VIZYON-2026-07-02.md, band 0.5)
+-- Muammo: GET /api/public/categories 503 — Drizzle `productCategories` sxemasi
+--   (lib/db/src/schema/pp/pp-enhanced.ts) `updated_at` ustunini so'raydi,
+--   lekin jonli `product_categories` jadvalida bu ustun yo'q edi
+--   (information_schema bilan tasdiqlandi 2026-07-03: id/name/name_ru/slug/description/
+--   description_ru/image_url/parent_id/sort_order/is_active/created_at/sort/active/deleted_at
+--   — updated_at YO'Q).
+-- Yechim: additive ALTER — ustun qo'shildi (Drizzle sxemasini DB'ga moslash o'rniga,
+--   chunki boshqa DB-superset ustunlar — sort/active/deleted_at — xuddi shu naqsh bilan
+--   avval qo'shilgan, izoh: "convergence: live-DB columns added (additive)").
+-- FAQAT ADDITIV: ADD COLUMN IF NOT EXISTS. DESTRUCTIVE amal YO'Q. Idempotent.
+ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;

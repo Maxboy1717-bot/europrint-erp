@@ -7,10 +7,11 @@ import { z } from 'zod';
 import { MAX_NOTES_LENGTH, MAX_NAME_LENGTH } from '@common/constants/app.constants';
 
 export const HrCheckInSchema = z.object({
-  employeeId:     z.number().int().positive(),
-  attendanceDate: z.string().optional(),
-  checkInTime:    z.string().optional(),
-  source:         z.string().max(50).optional(),
+  employeeId:          z.number().int().positive(),
+  attendanceDate:      z.string().optional(),
+  checkInTime:         z.string().optional(),
+  source:              z.string().max(50).optional(),
+  scheduledStartTime:  z.string().regex(/^\d{2}:\d{2}$/).optional(),  // "HH:MM"
 });
 export type HrCheckInDto = z.infer<typeof HrCheckInSchema>;
 
@@ -44,8 +45,11 @@ export const HrAssignOrgFunctionsSchema = z.object({
 });
 export type HrAssignOrgFunctionsDto = z.infer<typeof HrAssignOrgFunctionsSchema>;
 
+// C9.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): uncapped array on a JSON @Body — a caller could
+// submit an arbitrarily large batch (memory/DoS), bypassing the global multipart file-size cap
+// since this isn't a file upload. Bound matches the sibling fix in compat-body.dto.ts.
 export const HrImportEmployeesSchema = z.object({
-  employees: z.array(z.record(z.string(), z.unknown())).optional(),
+  employees: z.array(z.record(z.string(), z.unknown())).max(1000).optional(),
 });
 export type HrImportEmployeesDto = z.infer<typeof HrImportEmployeesSchema>;
 
@@ -101,9 +105,13 @@ export type HrConflictReportDto = z.infer<typeof HrConflictReportSchema>;
 export const HrEmployeeSkillSchema = z.object({
   employee_id:       z.number().int().positive(),
   skill_name:        z.string().min(1).max(MAX_NAME_LENGTH),
+  // Audit 2026-08-08: `employee_skills.skill_category` jonlida NOT NULL, DEFAULT yo'q —
+  // yubormasdan INSERT doim xato berardi. skill_catalog.category'dan real qiymat keladi.
+  skill_category:    z.string().min(1).max(50),
   proficiency_level: z.enum(['beginner', 'intermediate', 'advanced', 'expert']),
   proficiency_score: z.number().min(0).max(100),
   certified_date:    z.string().optional(),
+  notes:             z.string().max(MAX_NOTES_LENGTH).optional(),
 });
 export type HrEmployeeSkillDto = z.infer<typeof HrEmployeeSkillSchema>;
 
@@ -166,13 +174,29 @@ export const HrSafetyTrainingSchema = z.object({
 export type HrSafetyTrainingDto = z.infer<typeof HrSafetyTrainingSchema>;
 
 // P1.23.4: accept FE field aliases; make strict fields optional
+//
+// HR Nazorat fix (2026-07-13, verified live: POST /api/hr/safety/hazard-zones ALWAYS
+// returned 400 "Validation failed"): zone_name was declared here WITHOUT .optional() —
+// but HRSafetyDialogs.tsx ZoneDialog's real <Input {...form.register("zoneName")}/> only
+// ever sends camelCase `zoneName`, never snake_case `zone_name`. The comment above
+// ("make strict fields optional") was the intent but zone_name itself was never actually
+// relaxed, so the Zod pipe rejected every real submission before the controller's
+// zone_name ?? zoneName fallback ever ran. Fixed by making zone_name optional too and
+// requiring at least one of the two via .refine() (same pattern as the FE's own
+// TrainingSchema trainingId/trainingName refine in HRSafetyTypes.ts).
 export const HrHazardZoneSchema = z.object({
-  zone_name:     z.string().min(1).max(MAX_NAME_LENGTH),
-  zoneName:      z.string().optional(),           // camelCase alias
+  zone_name:     z.string().min(1).max(MAX_NAME_LENGTH).optional(),
+  zoneName:      z.string().min(1).max(MAX_NAME_LENGTH).optional(),  // camelCase alias (FE's real field)
   zone_code:     z.string().max(50).optional(),
   zoneCode:      z.string().optional(),           // camelCase alias
   department_id: z.number().int().positive().optional(),
-  hazard_level:  z.enum(['low', 'medium', 'high', 'extreme']).optional().default('low'),
+  // HR Nazorat fix (2026-07-13, verified live): .default('low') here made Zod fill
+  // hazard_level='low' whenever the FE only sent riskLevel (its real field) — so the
+  // controller's `body.hazard_level ?? body.riskLevel` fallback never reached riskLevel
+  // (hazard_level was never actually undefined post-parse). Every zone silently saved
+  // as risk_level='low' no matter what the user picked. Default moved to the repository
+  // layer (hr-compat-safety.repository.ts createHazardZone already does `?? 'low'`).
+  hazard_level:  z.enum(['low', 'medium', 'high', 'extreme']).optional(),
   riskLevel:     z.enum(['low', 'medium', 'high', 'critical']).optional(),  // FE alias
   required_ppe:  z.string().max(MAX_NOTES_LENGTH).optional(),
   requiredPpe:   z.string().optional(),           // camelCase alias
@@ -180,7 +204,10 @@ export const HrHazardZoneSchema = z.object({
   maxOccupancy:  z.number().int().positive().optional(),  // camelCase alias
   location:      z.string().optional(),           // FE uses this
   hazardType:    z.string().optional(),           // FE uses this
-}).passthrough();
+  description:   z.string().optional(),           // FE uses this (HR Nazorat fix 2026-07-13)
+}).passthrough().refine(d => d.zone_name || d.zoneName, {
+  message: 'zone_name yoki zoneName talab qilinadi', path: ['zoneName'],
+});
 export type HrHazardZoneDto = z.infer<typeof HrHazardZoneSchema>;
 
 export const HrPpeComplianceSchema = z.object({
@@ -207,6 +234,11 @@ export const HrCreateEmployeeSchema = z.object({
   departmentId:     z.string().optional(),
   positionId:       z.string().optional(),
   employeeCode:     z.string().optional(),
+  // EmployeeDialog.tsx (FE Add-Employee form, "Tabel raqami" field) posts this key,
+  // not `employeeCode` — accept it explicitly so the user-entered value isn't
+  // silently discarded and replaced by the auto-generated EMP-<timestamp> fallback
+  // in HrEmployeesController.createEmployee() (bug #3 fix, 2026-07-13).
+  employeeId:       z.string().optional(),
   hireDate:         z.string().optional(),
   salary:           z.number().positive().optional(),
   employmentStatus: z.string().optional(),
@@ -219,6 +251,8 @@ export const HrUpdateEmployeeSchema = z.object({
   middleName:       z.string().max(MAX_NAME_LENGTH).optional(),
   departmentId:     z.string().optional(),
   positionId:       z.string().optional(),
+  employeeCode:     z.string().optional(),
+  employeeId:       z.string().optional(),  // FE alias, see HrCreateEmployeeSchema note
   hireDate:         z.string().optional(),
   salary:           z.number().positive().optional(),
   employmentStatus: z.string().optional(),
@@ -269,3 +303,49 @@ export const UpdatePipSchema = z.object({
   outcome: z.string().max(2000).optional(),
 });
 export type UpdatePipDto = z.infer<typeof UpdatePipSchema>;
+
+/** Razryad assignment: xodimni org_function kartasiga biriktirish */
+export const HrAssignCardSchema = z.object({
+  org_function_id: z.number().int().positive(),
+});
+export type HrAssignCardDto = z.infer<typeof HrAssignCardSchema>;
+
+// ---------------------------------------------------------------------------
+// HR — Adaptatsiya (moslashuv) checklist (3.14)
+// ---------------------------------------------------------------------------
+
+export const HrAdaptationProgramCreateSchema = z.object({
+  title:          z.string().min(1).max(MAX_NAME_LENGTH),
+  title_ru:       z.string().min(1).max(MAX_NAME_LENGTH).optional(),
+  description:    z.string().max(MAX_NOTES_LENGTH).optional(),
+  position_id:    z.number().int().positive().optional(),
+  department_id:  z.number().int().positive().optional(),
+  duration:       z.number().int().positive().max(365).optional(),
+  duration_type:  z.enum(['days', 'weeks', 'months']).optional(),
+  mentor_required: z.boolean().optional(),
+}).passthrough();
+export type HrAdaptationProgramCreateDto = z.infer<typeof HrAdaptationProgramCreateSchema>;
+
+export const HrAdaptationRecordCreateSchema = z.object({
+  employee_id:  z.number().int().positive(),
+  program_id:   z.number().int().positive().optional(),
+  mentor_id:    z.number().int().positive().optional(),
+  start_date:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD format').optional(),
+}).passthrough();
+export type HrAdaptationRecordCreateDto = z.infer<typeof HrAdaptationRecordCreateSchema>;
+
+export const HrAdaptationMilestoneUpdateSchema = z.object({
+  status:         z.enum(['pending', 'completed', 'skipped']).optional(),
+  notes:          z.string().max(MAX_NOTES_LENGTH).optional(),
+  verified_by:    z.number().int().positive().optional(),
+});
+export type HrAdaptationMilestoneUpdateDto = z.infer<typeof HrAdaptationMilestoneUpdateSchema>;
+
+export const HrAdaptationRecordUpdateSchema = z.object({
+  status:              z.enum(['active', 'completed', 'failed', 'paused']).optional(),
+  mentor_id:           z.number().int().positive().optional(),
+  professional_master_id: z.number().int().positive().optional(),
+  current_phase:       z.string().max(50).optional(),
+  notes:               z.string().max(MAX_NOTES_LENGTH).optional(),
+});
+export type HrAdaptationRecordUpdateDto = z.infer<typeof HrAdaptationRecordUpdateSchema>;

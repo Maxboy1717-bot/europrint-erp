@@ -10,12 +10,15 @@ export type SoStatusType =
   | 'draft'
   | 'pending_approval'
   | 'approved'
+  | 'confirmed'
   | 'pending_advance'
+  | 'pending_material'
   | 'ready_for_planning'
   | 'in_planning'
   | 'completed_planning'
   | 'ready_for_production'
   | 'in_production'
+  | 'in_progress'
   | 'ready_for_shipment'
   | 'shipped'
   | 'delivered'
@@ -30,9 +33,9 @@ export class SoStatus extends ValueObject<SoStatusType> {
 
   static create(value: string): Result<SoStatus> {
     const validStatuses: SoStatusType[] = [
-      'draft', 'pending_approval', 'approved', 'pending_advance',
+      'draft', 'pending_approval', 'approved', 'confirmed', 'pending_advance', 'pending_material',
       'ready_for_planning', 'in_planning', 'completed_planning',
-      'ready_for_production', 'in_production', 'ready_for_shipment',
+      'ready_for_production', 'in_production', 'in_progress', 'ready_for_shipment',
       'shipped', 'delivered', 'closed', 'cancelled', 'on_hold',
     ];
     if (!validStatuses.includes(value as SoStatusType)) {

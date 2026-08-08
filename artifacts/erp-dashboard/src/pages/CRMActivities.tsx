@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
+import { queueCrmActivity } from "@/lib/erp-offline-db";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 import { Plus, Search } from "lucide-react";
@@ -53,17 +54,28 @@ export default function CRMActivities() {
 
   const createActivityMutation = useMutation({
     mutationFn: async (data: NewActivityState) => {
-      return apiRequest("POST", "/api/crm/activities", {
+      const payload = {
         ...data,
         dealId:      data.dealId      ? parseInt(data.dealId)      : null,
         contactId:   data.contactId   ? parseInt(data.contactId)   : null,
         scheduledAt: data.scheduledAt || null,
-      });
+      };
+      // vision 13-crm#50: activity capture works offline (queued + auto-synced
+      // on reconnect, server-wins).
+      if (!navigator.onLine) {
+        await queueCrmActivity(payload);
+        return { __offlineQueued: true };
+      }
+      return apiRequest("POST", "/api/crm/activities", payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/crm/activities"] });
+    onSuccess: (res: unknown) => {
       setIsCreateOpen(false);
       setNewActivity(INITIAL_NEW_ACTIVITY);
+      if ((res as { __offlineQueued?: boolean } | null)?.__offlineQueued) {
+        toast({ title: "📵 Oflayn saqlandi", description: "Tarmoq tiklanganda avtomatik yuboriladi" });
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/crm/activities"] });
       toast({ title: t("activityCreated") });
     },
     onError: () => {

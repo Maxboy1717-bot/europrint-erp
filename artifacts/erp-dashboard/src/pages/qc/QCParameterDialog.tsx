@@ -13,7 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 ;
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useUndoDelete } from "@/components/undo-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -69,7 +68,6 @@ interface QCParameterDialogProps {
 export function QCParameterDialog({ open, onClose, category, editingParameter }: QCParameterDialogProps) {
   const { t } = useTranslation("common");
   const { toast } = useToast();
-  const { showUndoToast } = useUndoDelete();
   const { t: tCommon } = useTranslation('common');
 
   const parameterForm = useForm<z.infer<typeof parameterSchema>>({

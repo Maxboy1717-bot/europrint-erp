@@ -26,7 +26,13 @@ export const productionOrders = pgTable('production_orders', {
   productId: text('product_id'),
   quantity: decimal('quantity', { precision: 15, scale: 4 }).notNull(),
   unit: text('unit'),
-  status: text('status').notNull().default('draft'),
+  // Item #81: default was 'draft', which is not in production_orders_status_chk's 13-value
+  // list — matches the live column default ('created'::character varying) instead. No live
+  // writer ever relied on the JS default (all real inserts set status explicitly), so this is
+  // a pure schema-accuracy fix, not a behavior change.
+  status: text('status').notNull().default('created'),
+  // EP-PP-085 "Очеред" — operator ko'radigan stanok-ichi navbat raqami (Batch 5 Item 4).
+  queueSequence: integer('queue_sequence'),
   plannedStart: ts('planned_start'),
   plannedEnd: ts('planned_end'),
   actualStart: ts('actual_start'),
@@ -51,25 +57,39 @@ export const routingOperations = pgTable('routing_operations', {
   createdAt: ts('created_at').defaultNow(),
 });
 
-// NOTE: convergence deferred (tier-1) — lib/db bomHeaders.productId is numeric but
-// pp-bom repo passes string; needs column-type reconciliation before re-export.
+// Live DB has more NOT NULL columns than the old stub carried (bom_number,
+// base_quantity, base_unit). Added additively so Drizzle emits them on INSERT —
+// otherwise the header INSERT 500s on the bom_number NOT NULL constraint.
 export const bomHeaders = pgTable('bom_headers', {
   id: integer('id').primaryKey(),
-  productId: text('product_id').notNull(),
+  bomNumber: text('bom_number').notNull(),
+  productId: integer('product_id').notNull(),
   version: text('version').default('1.0'),
   status: text('status').default('draft'),
+  baseQuantity: decimal('base_quantity', { precision: 18, scale: 4 }).default('1'),
+  baseUnit: text('base_unit').default('dona'),
+  description: text('description'),
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
 });
 
+// Live bom_items has item_number + component_id (both NOT NULL) and component_type/
+// scrap_percentage/position — the old stub omitted them, so component lines could
+// never be inserted. Added additively to match the real columns.
 export const bomItems = pgTable('bom_items', {
   id: integer('id').primaryKey(),
   bomId: integer('bom_id').notNull(),
-  materialId: text('material_id').notNull(),
+  itemNumber: text('item_number').notNull(),
+  componentType: text('component_type').default('material'),
+  componentId: integer('component_id').notNull(),
   quantity: decimal('quantity', { precision: 15, scale: 4 }).notNull(),
   unit: text('unit'),
+  scrapPercentage: decimal('scrap_percentage', { precision: 5, scale: 2 }).default('0'),
+  position: integer('position').default(0),
+  notes: text('notes'),
+  materialId: text('material_id'),
   scrapPercent: decimal('scrap_percent', { precision: 5, scale: 2 }).default('0'),
   createdAt: ts('created_at').defaultNow(),
 });
@@ -128,12 +148,43 @@ export const notifications = pgTable('notifications', {
   id: integer('id').primaryKey(),
   userId: text('user_id').notNull(),
   title: text('title').notNull(),
-  message: text('message'),
+  body: text('body'),         // live column is NOT NULL — was missing from this Drizzle def, so every
+  message: text('message'),   // notification insert omitted it -> 23502. Now settable.
   type: text('type').notNull().default('info'),
   isRead: boolean('is_read').default(false),
   entityType: text('entity_type'),
   entityId: text('entity_id'),
   createdAt: ts('created_at').defaultNow(),
+  priority: text('priority'),  // live column (varchar) — 'urgent'|'high'|'normal'|'low', same vocabulary
+                                // as PriorityEnum in notification-schedules.controller.ts. Used to sort the
+                                // notification list (urgent/high first) in drizzle-notification.repo.ts.
+  senderId: integer('sender_id'),   // 18-notif #88: originating actor (nullable, additive; NULL = system/cron)
+  // Owner decision 2026-07-13 (chat): 4 new columns on the single notifications table (not a
+  // new table). moduleCode = originating ERP module ('sd'/'mes'/'qc'/'pos'/... — same vocabulary
+  // as business_settings.module). channel = delivery channel attempted for this notification
+  // ('telegram'|'email'|'sms'|'in_app' — same vocabulary as channels[] in
+  // create-notification.handler.ts / ExtendedCreateNotificationCommand). status = delivery status
+  // ('pending'|'sent'|'failed' — distinct from isRead/readAt, which track READ status, not
+  // delivery status). immutable = marks certain notifications (e.g. official/legal notices) as
+  // non-deletable/non-editable; enforcement follows the existing CC "immutable document"
+  // convention (application-level check before mutate, see cc-retention.service.ts
+  // archiveWithRetention — no DB-trigger precedent exists in this codebase for that pattern).
+  moduleCode: text('module_code'),
+  channel: text('channel'),
+  status: text('status').default('pending'),
+  immutable: boolean('immutable').notNull().default(false),
+  // Notifications module gap (docs/audit/NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md):
+  // a 6-value notification-category taxonomy (buyruq/ogohlantirish/talab/tasdiqlash_sorovi/
+  // hisobot/elon) was already seeded into taxonomy_entries (category='notification_category',
+  // 6 rows — verified live 2026-07-13, taxonomy-seed-2026-07-11.sql:66-71) but notifications had
+  // no column referencing it. categoryCode is a soft-reference to taxonomy_entries.code — same
+  // FK-less TEXT convention as the sibling moduleCode/channel/status columns immediately above
+  // (taxonomy_entries has zero incoming FK constraints by design, validated at the application
+  // layer instead — see kanban_cards.task_type migration comment for the live pg_constraint
+  // check). Nullable, additive — existing rows/callers unaffected (Q-46). Scope: column +
+  // CreateNotificationCommand optional constructor param only (create-notification.command.ts) —
+  // NOT backfilled on existing call sites (separate follow-up item).
+  categoryCode: text('category_code'),
 });
 
 export const marketingCampaigns = pgTable('marketing_campaigns', {
@@ -191,5 +242,25 @@ export const securityAttendance = pgTable('security_attendance', {
   timestamp: ts('timestamp').notNull(),
   gateId: text('gate_id'),
   method: text('method'),
+  createdAt: ts('created_at').defaultNow(),
+});
+
+// 08-mes #83 — 1 operator + N nomli yordamchi + hissa% (contribution share).
+// machine_crews bola-jadvali: qat'iy 4 rol ustuni (master/polmaster/shogird/
+// rokler) o'rniga N qator, har biri role_label + share_percent bilan.
+// share_percent NULL = teng-taqsim (MesCrewMembersService hisoblaydi).
+// session_id → production_sessions.id, employee_id → employees.id (app-FK,
+// machine_crews kabi DB-FK constraintsiz). id: integer('id').primaryKey() —
+// fayldagi barcha sibling jadvallar kabi (DB SERIAL default id ni to'ldiradi,
+// Drizzle unset id ni INSERT dan tashlaydi; import qatoriga tegmaymiz).
+// Jadval faylning oxiriga (securityAttendance dan keyin) qo'shildi —
+// barqaror anchor: securityAttendance verbatim saqlanadi, sibling-append
+// bilan drift bo'lmaydi. Migration: mes-machine-crew-members-2026-07-11.sql
+export const machineCrewMembers = pgTable('machine_crew_members', {
+  id: integer('id').primaryKey(),
+  sessionId: integer('session_id').notNull(),
+  employeeId: integer('employee_id').notNull(),
+  roleLabel: text('role_label'),
+  sharePercent: decimal('share_percent', { precision: 5, scale: 2 }),
   createdAt: ts('created_at').defaultNow(),
 });

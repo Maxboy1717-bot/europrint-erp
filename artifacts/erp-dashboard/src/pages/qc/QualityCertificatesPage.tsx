@@ -3,14 +3,24 @@
  * @description React page component. Route-level UI.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 import { DedicatedPageShell, KpiCard, Section } from "@/components/DedicatedPageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Award, Download, Calendar, AlertTriangle } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Award, Download, Calendar, AlertTriangle, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface QualityCertificate {
   id: number;
@@ -27,6 +37,102 @@ interface QualityCertificate {
 
 const EXPIRY_WARN_DAYS = 30;
 
+const STATUS_LABELS = { active: "Amal qilmoqda", draft: "Loyiha", revoked: "Bekor qilingan" };
+
+function CreateCertificateDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [certNumber, setCertNumber]   = useState("");
+  const [productName, setProductName] = useState("");
+  const [issuedDate, setIssuedDate]   = useState("");
+  const [status, setStatus]           = useState<string>("active");
+  const [issuedBy, setIssuedBy]       = useState("");
+  const [notes, setNotes]             = useState("");
+
+  const mutation = useMutation({
+    mutationFn: (dto: Record<string, unknown>) =>
+      apiRequest<{ id: number }>("POST", "/api/qc/certificates", dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/certificates"] });
+      toast({ title: "Sertifikat yaratildi" });
+      setCertNumber(""); setProductName(""); setIssuedDate("");
+      setStatus("active"); setIssuedBy(""); setNotes("");
+      onClose();
+    },
+    onError: () => toast({ title: "Saqlash xatoligi", variant: "destructive" }),
+  });
+
+  function handleSubmit() {
+    if (!certNumber.trim()) {
+      toast({ title: "Sertifikat raqami majburiy", variant: "destructive" });
+      return;
+    }
+    const dto: Record<string, unknown> = { certNumber: certNumber.trim(), status };
+    if (productName.trim()) dto.productName = productName.trim();
+    if (issuedDate)         dto.issuedDate  = issuedDate;
+    if (issuedBy.trim())    dto.issuedBy    = issuedBy.trim();
+    if (notes.trim())       dto.notes       = notes.trim();
+    mutation.mutate(dto);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Yangi sifat sertifikati</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 py-2">
+          <div className="grid gap-1.5">
+            <Label>Sertifikat raqami *</Label>
+            <Input placeholder="QC-2026-001" value={certNumber}
+              onChange={(e) => setCertNumber(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Mahsulot nomi</Label>
+            <Input placeholder="Masalan: Gofra quti 5-ply" value={productName}
+              onChange={(e) => setProductName(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Berilgan sana</Label>
+            <Input type="date" value={issuedDate}
+              onChange={(e) => setIssuedDate(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Holat</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Beruvchi shaxs</Label>
+            <Input placeholder="Masalan: QC bo'lim boshlig'i" value={issuedBy}
+              onChange={(e) => setIssuedBy(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Izoh</Label>
+            <Input placeholder="Qo'shimcha ma'lumot..." value={notes}
+              onChange={(e) => setNotes(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Bekor qilish
+          </Button>
+          <Button onClick={handleSubmit}
+            disabled={mutation.isPending || !certNumber.trim()}>
+            {mutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function getDaysUntilExpiry(expiry: string | null): number | null {
   if (!expiry) return null;
   const diff = new Date(expiry).getTime() - Date.now();
@@ -35,6 +141,7 @@ function getDaysUntilExpiry(expiry: string | null): number | null {
 
 export default function QualityCertificatesPage() {
   const { t } = useTranslation('qc');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = useQuery<{ items: QualityCertificate[] }>({
     queryKey: ["/api/qc/certificates"],
@@ -62,6 +169,12 @@ export default function QualityCertificatesPage() {
       </div>
 
       <Section title={t('certs.list', "Sertifikatlar")}>
+        <div className="flex justify-end mb-3">
+          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            Yangi sertifikat
+          </Button>
+        </div>
         {isLoading ? (
           <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
@@ -89,7 +202,7 @@ export default function QualityCertificatesPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
                       <span>{t("mahsulot")}<strong>{c.productName}</strong></span>
                       <span>{t("mijoz")}<strong>{c.customerName ?? '—'}</strong></span>
-                      <span>{t("berildi1")}<strong>{c.issueDate}</strong></span>
+                      <span>{t("berildi1")} <strong>{c.issueDate}</strong></span>
                       <span>{t("muddati1")}<strong>{c.expiryDate ?? '—'}</strong></span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -110,6 +223,7 @@ export default function QualityCertificatesPage() {
           </div>
         )}
       </Section>
+      <CreateCertificateDialog open={createOpen} onClose={() => setCreateOpen(false)} />
     </DedicatedPageShell>
   );
 }

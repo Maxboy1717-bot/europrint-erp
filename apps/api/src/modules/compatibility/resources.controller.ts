@@ -17,11 +17,6 @@ import { CompatBodyDto } from './dto/compat-body.dto';
 import { WarehouseCreateDto, WarehouseUpdateDto } from './dto/warehouse.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
-import {
-  MaterialCardAclTranslator,
-  type LegacyMaterialCardRow,
-  type MaterialCardDto,
-} from './acl/material-card-acl';
 
 @ApiTags('Warehouses (Compat)')
 @ApiBearerAuth()
@@ -62,7 +57,7 @@ export class WarehousesCompatController {
   @Post('notify-vacancies')
   @HttpCode(HttpStatus.OK)
   async notifyVacancies(@Body() _body: unknown) {
-    return { notified: true };
+    return { notified: false, reason: 'notification service not configured' };
   }
 }
 
@@ -74,32 +69,14 @@ export class WarehousesCompatController {
 @UseInterceptors(AuditInterceptor)
 @Controller('material-cards')
 export class MaterialCardsCompatController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly materialCardAcl = new MaterialCardAclTranslator();
-
-  constructor(private readonly svc: ResourcesCompatService) {}
+  constructor(
+    private readonly svc: ResourcesCompatService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get()
   async getAll(@Query('page') page?: string, @Query('limit') limit?: string, @Query('search') search?: string) {
     return unwrapOrInternal(await this.svc.getMaterialCards(page, limit, search));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-4 / BC-6 consumers should
-   * target `/v2`; the legacy `/` endpoint stays for backwards-compat.
-   */
-  @Get('v2')
-  async getAllV2(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-  ): Promise<MaterialCardDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getMaterialCards(page, limit, search)) as unknown as LegacyMaterialCardRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.materialCardAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: MaterialCardDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Get(':id')
@@ -111,6 +88,14 @@ export class MaterialCardsCompatController {
   @UseInterceptors(AuditInterceptor)
   async create(@Body() body: CompatBodyDto) {
     return unwrapOrInternal(await this.svc.createMaterialCard(body));
+  }
+
+  @Patch(':id/unit-price')
+  @UseInterceptors(AuditInterceptor)
+  async updateUnitPrice(@Param('id') id: string, @Body() body: { unit_price: unknown }) {
+    const price = Number(body?.unit_price);
+    if (!Number.isFinite(price) || price < 0) throw new BadRequestException(await this.i18n.t('validation.unitPriceMustBeNonNegative'));
+    return unwrapOrInternal(await this.svc.updateMaterialCardUnitPrice(id, price));
   }
 }
 
@@ -134,9 +119,9 @@ export class OrgDepartmentsCompatController {
   }
 
   @Post('notify-vacancies')
-  @HttpCode(HttpStatus.ACCEPTED)
-  notifyVacancies() {
-    return { message: 'Vakansiya bildirishnomalari navbatga qo\'yildi', queued: true };
+  @HttpCode(HttpStatus.OK)
+  async notifyVacancies() {
+    return unwrapOrInternal(await this.svc.getVacantDepartments());
   }
 }
 
@@ -149,12 +134,7 @@ export class OrgDepartmentsCompatController {
 export class OrgFunctionsCompatController {
   constructor(private readonly svc: ResourcesCompatService) {}
 
-  /**
-   * GET /api/org-functions
-   * Org-sxemadagi "Lavozim" (position) ro'yxati — `org_functions` jadvalidan
-   * { id, name(=position_name), departmentId, ... } qaytaradi. Legacy
-   * `/api/positions` o'rnini bosadi (dropdown'lar uchun org-sxema manba).
-   */
+  /** GET /api/org-functions — ro'yxat (dropdown uchun) */
   @Get()
   async getAll(
     @Query('page') page?: string,
@@ -162,6 +142,28 @@ export class OrgFunctionsCompatController {
     @Query('departmentId') departmentId?: string,
   ) {
     return unwrapOrInternal(await this.svc.getOrgFunctions(page, limit, departmentId));
+  }
+
+  /** POST /api/org-functions — yangi karta yaratish */
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async create(@Body() body: CompatBodyDto) {
+    return unwrapOrInternal(await this.svc.createOrgFunction(body as Record<string, unknown>));
+  }
+
+  /** PATCH /api/org-functions/:id — kartani yangilash */
+  @Patch(':id')
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async update(@Param('id') id: string, @Body() body: CompatBodyDto) {
+    return unwrapOrInternal(await this.svc.updateOrgFunction(id, body as Record<string, unknown>));
+  }
+
+  /** DELETE /api/org-functions/:id — soft-delete */
+  @Delete(':id')
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async remove(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.deleteOrgFunction(id));
   }
 }
 

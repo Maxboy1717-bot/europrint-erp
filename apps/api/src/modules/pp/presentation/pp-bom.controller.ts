@@ -22,10 +22,30 @@ enum Role {
   DIRECTOR = 'director',
 }
 
+const BomItemDtoSchema = z.object({
+  // component id may arrive as componentId or materialId from the form
+  componentId: z.coerce.number().int().positive().optional(),
+  materialId: z.coerce.number().int().positive().optional(),
+  componentType: z.enum(['material', 'sub_assembly']).optional(),
+  itemNumber: z.string().optional(),
+  quantity: z.coerce.number().positive(),
+  unit: z.string().optional(),
+  scrapPercentage: z.coerce.number().min(0).max(100).optional(),
+  position: z.coerce.number().int().optional(),
+  notes: z.string().optional(),
+}).refine((it) => it.componentId !== undefined || it.materialId !== undefined, {
+  message: 'Har bir komponentda componentId yoki materialId bo\'lishi kerak',
+});
+
 const CreateBomDtoSchema = z.object({
-  productId: z.number(),
-  items: z.array(z.any()),
-  reason: z.string().min(5),
+  productId: z.coerce.number().int().positive(),
+  version: z.string().optional(),
+  bomNumber: z.string().optional(),
+  baseQuantity: z.coerce.number().positive().optional(),
+  baseUnit: z.string().optional(),
+  description: z.string().optional(),
+  items: z.array(BomItemDtoSchema).default([]),
+  reason: z.string().min(5).optional(),
 });
 
 const ApproveBomDtoSchema = z.object({
@@ -75,6 +95,32 @@ export class PpBomController {
     const parsed = CreateBomDtoSchema.parse(dto);
     const res = await this.bomService.create(parsed);
     return unwrapOrThrow(res);
+  }
+
+  @ApiOperation({ summary: 'List BOM items' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/items')
+  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR)
+  async listItems(@Param('id') id: string) {
+    return unwrapOrThrow(await this.bomService.findItems(Number(id)));
+  }
+
+  @ApiOperation({ summary: 'Add item to BOM' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @Post(':id/items')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNOLOGIST)
+  async addItem(@Param('id') id: string, @Body() dto: Record<string, unknown>) {
+    return unwrapOrThrow(await this.bomService.addItem(Number(id), dto));
+  }
+
+  @ApiOperation({ summary: 'Remove item from BOM' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete(':id/items/:itemId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.SUPER_ADMIN)
+  async removeItem(@Param('id') _id: string, @Param('itemId') itemId: string) {
+    return unwrapOrThrow(await this.bomService.removeItem(Number(itemId)));
   }
 
   @ApiOperation({ summary: 'Update bom' })

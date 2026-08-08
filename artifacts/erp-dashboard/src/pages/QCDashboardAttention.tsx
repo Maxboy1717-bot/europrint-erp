@@ -194,25 +194,25 @@ export function SummarySection({ stats, loading }: SummarySectionProps) {
   const { t } = useTranslation("common");
   const rows = [
     {
-      label: "O'tish darajasi",
+      label: t("qcOtishDarajasiLabel"),
       value: `${stats?.tests?.passRate || 0}%`,
       target: "≥ 95%",
       ok: (stats?.tests?.passRate || 0) >= 95,
     },
     {
-      label: "Ochiq reklamatsiyalar",
+      label: t("qcOchiqReklamatsiyalar"),
       value: stats?.reclamations?.open || 0,
       target: "= 0",
       ok: (stats?.reclamations?.open || 0) === 0,
     },
     {
-      label: "Brak soni",
+      label: t("qcBrakSoni"),
       value: stats?.braks?.count || 0,
       target: "< 5",
       ok: (stats?.braks?.count || 0) < 5,
     },
     {
-      label: "Ochiq RCA",
+      label: t("qcOchiqRcaLabel"),
       value: stats?.openRca || 0,
       target: "= 0",
       ok: (stats?.openRca || 0) === 0,

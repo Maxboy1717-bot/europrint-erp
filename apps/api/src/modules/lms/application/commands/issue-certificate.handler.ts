@@ -16,7 +16,9 @@ export class IssueCertificateCommand {
     public readonly courseId: number,
     public readonly courseName: string,
     public readonly validityMonths: number,
-    public readonly issuedBy: number) {}
+    public readonly issuedBy: number,
+    // LMS-12 #30 (legal-minimal cert fields): requester IP captured at issuance time.
+    public readonly issuedIp?: string) {}
 }
 
 @CommandHandler(IssueCertificateCommand)
@@ -40,6 +42,7 @@ export class IssueCertificateHandler implements ICommandHandler<IssueCertificate
           courseId: command.courseId,
           expiresAt,
           score: null,
+          issuedIp: command.issuedIp,
         },
         command.issuedBy,
       );

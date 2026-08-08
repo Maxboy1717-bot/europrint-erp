@@ -87,7 +87,7 @@ export function CandidateReportDialog({
           {!isLoading && !error && report && (
             <>
               {/* Report header */}
-              <div className="border-2 border-[#1a1a2e] rounded-lg p-5 mb-6 print:border-black">
+              <div className="border-2 border-[var(--ep-text)] rounded-lg p-5 mb-6 print:border-black">
                 <div className="flex items-start justify-between flex-wrap gap-3">
                   <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">

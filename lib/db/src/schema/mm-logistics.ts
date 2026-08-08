@@ -10,19 +10,13 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { glDocuments } from "./fi-schema";
-import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, productionSessions, products } from "./pp-schema";
+import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, products } from "./pp-schema";
 import { warehouseBins, warehouseTransactions, warehouses } from "./wms-schema";
-import { rawMaterials, vendors, purchaseOrders, goodsReceipts } from "./mm-procurement";
+import { rawMaterials, vendors } from "./mm-procurement";
 import { materialCards, materialBatches, batches } from "./mm-materials";
-import { mroBudgets } from "./mm-mro";
-
-export const insertMroBudgetSchema = createInsertSchema(mroBudgets, {
-  status: z.enum(["active", "exceeded", "closed"]),
-}).omit({ id: true, createdAt: true } as never);
-
-export type MroBudget = typeof mroBudgets.$inferSelect;
-
-export type InsertMroBudget = z.infer<typeof insertMroBudgetSchema>;
+// NOTE: mro_budgets pgTable + derived insertMroBudgetSchema/MroBudget/InsertMroBudget
+// removed (orphan, lib/db-only, no @workspace/db or @europrint/schemas consumer —
+// see chore(schema) cleanup 2026-07-02).
 
 
 // ============================================================================

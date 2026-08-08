@@ -5,14 +5,22 @@
 
 import { GL } from "../constants/gl-accounts.constants";
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { Result, Err } from '@common/result';
+import { Result, Err, Ok } from '@common/result';
 import { IGlPostingRepository, GL_POSTING_REPO } from '../repositories/i-gl-posting.repo';
+import { TashkentTimeService } from '@common/time';
+
+const _time = new TashkentTimeService();
 
 export interface JournalLine {
   accountCode: string;
   accountName: string;
   debit: number;
   credit: number;
+  // VISION-3340 #21 (2026-07-08): OPTIONAL cost-center tag (cost_centers.id). When omitted,
+  // the resulting `entries` row's cost_center_id is left NULL — fully backward-compatible with
+  // every existing caller (postSalesInvoice/postPayroll/postJournal/...). Does NOT affect any
+  // debit/credit/balance logic; it is a pass-through attribute persisted alongside the line.
+  costCenterId?: number;
 }
 
 @Injectable()
@@ -23,8 +31,18 @@ export class GlPostingService {
     @Inject(GL_POSTING_REPO) private readonly glPostingRepo: IGlPostingRepository,
   ) {}
 
-  async postSalesInvoice(invoiceId: number, amount: number, tax: number): Promise<Result<number>> {
+  async postSalesInvoice(invoiceId: number | string, amount: number, tax: number): Promise<Result<number>> {
     this.logger.debug(`Posting Sales Invoice - ID: ${invoiceId}, Amount: ${amount}, Tax: ${tax}`);
+    // F2 data-quality gate: a GL entry must trace to a real finance_invoices row (ACCOUNTING-STANDARDS-AUDIT-2026-07-06).
+    const invoiceIdNum = Number(invoiceId);
+    if (!Number.isFinite(invoiceIdNum)) {
+      return Err(`EP-FIN-DATA-QUALITY: invoiceId noto'g'ri (${invoiceId}) — manbasiz GL yozuvi rad etildi`);
+    }
+    const invoiceExists = await this.glPostingRepo.financeInvoiceExists(invoiceIdNum);
+    if (!invoiceExists.ok) return Err(invoiceExists.error);
+    if (!invoiceExists.data) {
+      return Err(`EP-FIN-DATA-QUALITY: finance_invoices #${invoiceIdNum} topilmadi — manbasiz GL yozuvi rad etildi`);
+    }
     const lines: JournalLine[] = [
       { accountCode: GL.ACCOUNTS_RECEIVABLE_TRADE, accountName: 'Accounts Receivable', debit: amount + tax, credit: 0 },
       { accountCode: GL.REVENUE, accountName: 'Sales Revenue', debit: 0, credit: amount },
@@ -33,13 +51,25 @@ export class GlPostingService {
     return this.createJournalEntry(lines, `SI-${invoiceId}`);
   }
 
-  async postCustomerPayment(paymentId: number, amount: number): Promise<Result<number>> {
+  // paymentId is only ever used to build the `CP-${paymentId}` idempotency reference below —
+  // it is never parsed back to a number. sd_payments.id is a live uuid (see EP-SD-030 follow-up);
+  // forcing it through Number() collapsed every SD payment to the same fallback 0, so every
+  // payment after the first silently matched the CP-0 idempotency check and never posted.
+  async postCustomerPayment(paymentId: number | string, amount: number): Promise<Result<number>> {
     this.logger.debug(`Posting Customer Payment - ID: ${paymentId}, Amount: ${amount}`);
+    // entries.entry_number is varchar(50) and createJournalEntry builds it as
+    // `${reference}-${Date.now()}-${n}` — a full 36-char uuid reference ("CP-<uuid>", 39 chars)
+    // would overflow that limit and fail the insert outright. Shorten a long string id to its
+    // last 12 hex chars (48 bits of entropy — collision odds are negligible at any realistic SD
+    // payment volume) so it stays both unique per payment and within the column width.
+    const ref = typeof paymentId === 'string' && paymentId.length > 12
+      ? paymentId.replace(/-/g, '').slice(-12)
+      : paymentId;
     const lines: JournalLine[] = [
       { accountCode: GL.CASH, accountName: 'Cash', debit: amount, credit: 0 },
       { accountCode: GL.ACCOUNTS_RECEIVABLE_TRADE, accountName: 'Accounts Receivable', debit: 0, credit: amount },
     ];
-    return this.createJournalEntry(lines, `CP-${paymentId}`);
+    return this.createJournalEntry(lines, `CP-${ref}`);
   }
 
   async postGoodsReceipt(grId: number, amount: number): Promise<Result<number>> {
@@ -82,34 +112,185 @@ export class GlPostingService {
     return result;
   }
 
-  private async createJournalEntry(lines: JournalLine[], reference: string): Promise<Result<number>> {
-    const safeLines = Array.isArray(lines) ? lines : [];
-    const totalDebit  = safeLines.reduce((sum, line) => sum + line.debit, 0);
-    const totalCredit = safeLines.reduce((sum, line) => sum + line.credit, 0);
+  /**
+   * Public entry point for other modules to post a balanced multi-leg journal through the ONE engine
+   * (resolves GL codes → accounts.id, validates ΣDR==ΣCR, writes balanced pair-rows to `entries._id`).
+   * Use this instead of bespoke per-module INSERTs into `entries`. Optional createdBy attributes the
+   * posting to whoever approved it — otherwise `entries.created_by` is left NULL (see F3 migration of
+   * the POS bespoke writer, which needs this to preserve its pre-existing attribution).
+   */
+  async postJournal(lines: JournalLine[], reference: string, createdBy?: number): Promise<Result<number>> {
+    return this.createJournalEntry(lines, reference, createdBy);
+  }
 
-    if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      return Err(`Double-entry validation failed: Debit ${totalDebit} != Credit ${totalCredit}`);
+  /**
+   * EP-FIN-005 (golden thread T-14): Delivery completed → full sales-invoice GL split, posted to the
+   * canonical `entries` ledger only (never gl_journal_entries / gl_lines — SAP#76 forbidden).
+   *
+   * Double-entry, two balanced pairs (5 legs collapsed by createJournalEntry into balanced rows):
+   *   Dr AR (4000)            +totalAmount
+   *     Cr Revenue (9010)         -(totalAmount - tax)   ← net of VAT
+   *     Cr Sales Tax (6310)       -tax                   ← 12% UZ VAT
+   *   Dr COGS (9100)          +costOfGoods               ← cost recognised on delivery
+   *     Cr Inventory (1000)       -costOfGoods           ← goods leave stock
+   *
+   * Balance check (enforced by createJournalEntry):
+   *   ΣDr  = totalAmount + costOfGoods
+   *   ΣCr  = (totalAmount - tax) + tax + costOfGoods = totalAmount + costOfGoods  ✓
+   *
+   * Idempotent: reference `DC-${orderId}` — a re-fired DeliveryCompletedEvent returns the existing
+   * entry id without a second post (findEntryIdByReference covers it).
+   */
+  async postDeliveryCompleted(
+    orderId: number,
+    totalAmount: number,
+    tax: number,
+    costOfGoods: number,
+  ): Promise<Result<number>> {
+    this.logger.debug(
+      `EP-FIN-005 delivery GL - Order: ${orderId}, Total: ${totalAmount}, Tax: ${tax}, COGS: ${costOfGoods}`,
+    );
+    if (!(totalAmount > 0)) {
+      return Err(`EP-FIN-005: totalAmount must be > 0 (got ${totalAmount})`);
+    }
+    if (costOfGoods < 0 || tax < 0) {
+      return Err(`EP-FIN-005: tax/costOfGoods must be >= 0 (tax=${tax}, cogs=${costOfGoods})`);
+    }
+    // F2 data-quality gate: a GL entry must trace to a real sales_orders row (ACCOUNTING-STANDARDS-AUDIT-2026-07-06).
+    const orderExists = await this.glPostingRepo.salesOrderExists(orderId);
+    if (!orderExists.ok) return Err(orderExists.error);
+    if (!orderExists.data) {
+      return Err(`EP-FIN-DATA-QUALITY: sales_orders #${orderId} topilmadi — manbasiz GL yozuvi rad etildi`);
+    }
+    const amount = totalAmount - tax; // revenue net of VAT
+    const lines: JournalLine[] = [
+      { accountCode: GL.ACCOUNTS_RECEIVABLE_TRADE, accountName: 'Debitorlar (AR)', debit: totalAmount, credit: 0 },
+      { accountCode: GL.REVENUE,                   accountName: 'Tushum (Revenue)', debit: 0, credit: amount },
+      { accountCode: GL.SALES_TAX_PAYABLE,         accountName: 'QQS (Sales Tax Payable)', debit: 0, credit: tax },
+      { accountCode: GL.COGS,                      accountName: 'Tannarx (COGS) - Dr', debit: costOfGoods, credit: 0 },
+      { accountCode: GL.INVENTORY,                 accountName: 'Materiallar (Inventory) - Cr', debit: 0, credit: costOfGoods },
+    ];
+    return this.createJournalEntry(lines, `DC-${orderId}`);
+  }
+
+  private async createJournalEntry(lines: JournalLine[], reference: string, createdBy?: number): Promise<Result<number>> {
+    // H1 idempotency: if this business reference (e.g. SI-123, PR-7) was already posted, return the
+    // existing entry id WITHOUT inserting again. Covers every caller (invoice/payroll/GR/VP/MC + the
+    // finance-gl admin endpoints) at the source — closes the double-post window between post + status-flip.
+    const already = await this.glPostingRepo.findEntryIdByReference(reference);
+    if (already.ok && already.data) {
+      this.logger.debug(`Journal already posted for ${reference} (idempotent) — entry id=${already.data}`);
+      return Ok(already.data);
     }
 
-    const entryDate = new Date().toISOString().slice(0, 10);
+    const safeLines = Array.isArray(lines) ? lines : [];
+    const debits = safeLines.filter((l) => l.debit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.debit, cc: l.costCenterId }));
+    const credits = safeLines.filter((l) => l.credit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.credit, cc: l.costCenterId }));
+    const totalDebit  = debits.reduce((s, d) => s + d.amt, 0);
+    const totalCredit = credits.reduce((s, c) => s + c.amt, 0);
 
-    // Build one row per non-zero leg, then insert ALL legs atomically (insertJournal
-    // wraps them in a single db.transaction — a mid-journal failure rolls back every
-    // leg instead of leaving an unbalanced half-journal). Account codes / OFFSET /
-    // entryNumber format / amount selection are unchanged.
-    const rows = safeLines
-      .filter((line) => (line.debit > 0 ? line.debit : line.credit) > 0)
-      .map((line) => ({
-        entryNumber: `${reference}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    // C3.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): this used to compare the raw UNROUNDED float
+    // sums with a flat `> 0.01` tolerance, while the decomposition below persists every leg rounded
+    // to money precision (Math.round(alloc*100)/100, cents — see Money.vo's SCALE philosophy: never
+    // compare/store money at float precision). That let a genuine sub-cent-to-1-cent debit/credit
+    // gap slip through unrejected (e.g. 100.006 vs 100.00 — diff 0.006 < 0.01 — was accepted even
+    // though the two sides differ by more than a possible cent), inconsistent with the exact-cent
+    // precision the ledger actually stores. Fix: round BOTH sides to the SAME money precision
+    // (cents) first — this also makes the comparison immune to pure float noise (0.1+0.2 style)
+    // without needing an arbitrary tolerance — then require EXACT equality in integer cents.
+    const totalDebitCents  = Math.round(totalDebit  * 100);
+    const totalCreditCents = Math.round(totalCredit * 100);
+    if (totalDebitCents !== totalCreditCents) {
+      return Err(
+        `Double-entry validation failed: Debit ${(totalDebitCents / 100).toFixed(2)} != Credit ${(totalCreditCents / 100).toFixed(2)}`,
+      );
+    }
+
+    // F2 data-quality gate (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): a balanced-but-zero journal (every
+    // line 0) passes the check above and used to fall through to insertJournal([]) — a silent no-op that
+    // returns Ok() while writing nothing. This is the exact root cause traced in
+    // GL-GARBAGE-ROW-ARCHIVE-2026-07-06.md's "F2/F3 residual risk" note. Enforced centrally here so every
+    // caller (current and future) is covered, not just the ones with their own per-method guard.
+    if (!(totalDebit > 0)) {
+      return Err(
+        `EP-FIN-DATA-QUALITY: jurnal umumiy summasi 0 yoki manfiy (reference=${reference}) — ` +
+          `bo'sh/soxta GL yozuvi rad etildi`,
+      );
+    }
+
+    // C3 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): was `new Date().toISOString().slice(0,10)` —
+    // .toISOString() is always UTC. Tashkent is UTC+5, so any post between 00:00-05:00 Tashkent
+    // time landed on the PREVIOUS calendar day (e.g. a 02:00 Tashkent post got entry_date =
+    // yesterday), silently mis-dating GL entries and — worse — letting a post that should have
+    // been rejected by the period-lock below slip into an already-closed period one day early.
+    // TashkentTimeService.formatDate() correctly resolves the calendar day in Asia/Tashkent.
+    const entryDate = _time.formatDate(new Date());
+
+    // EP-FIN-064 PERIOD LOCK: a new GL post whose entry_date falls inside a CLOSED accounting period
+    // is rejected here at the ONE engine — so every caller (invoice/payroll/GR/VP/MC + the finance-gl
+    // admin endpoints) is covered at the source. The period must be open (or no period defined) to post.
+    // (The idempotency short-circuit above means an already-posted reference is unaffected — only a
+    // genuinely-new entry into a locked period is blocked.) FinanceAccountingService surfaces this Err
+    // as a 400 BadRequest. An open/absent period → posting proceeds normally.
+    const lock = await this.glPostingRepo.findClosedPeriodForDate(entryDate);
+    if (!lock.ok) return Err(lock.error);
+    if (lock.data) {
+      this.logger.warn(`Period lock: ${reference} rejected — entry date ${entryDate} is in closed period ${lock.data.periodCode}`);
+      return Err(
+        `Davr yopilgan (EP-FIN-064): ${entryDate} sanasi yopilgan hisob davriga (${lock.data.periodCode}) ` +
+          `tegishli — yangi GL yozuvi taqiqlanadi. Yozuvni ochiq davrga kiriting yoki davrni qayta oching.`,
+      );
+    }
+
+    // #04 fix: the live `entries` row is a BALANCED PAIR (debit_account_id + credit_account_id both set
+    // to a real account) — like postMovementToLedger. The old code wrote one row per leg with 'OFFSET'
+    // for the missing side, which crashed against the integer account columns. Decompose the multi-leg
+    // journal into balanced (debit, credit, amount) rows by greedily allocating debits against credits.
+    const rows: Array<{ entryNumber: string; entryDate: string; documentType: string; debitAccountId: string; creditAccountId: string; amount: number; description: string; createdBy?: number; costCenterId?: number }> = [];
+    let di = 0, ci = 0, dRem = debits[0]?.amt ?? 0, cRem = credits[0]?.amt ?? 0, guard = 0;
+    while (di < debits.length && ci < credits.length && guard++ < 1000) {
+      const alloc = Math.min(dRem, cRem);
+      rows.push({
+        entryNumber: `${reference}-${Date.now()}-${rows.length}`,
         entryDate,
         documentType: 'journal',
-        debitAccountId:  line.debit  > 0 ? line.accountCode : 'OFFSET',
-        creditAccountId: line.credit > 0 ? line.accountCode : 'OFFSET',
-        amount: line.debit > 0 ? line.debit : line.credit,
-        description: `${reference} — ${line.accountName}`,
-      }));
+        debitAccountId: debits[di].code,
+        creditAccountId: credits[ci].code,
+        amount: Math.round(alloc * 100) / 100,
+        description: `${reference} — ${debits[di].name} / ${credits[ci].name}`,
+        createdBy,
+        // VISION-3340 #21: tag the balanced (debit,credit) pair-row with a cost center. Prefer
+        // the debit leg's tag (cost centers conventionally attach to the expense/cost side),
+        // falling back to the credit leg's; undefined when neither carries one → NULL in the DB
+        // (unchanged behavior for callers that don't set costCenterId).
+        costCenterId: debits[di].cc ?? credits[ci].cc,
+      });
+      dRem -= alloc; cRem -= alloc;
+      if (dRem <= 0.001) { di++; dRem = debits[di]?.amt ?? 0; }
+      if (cRem <= 0.001) { ci++; cRem = credits[ci]?.amt ?? 0; }
+    }
 
-    const result = await this.glPostingRepo.insertJournal(rows);
+    // C3.1 last-leg residual adjustment (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): each row's `amount`
+    // above is independently rounded to cents (Math.round(alloc*100)/100). With enough legs — or legs
+    // whose raw amounts carry more than 2 decimal places (e.g. a 100/3 proportional split) — those
+    // independent roundings can accumulate a few cents of drift between Σ(persisted rows) and the
+    // totalDebitCents/totalCreditCents already validated above, even though the validation passed
+    // exactly. Force the LAST leg to absorb that drift so what lands in `entries` always sums to
+    // EXACTLY the validated total — closing the gap between "what createJournalEntry validated" and
+    // "what actually got persisted" that this audit item flagged as latent.
+    if (rows.length > 0) {
+      const postedCents = rows.reduce((s, r) => s + Math.round(r.amount * 100), 0);
+      const residualCents = totalDebitCents - postedCents;
+      if (residualCents !== 0) {
+        const last = rows[rows.length - 1];
+        last.amount = Math.round(last.amount * 100 + residualCents) / 100;
+      }
+    }
+
+    // C1.9 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): pass `reference` so the repo serializes against
+    // a truly-concurrent duplicate post of this SAME business event via an advisory lock + in-tx
+    // re-check — the idempotency pre-check above is a fast, non-authoritative best-effort path only.
+    const result = await this.glPostingRepo.insertJournal(rows, reference);
     if (result.ok) {
       this.logger.debug(`Journal entry created - Reference: ${reference}, Debit/Credit: ${totalDebit}`);
     }

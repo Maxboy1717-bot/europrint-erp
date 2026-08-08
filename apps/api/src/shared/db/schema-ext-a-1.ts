@@ -14,6 +14,7 @@ import {
   employeeIssuanceLog as canonicalEmployeeIssuanceLog,
   posInventoryCountLines as canonicalPosInventoryCountLines,
   inventoryBarcodeAssignments as canonicalInventoryBarcodeAssignments,
+  barcodeMap as canonicalBarcodeMap,
   idealRasmTargets as canonicalIdealRasmTargets,
   glLines as canonicalGlLines,
   sdCustomerContacts as canonicalSdCustomerContacts,
@@ -82,6 +83,13 @@ export const pos_inventory_count_lines = canonicalPosInventoryCountLines;
 // inventory_barcode_assignments: re-exported from canonical definition in @workspace/db (pos-schema.ts)
 export const inventory_barcode_assignments = canonicalInventoryBarcodeAssignments;
 
+// ─── POS: Barcode Map ─────────────────────────────────────────────────────────
+// pos_barcode_map: re-exported from canonical definition in @workspace/db (pos-schema-extensions.ts).
+// C8.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): this is the REAL table findByBarcode()'s
+// pos_barcode_map subquery (`... AND is_primary = TRUE`) reads from — NOT
+// inventory_barcode_assignments (an unrelated passport/serial-tracking barcode table).
+export const pos_barcode_map = canonicalBarcodeMap;
+
 // ─── LMS: Lessons & Certificates ─────────────────────────────────────────────
 // lessons: re-exported from canonical definition in @workspace/db (lms-schema.ts)
 export { lessons } from '@workspace/db';
@@ -136,10 +144,12 @@ export const sd_sales_orders = pgTable('sd_sales_orders', {
   order_number:   text('order_number'),
   status:         text('status').default('pending'),
   company_id:     integer('company_id'),
+  customer_id:    integer('customer_id'),
   total_amount:   numeric('total_amount', { precision: 15, scale: 2 }),
   advance_required: integer('advance_required').default(70),
   advance_paid:   numeric('advance_paid', { precision: 15, scale: 2 }).default('0'),
   advance_status: text('advance_status').default('pending'),
+  currency:       text('currency'),
   design_flag:    boolean('design_flag').default(false),
   sample_flag:    boolean('sample_flag').default(false),
   is_vip:         boolean('is_vip').default(false),

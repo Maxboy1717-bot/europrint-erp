@@ -6,10 +6,10 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { db, runQuery, hrEmployees } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { face_embeddings } from '@shared/db';
 import { attendance } from '@europrint/schemas';
-import { SQL, SQLWrapper, and, count, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, and, count, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IAttendanceRepository } from './i-attendance.repo';
 
@@ -51,47 +51,68 @@ export class DrizzleAttendanceRepository implements IAttendanceRepository {
 
   async checkIn(userId: number, dto: Row): Promise<Result<Row>> {
     try {
-      const result = await db.insert(attendance).values({ id: sql`DEFAULT`, employeeId: String(userId), userId, date: String(dto.date ?? _time.now().toISOString().slice(0, 10)), status: 'present', checkIn: _time.now() }).returning();
-      return Ok(result[0] as Row);
+      const dateStr = String(dto.date ?? _time.now().toISOString().slice(0, 10));
+      const now = _time.now();
+      const inserted = await db.transaction(async (tx) => {
+        const result = await tx.insert(attendance).values({ id: sql`DEFAULT`, employeeId: String(userId), userId, date: dateStr, status: 'present', checkIn: now }).returning();
+        const row = result[0] as (Row & { id: number }) | undefined;
+        if (!row) return row;
+        // Drizzle schema (schema-compat-2.ts) does not model `attendance_date`/`check_in_time` —
+        // these DB-only mirror columns are read by HR-rating/PIP/director-dashboard (see
+        // hr-rating.reader.ts, hr-dashboard.repository.ts, finance-extended-payroll.service.ts).
+        // Keep both column sets in sync so downstream readers see live check-in data.
+        await tx.execute(sql`UPDATE attendance SET attendance_date = ${dateStr}, check_in_time = ${now} WHERE id = ${row.id}`);
+        return { ...row, attendance_date: dateStr, check_in_time: now };
+      });
+      return Ok(inserted as Row);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Kirishda xatolik'); }
   }
 
   async checkOut(userId: number, dto: Row): Promise<Result<Row>> {
     try {
-      const result = await db.update(attendance).set({ checkOut: _time.now() }).where(and(eq(attendance.userId, userId), eq(attendance.date, String(dto.date)))).returning();
-      return Ok(result[0] as Row);
+      const dateStr = String(dto.date);
+      const now = _time.now();
+      const updated = await db.transaction(async (tx) => {
+        const result = await tx.update(attendance).set({ checkOut: now }).where(and(eq(attendance.userId, userId), eq(attendance.date, dateStr))).returning();
+        const row = result[0] as (Row & { id: number }) | undefined;
+        if (!row) return row;
+        // Mirror into the DB-only `attendance_date`/`check_out_time` columns (see checkIn note
+        // above) so HR-rating/PIP/director-dashboard reads reflect the actual check-out.
+        await tx.execute(sql`UPDATE attendance SET attendance_date = COALESCE(attendance_date, ${dateStr}), check_out_time = ${now} WHERE id = ${row.id}`);
+        return { ...row, attendance_date: dateStr, check_out_time: now };
+      });
+      return Ok(updated as Row);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Chiqishda xatolik'); }
   }
 
+  // 2026-07-13 fix: employees.face_embedding was declared in Drizzle (vector(512)) but never
+  // actually existed on the live table, AND the `vector` Postgres extension isn't installed on
+  // this deployment ("extension \"vector\" is missing... install it in the system where
+  // PostgreSQL runs" - not something safely doable from application code). Every Drizzle insert
+  // into `employees` implicitly referenced this phantom column and 500'd - including plain
+  // "add employee", nothing to do with face-recognition. The real, working storage has been
+  // `face_embeddings` (plain text/JSON, no pgvector needed) all along - saveEmployeeFaceEmbedding
+  // below already wrote there correctly; only the read paths still pointed at the dead column.
+  // findEmployeeByEmbedding now honestly reports "no fast path" so the caller's own designed
+  // fallback (_matchInProcess, which calls findAllWithEmbeddings) takes over - same behavior
+  // the service already has for any other pgvector failure, just without an actually-broken query.
   async findEmployeeByEmbedding(
-    vectorLiteral: string,
-    threshold: number,
+    _vectorLiteral: string,
+    _threshold: number,
   ): Promise<Result<{ id: number | null; distance: number }>> {
-    try {
-      const distExpr = sql<number>`(${hrEmployees.face_embedding} <=> ${vectorLiteral}::vector(512))`;
-      const rows = await db
-        .select({ id: hrEmployees.id, distance: distExpr })
-        .from(hrEmployees)
-        .where(isNotNull(hrEmployees.face_embedding))
-        .orderBy(distExpr)
-        .limit(1);
-      const row = rows[0];
-      if (!row) return Ok({ id: null, distance: 1 });
-      const dist = Number(row.distance ?? 1);
-      if (1 - dist < threshold) return Ok({ id: null, distance: dist });
-      return Ok({ id: Number(row.id), distance: dist });
-    } catch (e: unknown) {
-      this.logger.warn('findEmployeeByEmbedding failed: %s', (e as Error)?.message);
-      return Err((e as Error)?.message || 'Embedding search failed');
-    }
+    return Err('pgvector extension not installed on this deployment - use in-process fallback');
   }
 
   async findAllWithEmbeddings(): Promise<{ id: number; face_embedding: number[] | null }[]> {
     const rows = await db
-      .select({ id: hrEmployees.id, face_embedding: hrEmployees.face_embedding })
-      .from(hrEmployees)
-      .where(isNotNull(hrEmployees.face_embedding));
-    return rows.map(r => ({ id: r.id, face_embedding: r.face_embedding as number[] | null }));
+      .select({ id: face_embeddings.employeeId, embedding: face_embeddings.embedding })
+      .from(face_embeddings)
+      .where(eq(face_embeddings.isActive, true));
+    return rows.map(r => {
+      let parsed: unknown = null;
+      try { parsed = JSON.parse(r.embedding); } catch { parsed = null; }
+      return { id: Number(r.id), face_embedding: Array.isArray(parsed) ? parsed as number[] : null };
+    });
   }
 
   async saveEmployeeFaceEmbedding(
@@ -101,25 +122,21 @@ export class DrizzleAttendanceRepository implements IAttendanceRepository {
     imageUrl?:  string,
   ): Promise<Result<{ id: number }>> {
     const [existing] = await db
-      .select({ face_embedding: hrEmployees.face_embedding })
-      .from(hrEmployees)
-      .where(eq(hrEmployees.id, employeeId))
+      .select({ embedding: face_embeddings.embedding })
+      .from(face_embeddings)
+      .where(and(eq(face_embeddings.employeeId, String(employeeId)), eq(face_embeddings.isActive, true)))
       .limit(1);
 
     let finalEmbedding = embedding;
-    if (existing?.face_embedding) {
-      const old = existing.face_embedding as number[];
+    if (existing?.embedding) {
+      let old: unknown = null;
+      try { old = JSON.parse(existing.embedding); } catch { old = null; }
       if (Array.isArray(old) && old.length === embedding.length) {
-        const weighted = old.map((v, i) => 0.7 * v + 0.3 * (embedding[i] ?? 0));
+        const weighted = (old as number[]).map((v, i) => 0.7 * v + 0.3 * (embedding[i] ?? 0));
         const norm = Math.sqrt(weighted.reduce((s, x) => s + x * x, 0));
         finalEmbedding = norm > 0 ? weighted.map(x => x / norm) : weighted;
       }
     }
-
-    await db
-      .update(hrEmployees)
-      .set({ face_embedding: finalEmbedding, face_embedding_updated_at: _time.now() } as never)
-      .where(eq(hrEmployees.id, employeeId));
 
     await db
       .update(face_embeddings)

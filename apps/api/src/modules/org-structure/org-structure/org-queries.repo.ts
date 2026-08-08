@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
 import { SQL, SQLWrapper, and, eq, sql } from 'drizzle-orm';
@@ -18,6 +19,7 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => (await runQuery<Row>
 
 @Injectable()
 export class OrgQueriesRepo {
+  constructor(private readonly i18n: I18nService) {}
   async getHierarchyNodes(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
       const rows = await db
@@ -37,13 +39,16 @@ export class OrgQueriesRepo {
           sortOrder: orgDepartments.sort_order,
           headUserId: orgDepartments.head_user_id,
           headUserName: fullName,
+          // VISION (egasi EP-ORG: "kartada razryad badge ko'rinadi") — daraxt kartasiga razryad
+          razryadLevelId: sql<number | null>`razryad_level_id`,
           employeeCount: sql<number>`(
             SELECT COUNT(*)::int
             FROM employee_org_departments eod
             JOIN users eu ON eu.id = eod.user_id AND eu.is_active = TRUE
             WHERE eod.org_department_id = ${orgDepartments.id}
           )`,
-          capacity: sql<string>`COALESCE(${orgDepartments.tskp_ru}, ${orgDepartments.tskp}, '0')`,
+          // PHASE-00 (MASSIV-100): vacant-count endi kanonik jadval ICHIDA (org_functions cross-ref tugadi).
+          vacantCardCount: sql<number>`(SELECT COUNT(*)::int FROM org_departments f WHERE f.parent_id = ${orgDepartments.id} AND f.is_active = true AND f.node_type = 'position' AND f.current_state = 'vacant')`,
         })
         .from(orgDepartments)
         .leftJoin(appUsers, and(eq(appUsers.id, orgDepartments.head_user_id), eq(appUsers.is_active, true)))
@@ -58,11 +63,13 @@ export class OrgQueriesRepo {
       const rows = await exec(sql`
         SELECT
           (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true) AS "totalNodes",
-          (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND node_type = 'department') AS "totalDepartments",
+          -- 2026-07-11: "Jami bo'limlar" endi faqat literal 'department' emas — Vysotskiy-7
+          -- otdeleniye/otdel/sektsiya/sektor ham org-birlik (guruh-karta), aks holda bu KPI
+          -- egasi yangi tier-nomlar bilan struktura qursa ham doim 0 ko'rsatardi.
+          (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND node_type IN ('department', 'section', 'otdeleniye', 'otdel', 'sektsiya', 'sektor')) AS "totalDepartments",
           (SELECT COUNT(*)::int FROM users u JOIN employee_org_departments eod ON eod.user_id = u.id WHERE u.is_active = TRUE) AS "totalEmployees",
-          (SELECT COALESCE(SUM(CAST(NULLIF(tskp_ru, '') AS integer)), 0)
-             FROM org_departments WHERE is_active = true AND tskp_ru ~ '^[0-9]+$') AS "totalCapacity",
-          (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND created_at >= NOW() - INTERVAL '30 days') AS "recentChanges"
+          (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND head_user_id IS NULL) AS "vacantCount",
+          (SELECT COUNT(*)::int FROM audit_logs WHERE table_name = 'orgstructure' AND created_at >= NOW() - INTERVAL '30 days') AS "recentChanges"
       `);
       return castTo<Record<string, unknown>>((rows[0] ?? {}));
     }, 'DB_ERROR');
@@ -115,26 +122,75 @@ export class OrgQueriesRepo {
           parentId: orgDepartments.parent_id, hierarchyLevel: orgDepartments.level,
           nodeType: orgDepartments.node_type, isActive: orgDepartments.is_active,
           headUserId: orgDepartments.head_user_id, headUserName: fullName,
+          // VISION: har node razryadga ega (raw column — Drizzle schema'da yo'q)
+          razryadLevelId: sql<number | null>`razryad_level_id`,
+          // VISION (node=karta): to'liq karta-maydonlari (raw — Drizzle schema'da yo'q)
+          // 2026-07-14: `salary_type` MUST be table-qualified — `users` (LEFT JOIN'langan appUsers)
+          // ham shu nomdagi ustunga ega, shuning uchun bare `salary_type` doim "ambiguous column"
+          // Postgres xatosi bilan portlagan — natijada findOneWithDetails() HAR DOIM Err qaytargan,
+          // va findOne() bo'sh {node:{}, employees:[], children:[]} fallback'ga tushgan (karta-detal
+          // sahifasi/tahrirlash formasi hech qachon haqiqiy ma'lumot ko'rmagan — egasi: "tahrirlash
+          // tabi rasvo, juda ko'p xatosi bor"). Boshqa raw ustunlarning hech biri `users`da mos
+          // nomga ega emas, shuning uchun faqat shu bittasi to'g'ridan-to'g'ri buzilgan edi.
+          salaryType: sql<string | null>`org_departments.salary_type`,
+          minSalary: sql<number | null>`min_salary`,
+          maxSalary: sql<number | null>`max_salary`,
+          rbacTier: sql<string | null>`rbac_tier`,
+          tskpTarget: sql<number | null>`tskp_target`,
+          tskpMeasurementUnit: sql<string | null>`tskp_measurement_unit`,
+          // T11-02: ЦКП formula-turi (round-trip — EditDialog selectori shu qiymat bilan to'ldiriladi)
+          ckpFormulaType: sql<string | null>`ckp_formula_type`,
+          // T11-05 (Egasi 6-qaror — kunlik deadline-enforcement): hisobot muddati soat (NULL=qoida yo'q).
+          // FE OVERDUE-badge shu real qiymat + fakt submitted_at orqali hisoblaydi (FABRIKATSIYA YO'Q).
+          ckpReportDeadlineHours: sql<number | null>`ckp_report_deadline_hours`,
+          workSchedule: sql<string | null>`work_schedule`,
+          currentState: sql<string | null>`current_state`,
+          // VISION (A35 — Vysotskiy 7-otdeleniye): bu karta qaysi 7 bo'limdan biriga tegishli (1-7, NULL=belgilanmagan).
+          otdeleniyeNo: sql<number | null>`otdeleniye_no`,
+          // VISION 5-holat lifecycle (A32): muzlatish/arxiv meta (raw — Drizzle schema'da yo'q)
+          freezeReason: sql<string | null>`freeze_reason`,
+          freezeUntil: sql<string | null>`freeze_until`,
+          frozenAt: sql<string | null>`frozen_at`,
+          archivedAt: sql<string | null>`archived_at`,
+          bonusConfig: sql<string | null>`bonus_config`,
+          aiExamEnabled: sql<boolean | null>`ai_exam_enabled`,
+          statisticsType: sql<string | null>`statistics_type`,
           employeeCount: sql<number>`(
             SELECT COUNT(*)::int FROM employee_org_departments eod
             JOIN users eu ON eu.id = eod.user_id AND eu.is_active = TRUE
             WHERE eod.org_department_id = ${orgDepartments.id}
           )`,
+          // 2026-07-14: subquery MUST alias its own org_departments reference (child_dept) —
+          // the outer .from(orgDepartments) below is unaliased, so a bare, same-named
+          // `org_departments.id` inside this subquery resolved to the SUBQUERY's OWN row
+          // (self-correlation), not the outer card — `parent_id = own id` is never true, so
+          // this returned 0 for EVERY card regardless of real children (verified live: node #8
+          // showed "Farzandlar (0)" while actually having 2). The correct aliased pattern
+          // already existed elsewhere in this same file (line 51, vacantCardCount `f` alias) —
+          // this one just missed it.
           childCount: sql<number>`(
-            SELECT COUNT(*)::int FROM org_departments
-            WHERE parent_id = ${orgDepartments.id} AND is_active = true
+            SELECT COUNT(*)::int FROM org_departments child_dept
+            WHERE child_dept.parent_id = ${orgDepartments.id} AND child_dept.is_active = true
+          )`,
+          vacantChildCount: sql<number>`(
+            SELECT COUNT(*)::int FROM org_departments child_dept
+            WHERE child_dept.parent_id = ${orgDepartments.id} AND child_dept.is_active = true AND child_dept.head_user_id IS NULL
           )`,
         })
         .from(orgDepartments)
         .leftJoin(appUsers, and(eq(appUsers.id, orgDepartments.head_user_id), eq(appUsers.is_active, true)))
         .where(eq(orgDepartments.id, id));
 
-      if (!nodeRows[0]) throw new NotFoundException(`Node #${id} topilmadi`);
+      if (!nodeRows[0]) throw new NotFoundException(await this.i18n.t('errors.orgNodeNotFoundWithId', { args: { id } }));
 
       const empRows = await db
         .select({
           id: appUsers.id, firstName: appUsers.first_name, lastName: appUsers.last_name,
           fullName, phone: appUsers.phone,
+          // VISION (ko'p-karta): xodimning shu kartadagi ulushi + birlamchimi (FE Xodimlar tab stake-display).
+          // raw column — employee_org_departments.stake_fraction/is_primary (Drizzle schema'da yo'q).
+          stakeFraction: sql<number | null>`stake_fraction`,
+          isPrimary: sql<boolean | null>`is_primary`,
         })
         .from(employeeOrgDepartments)
         .innerJoin(appUsers, and(eq(appUsers.id, employeeOrgDepartments.user_id), eq(appUsers.is_active, true)))
@@ -234,6 +290,26 @@ export class OrgQueriesRepo {
     }, 'DB_ERROR');
   }
 
+  /**
+   * Returns all active users ordered by first_name.
+   * Used by FE EditDialog to populate the department-head picker
+   * (87% of nodes have zero members, so member-based list is unusable).
+   */
+  async availableUsers(): Promise<Result<{ id: number; firstName: string; lastName: string }[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id: appUsers.id,
+          firstName: appUsers.first_name,
+          lastName: appUsers.last_name,
+        })
+        .from(appUsers)
+        .where(eq(appUsers.is_active, true))
+        .orderBy(appUsers.first_name, appUsers.last_name);
+      return castTo<{ id: number; firstName: string; lastName: string }[]>(rows);
+    }, 'DB_ERROR');
+  }
+
   async existsById(id: number): Promise<Result<boolean>> {
     return safeCall(async () => {
       const rows = await db
@@ -242,6 +318,77 @@ export class OrgQueriesRepo {
         .where(eq(orgDepartments.id, id))
         .limit(1);
       return rows.length > 0;
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * P51 — Derives the *direct manager* of a node by walking the parent chain
+   * upward and returning the nearest ANCESTOR node's `head_user_id`.
+   *
+   * Vizyon §2.3 Q1/Q4: manager_id = the head of the immediately-higher node in
+   * the tree (NOT "the dept head" — each branch has a different depth). When an
+   * intermediate ancestor has a NULL head, the recursion skips it and keeps
+   * climbing (depth-limited to 10, which also breaks any accidental cycle).
+   *
+   * Returns `managerUserId: null` (with all fields null) when no non-null head
+   * exists anywhere up the chain — this is the CORRECT, non-fabricated answer
+   * for a root node or an unstaffed branch (Q-40: no invented who-manages-whom).
+   *
+   * Distinct from the legacy {@link getDirectManager} (which COALESCEs the node's
+   * own head as a fallback — the RETRACTED model). Both coexist (Q-46).
+   */
+  async deriveManagerForNode(nodeId: number): Promise<Result<{
+    managerUserId: number | null;
+    managerName: string | null;
+    resolvedAtNodeId: number | null;
+    resolvedAtNodeName: string | null;
+    depth: number;
+  }>> {
+    return safeCall(async () => {
+      // RULE4_EXCEPTION: recursive CTE (ancestor walk) — Drizzle cannot express
+      // WITH RECURSIVE; same pattern as getApprovalChain above.
+      const rows = await exec(sql`
+        WITH RECURSIVE ancestor AS (
+          SELECT od.id, od.name, od.parent_id, od.head_user_id, 1 AS depth
+          FROM   org_departments od
+          WHERE  od.id = ${nodeId} AND od.is_active = true
+
+          UNION ALL
+
+          SELECT od2.id, od2.name, od2.parent_id, od2.head_user_id, a.depth + 1
+          FROM   org_departments od2
+          JOIN   ancestor a ON od2.id = a.parent_id
+          WHERE  od2.is_active = true AND a.depth < 10
+        )
+        SELECT
+          a.head_user_id AS "managerUserId",
+          a.id           AS "resolvedAtNodeId",
+          a.name         AS "resolvedAtNodeName",
+          a.depth        AS "depth",
+          TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')) AS "managerName"
+        FROM   ancestor a
+        LEFT   JOIN users u ON u.id = a.head_user_id AND u.is_active = true
+        WHERE  a.head_user_id IS NOT NULL
+          AND  a.id <> ${nodeId}
+        ORDER  BY a.depth
+        LIMIT  1
+      `);
+
+      const r = rows[0];
+      if (!r) {
+        return { managerUserId: null, managerName: null, resolvedAtNodeId: null, resolvedAtNodeName: null, depth: 0 };
+      }
+      const muid = r['managerUserId'];
+      const rid  = r['resolvedAtNodeId'];
+      const rname = r['resolvedAtNodeName'];
+      const mname = r['managerName'];
+      return {
+        managerUserId:      muid  === null || muid  === undefined ? null : Number(muid),
+        managerName:        mname === null || mname === undefined ? null : String(mname),
+        resolvedAtNodeId:   rid   === null || rid   === undefined ? null : Number(rid),
+        resolvedAtNodeName: rname === null || rname === undefined ? null : String(rname),
+        depth:              r['depth'] === null || r['depth'] === undefined ? 0 : Number(r['depth']),
+      };
     }, 'DB_ERROR');
   }
 }

@@ -21,6 +21,8 @@ interface MovementTypeConfig {
   badge: string;
   badgeClass: string;
   description: string;
+  /** Aniq sub-route (bo'lsa variant-yo'nalishdan ustun). */
+  route?: string;
 }
 
 const MOVEMENT_TYPES: MovementTypeConfig[] = [
@@ -33,6 +35,17 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
     badge:      "QO'LDA",
     badgeClass: "pos-badge-green",
     description: tLabel('common.PosMovementNew.tsx.taminotchidanYetibKelganMateriallarBarcha', "Ta'minotchidan yetib kelgan materiallar. Barcha maydonlar qo'lda to'ldiriladi — barcode skaneri kerak emas."),
+  },
+  {
+    value:      "WASTE_IN",
+    icon:       "♻️",
+    label:      tLabel('common.PosMovementNew.tsx.presKirim', "Pres-kirim"),
+    sublabel:   tLabel('common.PosMovementNew.tsx.taroziBarcode', "(Tarozi + barcode)"),
+    variant:    "kirim",
+    badge:      "TAROZI",
+    badgeClass: "pos-badge-green",
+    description: tLabel('common.PosMovementNew.tsx.presStansiyaTezQabul', "Pres-stansiya tez qabul: og'irlik (kg) tarozidan → barkod → ichki kirim, bir tez oqimda."),
+    route:      "/pos-monitor/movements/new/pres-kirim",
   },
   {
     value:      "EXTERNAL_OUT",
@@ -101,7 +114,9 @@ export default function PosMovementNew() {
   const { t } = usePosI18n();
 
   function handleSelect(mt: MovementTypeConfig) {
-    if (mt.variant === "kirim") {
+    if (mt.route) {
+      navigate(mt.route);
+    } else if (mt.variant === "kirim") {
       navigate("/pos-monitor/movements/new/kirim");
     } else {
       navigate("/pos-monitor/movements/new/chiqim");
@@ -137,7 +152,7 @@ export default function PosMovementNew() {
         }}>
           <span style={{ fontSize: 20 }}>📥</span>
           <div>
-            <div style={{ fontWeight: 700, color: "#065F46", marginBottom: 2 }}>{t("tashqiKirimQolda")}</div>
+            <div style={{ fontWeight: 700, color: "var(--pos-success)", marginBottom: 2 }}>{t("tashqiKirimQolda")}</div>
             <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
               {t("operatorBarchaMaydonlarniQoldaToldiradi")}
             </div>
@@ -149,7 +164,7 @@ export default function PosMovementNew() {
         }}>
           <span style={{ fontSize: 20 }}>📤</span>
           <div>
-            <div style={{ fontWeight: 700, color: "#1E40AF", marginBottom: 2 }}>{t("chiqimTurlarBarcode")}</div>
+            <div style={{ fontWeight: 700, color: "var(--pos-accent)", marginBottom: 2 }}>{t("chiqimTurlarBarcode")}</div>
             <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
               {t("barcodeSkanerOrqaliAmalgaOshiriladi")}
             </div>
@@ -222,7 +237,7 @@ export default function PosMovementNew() {
             <div style={{
               marginTop: 4,
               fontSize: 12, fontWeight: 600,
-              color: mt.variant === "kirim" ? "#059669" : "var(--pos-accent)",
+              color: mt.variant === "kirim" ? "var(--pos-success)" : "var(--pos-accent)",
               display: "flex", alignItems: "center", gap: 4,
             }}>
               {mt.variant === "kirim" ? "Qo'lda to'ldirish →" : "Barcode skan →"}

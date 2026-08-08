@@ -101,10 +101,16 @@ export class PpIntelligenceService implements OnModuleInit {
   async runMrp(input: MrpRunInput): Promise<Result<EnrichedMrpResult, AppError>> {
     let runId: number | undefined;
     try {
+      // SB0278 fix: `input.lotSizingMethod` is an explicit planner OPT-IN override
+      // (per the module doc above — "switching to EOQ/POQ/W-W requires the planner
+      // to opt in"). When the caller omits it, fall back to L4L only for the run-log
+      // label; per-material method now comes from `inventory_policy.lot_sizing_method`
+      // (loadRunInputs), so materials with a DB-configured non-L4L policy are honoured
+      // even when the run itself doesn't specify a global override.
       const method = input.lotSizingMethod ?? 'L4L';
       const horizon = input.horizonPeriods ?? MRP_DEFAULT_HORIZON;
       runId = await this.insertRun(method, horizon);
-      const inputs = await this.loadRunInputs(method, horizon, input.mpsRows);
+      const inputs = await this.loadRunInputs(method, horizon, input.mpsRows, input.lotSizingMethod);
       const result = await this.mrpHandler.runMrp({ ...inputs, horizonPeriods: horizon });
       if (!result.ok) {
         await this.setRunStatus(runId, 'failed');
@@ -119,18 +125,84 @@ export class PpIntelligenceService implements OnModuleInit {
     }
   }
 
+  /**
+   * audit 2026-08-06 T22B (Qoida 6): moved verbatim from pp-intelligence.controller.ts —
+   * period-matrix assembly + iterative projected-on-hand is business math, not transport.
+   */
+  formatMrpResponse(result: EnrichedMrpResult, method: string, horizon: number) {
+    type PeriodCell = { grossReq: number; scheduledReceipts: number; netReq: number; projectedOnHand: number; plannedOrders: number };
+    const emptyPeriods = (): PeriodCell[] => Array.from({ length: horizon }, () => ({ grossReq: 0, scheduledReceipts: 0, netReq: 0, projectedOnHand: 0, plannedOrders: 0 }));
+    const byMaterial = new Map<string, PeriodCell[]>();
+
+    for (const nr of result.netRequirements ?? []) {
+      let periods = byMaterial.get(nr.materialId);
+      if (!periods) {
+        periods = emptyPeriods();
+        byMaterial.set(nr.materialId, periods);
+      }
+      const idx = Math.min(Math.max(0, nr.period), horizon - 1);
+      const p = periods[idx];
+      if (!p) continue;
+      p.grossReq = nr.gr; p.netReq = nr.nr; p.scheduledReceipts += nr.sr;
+    }
+    for (const po of result.plannedOrders ?? []) {
+      let periods = byMaterial.get(po.materialId);
+      if (!periods) {
+        periods = emptyPeriods();
+        byMaterial.set(po.materialId, periods);
+      }
+      const idx = Math.min(Math.max(0, po.periodIndex), horizon - 1);
+      const p = periods[idx];
+      if (!p) continue;
+      p.plannedOrders += po.qty;
+    }
+    for (const [materialId, periods] of byMaterial) {
+      let poh = result.openingOnHand[materialId] ?? 0;
+      for (const p of periods) { poh = poh + p.scheduledReceipts + p.plannedOrders - p.grossReq; p.projectedOnHand = poh; }
+    }
+
+    const policyMap = new Map((Array.isArray(result.policies) ? result.policies : []).map((p) => [p.materialId, p]));
+    const lines = Array.from(byMaterial.entries()).map(([materialId, periods]) => {
+      const policy = policyMap.get(materialId);
+      return {
+        itemId: materialId,
+        itemName: materialId,
+        lotSizingMethod: policy?.lotSizingMethod ?? method,
+        safetyStock: policy?.safetyStock ?? 0,
+        leadTimePeriods: Math.max(1, Math.ceil((policy?.leadTimeDays ?? 7) / 7)),
+        periods,
+      };
+    });
+
+    return { method, horizon, lines, runAt: result.runAt };
+  }
+
   private async insertRun(method: string, horizon: number): Promise<number> {
+    // `pp_mrp_runs` is an auto-updatable VIEW over the base table `mrp_runs`, whose
+    // `run_number` (varchar(50)) and `run_date` (varchar(10), ISO date) columns are
+    // NOT NULL with no default. The view INSERT must supply both or the rewrite to the
+    // base table fails the NOT NULL constraint (verified live: header insert was 100%
+    // failing → 0 persisted runs). run_number is unique; concurrent 'running' rows are
+    // additionally blocked by the partial unique index `mrp_single_running_idx`.
+    const runNumber = `MRP-${Date.now()}`;
+    const runDate = new Date().toISOString().slice(0, 10);
     try {
       const r = await runQuery<{ id: number }>(sql`
-        INSERT INTO pp_mrp_runs (lot_sizing_method, status, horizon_periods, run_at)
-        VALUES (${method}, 'running', ${horizon}, NOW())
+        INSERT INTO pp_mrp_runs (run_number, run_date, lot_sizing_method, status, horizon_periods, run_at)
+        VALUES (${runNumber}, ${runDate}, ${method}, 'running', ${horizon}, NOW())
         RETURNING id
       `);
       const row = r.rows[0];
       if (!row) throw Object.assign(new Error('MRP run yaratilmadi'), { code: 'INTERNAL' });
       return row['id'];
-    } catch {
-      throw Object.assign(new Error('MRP hisoblash allaqachon bajarilmoqda'), { code: 'CONFLICT' });
+    } catch (e) {
+      // Only a unique-violation on the single-running index means a concurrent run; any
+      // other failure is a real error and must not be masked as CONFLICT (Q-40).
+      const msg = String((e as { message?: string })?.message ?? e);
+      if (/duplicate key|unique|mrp_single_running_idx/i.test(msg)) {
+        throw Object.assign(new Error('MRP hisoblash allaqachon bajarilmoqda'), { code: 'CONFLICT' });
+      }
+      throw Object.assign(new Error(`MRP run yaratilmadi: ${msg}`), { code: 'INTERNAL' });
     }
   }
 
@@ -139,7 +211,7 @@ export class PpIntelligenceService implements OnModuleInit {
       .catch((e: Error) => this.logger.warn(`Failed to set run ${runId} status=${status}: ${e.message}`));
   }
 
-  private async loadRunInputs(method: string, horizon: number, mpsInput?: MpsRow[]) {
+  private async loadRunInputs(method: string, horizon: number, mpsInput?: MpsRow[], explicitMethodOverride?: LotSizingMethod) {
     const [bomRows, mpsRows, onHandRows, policyRows] = await Promise.all([
       runQuery<BomEdge>(sql`
         SELECT bh.product_id::text AS "parentId", bi.material_id::text AS "childId",
@@ -148,10 +220,29 @@ export class PpIntelligenceService implements OnModuleInit {
         WHERE bh.is_active = true AND bh.deleted_at IS NULL LIMIT 1000
       `),
       mpsInput?.length ? Promise.resolve(mpsInput) : this.loadMpsFromDb(horizon),
-      runQuery(sql`SELECT id::text AS material_id, GREATEST(current_stock, 0)::numeric AS qty_on_hand FROM material_cards WHERE is_active = true`),
+      // ADR-004: warehouse_stock is the canonical on-hand source (material_cards.current_stock
+      // drifts out of sync with real warehouse movements — verified live e.g. OFFICE-PEN
+      // current_stock=202 vs warehouse_stock SUM(quantity)=15345). Sum across warehouses per
+      // material; is_active filter preserved via join to material_cards master data.
+      runQuery(sql`
+        SELECT mc.id::text AS material_id,
+               GREATEST(COALESCE(ws.total_qty, 0), 0)::numeric AS qty_on_hand
+        FROM material_cards mc
+        LEFT JOIN (
+          SELECT material_id, SUM(quantity) AS total_qty
+          FROM warehouse_stock
+          GROUP BY material_id
+        ) ws ON ws.material_id = mc.id
+        WHERE mc.is_active = true
+      `),
+      // SB0278: lot_sizing_method + review_period_days are DB-persisted per-material
+      // MRP config (inventory_policy) — previously loaded but discarded, forcing every
+      // material onto the run-level `method` regardless of its own policy row.
       runQuery(sql`
         SELECT mc.id::text AS material_id, COALESCE(ip.safety_stock, 0)::numeric AS safety_stock,
-               COALESCE(ip.lead_time_days, 1)::integer AS lead_time_days, COALESCE(ip.eoq, 0)::numeric AS eoq_qty
+               COALESCE(ip.lead_time_days, 1)::integer AS lead_time_days, COALESCE(ip.eoq, 0)::numeric AS eoq_qty,
+               ip.lot_sizing_method AS lot_sizing_method,
+               COALESCE(ip.review_period_days, 0)::integer AS review_period_days
         FROM material_cards mc LEFT JOIN inventory_policy ip ON ip.material_id = mc.id
         WHERE mc.is_active = true LIMIT 500
       `),
@@ -160,13 +251,27 @@ export class PpIntelligenceService implements OnModuleInit {
     const onHand: Record<string, number> = {};
     for (const r of onHandRows.rows ?? []) onHand[String(r['material_id'])] = safeNum(r['qty_on_hand']);
 
-    const policies: MaterialPolicy[] = (Array.isArray(policyRows.rows) ? policyRows.rows : []).map((r) => ({
-      materialId: String(r['material_id']),
-      lotSizingMethod: method as LotSizingMethod,
-      leadTimeDays: safeNum(r['lead_time_days']),
-      safetyStock: safeNum(r['safety_stock']),
-      eoq: safeNum(r['eoq_qty']),
-    }));
+    const validMethods = new Set<LotSizingMethod>(['L4L', 'EOQ', 'POQ', 'WAGNER_WHITIN']);
+    const policies: MaterialPolicy[] = (Array.isArray(policyRows.rows) ? policyRows.rows : []).map((r) => {
+      const dbMethod = String(r['lot_sizing_method'] ?? '');
+      // Explicit run-level override wins (planner opt-in); otherwise use the
+      // material's own DB policy when it's a recognised method; otherwise the
+      // run's default `method` (L4L unless the caller specified one).
+      const resolvedMethod = explicitMethodOverride
+        ?? (validMethods.has(dbMethod as LotSizingMethod) ? (dbMethod as LotSizingMethod) : (method as LotSizingMethod));
+      const reviewPeriodDays = safeNum(r['review_period_days']);
+      return {
+        materialId: String(r['material_id']),
+        lotSizingMethod: resolvedMethod,
+        leadTimeDays: safeNum(r['lead_time_days']),
+        safetyStock: safeNum(r['safety_stock']),
+        eoq: safeNum(r['eoq_qty']),
+        // POQ bucket size: review_period_days is the closest DB analog (periodic-review
+        // interval) to POQ's "n periods per order" — convert days→weekly-period buckets
+        // to match the handler's period unit (see leadTimePeriodOffset ÷7 convention).
+        poqPeriods: reviewPeriodDays > 0 ? Math.max(1, Math.round(reviewPeriodDays / 7)) : undefined,
+      };
+    });
 
     const srRows = await runQuery(sql`
       SELECT poi.material_id::text AS material_id, COALESCE(poi.quantity, 0)::numeric AS qty,
@@ -223,18 +328,28 @@ export class PpIntelligenceService implements OnModuleInit {
 
   private async persistRunLines(runId: number, data: MrpRunResult, onHand: Record<string, number>): Promise<void> {
     if (!data.netRequirements.length) return;
+    // Aggregate planned-order qty AND the earliest release period per (material, demand-period).
+    // releaseByPeriod is a 0-based period index from the handler → store as 'W{n+1}' to match `period`.
     const poByPeriod = new Map<string, number>();
+    const releaseByPeriod = new Map<string, number>();
     for (const po of data.plannedOrders) {
       const key = `${po.materialId}:${po.periodIndex}`;
       poByPeriod.set(key, (poByPeriod.get(key) ?? 0) + po.qty);
+      const prev = releaseByPeriod.get(key);
+      releaseByPeriod.set(key, prev === undefined ? po.releaseByPeriod : Math.min(prev, po.releaseByPeriod));
     }
-    // Pattern 2: each ON CONFLICT DO NOTHING insert is independent — fire in parallel to remove N+1 latency
+    // Lines are unique per (run_id) snapshot — a fresh run_id has no existing rows, so no
+    // ON CONFLICT clause is needed (the table has no unique key on (run_id, material, period)
+    // to infer against, which made the previous ON CONFLICT DO NOTHING throw). Pattern 2:
+    // each insert is independent — fire in parallel to remove N+1 latency.
     await Promise.all(data.netRequirements.map((nr) => {
-      const poQty = poByPeriod.get(`${nr.materialId}:${nr.period}`) ?? 0;
+      const key = `${nr.materialId}:${nr.period}`;
+      const poQty = poByPeriod.get(key) ?? 0;
+      const releaseIdx = releaseByPeriod.get(key);
+      const releaseLabel = releaseIdx === undefined ? null : `W${releaseIdx + 1}`;
       return runQuery(sql`
-        INSERT INTO pp_mrp_run_lines (run_id, material_id, period, gross_req, on_hand, net_req, planned_order)
-        VALUES (${runId}, ${nr.materialId}, ${`W${nr.period + 1}`}, ${nr.gr}, ${onHand[nr.materialId] ?? 0}, ${nr.nr}, ${poQty})
-        ON CONFLICT DO NOTHING
+        INSERT INTO pp_mrp_run_lines (run_id, material_id, period, gross_req, on_hand, scheduled_receipts, net_req, planned_order, release_date)
+        VALUES (${runId}, ${nr.materialId}, ${`W${nr.period + 1}`}, ${nr.gr}, ${onHand[nr.materialId] ?? 0}, ${nr.sr}, ${nr.nr}, ${poQty}, ${releaseLabel})
       `).catch((e: Error) => this.logger.warn(`MRP line insert failed: ${e.message}`));
     }));
   }

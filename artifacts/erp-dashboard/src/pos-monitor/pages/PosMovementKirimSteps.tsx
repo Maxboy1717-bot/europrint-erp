@@ -77,6 +77,11 @@ export function Step1Header({header, errors, warehouses, warehousesLoading, kiri
           <label className="_lbl">{t("Izoh")}</label>
           <textarea className="pos-input" rows={3} value={header.notes} onChange={e => setH("notes", e.target.value)} placeholder={t("qoshimchaIzoh")} style={{ resize: "vertical" }} />
         </div>
+        {/* VISION-3340 #60: ixtiyoriy foto-dalil URL (shift-handover formasi bilan bir xil naqsh) */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label className="_lbl">{t("PosMovementKirim.fotoDalilUrl", "Foto-dalil URL (ixtiyoriy)")}</label>
+          <input className="pos-input" value={header.photoEvidenceUrl ?? ""} onChange={e => setH("photoEvidenceUrl", e.target.value)} placeholder="https://..." />
+        </div>
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
         <button className="pos-btn pos-btn-primary" onClick={goNext}>{t("keyingiMateriallar")}</button>
@@ -94,14 +99,17 @@ interface Step2Props {
   totalQty: number;
   totalValue: number;
   totalWeight: number;
+  allLinesHaveBarcode: boolean;
   addLine: () => void;
   removeLine: (i: number) => void;
   updateLine: (i: number, key: Exclude<keyof LineItem, "_key">, val: string) => void;
+  onGenerateBarcode: (i: number) => void;
+  onOpenKeypad: (i: number, field: "quantity" | "weightKg") => void;
   goBack: () => void;
   goNext: () => void;
 }
 
-export function Step2Lines({ lines, lineErrors, header, kirimCfg, totalQty, totalValue, totalWeight, addLine, removeLine, updateLine, goBack, goNext }: Step2Props) {
+export function Step2Lines({ lines, lineErrors, header, kirimCfg, totalQty, totalValue, totalWeight, allLinesHaveBarcode, addLine, removeLine, updateLine, onGenerateBarcode, onOpenKeypad, goBack, goNext }: Step2Props) {
   const { t } = useTranslation("common");
   return (
     <div className="pos-fade-in">
@@ -137,7 +145,10 @@ export function Step2Lines({ lines, lineErrors, header, kirimCfg, totalQty, tota
                   {le.materialCardId && <div className="_errmsg">{le.materialCardId}</div>}
                 </div>
                 <div>
-                  <input className={`pos-input pos-mono${le.quantity ? " _err" : ""}`} value={line.quantity} onChange={e => updateLine(i, "quantity", e.target.value)} placeholder="0" type="number" min="0" step="any" />
+                  <div style={{ display: "flex", gap: 3 }}>
+                    <input className={`pos-input pos-mono${le.quantity ? " _err" : ""}`} value={line.quantity} onChange={e => updateLine(i, "quantity", e.target.value)} placeholder="0" type="number" min="0" step="any" />
+                    <button type="button" className="pos-btn pos-btn-ghost" style={{ padding: "0 8px", flexShrink: 0 }} title={t("PosMovementKirim.miqdorKiriting", "Klaviatura / tarozi")} onClick={() => onOpenKeypad(i, "quantity")}>⌨️</button>
+                  </div>
                   {le.quantity && <div className="_errmsg">{le.quantity}</div>}
                 </div>
                 <div>
@@ -146,11 +157,33 @@ export function Step2Lines({ lines, lineErrors, header, kirimCfg, totalQty, tota
                 </div>
                 <input className="pos-input" value={line.batchNumber} onChange={e => updateLine(i, "batchNumber", e.target.value)} placeholder="LOT-001" />
                 <input className="pos-input" type="date" value={line.expiryDate} onChange={e => updateLine(i, "expiryDate", e.target.value)} />
-                <input className="pos-input pos-mono" value={line.weightKg} onChange={e => updateLine(i, "weightKg", e.target.value)} placeholder="0.00" type="number" min="0" step="any" />
+                <div style={{ display: "flex", gap: 3 }}>
+                  <input className="pos-input pos-mono" value={line.weightKg} onChange={e => updateLine(i, "weightKg", e.target.value)} placeholder="0.00" type="number" min="0" step="any" />
+                  <button type="button" className="pos-btn pos-btn-ghost" style={{ padding: "0 8px", flexShrink: 0 }} title={t("PosMovementKirim.tarozidanOgirlikOlish", "Tarozi / klaviatura")} onClick={() => onOpenKeypad(i, "weightKg")}>⚖️</button>
+                </div>
                 <input className="pos-input" value={line.certificateNumber} onChange={e => updateLine(i, "certificateNumber", e.target.value)} placeholder="SERT-001" />
                 <input className="pos-input" value={line.notes} onChange={e => updateLine(i, "notes", e.target.value)} placeholder={t("Izoh")} />
                 <button className="pos-btn pos-btn-ghost" style={{ padding: "9px 10px", color: "var(--pos-danger)", flexShrink: 0 }} onClick={() => removeLine(i)} title={t("qatorniOchirish")}>✕</button>
               </div>
+              {/* Barkod (MAJBURIY) — POS Monitor printeridan yaratiladi */}
+              {parseInt(line.materialCardId, 10) > 0 && parseFloat(line.quantity) > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6, paddingLeft: 2 }}>
+                  {line.barcode && line.barcodePrintedAt ? (
+                    <>
+                      <span className="pos-badge pos-badge-green" style={{ fontSize: 11 }}>🏷️ {t("PosMovementKirim.barkodChopEtildi", "Barkod chop etildi")}</span>
+                      <span className="pos-mono" style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{line.barcode}</span>
+                      <button type="button" className="pos-btn pos-btn-ghost" style={{ fontSize: 11, padding: "3px 10px" }} onClick={() => onGenerateBarcode(i)}>🔁 {t("PosMovementKirim.qaytaYaratish", "Qayta")}</button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" className="pos-btn pos-btn-success" style={{ fontSize: 12, padding: "6px 14px" }} onClick={() => onGenerateBarcode(i)}>
+                        🏷️ {t("PosMovementKirim.barkodYaratishVaChopEtish", "Barkod yaratish va chop etish")}
+                      </button>
+                      <span style={{ fontSize: 11, color: "var(--pos-danger)", fontWeight: 600 }}>{le.barcode || (t("PosMovementKirim.barkodMajburiy", "Barkod majburiy"))}</span>
+                    </>
+                  )}
+                </div>
+              )}
               {(parseFloat(line.quantity) > 0 && parseFloat(line.unitPrice) > 0) && (
                 <div style={{ textAlign: "right", fontSize: 11, color: "var(--pos-text-muted)", marginTop: 2, paddingRight: 36 }}>
                   {t("jami")}<span className="pos-mono" style={{ color: "var(--pos-accent)", fontWeight: 600 }}>{fmt(parseFloat(line.quantity) * parseFloat(line.unitPrice), header.currency)}</span>
@@ -167,9 +200,14 @@ export function Step2Lines({ lines, lineErrors, header, kirimCfg, totalQty, tota
           </div>
         )}
       </div>
+      {lines.length > 0 && !allLinesHaveBarcode && (
+        <div style={{ fontSize: 12, color: "var(--pos-danger)", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+          🏷️ {t("PosMovementKirim.barkodsizQabulYoq", "Barkodsiz qabul YO'Q — har material uchun barkod yaratib chop eting (POS Monitor printeridan).")}
+        </div>
+      )}
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <button className="pos-btn pos-btn-ghost" onClick={goBack}>{t("orqaga")}</button>
-        <button className="pos-btn pos-btn-primary" onClick={goNext}>{t("keyingiInventarPasporti")}</button>
+        <button className="pos-btn pos-btn-primary" onClick={goNext} disabled={!allLinesHaveBarcode} style={!allLinesHaveBarcode ? { opacity: 0.5, cursor: "not-allowed" } : undefined}>{t("keyingiInventarPasporti")}</button>
       </div>
     </div>
   );
@@ -184,7 +222,7 @@ export function Step3Passport({ header, lines, totalQty, totalWeight, totalValue
     <div className="pos-fade-in">
       <div className="pos-card" style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--pos-accent)", marginBottom: 18 }}>{t("bosqich3InventarPasporti")}</div>
-        <div style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#1E40AF", display: "flex", gap: 10, alignItems: "flex-start" }}>
+        <div style={{ background: "var(--pos-accent-soft)", border: "1px solid color-mix(in srgb, var(--pos-accent) 20%, transparent)", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "var(--pos-accent)", display: "flex", gap: 10, alignItems: "flex-start" }}>
           <span style={{ fontSize: 18, flexShrink: 0 }}>ℹ️</span>
           <span>{t("barchaTashqiKirimlarAvval")}<strong>karantinga</strong> {t("tushadiQcBolimiTekshirgandanSong")}</span>
         </div>
@@ -299,13 +337,14 @@ interface Step5Props {
   header: HeaderForm;
   lines: LineItem[];
   totalValue: number;
+  allLinesHaveBarcode: boolean;
   handleSave: (submitToKarantin: boolean) => void;
   downloadPdf: () => void;
   goBack: () => void;
   navigate: (path: string) => void;
 }
 
-export function Step5Submit({ created, saving, header, lines, totalValue, handleSave, downloadPdf, goBack, navigate }: Step5Props) {
+export function Step5Submit({ created, saving, header, lines, totalValue, allLinesHaveBarcode, handleSave, downloadPdf, goBack, navigate }: Step5Props) {
   const { t } = useTranslation("common");
   return (
     <div className="pos-fade-in">
@@ -335,15 +374,20 @@ export function Step5Submit({ created, saving, header, lines, totalValue, handle
               <SumItem label={t("Materiallar")}  value={`${lines.length} ta qator`} />
               <SumItem label={t("jamiSumma")}   value={fmt(totalValue, header.currency)} mono />
             </div>
-            <div style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: "#92400E", display: "flex", gap: 10 }}>
+            <div style={{ background: "color-mix(in srgb, var(--pos-warning) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--pos-warning) 28%, transparent)", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: "var(--pos-warning)", display: "flex", gap: 10 }}>
               <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
               <span>{t("barchaTashqiKirimlarAvvalKarantinga")}</span>
             </div>
+            {!allLinesHaveBarcode && (
+              <div style={{ fontSize: 12, color: "var(--pos-danger)", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, padding: "8px 12px", marginBottom: 14 }}>
+                🏷️ {t("PosMovementKirim.barkodsizSaqlashMumkinEmas", "Barkodsiz saqlash mumkin emas — barkod yaratib chop eting.")}
+              </div>
+            )}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 400 }}>
-              <button className="pos-btn pos-btn-ghost" style={{ justifyContent: "center", padding: "12px 24px", fontSize: 14 }} onClick={() => handleSave(false)} disabled={saving}>
+              <button className="pos-btn pos-btn-ghost" style={{ justifyContent: "center", padding: "12px 24px", fontSize: 14, ...(!allLinesHaveBarcode ? { opacity: 0.5, cursor: "not-allowed" } : {}) }} onClick={() => handleSave(false)} disabled={saving || !allLinesHaveBarcode}>
                 {saving ? "⏳ Saqlanmoqda..." : "💾 Qoralama saqlash"}
               </button>
-              <button className="pos-btn pos-btn-success" style={{ justifyContent: "center", padding: "14px 24px", fontSize: 15 }} onClick={() => handleSave(true)} disabled={saving}>
+              <button className="pos-btn pos-btn-success" style={{ justifyContent: "center", padding: "14px 24px", fontSize: 15, ...(!allLinesHaveBarcode ? { opacity: 0.5, cursor: "not-allowed" } : {}) }} onClick={() => handleSave(true)} disabled={saving || !allLinesHaveBarcode}>
                 {saving ? "⏳ Yuborilmoqda..." : "🚀 Karantinga yuborish"}
               </button>
             </div>

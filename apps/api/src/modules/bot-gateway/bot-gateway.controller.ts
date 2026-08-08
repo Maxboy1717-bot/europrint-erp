@@ -17,7 +17,7 @@ import { DirectorBotService } from './bots/director.bot';
 import { OmborBotService } from './bots/ombor.bot';
 import { PosBotService } from './bots/pos.bot';
 import { TelegramAuthGuard } from './telegram-auth.guard';
-import type { BotMessage } from './bots/bot.helpers';
+import type { BotMessage, InlineKeyboard } from './bots/bot.helpers';
 import type { TelegramWebhookRequest } from './telegram-auth.guard';
 
 const BOT_NAMES = ['crm', 'mes', 'hr', 'logistics', 'fin', 'qc', 'director', 'ombor', 'pos'] as const;
@@ -129,12 +129,15 @@ export class BotGatewayController {
 
     // Return Telegram webhook reply method — Telegram will deliver this message to the user
     // without a separate outbound API call.
-    const r = reply as { text?: string; parse?: string };
+    const r = reply as { text?: string; parse?: string; replyMarkup?: InlineKeyboard };
     return {
-      method:     'sendMessage',
-      chat_id:    chatId,
-      text:       r.text ?? '✅ Bajarildi',
-      parse_mode: r.parse === 'HTML' ? 'HTML' : undefined,
+      method:       'sendMessage',
+      chat_id:      chatId,
+      text:         r.text ?? '✅ Bajarildi',
+      parse_mode:   r.parse === 'HTML' ? 'HTML' : undefined,
+      // Item 18-notif#17 — carry the bot's inline keyboard through to Telegram so
+      // night-shift users get tap-to-act buttons (PRIMARY channel), not just text.
+      reply_markup: r.replyMarkup && r.replyMarkup.length ? { inline_keyboard: r.replyMarkup } : undefined,
     };
   }
 }

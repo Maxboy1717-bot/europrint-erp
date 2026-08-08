@@ -4,15 +4,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { Ok, Err, Result } from '@common/result';
 import { QcNewRepository } from '../infrastructure/repositories/qc-new.repository';
-
-type AiTrendBase = Extract<
-  Awaited<ReturnType<QcNewRepository['getAiTrendData']>>,
-  { ok: true; data: unknown }
->['data'];
-
-type AiTrendPrediction = { nextWeekRisk: string; confidenceScore: number; recommendation: string };
 
 @Injectable()
 export class QcNewService {
@@ -37,18 +29,24 @@ export class QcNewService {
     });
   }
 
-  async getAiTrend(): Promise<Result<AiTrendBase & { prediction: AiTrendPrediction }>> {
-    const prediction: AiTrendPrediction = {
-      nextWeekRisk: 'medium',
-      confidenceScore: 0.72,
-      recommendation: 'Sifat nazoratini kuchaytirish tavsiya etiladi',
-    };
-    const r = await this.repo.getAiTrendData();
-    return r.ok ? Ok({ ...r.data, prediction }) : Err(r.error);
+  getAiTrend(): ReturnType<QcNewRepository['getAiTrendSummary']> {
+    return this.repo.getAiTrendSummary();
   }
 
   getCertificates(status?: string): ReturnType<QcNewRepository['findCertificates']> {
     return this.repo.findCertificates(status);
+  }
+
+  createCertificate(data: {
+    certNumber: string;
+    orderId?: number;
+    productName?: string;
+    issuedDate?: string;
+    status?: string;
+    notes?: string;
+    issuedBy?: string;
+  }): ReturnType<QcNewRepository['insertCertificate']> {
+    return this.repo.insertCertificate(data);
   }
 
   getLabTests(orderId?: string): ReturnType<QcNewRepository['findLabTests']> {
@@ -57,20 +55,32 @@ export class QcNewService {
 
   createLabTest(data: {
     order_id?: number;
-    parameter_name: string;
+    parameter_name?: string;
     value?: number;
     unit?: string;
     min_value?: number;
     max_value?: number;
     tested_by?: string;
     notes?: string;
+    materialName?: string;
+    lotNumber?: string;
+    grammatura?: number;
+    qalinlik?: number;
+    bosim?: number;
+    namlik?: number;
+    operatorName?: string;
+    result?: string;
   }): ReturnType<QcNewRepository['insertLabTest']> {
     const v = data.value ?? null;
     const min = data.min_value ?? null;
     const max = data.max_value ?? null;
-    const result = (min !== null && max !== null && v !== null)
+    // Session-model rows (materialName present) carry their own operator-chosen result
+    // (pass/fail/conditional from LabSchema on the FE); the generic model still derives
+    // pass/fail/pending from a min/max compare when the caller didn't send one.
+    const computedResult = (min !== null && max !== null && v !== null)
       ? (v >= min && v <= max ? 'pass' : 'fail')
       : 'pending';
+    const result = data.result ?? computedResult;
     return this.repo.insertLabTest({
       orderId: data.order_id,
       parameterName: data.parameter_name,
@@ -81,6 +91,13 @@ export class QcNewService {
       testedBy: data.tested_by,
       notes: data.notes,
       result,
+      materialName: data.materialName,
+      lotNumber: data.lotNumber,
+      grammatura: data.grammatura,
+      qalinlik: data.qalinlik,
+      bosim: data.bosim,
+      namlik: data.namlik,
+      operatorName: data.operatorName,
     });
   }
 
@@ -107,5 +124,10 @@ export class QcNewService {
 
   deleteInspection(id: string): ReturnType<QcNewRepository['deleteInspection']> {
     return this.repo.deleteInspection(id);
+  }
+
+  /** VISION-3340 #40 — full material→QC→delivery trace for one production order. */
+  getTraceability(productionOrderId: number): ReturnType<QcNewRepository['getProductionOrderTrace']> {
+    return this.repo.getProductionOrderTrace(productionOrderId);
   }
 }

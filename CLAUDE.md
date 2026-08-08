@@ -3,6 +3,48 @@
 > Bu fayl Claude Code terminaliga loyihaning arxitekturasi, qoidalari va hozirgi holati
 > haqida to'liq ma'lumot beradi. Har bir vazifani boshlashdan oldin bu faylni o'qing.
 
+> ⭐ **LOYIHA KONSTITUTSIYASI (yangi, kanonik):**
+> [`LOYIHA_QOIDALARI.md`](LOYIHA_QOIDALARI.md) — 17 bo'lim: 23 arxitektura qoidasi, DB, DDD, Security, FE, Test, CI/CD + EuroPrint-maxsus qoidalar (C/E/F/H).
+> [`DIZAYN_QOIDALARI.md`](DIZAYN_QOIDALARI.md) — EP Design System: tokenlar, EPPageHeader/EPKpiCard/EPCard/EPStatusPill, AppShell, modul ranglar.
+> [`STANDARTLAR.md`](STANDARTLAR.md) — ⭐ AGENT QOʻLLANMASI: kanonik jadvallar (nima ishlat/ishlaTMA), jadval/ustun/API nomlash, DDD tuzilma, Drizzle/controller/service/repo/DTO shablonlar, duplikat tekshiruv skriptlari. **§15 = 72 ta tarixiy xato qoidasi.**
+> [`EuroPrint_Master_Prompt.md`](EuroPrint_Master_Prompt.md) — ⭐ BAJARUVCHI (Muslimbek) har sessiyada o'qi: doimiy kontekst (A) + 22 faz prompti (B).
+> [`docs/V2-REBUILD/Backend_Reja/00_Indeks.md`](docs/V2-REBUILD/Backend_Reja/00_Indeks.md) — 18 fazali backend reja (indeks, hamma faz tayyor).
+> [`docs/adr/`](docs/adr/) — Arxitektura qarorlari (ADR-001..006): org_functions/sales_orders/entries/warehouse_stock/Result-T/technology_cards.
+> [`FE_STANDARTLAR.md`](FE_STANDARTLAR.md) — ⭐ FRONTEND standartlari: useQuery/useMutation/forma/jadval/modal shablonlar (copy-paste tayyor), EP komponentlar, rang/token/AppShell qoidalari, pre-commit tekshiruv ro'yxati.
+> [`BOSHLASH.md`](BOSHLASH.md) — Dev setup: clone, .env, Docker, migratsiya, seed, ishga tushirish, smoke test, umumiy muammolar va hal yo'llari.
+> [`docs/LUGAT.md`](docs/LUGAT.md) — Domain lug'at: gofra/offset atamalar, kanonik jadval nomlari, ERP qisqartmalar, aralashtirilmasligi kerak terminlar.
+> [`docs/GIT_QOIDALARI.md`](docs/GIT_QOIDALARI.md) — Git qoidalar: branch, commit format, `git add <aniq-fayl>` (HECH QACHON `-A`), migration commit, taqiqlangan amallar.
+> [`docs/migration/seed/`](docs/migration/seed/) — Seed SQL (idempotent): roles, razryad 1-6, unit_of_measures, accounts (BHMS), defect_catalog (gofra/offset/silkscreen/flexi).
+> [`docs/EVENT_KATALOGI.md`](docs/EVENT_KATALOGI.md) — ⭐ Domain events: 19 event (nom, payload schema, emitter, listener, holat: ✅/⚠️/🔲). Oltin zanjir SD→PP→MES→QC→WMS→FIN.
+> [`docs/API_SHARTNOMA.md`](docs/API_SHARTNOMA.md) — FE↔BE kelishuv: success/error/pagination format, HTTP kodlar, ID=integer, sana=ISO8601, endpoint nomlash.
+> [`docs/XATO_KODLARI.md`](docs/XATO_KODLARI.md) — Standart xato kodlari: HR_*/SD_*/PP_*/MES_*/QC_*/WMS_*/FIN_*/CRM_*/AUTH_*. Result<T> bilan birga ishlaydi.
+> [`docs/DB_ERD.md`](docs/DB_ERD.md) — Jadvallar munosabati (matnli ERD): kanonik vs eskirgan jadvallar xaritasi, FK bog'lanishlar.
+> [`docs/SPRINT_REJA.md`](docs/SPRINT_REJA.md) — Sprint 0-10 reja: tartib, bog'liqlik, tekshiruv mezonlari. Sprint 0 ✅ bajarildi.
+> [`docs/migration/MIGRATION_TARTIB.md`](docs/migration/MIGRATION_TARTIB.md) — Migration tartib: poydevor→org→material→SD→PP→MES→QC→WMS→FIN.
+> [`docs/V2_PAPKA_STRUKTURASI.md`](docs/V2_PAPKA_STRUKTURASI.md) — ⭐ V2 papka arxitekturasi: Strangler Fig pattern, `modules/` = V2 toza DDD, `_legacy/` = V1 o'chirilish kutmoqda, qaerda nima yoziladi jadvali.
+> [`docs/PARAZIT_KOD_QOIDALARI.md`](docs/PARAZIT_KOD_QOIDALARI.md) — ⭐ Parazit kod qoidalari: 8 tur (soxta/o'lik/stub/echo/phantom/ghost/view-yozish), oldini olish P-1..P-5, o'chirish tartibi, V1 katalog (~130 parazit).
+> [`docs/MASTER_DATA_STANDARTLARI.md`](docs/MASTER_DATA_STANDARTLARI.md) — Master data standartlari: jadval egalari, kim yarata/o'zgartira oladi, versiyalash (technology_cards), soft delete, biznes kalit, lookup=seed-only, material kod formati.
+> [`docs/XAVFSIZLIK_STANDARTLARI.md`](docs/XAVFSIZLIK_STANDARTLARI.md) — ⭐ Xavfsizlik: 4 global guard qoidasi, rol matrisi, input validatsiya (whitelist=true), SQL injection (Drizzle), JWT (HS256+pin), RBAC, bcrypt×12, OWASP Top10 EuroPrint uchun.
+> [`docs/TEST_STANDARTLARI.md`](docs/TEST_STANDARTLARI.md) — Test standartlari: real DB qoidasi (mock repo taqiq), unit/integration/e2e tuzilma, factory pattern, coverage maqsadlari (domain≥90%), Jest config, nima test qilinmaydi.
+> [`docs/PERFORMANCE_STANDARTLARI.md`](docs/PERFORMANCE_STANDARTLARI.md) — Performance: N+1 taqiq (1 so'rov=1 SQL), pagination majburiy (max 100), index standartlari (FK+deleted_at+FTS), javob vaqti maqsadlari, EXPLAIN ANALYZE, katta jadval strategiyasi.
+> [`docs/MODUL_SHARTNOMASI.md`](docs/MODUL_SHARTNOMASI.md) — Modul chegaralari: modul A → modul B faqat event orqali (servis import taqiq), jadval egasi xaritasi, outbox pattern, shared read qoidasi, NestJS import tuzilmasi.
+> [`docs/MUHIT_STANDARTLARI.md`](docs/MUHIT_STANDARTLARI.md) — Muhit: port standartlari (3030/5173/5432), .env majburiy o'zgaruvchilar, Docker Compose, dev/test/prod farqlari, secret rotation, startup validatsiya, pre-deploy tekshiruv.
+> [`docs/MONITORING_STANDARTLARI.md`](docs/MONITORING_STANDARTLARI.md) — Monitoring: log darajalari (error/warn/log/debug), nima loglanadi/loglanmaydi (JWT/parol taqiq), JSON strukturalangan log, GlobalExceptionFilter, health check format, performance monitoring.
+> [`docs/XAVF_REESTRI.md`](docs/XAVF_REESTRI.md) — ⭐ Xavf reestri: 23 aniqlangan xavf (R-01..R-23) E×T=M ball bilan. Kritik (M≥15): ikki-dunyo, GL atomarligi, secret leak, event yo'qolishi, N+1. Har sprint yangilanadi.
+> [`docs/KOCHIRISH_QOIDALARI.md`](docs/KOCHIRISH_QOIDALARI.md) — ⭐ V1→V2 ko'chirish: 6-bosqich (tahlil→domen→app→infra→presentation→cleanup), nima saqlash/qayta yozish, zero-downtime, rollback, modul tartib (auth→org→hr→mm→sd→...).
+> [`docs/CODE_REVIEW_STANDARTLARI.md`](docs/CODE_REVIEW_STANDARTLARI.md) — Code review: commit format, PR shabloni, tekshiruv ro'yxati (SEC/DB/DDD/TEST/PERF/NAMING), bloker vs taklif, merge qoidalari, self-review.
+> [`docs/DRIZZLE_STANDARTLARI.md`](docs/DRIZZLE_STANDARTLARI.md) — Drizzle ORM: schema definition pattern, SELECT/INSERT/UPDATE/softdelete, JOIN (N+1 yo'q), transaction, VIEW, migration workflow, kanonik jadval nomlari.
+> [`docs/TEXNIK_QARZ.md`](docs/TEXNIK_QARZ.md) — Texnik qarz reestri: 18 qarz T-01..T-18 (P0/P1/P2/P3). P0: ikki-dunyo, outbox. P1: ghost endpoint, hardcoded matn, parazit ~130. Sprint bo'yicha to'lash rejasi.
+> [`docs/SPRINT_DOD.md`](docs/SPRINT_DOD.md) — Sprint Definition of Done: global checklisti (tsc/test/golden-thread/sec), Sprint 0 to'liq ro'yxati ✅, Sprint 1-10 maxsus DoD, sign-off tartibi.
+> [`docs/GOLDEN_THREAD_TEKSHIRUV.md`](docs/GOLDEN_THREAD_TEKSHIRUV.md) — Oltin zanjir tekshiruvi: SD→PP→MES→QC→WMS→FIN curl qadamlari, domain_events SQL, listener grep, sprint holati jadvali.
+> [`docs/FUNDAMENT_STATUS.md`](docs/FUNDAMENT_STATUS.md) — ⭐ MASTER CHECKLISTI: 30 hujjat kategoriya bo'yicha (Arxitektura/Jarayon/Xavfsizlik/Ma'lumot/Xavf/Integratsiya/Muhit/Reja). Sprint 0 ✅ 100% tugadi. Sprint 1 tayyor.
+> [`docs/V2_YOQILISH_REJASI.md`](docs/V2_YOQILISH_REJASI.md) — ⭐ V2 GA O'TISH REJASI: Strangler Fig, 10 sprint jadvali (Auth+Org→Material+SD→PP→MES→QC→WMS→FIN→CRM→AI+IoT→Test), har sprint foydalanuvchi ko'radigan yangiliklar, xavf/yechim jadvali, muvaffaqiyat mezonlari. "V2 ga qanday o'tamiz?" — aniq javob.
+> [`docs/NOMLASHTIRISH_QOIDALARI.md`](docs/NOMLASHTIRISH_QOIDALARI.md) — Nomlashtirish standartlari: fayl (kebab-case), class (PascalCase), metod (camelCase), DB (snake_case), API route, event (modul.entity.amal), xato kodi (MODUL_TAVSIF), i18n kalit (modul.entity.kalit). Har kategoriya uchun ✅/❌ misollar.
+> [`docs/CI_CD_STANDARTLARI.md`](docs/CI_CD_STANDARTLARI.md) — CI/CD: ci.yml bosqichlari, pre-commit hooklar ro'yxati, branch strategiyasi (chore/schema-convergence de-facto main), deployment tartibi (pull→install→build→migrate→restart), backup qoidasi, muhit tekshiruvi.
+> [`docs/DEPENDENCY_STANDARTLARI.md`](docs/DEPENDENCY_STANDARTLARI.md) — Dependency boshqaruvi: 5-savol tekshiruvi (kerak/tavsiya/yangilanish/litsenziya/zaiflik), tasdiqlangan paketlar (NestJS/Drizzle/React/TanStack), taqiqlangan paketlar (moment/axios/sequelize/typeorm/redux/webpack), versiya strategiyasi (^/~/Exact), pnpm workspace qoidasi, audit (sprint boshida).
+> [`docs/ROLLBACK_PLAYBOOK.md`](docs/ROLLBACK_PLAYBOOK.md) — Rollback: qaror daraxti (API tushdi/DB muammo/migration xato/V2 bug/secret leak/relay to'xtadi/FE ishlamaydi), har holat uchun aniq buyruqlar, < 5 daqiqada tiklash maqsadi, incident log shabloni.
+> Test factory base (`apps/api/src/common/factories/`): har modul Drizzle sxemasi yaratilgandan keyin qo'shiladi (real DB, mock emas — Backend_Reja/14_Test.md §1 qoida).
+
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
 > [`docs/agent-constitution.md`](docs/agent-constitution.md) — Ish metodologiyasi,
 > modul holatlari, katta vazifalar jarayoni (dizayn o'zgartirish, refactor), commit qoidalari,
@@ -83,11 +125,10 @@ this.jwtService.verify(body.refreshToken, { secret: refreshSecret });
 -- Migration faylida parol hash bo'lmasligi kerak
 ```
 
-**Hozirgi holat:**
-- `apps/api/src/database/seeds/admin.seed.ts:6` — `'Admin123!'` fallback — **TUZATILISHI KERAK**
-- `apps/api/src/shared/db/migrations/org-structure-sync.sql:40` — `test123` hash — **TUZATILISHI KERAK**
-- `apps/api/src/modules/legacy/controllers/admin-auth.controller.ts:33` — noto'g'ri secret — **TUZATILISHI KERAK**
-- `apps/api/src/modules/auth/domain/value-objects/password.vo.ts:14` — bcrypt rounds 10 (admin 12 ishlatadi) — **TEKSHIRILSIN**
+**Hozirgi holat (2026-08-07 jonli tekshirildi — hammasi YOPILGAN):**
+- `apps/api/src/database/seeds/admin.seed.ts` — ✅ fallback parol yo'q; PA-S1 izohi bilan env yo'q bo'lsa hard-fail. `BCRYPT_ROUNDS` endi `common/constants/security.constants` dan (runtime hasher bilan bir manba).
+- `apps/api/src/shared/db/migrations/org-structure-sync.sql` — ✅ `test123` hash yo'q.
+- `apps/api/src/modules/legacy/controllers/admin-auth.controller.ts` — ✅ fayl umuman yo'q (legacy controller o'chirilgan).
 
 ---
 
@@ -114,10 +155,9 @@ await db.select().from(users).where(eq(users.id, id));
 await db.execute(sql.raw(`CREATE INDEX IF NOT EXISTS ...`));
 ```
 
-**Hozirgi holat:**
-- `apps/api/src/modules/legacy/services/legacy.service.ts:27` — `sql.raw(rawQuery)` — **DARHOL TUZATILSIN**
-- `apps/api/src/shared/db/schema.ts:86,91` — `sql.raw(q)` shared helper — **TUZATILSIN**
-- `apps/api/src/shared/db/invariants.ts:1047` — `sql.raw(m.sql)` — **TUZATILSIN**
+**Hozirgi holat (2026-08-07 jonli tekshirildi — hammasi YOPILGAN):**
+- `apps/api/src/modules/legacy/services/legacy.service.ts` — ✅ `sql.raw` qolmagan.
+- `apps/api/src/shared/db/schema.ts:114` — ✅ `sql.raw(q)` faqat `ddlRun()` ichida qoldi va `DDL_PREFIX_RE` runtime tekshiruvi bilan himoyalangan (PA-S4b): satr DDL kalit so'zi bilan boshlanmasa `throw` qiladi, ya'ni so'rov payload'idan kelgan bo'lak o'tolmaydi.
 
 ---
 
@@ -247,7 +287,7 @@ return { data, total: data.length };
 ```
 
 **Reviewer:** `bash scripts/reviewer-as-unknown.sh`  
-**Hozirgi holat:** FAIL: 3 (`gamification.controller.ts`, `crm-extended.service.ts` ×2)
+**Hozirgi holat (2026-08-07):** ✅ FAIL: 0 (WARN: 1). Avvalgi "FAIL: 3" eskirgan edi — `gamification.controller.ts` umuman yo'q, `crm-extended.service.ts` (endi `modules/compatibility/`) da bitta ham `as unknown` qolmagan.
 
 ---
 
@@ -277,12 +317,11 @@ async getAbc() {
 }
 ```
 
-**Eng yomon fayllar:**
-- `wms-catalog.controller.ts` — 5 ta metod (ABC, aging, expiry, turnover, stock balance) to'liq servisga ko'chirilishi kerak
-- `crm-ai-extended.controller.ts` — risk score hisob-kitobi servisga ko'chirilsin
-- `hr-payroll.controller.ts` — INPS/JSHD hisoblash `PayrollService`ga ko'chirilsin
-- `pp-intelligence.controller.ts` — MRP matrisi `PpIntelligenceService`ga ko'chirilsin
-- `chat-advanced.controller.ts` — N+1 loop `ChatService.getBulkUnread()`ga ko'chirilsin
+**Hozirgi holat (2026-08-07 jonli tekshirildi — ro'yxatning katta qismi yopilgan):**
+- `wms-catalog.controller.ts` — ✅ 0 ta `reduce(`/`.map(` qoldi (ABC/aging/expiry/turnover/stock-balance servisga ko'chirilgan)
+- `pp-intelligence.controller.ts` — ✅ MRP matrisi ko'chirilgan (`this.svc.formatMrpResponse(...)`, izohda "Qoida 6 audit 2026-08-06 T22B"); faylda 1 ta `reduce(` qolgan — tekshirilsin
+- `crm-ai-extended.controller.ts` — 1 ta `.map(` qolgan — tekshirilsin
+- `hr-payroll.controller.ts`, `chat-advanced.controller.ts` — qayta tekshirilmagan
 
 ---
 
@@ -383,10 +422,12 @@ async getItems(@Query() query: unknown) {
 }
 ```
 
-**Hozirgi holat:** ~50 ta soxta javob mavjud — birinchi navbatda tuzatilsin:
-- `chat.controller.ts:307,315,369` — `return { ok: true }`
-- `wms-integration.controller.ts:60,66,88` — `return { data: [] }`
-- `sd-customers.controller.ts:111,152,184,204` — `return {}`
+**Hozirgi holat (2026-08-07 jonli tekshirildi — "~50 ta" eskirgan):**
+- `chat.controller.ts` — ✅ 0 ta `return { ok: true }`
+- `wms-integration.controller.ts` — ✅ butun kod bazasida 0 ta `return { data: [] }`
+- `sd-customers.controller.ts` — 4 ta `return {}` qolgan (270/328/380/413), LEKIN bular **soxta emas**: `svc.softDelete()` / `svc.deleteContact()` real ish bajaradi, faqat javob tanasi bo'sh (DELETE ack). Faylda buni tushuntiruvchi `LEGACY_NOOP` izohi bor.
+- Butun `apps/api/src` bo'yicha 13 ta `return { ok: true }` qolgan (chat-uploads ×3, CC ×5, erp-documents ×2, erp-spreadsheets ×2, kanban ×1) — namunaviy tekshiruv hammasi **qonuniy ack** ekanini ko'rsatdi: avval `if (!result.ok) throw ...`, keyin ok qaytariladi. Bu Qoida 10 buzilishi EMAS.
+- ⚠️ Qoida 10 ning haqiqiy nishoni — **hech narsa qilmasdan** ok qaytaruvchi endpoint. Yangi da'vo qo'shishdan oldin real ish bajarilishini tasdiqlang (Q-29).
 
 ---
 
@@ -411,12 +452,9 @@ async getOne(@Param('id') id: string) {
 }
 ```
 
-**Hozirgi holat:** 8 ta controller `@Param` ishlatadi lekin null tekshirmaydi:
-- `pp-intelligence.controller.ts:64`
-- `mes-production-sessions.controller.ts:54`
-- `wms-catalog.controller.ts:458`
-- `adaptation.controller.ts` — stub ID qaytaradi
-- `hr-dashboard.controller.ts` — stub ID qaytaradi
+**Hozirgi holat (2026-08-07 jonli tekshirildi):**
+- `pp-intelligence.controller.ts`, `mes-production-sessions.controller.ts`, `wms-catalog.controller.ts` — ✅ hammasi `unwrapOrThrow(await ...)` ishlatadi, ya'ni Result xatosi HTTP xatosiga aylanadi. Eski satr raqamlari ham noto'g'ri (kod ko'chgan).
+- `adaptation.controller.ts`, `hr-dashboard.controller.ts` — qayta tekshirilmagan.
 
 ---
 
@@ -485,7 +523,14 @@ HRCapitalTests.tsx         ← faqat state + orchestration (≤ 900 qator)
 
 | Fayl | Qator | Amal |
 |------|-------|------|
-| `drizzle-kanban-ext.repo.ts` | 964 | 900+ — bo'linsin |
+| `shared/db/invariants/migrations-drift.ts` | 4555 | Migration-reestri (generatsiya qilingan DDL ro'yxati) — bo'lish qiymati past, lekin qoidadan ISTISNO deb hujjatlashtirilmagan |
+| `shared/db/invariants/migrations-schema.ts` | 2292 | Yuqoridagi kabi |
+| `modules/iot/presentation/iot-tablet.controller.ts` | 1219 | ⚠️ Haqiqiy nomzod — bo'linishi kerak |
+| `modules/org-structure/card.repository.ts` | 1061 | ⚠️ Haqiqiy nomzod |
+| `modules/hr/payroll/payroll.service.ts` | 1040 | ⚠️ Haqiqiy nomzod |
+| `artifacts/erp-dashboard/src/pages/CashierHub.tsx` | 1125 | ⚠️ FE — yagona 900+ fayl |
+
+> ⚠️ 2026-08-07 tuzatildi: bu jadval "900+ fayl qolmadi" deb yozilgan edi — bu XATO. `drizzle-kanban-ext.repo.ts` haqiqatan bo'lingan (156-qatorli facade + 8 sub-repo), lekin yuqoridagi 6 fayl chegaradan oshadi. Migration-reestrlarini istisno qilish kerak bo'lsa — bu egasi qarori, o'z-o'zicha "yo'q" deb yozilmaydi (Q-40).
 
 > Eslatma: 300–899 qatorli fayllar endi qoidaga muvofiq (oldin bo'lish kerak edi). Kelajakda 900+ va funksiyalar 150+ qator bo'lgan joylarni bo'lish kifoya.
 
@@ -576,8 +621,8 @@ import { typedExecute } from '@shared/db/typed-execute';
 const rows = await typedExecute<KpiRow>(sql`SELECT * FROM kpi WHERE ...`);
 ```
 
-**Hozirgi holat:** `pos/repositories/` ichida 15+ cast mavjud —
-`typedExecute<T>` helper allaqachon mavjud, ishlatilsin.
+**Hozirgi holat (2026-08-07 jonli tekshirildi):** `modules/pos/` bo'yicha **4 ta** `as unknown as` qolgan
+("15+" eskirgan). `typedExecute<T>` helper mavjud — qolgan 4 tasi shunga o'tkazilsin.
 
 ---
 
@@ -630,17 +675,24 @@ apiRequest('POST', '/api/orders', { quantity: 5 });
 apiRequest('DELETE', `/api/orders/${id}`);
 ```
 
-### F4 — Stub sahifalar hali mavjud (22 ta route)
+### F4 — Stub sahifalar (ESKIRGAN, 2026-07-03 yangilandi — 3.13-stub-routes)
 
-Quyidagi routelar hali `StubPage.tsx` ko'rsatadi — real sahifaga almashtirilishi kerak:
+⚠️ Bu ro'yxat eskirgan edi (manba: `docs/audit/MASTER-REJA-VIZYON-2026-07-02.md:57`).
+13 route allaqachon REAL sahifaga almashtirilgan (session 2026-05-12), 3 route
+o'chirilgan (`/gpt`, `/inventory/advanced`, `/pos/mini-app` — 404, sidebar'da
+yo'q edi), qolgan **5 tasi 2026-07-03 da StubRoutes.tsx'dan olib tashlandi**
+(Q-46 — BE mavjud edi lekin funksiya boshqa jonli sahifada allaqachon bor edi,
+alohida stub-route ortiqcha):
 
-```
-/360, /ai, /ai-camera, /ai-exam, /ai/hr, /ai/marketing,
-/ai-planning, /ai/wms, /assignments, /export, /gpt, /insights,
-/integration/requests, /inventory/advanced, /iot-enhanced,
-/micro-modules, /modules, /pos/mini-app, /pos/printer-config,
-/sap, /video-progress
-```
+| Route | Qaror | Sabab |
+|---|---|---|
+| `/export` | O'CHIRILDI | BE (5 CSV/PDF endpoint) `RemainingTabsHr.tsx`da (HR analytics) allaqachon jonli |
+| `/micro-modules` | O'CHIRILDI | BE (list/create/view) `/lms/micro-learning`da (sidebar+routed, `MicroLearningTab`) allaqachon jonli |
+| `/modules` | O'CHIRILDI | BE (LMS module CRUD) `/courses/:id` ichida `AddModuleDialog` orqali allaqachon ishlatiladi; alohida global module-manager sahifa vizyonda yo'q |
+| `/pos/printer-config` | O'CHIRILDI | BE bor, lekin `/warehouse/barcodes` ichidagi Printer Settings tab bilan funksional dublikat (u `/api/warehouse/printer-config` ishlatadi) |
+| `/sap` | O'CHIRILDI | BE aslida `sales_orders` ustidan ichki shim (haqiqiy tashqi SAP integratsiya emas); funksiya `/erp/sales` (`SalesOrders.tsx`)da allaqachon bor; haqiqiy SAP integratsiya = egasi-qaror kutadi |
+
+**Stub-route soni endi: 0.** (`ComingSoonPage.tsx` ham endi ishlatilmagani uchun o'chirildi.)
 
 ---
 
@@ -650,7 +702,7 @@ Quyidagi routelar hali `StubPage.tsx` ko'rsatadi — real sahifaga almashtirilis
 |--------|-------|-------|
 | `reviewer-array-safety.sh` | Array.isArray | ✅ PASS (0 FAIL, 1172 pass) |
 | `reviewer-result-pattern.sh` | Result\<T\> | ✅ PASS (0 FAIL, 6 WARN) |
-| `reviewer-as-unknown.sh` | as unknown stub | FAIL: 3 |
+| `reviewer-as-unknown.sh` | as unknown stub | ✅ PASS (0 FAIL, 1 WARN) |
 | `reviewer-dto-validation.sh` | Zod validation | ✅ PASS |
 | `reviewer-process-env.sh` | ConfigService | ✅ PASS |
 | `reviewer-jwt-guard.sh` | JWT Guard | ✅ PASS |
@@ -671,21 +723,44 @@ Quyidagi routelar hali `StubPage.tsx` ko'rsatadi — real sahifaga almashtirilis
 
 ## Ustuvor Tuzatishlar (Tartibi Bilan)
 
-### 🔴 DARHOL (Production uchun xavfli)
+### ✅ 🔴 DARHOL — 2026-08-07 da BESHTASI HAM YOPILGAN (band-ma-band jonli tekshirildi)
 
-1. `admin.seed.ts:6` — `'Admin123!'` default parolni o'chiring
-2. `org-structure-sync.sql:40` — `test123` bcrypt hashini migration'dan oling
-3. `legacy.service.ts:27` — `sql.raw(rawQuery)` SQL injection — parametrli qiling
-4. `schema.ts:86,91` — `sql.raw(q)` — parametrli qiling
-5. `admin-auth.controller.ts:33` — `JWT_REFRESH_SECRET` ishlatsin
+Bu ro'yxat ~2 oy davomida yopilgan muammolarni "production uchun xavfli" deb ko'rsatib turdi. Har
+bir bandni CLAUDE.md ning tegishli bo'limida dalil bilan hujjatlashtirdim:
 
-### 🟠 MUHIM (Funksional muammolar)
+1. ~~`admin.seed.ts:6` `'Admin123!'`~~ → ✅ fallback yo'q, env bo'lmasa hard-fail (PA-S1)
+2. ~~`org-structure-sync.sql:40` `test123` hash~~ → ✅ faylda hash yo'q
+3. ~~`legacy.service.ts:27` `sql.raw(rawQuery)`~~ → ✅ `sql.raw` qolmagan
+4. ~~`schema.ts:86,91` `sql.raw(q)`~~ → ✅ `ddlRun()` ichida `DDL_PREFIX_RE` runtime darvozasi (PA-S4b)
+5. ~~`admin-auth.controller.ts:33`~~ → ✅ fayl umuman yo'q
 
-6. `wms-catalog.controller.ts` — 5 ta biznes logika metod `WmsCatalogService`ga ko'chiring
-7. `chat.controller.ts:307,315,369` — `return { ok: true }` → real logika
-8. `sd-customers.controller.ts` — 4 ta `return {}` → real logika
-9. `Tests.tsx:179`, `RoutingConfiguration.tsx:528` — o'chirishga tasdiqlash qo'shing
-10. `pos/repositories/*.ts` — 15+ cast `typedExecute<T>` bilan almashtiring
+> ⚠️ Saboq (Q-29): bu jadval o'z-o'zidan yangilanmaydi. Da'voni **jonli kodda tekshirmasdan**
+> ro'yxatga ishonmang — na "ochiq" deb, na "yopilgan" deb.
+
+### 🟠 MUHIM — 2026-08-07 holati
+
+| # | Eski da'vo | Tekshirilgan holat |
+|---|---|---|
+| 6 | `wms-catalog.controller.ts` 5 biznes-metod | ✅ ko'chirilgan (0 `reduce`/`.map`) |
+| 7 | `chat.controller.ts:307,315,369` `{ ok: true }` | ✅ 0 ta qolgan |
+| 8 | `sd-customers.controller.ts` 4 ta `return {}` | ⚠️ qolgan, lekin **soxta emas** — DELETE real ish bajaradi, javob tanasi bo'sh (Qoida 10 buzilishi emas) |
+| 9 | `Tests.tsx:179`, `RoutingConfiguration.tsx:528` tasdiqsiz o'chirish | ⚠️ satr raqamlari eskirgan — qayta tekshirilsin |
+| 10 | `pos/repositories/*.ts` 15+ cast | ⚠️ **4 ta** qolgan (15+ eskirgan) |
+
+### ⚠️ 2026-08-07 da topilgan HAQIQIY ochiq muammolar
+
+1. **900+ qatorli 6 fayl** — Qoida 13 jadvaliga qarang (jadval "qolmadi" deb yolg'on yozgan edi)
+2. **`alert_thresholds`** — ✅ qisman yopildi (`ce38304b`): `shared/config/alert-thresholds.reader.ts`
+   yaratildi, `wms.lot_expiring` va `wms.low_stock` ulandi. ⛔ Qolgan 2 tasi **atayin ulanmadi**:
+   `qc.failed` (verdikt ikkilik — foiz kiritish egasi qarori, Q-34; ustiga `business_settings.qc.lot_defect_fail_ratio`
+   bilan dublikat) va `mro.machine_stopped` (`MroMaintenanceStopEvent` davomiylikni tashimaydi).
+   Sabablar reader faylining sarlavhasida to'liq yozilgan.
+   **`kanban_column_sla`** — hamon **hech qanday kod o'qimaydi**, boot-guard ham yo'q
+3. **`PosDepartmentGuard` / `PosWarehouseAccessGuard`** — to'liq yozilgan, lekin hech qaysi
+   controllerda `@UseGuards()` bilan qo'llanilmagan → bo'lim/ombor izolyatsiyasi amalda ishlamaydi
+4. **`business_settings.pos.norma_fakt_farqi_ortiqcha_sarf_94`** (id=50, 2026-07-11) — hech qaysi
+   kod o'qimaydi, ~1 oydan beri egasi javobini kutmoqda
+5. **`GET /coordination/baskets`** — orfan (FE-chaqiruv o'chirilgan, endpoint qolgan)
 
 ### 🟡 KEYINROQ (Kod sifati)
 
@@ -819,6 +894,104 @@ Har sessiya promt boshida ROL oladi:
 - **Q-44 — Windows `nest watch` crash = muhit, kod emas:** Katta rebuilddan keyin backend :3030 tushishi mumkin (000) — Windows `nest watch` tree-kill bug (manba: `docs/dedup-safety-rules.md`). Bu KOD xatosi EMAS (typecheck + DB-proof PASS bo'lsa). **Belgi:** `/api/auth/health` ham 000 (butun server tushgan, bitta endpoint emas). **Chora:** dev-serverni qayta ishga tushir (`pnpm --filter @europrint/api run dev:unsafe`) — panik yo'q. **Verify (Q-32):** server tushganda → static fallback (typecheck + rollback-tx DB-proof) bilan fix tasdiqlanadi; jonli-HTTP isbot server qaytgach + login bilan.
 - **Q-45 — Log fayllar HECH QACHON commit qilinmaydi (xavfsizlik) 🔴:** `backend.log*` va boshqa loglar JWT token / sezgir runtime ma'lumot saqlashi mumkin → `.gitignore`'da, HECH QACHON commit qilinmaydi. ⚠️ Nozik nuance: `*.log` rotated loglarni (`backend.log.prev3` — `.prev3` bilan tugaydi) **ushlamaydi** → `backend.log*` + `*.log.*` kerak. Agar log commit'ga tushib qolsa → darrov olib tashla (`git rm --cached`).
 
+### 🅶️ Kod hayoti va direktiva (Q-46..Q-47) — egasi 2026-06-17
+- **Q-46 — Ishlab turgan kod O'CHIRILMAYDI; to'g'ri ishlamaydigan kod TO'LIQ o'chiriladi ✂️🔴 (egasi qoidasi):** Bu Q-39 (kod-qotirish/regressiya) ning to'ldirmasi. ⭐ **Ikki tomonlama qoida:**
+  - ✅ **Ishlab turgan (to'g'ri ishlaydigan) kod/funksiya/sahifa/element HECH QACHON o'chirilmaydi** — dizayn moslash, refactor, "tozalash" bahonasida ham YO'Q. Statistika kartasi, tugma, feature, ma'lumot maydoni — ishlayotgan bo'lsa, qoladi (recruiting 9→5 stat olib tashlash = BU QOIDA BUZILISHI edi). "Dizaynni moslash = faqat ko'rinish; mazmun/funksiya o'chmaydi."
+  - ❌ **To'g'ri ISHLAMAYDIGAN kod — yarim-ishlaydigan, soxta (fake/echo/hardcoded), crash beradigan, o'lik (de-routed/orphan), dublikat — TO'LIQ o'chiriladi.** Buzuq kodni "saqlab qo'yish" yoki yarim holatda qoldirish TAQIQ — yo to'g'irlanadi, yo butunlay olib tashlanadi (chala qoldirilmaydi). O'chirishdan oldin: kod haqiqatan ishlamasligini tasdiqla (Q-29 verify) + boshqa joy import qilmasligini tekshir (Q-39 regress).
+  - O'lchov: "ishlaydimi + to'g'rimi?" (Q-40). Ishlaydi+to'g'ri → saqlanadi. Ishlamaydi/noto'g'ri → to'liq o'chiriladi yoki to'g'irlanadi, chala emas.
+- **Q-47 — Bajaruvchi direktivasi ≥1000 qator (egasi qoidasi) 📜:** Muslimbekka beriladigan har bir direktiva fayli **1000 qatordan kam bo'lmasin** — to'liq, batafsil, hech qanday noaniqlik qoldirmaydigan. Har faza/modul/fayl/pattern alohida yoziladi: aniq `fayl:satr`, oldin/keyin kod misollari, standart spetsifikatsiyasi (API, token ro'yxati), qabul-mezoni, edge-holatlar, self-verify qadamlari. ⚠️ To'ldiruvchi "filler" emas — haqiqiy batafsillik (massiv ish ko'lami buni oqlaydi). Kichik vazifa bo'lsa ham, direktiva to'liq kontekst + qoidalar bloki + har bosqich isboti bilan yoziladi.
+
 ---
 
-*Yangilangan: 2026-06-03 | Q-44..Q-45 qo'shildi (Q-44 Windows nest-watch crash = muhit, kod emas; Q-45 log fayllar hech qachon commit qilinmaydi — JWT token xavfi, `*.log` rotated loglarni ushlamaydi → `backend.log*`+`*.log.*`). Q-39..Q-43 (kod-qotirish, ishlaydi≠to'g'ri+master-reja, dizayn izchillik, tab ≤2 daraja, forma saqlash + `check-form-has-save`). Q-24..Q-38 (jarayon/boshqaruv). Qoida 23 (parallel sessiya rollari). Qoida 22 (Ombor+POS sidebar). Qoidalar 17-21.*
+## 🧩 Prompt naqshlari (EuroPrint ERP)
+
+> Manba: Claude Code rasmiy prompt-kutubxonasi (code.claude.com/docs/en/prompt-library),
+> loyihaga moslashtirilgan. Bu bo'lim yuqoridagi Q-qoidalardan (nazorat) ALOHIDA — maqsad
+> tezlashtirish/osonlashtirish, nazorat emas.
+
+### Foydali prompt naqshlari
+
+**Modulni tushunish uchun** (ishga tushirishdan oldin doim foydali):
+```
+give me an overview of the {module} module: architecture, key files, and how it
+connects to {other_module}
+```
+Masalan: `give me an overview of the POS/Kassir module: architecture, key files, and how it connects to the warehouse module`
+
+**Xatti-harakat qayerda amalga oshishini topish:**
+```
+where do we {behavior}?
+```
+Masalan: `where do we calculate the sloy formula (m² to kg conversion)?`
+
+**O'zgarish ko'lamini oldindan bilish:**
+```
+which files would I need to touch to {change}?
+```
+
+**Mavjud naqshga ergashib yangi narsa qurish:**
+```
+look at how {existing_module} is implemented, then build {new_module} the same way
+```
+Masalan: `look at how the production routing module is implemented, then build the org approval-chain module the same way`
+
+**Kichik, aniq funksiya qo'shish:**
+```
+add a {endpoint} endpoint that returns {payload}
+```
+
+**Testlar bilan implementatsiya (test-driven):**
+```
+write tests for {feature} first, then implement it until they pass
+```
+
+**Commit qilishdan oldin o'z-o'zini tekshirish:**
+```
+review your uncommitted changes and flag anything that looks risky before committing
+```
+
+**Xatoni ildizidan tuzatish:**
+```
+here is the error/log: @{log_file}. find the root cause and verify the fix, don't
+just patch the symptom
+```
+
+**Subagent bilan xavfsizlik tekshiruvi** (asosiy sessiyani to'ldirmasdan):
+```
+use a subagent to review {path} for security issues and report what it finds
+```
+
+**Tuzatishni qoidaga aylantirish** (agent bir xil xatoni takrorlasa):
+```
+you keep {mistake}. add a rule to CLAUDE.md so this stops happening
+```
+
+**Sessiya oxirida bilim to'plash:**
+```
+summarize what we did this session and suggest what to add to CLAUDE.md
+```
+
+### Promptlarni yozishda 6 tamoyil
+
+1. **Qadamlarni emas, natijani tasvirlang** — Claude fayllarni o'zi topsin.
+2. **O'z ishini tekshirish usulini bering** — "ishga tushir", "sina", "solishtir", "tasdiqla" so'zlarini qo'shing, shunda bir urinishdan keyin ham davom etadi.
+3. **Ma'lumotnomaga ishora qiling** — mos kelishi kerak bo'lgan mavjud fayl/naqshni nomlang (masalan: "production routing modulidagi kabi").
+4. **O'lchanadigan maqsad bering** — samaradorlik/qamrov bo'lsa, aniq metrika va chegara ayting.
+5. **Artefaktni bering** — xato, log, skrinshot, plan natijasini to'g'ridan-to'g'ri promptga joylashtiring yoki `@fayl` bilan ishora qiling.
+6. **Javob formatini ayting** — uzunlik, format, auditoriyani nomlang.
+
+### Naqsh → skill/hook aylantirish
+
+Bir prompt loyihada bir necha marta ishlatilsa:
+```
+create a /{name} skill for this project that {steps}
+```
+yoki takrorlanuvchi avtomatik xatti-harakat uchun:
+```
+write a hook that {action} after every {event}
+```
+Bu keyingi agent sessiyalari uchun `/buyruq` sifatida qayta ishlatiladigan qiladi — har safar qayta yozish shart emas.
+
+---
+
+*Yangilangan: 2026-07-03 (Prompt naqshlari bo'limi qo'shildi — Claude Code rasmiy prompt-kutubxonasidan moslashtirilgan, nazorat-qoidalardan alohida). 2026-06-17 (Q-46 ishlab-turgan-kod-o'chmaydi/buzuq-kod-to'liq-o'chiriladi [egasi]; Q-47 direktiva ≥1000 qator [egasi]). 2026-06-03 | Q-44..Q-45 qo'shildi (Q-44 Windows nest-watch crash = muhit, kod emas; Q-45 log fayllar hech qachon commit qilinmaydi — JWT token xavfi, `*.log` rotated loglarni ushlamaydi → `backend.log*`+`*.log.*`). Q-39..Q-43 (kod-qotirish, ishlaydi≠to'g'ri+master-reja, dizayn izchillik, tab ≤2 daraja, forma saqlash + `check-form-has-save`). Q-24..Q-38 (jarayon/boshqaruv). Qoida 23 (parallel sessiya rollari). Qoida 22 (Ombor+POS sidebar). Qoidalar 17-21.*

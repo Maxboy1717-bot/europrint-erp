@@ -3,12 +3,13 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, text, boolean, integer, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, varchar, serial, boolean, integer, timestamp, index } from 'drizzle-orm/pg-core';
 
 export const marketingContentPosts = pgTable('marketing_content_posts', {
-  id:           uuid('id').primaryKey().defaultRandom(),
+  id:           serial('id').primaryKey(),
   title:        text('title').notNull(),
-  content:      text('content'),
+  platform:     varchar('platform', { length: 30 }).notNull(),
+  content:      text('content').notNull(),
   postType:     text('post_type').notNull().default('blog'),
   status:       text('status').notNull().default('draft'),
   publishedAt:  timestamp('published_at', { withTimezone: true }),

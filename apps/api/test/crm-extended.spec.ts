@@ -16,8 +16,10 @@ import { CrmAiService } from '../src/modules/crm/application/crm-ai.service';
 import { CrmAutoLeadService } from '../src/modules/crm/application/crm-auto-lead.service';
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
+import { WebhookSignatureGuard } from '@common/guards/webhook-signature.guard';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
+import { I18nService } from 'nestjs-i18n';
 
 const ok = (data: unknown) => ({ ok: true, data });
 const fail = () => ({ ok: false, code: 'DB_ERROR', error: new Error('fail') });
@@ -93,10 +95,16 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
         { provide: CrmAiService, useValue: mockAiSvc },
         { provide: CrmAutoLeadService, useValue: mockAutoLeadSvc },
         { provide: CommandBus, useValue: (commandBusMock = { execute: jest.fn() }) },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue(mockGuard)
       .overrideGuard(RolesGuard).useValue(mockGuard)
+      // CrmAutoLeadController's public ingest routes are @UseGuards(WebhookSignatureGuard)
+      // (added for the 2.16 public-webhook-ingest work) — this guard needs ConfigService,
+      // which this controller-only test module doesn't provide; override it like the
+      // other guards since this suite tests controller/service behavior, not guard logic.
+      .overrideGuard(WebhookSignatureGuard).useValue(mockGuard)
       .compile();
 
     contactsController = module.get(CrmContactsController);

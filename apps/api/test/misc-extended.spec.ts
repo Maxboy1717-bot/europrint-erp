@@ -50,7 +50,10 @@ describe('OkrController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OkrController],
-      providers: [{ provide: OkrService, useValue: mockSvc }],
+      providers: [
+        { provide: OkrService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(OkrController);
   });
@@ -102,7 +105,10 @@ describe('KaizenController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [KaizenController],
-      providers: [{ provide: KaizenService, useValue: mockSvc }],
+      providers: [
+        { provide: KaizenService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(KaizenController);
   });
@@ -155,7 +161,10 @@ describe('StrategicController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StrategicController],
-      providers: [{ provide: StrategicService, useValue: mockSvc }],
+      providers: [
+        { provide: StrategicService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(StrategicController);
   });
@@ -445,7 +454,10 @@ describe('CameraAiController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CameraAiController],
-      providers: [{ provide: CameraAiService, useValue: mockSvc }],
+      providers: [
+        { provide: CameraAiService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(CameraAiController);
   });
@@ -483,7 +495,10 @@ describe('RaciController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RaciController],
-      providers: [{ provide: RaciService, useValue: mockSvc }],
+      providers: [
+        { provide: RaciService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(RaciController);
   });

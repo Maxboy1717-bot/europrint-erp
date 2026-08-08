@@ -9,7 +9,7 @@
  *   Three operations:
  *     - `monitorOrders` — count delayed + at-risk production orders
  *     - `calculateOEE`  — per-machine OEE snapshot
- *     - `detectBottleneck` — find slowest work center by queue size
+ *     - `detectBottleneck` — most loaded work center by TOC utilisation (ρ = λ/μ)
  *
  *   Decisions and alerts go through `AgentAuditService` so they show up
  *   on the Director's AI-Audit panel alongside LLM agent decisions.
@@ -49,11 +49,15 @@
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { sql, and, gte, lte } from 'drizzle-orm';
+import { sql, and, eq, gte, lte } from 'drizzle-orm';
 import { db, downtime_events as downtimeEvents, runQuery } from '@shared/db';
 import { AgentAlertService } from './shared/agent-alert.service';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AgentEventBusService } from './shared/agent-event-bus.service';
+// TOC hisobi PP domenida yashaydi va toza funksiya (DI bog'liqligi yo'q) — shuning uchun
+// bu yerda to'g'ridan-to'g'ri instansiya qilinadi, xuddi scheduling.service.ts qilganidek.
+import { SchedulingCapacityService } from '../pp/domain/services/scheduling-capacity.service';
+import { fetchWorkCenterLoads } from '@common/database/queries-work-center-load';
 
 @Injectable()
 export class ProductionAgentService {
@@ -65,6 +69,8 @@ export class ProductionAgentService {
     private readonly audit: AgentAuditService,
     private readonly bus:   AgentEventBusService,
   ) {}
+
+  private readonly capacity = new SchedulingCapacityService();
 
   /** Faol buyurtmalarni tekshirish, kechikish xavfini aniqlash */
   async monitorOrders(): Promise<{ delayed: number; atRisk: number }> {
@@ -88,7 +94,7 @@ export class ProductionAgentService {
   async calculateOEE(
     machineId: string,
     dateISO: string,
-  ): Promise<{ availability: number; performance: number; quality: number; oee: number }> {
+  ): Promise<{ availability: number; performance: number; quality: number; oee: number; estimated: boolean }> {
     // Availability hisoblash: downtime_events jadvalidan real ma'lumot olish
     // periodStart/end: shu kun 00:00–23:59
     const periodStart = new Date(`${dateISO}T00:00:00Z`);
@@ -96,6 +102,14 @@ export class ProductionAgentService {
     const PERIOD_MINUTES = 24 * 60; // 1440 daqiqa / sutka
 
     try {
+      // M3 (2026-07-05): previously ignored `machineId` entirely, always summing
+      // downtime across every work center -- "per-machine OEE" for machine A and
+      // machine B returned the identical number. The sole live caller
+      // (ProductionDashboard.tsx) always passes machineId=ALL (factory-wide), so
+      // that aggregate case is preserved; a real machine id now actually filters.
+      const scopeFilter = machineId && machineId.toUpperCase() !== 'ALL'
+        ? eq(downtimeEvents.workCenterId, machineId)
+        : undefined;
       const rows = await db
         .select({ totalMinutes: sql<string>`COALESCE(SUM(${downtimeEvents.durationMinutes}), 0)` })
         .from(downtimeEvents)
@@ -103,6 +117,7 @@ export class ProductionAgentService {
           and(
             gte(downtimeEvents.startedAt, periodStart),
             lte(downtimeEvents.startedAt, periodEnd),
+            scopeFilter,
           ),
         );
       const downtimeMinutes = Number(rows[0]?.totalMinutes ?? 0);
@@ -110,24 +125,55 @@ export class ProductionAgentService {
         ? Math.max(0, Math.min(1, (PERIOD_MINUTES - downtimeMinutes) / PERIOD_MINUTES))
         : 0.92;
       // performance + quality: MES telemetry jadvali hali to'liq tayyor emas —
-      // default qiymatlar saqlanadi (TODO: mes_machine_logs tayyor bo'lganda kengaytir)
+      // ONGOING, DISCLOSED placeholder (see file header "WHY calculateOEE RETURNS
+      // HARDCODED 0.92/0.85/0.97" -- real formula needs idealCycleTime/plannedTime
+      // inputs that don't exist in any table yet; owner decision needed on source,
+      // not a magic-number swap). `estimated: true` lets callers/UI now DISTINGUISH
+      // real availability from placeholder performance/quality instead of silently
+      // presenting all three as equally real.
       const p = 0.85, q = 0.97;
       const a = Math.round(availability * 100) / 100;
-      return { availability: a, performance: p, quality: q, oee: Math.round(a * p * q * 100) / 100 };
+      return { availability: a, performance: p, quality: q, oee: Math.round(a * p * q * 100) / 100, estimated: true };
     } catch (e) {
       this.logger.warn(`OEE calculation failed for machine=${machineId} date=${dateISO}, using defaults: ${(e as Error).message}`);
       const a = 0.92, p = 0.85, q = 0.97;
-      return { availability: a, performance: p, quality: q, oee: Math.round(a * p * q * 100) / 100 };
+      return { availability: a, performance: p, quality: q, oee: Math.round(a * p * q * 100) / 100, estimated: true };
     }
   }
 
-  /** Eng sekin ish markazini topish */
-  async detectBottleneck(): Promise<{ machineId: string; queueSize: number } | null> {
-    const r = await runQuery<{ machine_id: string; queue: string }>(sql`
-      SELECT machine_id::text, COUNT(*)::text AS queue FROM production_operations
-      WHERE status = 'pending' GROUP BY machine_id ORDER BY queue DESC LIMIT 1
-    `).catch(() => ({ rows: [] }));
-    return r.rows[0] ? { machineId: r.rows[0].machine_id, queueSize: Number(r.rows[0].queue) } : null;
+  /**
+   * Eng yuklangan ish markazini topish (TOC: ρ = λ/μ, bottleneck = argmax ρ).
+   *
+   * Audit 2026-08-07: bu metod `production_operations` jadvalidan o'qirdi — bunday jadval
+   * bazada UMUMAN YO'Q. Xato `.catch(() => ({rows: []}))` bilan yutilgani uchun endpoint
+   * jimgina HAR DOIM `null` qaytarardi, ya'ni "to'siq yo'q" deb yolg'on aytardi (Q-40).
+   *
+   * Ayni paytda haqiqiy TOC hisobi (`SchedulingCapacityService`) kodda mavjud edi, lekin
+   * uni faqat `SchedulingService` chaqirardi — u esa hech qayerga inject qilinmagan, ya'ni
+   * yetib bo'lmaydigan edi. Endi jonli endpoint o'sha hisobni ishlatadi.
+   *
+   * λ = kutayotgan operatsiyalarning rejalashtirilgan soati, μ = ish markazining kunlik
+   * soati. ρ = kunlardagi zaxira; eng kattasi — to'siq. Ikkala qiymat ham mavjud
+   * ustunlardan olinadi (`production_order_operations.planned_duration`,
+   * `work_centers.hours_per_day`) — hech narsa taxmin qilinmaydi.
+   */
+  async detectBottleneck(): Promise<{ machineId: string; queueSize: number; utilization?: number } | null> {
+    // 2026-08-07: so'rov `common/database/queries-work-center-load.ts` ga ko'chirildi, chunki AI
+    // modulining `GET /ai/bottleneck/analysis` endpoint'i ham aynan shu yukni talab qiladi. Uni
+    // ko'chirib yozish loyihaning eng ko'p takrorlanuvchi nuqsonini ("bir joyda tuzatilib,
+    // qo'shnilari unutilgan") yana takrorlash bo'lardi.
+    const loads = await fetchWorkCenterLoads();
+    if (loads.length === 0) return null;
+
+    const toc = this.capacity.detectBottleneck(loads);
+    if (!toc.ok) return null;
+
+    const opsById = new Map(loads.map((l) => [l.workCenterId, l.pendingOps]));
+    return {
+      machineId: toc.data.bottleneck,
+      queueSize: opsById.get(toc.data.bottleneck) ?? 0,
+      utilization: toc.data.utilization,
+    };
   }
 
   /** Smena hisoboti */

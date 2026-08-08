@@ -41,6 +41,15 @@ interface SalesCopilotDirectorApprovalEvent {
   timestamp:  Date;
 }
 
+/** SB0504: emitted by AiFitService.evaluate() when a real (non-fallback) AI-fit score is below threshold. */
+interface AiFitLowScoreEvent {
+  employeeId: number;
+  cardId:     number;
+  fitScore:   number;
+  summary:    string | null;
+  timestamp:  Date;
+}
+
 type RecipientRow = { telegram_chat_id: string };
 
 @Injectable()
@@ -172,6 +181,40 @@ export class AiAlertsService {
          + `⚠️ Sabab: ${event.hitlReason ?? 'soft HITL chegarasi oshdi'}\n\n`
          + `Buyurtma bajarildi, lekin Siz tasdiqlashingiz yoki bekor qilishingiz mumkin.\n`
          + `ERP: /director/ai-audit`;
+  }
+
+  @OnEvent('ai.fit.low_score')
+  async onAiFitLowScore(event: AiFitLowScoreEvent): Promise<void> {
+    this.logger.warn({
+      msg:        'AI-fit past-moslik ogohlantiruvi — HR ga Telegram yuborilmoqda',
+      employeeId: event.employeeId,
+      cardId:     event.cardId,
+      fitScore:   event.fitScore,
+    });
+    const hrManagers = await this.findHrManagers();
+    const text = this.buildLowFitAlertText(event);
+    await this.broadcastTelegram(hrManagers, text, 'AI-fit low-score alert');
+  }
+
+  private buildLowFitAlertText(event: AiFitLowScoreEvent): string {
+    return `⚠️ <b>AI-fit: past moslik aniqlandi</b>\n`
+         + `👤 Xodim ID: <code>${event.employeeId}</code>\n`
+         + `🗂 Karta ID: <code>${event.cardId}</code>\n`
+         + `📉 Moslik bahosi: ${event.fitScore.toFixed(0)}/100\n`
+         + (event.summary ? `📝 Xulosa: ${event.summary}\n` : '')
+         + `🕐 Vaqt: ${event.timestamp.toISOString()}\n`
+         + `👤 HR ko'rib chiqishi kerak — bu avtomatik bloklamaydi.`;
+  }
+
+  private async findHrManagers(): Promise<RecipientRow[]> {
+    return db.execute<RecipientRow>(sql`
+      SELECT e.telegram_chat_id
+      FROM employees e
+      WHERE LOWER(e.status) = 'active'
+        AND e.telegram_chat_id IS NOT NULL
+        AND LOWER(e.role) IN ('hr_manager', 'hr_head', 'director')
+      LIMIT 5
+    `).then((r) => r.rows).catch(() => [] as RecipientRow[]);
   }
 
   private async findSupervisors(): Promise<RecipientRow[]> {

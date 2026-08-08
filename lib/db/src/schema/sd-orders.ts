@@ -9,7 +9,9 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, uni
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
-import { crmCompanies } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): import of crmCompanies from "./crm-schema"
+// removed — that pgTable declaration was deleted (dead lib/db duplicate,
+// Q-29 verified). The 2 customerId FKs below converted to plain columns.
 import { glDocuments } from "./fi-schema";
 import { Module } from "./lms-schema";
 import { Order, Product, orders, productionOrders, products } from "./pp-schema";
@@ -24,7 +26,8 @@ export const salesInvoices = pgTable("sales_invoices", {
   invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
   invoiceDate: varchar("invoice_date", { length: 10 }).notNull(), // YYYY-MM-DD
   customerName: text("customer_name").notNull(),
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
   orderId: varchar("order_id").references(() => orders.id, { onDelete: "set null" }),
   // Live DB superset (ADD-ONLY): link to a sales_orders row + invoice currency
   salesOrderId: integer("sales_order_id"),
@@ -103,7 +106,8 @@ export const salesOrders = pgTable("sales_orders", {
   division: varchar("division", { length: 10 }).notNull().default("00"),
   
   // Customer references
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
   soldToParty: varchar("sold_to_party", { length: 50 }),
   shipToParty: varchar("ship_to_party", { length: 50 }),
   billToParty: varchar("bill_to_party", { length: 50 }),
@@ -184,7 +188,10 @@ export const salesOrders = pgTable("sales_orders", {
   techNotes: text("tech_notes"),
   
   // Audit
-  createdBy: varchar("created_by"),
+  createdBy: varchar("created_by"), // LEGACY (live DB type = uuid; never written by repo). Use createdByUserId for the user FK.
+  // T8-01 (APPROVED, IJRO-REJA): kim-yaratdi karta-bog'lanishi. Eski created_by (uuid) ga FK qo'yib bo'lmas
+  //   (users.id=integer) — ADDITIV yangi integer ustun + FK users(id). Login=birlamchi karta golden-thread.
+  createdByUserId: integer("created_by_user_id").references(() => users.id, { onDelete: "set null" }),
   changedBy: varchar("changed_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -231,6 +238,7 @@ export const salesOrders = pgTable("sales_orders", {
   index("idx_sales_orders_delivery_status").on(t.deliveryStatus),
   index("idx_sales_orders_billing_status").on(t.billingStatus),
   index("idx_sales_orders_deleted_at").on(t.deletedAt),
+  index("idx_sales_orders_created_by_user_id").on(t.createdByUserId), // T8-01: kim-yaratdi (users FK) audit
   check("sales_orders_master_status_chk", sql`${t.masterStatus} IN ('draft','incomplete','pending_design','pending_sample_lab','pending_manager_completion','pending_technology','pending_advance','ready_for_planning','planned','released_to_production','in_production','pending_qc_final','qc_failed','rework','ready_for_fg_warehouse','in_fg_warehouse','delivery_planned','in_delivery','delivered','partially_paid','fully_paid','closed','cancelled')`),
   check("sales_orders_advance_status_chk", sql`${t.advanceStatus} IN ('no_advance','partial_advance','advance_completed','balance_pending','overdue','paid','closed')`),
 ]);

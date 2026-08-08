@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';
 import { AiRouterService } from '../application/services/ai-router.service';
 import { AiDataRepository } from './ai-data.repository';
@@ -31,13 +32,14 @@ export class HrAiExtService {
   constructor(
     private readonly ai:       AiRouterService,
     private readonly dataRepo: AiDataRepository,
+    private readonly i18n:     I18nService,
   ) {}
 
   async analyzeToolTest(toolTestId: number, positionTitle: string, userId: number): Promise<Result<object, AppError>>{
     return safeCall(async () => {
       this.logger.log(`hr ai ext: AI tahlil boshlanmoqda`);
       const test = await this.dataRepo.getToolTestById(toolTestId);
-      if (!test) throw new InternalServerErrorException(`Tool Test #${toolTestId} topilmadi`);
+      if (!test) throw new InternalServerErrorException(await this.i18n.t('errors.toolTestNotFoundWithId', { args: { id: toolTestId } }));
 
       const prompt = this.buildToolTestPrompt(test as ToolTestRow, positionTitle);
       const aiResult = await this.ai.call({

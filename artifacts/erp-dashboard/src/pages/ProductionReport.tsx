@@ -52,10 +52,10 @@ export default function ProductionReportPage() {
   const stats = data?.stats || { total: 0, completed: 0, in_progress: 0, delayed: 0 };
 
   const statsCards = [
-    { label: "Jami Buyurtmalar", value: formatNum(stats.total), icon: Factory, color: "text-[var(--ep-blue)]" },
-    { label: "Bajarildi", value: formatNum(stats.completed), icon: CheckCircle, color: "text-[var(--ep-green)]" },
-    { label: "Jarayonda", value: formatNum(stats.in_progress), icon: Clock, color: "text-[var(--ep-primary)]" },
-    { label: "Kechikkan", value: formatNum(stats.delayed), icon: AlertCircle, color: "text-[var(--ep-red)]" },
+    { label: t("ProductionReport.jamiBuyurtmalar"), value: formatNum(stats.total), icon: Factory, color: "text-[var(--ep-blue)]" },
+    { label: t("ProductionReport.bajarildi"), value: formatNum(stats.completed), icon: CheckCircle, color: "text-[var(--ep-green)]" },
+    { label: t("ProductionReport.jarayonda"), value: formatNum(stats.in_progress), icon: Clock, color: "text-[var(--ep-primary)]" },
+    { label: t("ProductionReport.kechikkan"), value: formatNum(stats.delayed), icon: AlertCircle, color: "text-[var(--ep-red)]" },
   ];
 
   return (
@@ -166,7 +166,7 @@ export default function ProductionReportPage() {
 
             {pagination.pages > 1 && (
               <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Jami: {pagination.total} ta buyurtma</p>
+                <p className="text-sm text-muted-foreground">{t("ProductionReport.jamiTaBuyurtma", { count: pagination.total })}</p>
                 <div className="flex items-center gap-2">
                   <Button size="icon" variant="outline" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} data-testid="button-prev-page"><ChevronLeft className="w-4 h-4" /></Button>
                   <span className="text-sm text-muted-foreground">{page} / {pagination.pages}</span>

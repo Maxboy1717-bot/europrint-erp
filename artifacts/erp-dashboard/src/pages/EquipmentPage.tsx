@@ -15,9 +15,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Plus, Wrench, Settings2 } from "lucide-react";
-import { EPStatusPill } from "@/components/ep";
+import { Plus, Wrench, Settings2, StopCircle } from "lucide-react";
+import { EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { Textarea } from "@/components/ui/textarea";
 
 interface Equipment {
   id: number;
@@ -30,6 +31,15 @@ interface Equipment {
   purchaseDate?: string;
 }
 
+interface MaintenanceOrder {
+  id: string;
+  equipmentName: string;
+  issueDescription: string;
+  status: string;
+  priority: string;
+  createdAt?: string;
+}
+
 export default function EquipmentPage() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -37,6 +47,11 @@ export default function EquipmentPage() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [newStatus, setNewStatus] = useState("active");
+
+  const [isStopOpen, setIsStopOpen] = useState(false);
+  const [stopEquipment, setStopEquipment] = useState<Equipment | null>(null);
+  const [issueDesc, setIssueDesc] = useState("");
+  const [priority, setPriority] = useState<"low" | "medium" | "high" | "critical">("high");
 
   const [invNumber, setInvNumber] = useState("");
   const [name, setName] = useState("");
@@ -48,16 +63,35 @@ export default function EquipmentPage() {
     queryKey: ["/api/mro/equipment"],
   });
 
+  const { data: maintenanceOrders = [] } = useQuery<MaintenanceOrder[]>({
+    queryKey: ["/api/mro"],
+  });
+
   const createMutation = useMutation({
     mutationFn: (data: object) => apiRequest("POST", "/api/mro/equipment", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mro/equipment"] });
-      toast({ title: "Jihoz muvaffaqiyatli qo'shildi" });
+      toast({ title: t("jihozMuvaffaqiyatliQoshildi") });
       resetForm();
     },
     onError: () => {
-      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+      toast({ title: t("xatolikYuzBerdi"), variant: "destructive" });
     },
+  });
+
+  const stopMachineMutation = useMutation({
+    mutationFn: (payload: { equipmentId: string; equipmentName: string; issueDescription: string; priority: string }) =>
+      apiRequest("POST", "/api/mro/stop-machine", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mro"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mro/equipment"] });
+      toast({ title: t("jihozToxtatildiTexnikXizmat") });
+      setIsStopOpen(false);
+      setStopEquipment(null);
+      setIssueDesc("");
+      setPriority("high");
+    },
+    onError: () => toast({ title: t("xatolikYuzBerdi"), variant: "destructive" }),
   });
 
   const statusMutation = useMutation({
@@ -65,12 +99,12 @@ export default function EquipmentPage() {
       apiRequest("PATCH", `/api/mro/equipment/${id}/status`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mro/equipment"] });
-      toast({ title: "Holat yangilandi" });
+      toast({ title: t("holatYangilandi") });
       setIsStatusOpen(false);
       setSelectedId(null);
     },
     onError: () => {
-      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+      toast({ title: t("xatolikYuzBerdi"), variant: "destructive" });
     },
   });
 
@@ -85,7 +119,7 @@ export default function EquipmentPage() {
 
   const handleSave = () => {
     if (!invNumber.trim() || !name.trim()) {
-      toast({ title: "Inventar raqami va nomni kiriting", variant: "destructive" });
+      toast({ title: t("inventarRaqamiVaNomniKiriting"), variant: "destructive" });
       return;
     }
     createMutation.mutate({ inventoryNumber: invNumber, name, type, location, purchaseDate });
@@ -95,6 +129,27 @@ export default function EquipmentPage() {
     setSelectedId(item.id);
     setNewStatus(item.status);
     setIsStatusOpen(true);
+  };
+
+  const openStopDialog = (item: Equipment) => {
+    setStopEquipment(item);
+    setIssueDesc("");
+    setPriority("high");
+    setIsStopOpen(true);
+  };
+
+  const handleStopMachine = () => {
+    if (!stopEquipment) return;
+    if (issueDesc.length < 10) {
+      toast({ title: t("muammoTavsifiniKamida10"), variant: "destructive" });
+      return;
+    }
+    stopMachineMutation.mutate({
+      equipmentId: crypto.randomUUID(),
+      equipmentName: stopEquipment.name,
+      issueDescription: issueDesc,
+      priority,
+    });
   };
 
   const handleStatusSave = () => {
@@ -118,14 +173,17 @@ export default function EquipmentPage() {
   const list = Array.isArray(equipment) ? equipment : [];
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("jihozlar")}</h1>
-        <Button onClick={() => setIsAddOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          {t("yangiJihoz")}
-        </Button>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
+      <EPPageHeader
+        icon={<Wrench className="h-5 w-5" />}
+        title={t("jihozlar")}
+        actions={
+          <Button onClick={() => setIsAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t("yangiJihoz")}
+          </Button>
+        }
+      />
 
       <Card>
         <CardContent className="p-0">
@@ -163,15 +221,28 @@ export default function EquipmentPage() {
                         : "—"}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openStatusDialog(item)}
-                        className="whitespace-nowrap"
-                      >
-                        <Settings2 className="h-3.5 w-3.5 mr-1.5" />
-                        {t("holatOzgartirish")}
-                      </Button>
+                      <div className="flex gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openStatusDialog(item)}
+                          className="whitespace-nowrap"
+                        >
+                          <Settings2 className="h-3.5 w-3.5 mr-1.5" />
+                          {t("holatOzgartirish")}
+                        </Button>
+                        {item.status === "active" && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => openStopDialog(item)}
+                            className="whitespace-nowrap"
+                          >
+                            <StopCircle className="h-3.5 w-3.5 mr-1.5" />
+                            {t("toxtatishAmali")}
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -213,6 +284,75 @@ export default function EquipmentPage() {
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={resetForm}>{t("cancel")}</Button>
               <Button onClick={handleSave} disabled={createMutation.isPending}>{t("Saqlash")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Maintenance orders list */}
+      {Array.isArray(maintenanceOrders) && maintenanceOrders.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-base font-semibold mb-3">{t("texnikXizmatBuyurtmalari")}</h2>
+            <div className="space-y-2">
+              {maintenanceOrders.slice(0, 10).map((order) => (
+                <div key={order.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div>
+                    <p className="text-sm font-medium">{order.equipmentName}</p>
+                    <p className="text-xs text-muted-foreground">{order.issueDescription}</p>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Badge variant="outline" className="text-xs">{order.priority}</Badge>
+                    <EPStatusPill tone={order.status === "completed" ? "success" : order.status === "in_progress" ? "info" : "warning"}>
+                      {order.status}
+                    </EPStatusPill>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stop machine dialog */}
+      <Dialog open={isStopOpen} onOpenChange={setIsStopOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">{t("jihozniToxtatishDialog")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
+              <span className="font-medium">{t("jihozLabel")}:</span> {stopEquipment?.name}
+            </div>
+            <div>
+              <Label>{t("muammoTavsifiLabel")} <span className="text-destructive">*</span></Label>
+              <Textarea
+                value={issueDesc}
+                onChange={(e) => setIssueDesc(e.target.value)}
+                placeholder={t("muammoniBatafsilTavsiflang")}
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>{t("ustuvorlikLabel")}</Label>
+              <Select value={priority} onValueChange={(v) => setPriority(v as typeof priority)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">{t("darajaPast")}</SelectItem>
+                  <SelectItem value="medium">{t("darajaOrta")}</SelectItem>
+                  <SelectItem value="high">{t("darajaYuqori")}</SelectItem>
+                  <SelectItem value="critical">{t("darajaKritik")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsStopOpen(false)}>{t("bekorQilish")}</Button>
+              <Button variant="destructive" onClick={handleStopMachine} disabled={stopMachineMutation.isPending}>
+                <StopCircle className="h-4 w-4 mr-2" />
+                {t("toxtatishAmali")}
+              </Button>
             </div>
           </div>
         </DialogContent>

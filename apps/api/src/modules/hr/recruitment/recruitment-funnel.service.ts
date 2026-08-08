@@ -1,13 +1,14 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IHrRecruitmentFunnelRepository, HR_RECRUITMENT_FUNNEL_REPO } from './repos/i-hr-recruitment-funnel.repo';
 import type { FunnelStage, ProductivityCategory } from './dto/create-funnel.dto';
 import type { CreateFunnelDto, MoveFunnelStageDto, QuickScreeningDto, ListFunnelDto } from './dto/create-funnel.dto';
 import { safeCall, Result, AppError } from '@common/result';
 import { Funnel } from '../domain/aggregates/funnel.aggregate';
-import { FunnelStage as FunnelStageVO } from '../domain/value-objects/funnel-stage.vo';
+import { FunnelStage as FunnelStageVO, HC_FUNNEL_STAGES, mapLegacyToHcStage, type HcFunnelStageValue } from '../domain/value-objects/funnel-stage.vo';
 import { DomainEvent } from '@shared/domain/domain-event';
 
 /**
@@ -43,6 +44,7 @@ export class RecruitmentFunnelService {
   constructor(
     @Inject(HR_RECRUITMENT_FUNNEL_REPO) private readonly hrRecruitmentFunnelRepo: IHrRecruitmentFunnelRepository,
     private readonly emitter: EventEmitter2,
+    private readonly i18n: I18nService,
   ) {}
 
   async createFunnel(dto: CreateFunnelDto, createdById: number): Promise<Result<object, AppError>> {
@@ -52,11 +54,11 @@ export class RecruitmentFunnelService {
     return safeCall(async () => {
     const candidateResult = await this.hrRecruitmentFunnelRepo.findCandidateById(dto.candidateId);
     if (!candidateResult.ok) throw new InternalServerErrorException(candidateResult.error);
-    if (!candidateResult.data) throw new NotFoundException(`Nomzod #${dto.candidateId} topilmadi`);
+    if (!candidateResult.data) throw new NotFoundException(await this.i18n.t('errors.candidateNotFoundWithId', { args: { id: dto.candidateId } }));
 
     const existingResult = await this.hrRecruitmentFunnelRepo.findActiveFunnelForCandidate(dto.candidateId);
     if (!existingResult.ok) throw new InternalServerErrorException(existingResult.error);
-    if (existingResult.data) throw new BadRequestException(`Nomzod #${dto.candidateId} allaqachon aktiv funnelda`);
+    if (existingResult.data) throw new BadRequestException(await this.i18n.t('errors.candidateAlreadyInActiveFunnel', { args: { id: dto.candidateId } }));
 
     const funnelResult = await this.hrRecruitmentFunnelRepo.createFunnel(dto, createdById);
     if (!funnelResult.ok) throw new InternalServerErrorException(funnelResult.error);
@@ -81,7 +83,7 @@ export class RecruitmentFunnelService {
     return safeCall(async () => {
     const result = await this.hrRecruitmentFunnelRepo.getFunnelById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Funnel #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.funnelNotFoundWithId', { args: { id } }));
     return result.data;
   
     });}
@@ -101,16 +103,40 @@ export class RecruitmentFunnelService {
       candidates: (all as Record<string, unknown>[]).filter((c) => c['funnelStage'] === stage),
       count: (all as Record<string, unknown>[]).filter((c) => c['funnelStage'] === stage).length,
     }));
-  
+
+    });}
+
+  /**
+   * EP-HR-016 — the owner's 7-stage Human-Capital kanban view. Same live data as
+   * `getFunnelKanban` (no separate query, no data migration) but the candidates
+   * are PROJECTED onto the owner's 7 HC stages (PORTRET → KUCHAYTIRISH) via
+   * `mapLegacyToHcStage`. The legacy 12-column board is left untouched (Q-39),
+   * so this is an additive view the FE can adopt for the vision's 7-column board.
+   * Terminal/inactive candidates (HIRED / REJECTED / unknown legacy codes) map to
+   * no HC column, so they are surfaced in a separate `unmapped` group rather than
+   * silently dropped.
+   */
+  async getFunnelKanbanHc(vacancyId?: number){
+    return safeCall(async () => {
+    const result = await this.hrRecruitmentFunnelRepo.getFunnelKanban(vacancyId);
+    if (!result.ok) throw new InternalServerErrorException(result.error);
+    const all = Array.isArray(result.data) ? (result.data as Record<string, unknown>[]) : [];
+    const stages = (HC_FUNNEL_STAGES as readonly HcFunnelStageValue[]).map((hc) => {
+      const candidates = all.filter((c) => mapLegacyToHcStage(String(c['funnelStage'] ?? '')) === hc);
+      return { stage: hc, candidates, count: candidates.length };
+    });
+    const unmappedCandidates = all.filter((c) => mapLegacyToHcStage(String(c['funnelStage'] ?? '')) === null);
+    return { model: 'hc-7', stages, unmapped: { candidates: unmappedCandidates, count: unmappedCandidates.length } };
+
     });}
 
   async moveFunnelStage(funnelId: number, dto: MoveFunnelStageDto, changedById: number){
     return safeCall(async () => {
     const funnelResult = await this.hrRecruitmentFunnelRepo.getFunnelById(funnelId);
     if (!funnelResult.ok) throw new InternalServerErrorException(funnelResult.error);
-    if (!funnelResult.data) throw new NotFoundException(`Funnel #${funnelId} topilmadi`);
+    if (!funnelResult.data) throw new NotFoundException(await this.i18n.t('errors.funnelNotFoundWithId', { args: { id: funnelId } }));
     const funnel = funnelResult.data;
-    if (!funnel.isActive) throw new BadRequestException('Funnel yopilgan');
+    if (!funnel.isActive) throw new BadRequestException(await this.i18n.t('errors.funnelClosed'));
 
     const currentStage = funnel.funnelStage as FunnelStage;
 
@@ -138,7 +164,7 @@ export class RecruitmentFunnelService {
       const countResult = await this.hrRecruitmentFunnelRepo.countReferencesChecks(funnelId);
       if (!countResult.ok) throw new InternalServerErrorException(countResult.error);
       if (countResult.data === 0) {
-        throw new BadRequestException('REFERENCES_CHECK bosqichiga o\'tish uchun kamida 1 ta navedenie spravok yozuvi kerak.');
+        throw new BadRequestException(await this.i18n.t('errors.referencesRequired'));
       }
     }
 
@@ -235,7 +261,7 @@ export class RecruitmentFunnelService {
     return safeCall(async () => {
     const funnelResult = await this.hrRecruitmentFunnelRepo.getFunnelById(funnelId);
     if (!funnelResult.ok) throw new InternalServerErrorException(funnelResult.error);
-    if (!funnelResult.data) throw new NotFoundException(`Funnel #${funnelId} topilmadi`);
+    if (!funnelResult.data) throw new NotFoundException(await this.i18n.t('errors.funnelNotFoundWithId', { args: { id: funnelId } }));
     const funnel = funnelResult.data;
 
     const updates: Record<string, unknown> = { screeningScore: dto.screeningScore, initialScreeningNotes: dto.notes, updatedAt: _time.now() };

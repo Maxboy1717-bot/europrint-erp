@@ -74,10 +74,38 @@ export class HttpError extends Error {
   }
 }
 
+/**
+ * SECURITY (2026-07-13, info-disclosure fix): never surface the raw response
+ * body verbatim. The backend's GlobalExceptionFilter intentionally attaches a
+ * `debug` field to 5xx envelopes ({ success, error, code, debug?, timestamp })
+ * that may contain internal detail (raw SQL, table/column names, stack info)
+ * — but ONLY when NODE_ENV !== 'production', for server-side/devtools-network-tab
+ * diagnosis. That field must never be forwarded into an Error whose `.message`
+ * ends up rendered on-screen (see EPErrorState.describeError, which truncates
+ * and displays `.message` directly to the end user — including on PUBLIC,
+ * unauthenticated pages like HRCapitalPublicTest). Extract only the intended
+ * user-facing `error`/`message` field; drop everything else (debug, code,
+ * stack, raw body) even in development.
+ */
+function extractSafeErrorMessage(rawText: string, fallback: string): string {
+  if (!rawText) return fallback;
+  try {
+    const parsed = JSON.parse(rawText) as Record<string, unknown> | null;
+    if (parsed && typeof parsed === "object") {
+      if (typeof parsed.error === "string") return parsed.error;
+      if (typeof parsed.message === "string") return parsed.message;
+    }
+  } catch {
+    // Not JSON (e.g. an HTML error page or plain text) — never echo raw body.
+  }
+  return fallback;
+}
+
 async function throwIfResNotOk(res: Response, url?: string) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new HttpError(res.status, `${res.status}: ${text}`, url);
+    const text = await res.text();
+    const safeMessage = extractSafeErrorMessage(text, res.statusText || `HTTP ${res.status}`);
+    throw new HttpError(res.status, `${res.status}: ${safeMessage}`, url);
   }
 }
 

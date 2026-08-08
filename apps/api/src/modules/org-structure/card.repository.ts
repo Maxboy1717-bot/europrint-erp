@@ -1,0 +1,1061 @@
+/**
+ * @module card.repository
+ * @description Data-access for the canonical ORG CARD (`org_departments`). Parametrized SQL.
+ *   PHASE-00 (MASSIV-100): re-pointed from the retired `org_functions` world to the single
+ *   canonical card table `org_departments` (node=karta). Column map: position_name→name,
+ *   function_description→description, manager_id→parent_id, deleted_at IS NULL→is_active=true,
+ *   status→current_state, department_id filter→parent_id; a card = node_type='position'.
+ *   Output aliases (name AS position_name, current_state AS status, parent_id AS manager_id)
+ *   preserve the API contract so the FE (CardDetailDialog, EmployeeCardsSummary) is not broken.
+ *   org_departments has no updated_at column. Returns Result<T>.
+ */
+
+import { Ok, Err, Result, safeCall } from '@common/result';
+import { Injectable } from '@nestjs/common';
+import { db, runQuery } from '@shared/db';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+import { LmsCardGateService } from '../lms/application/services/lms-card-gate.service';
+
+type Row = Record<string, unknown>;
+
+/** SB0777 (finding A2) manual-PATCH razryad_history fallback — mirrors org-mutations.repo.ts's
+ *  identical literal. Used only when the caller supplied no reason (defense-in-depth; this repo
+ *  method has direct unit-test callers too, not exclusively the CardController PATCH route). */
+const DEFAULT_MANUAL_RAZRYAD_REASON = "Karta to'g'ridan tahrirlash (manual PATCH, 2-imzo oqimidan tashqari)";
+
+export interface CardInput {
+  positionName?: string;
+  positionNameRu?: string | null;
+  departmentId?: number | null;
+  code?: string | null;
+  level?: number | null;
+  razryadLevelId?: number | null;
+  salaryType?: string | null;
+  minSalary?: number | null;
+  maxSalary?: number | null;
+  rbacTier?: string | null;
+  status?: string | null;
+  tskp?: string | null;
+  tskpTarget?: string | null;
+  tskpMeasurementUnit?: string | null;
+  statisticsType?: string | null;
+  aiExamEnabled?: boolean | null;
+  functionDescription?: string | null;
+  functionDescriptionRu?: string | null;
+}
+
+@Injectable()
+export class CardRepository {
+  constructor(private readonly lmsGate: LmsCardGateService) {}
+
+  private exec(q: SQL | SQLWrapper): Promise<Result<Row[]>> {
+    return safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
+  }
+
+  /** EP-ORG-137 staleness flag: a card with no review, or reviewed > 1 year ago, is stale. */
+  private readonly staleExpr = sql`(f.last_reviewed_at IS NULL OR f.last_reviewed_at < now() - interval '1 year')`;
+
+  async list(departmentId: number | null, status: string | null): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT f.*, f.name AS position_name, f.current_state AS status, f.parent_id AS manager_id,
+             p.name AS department_name, ${this.staleExpr} AS is_stale
+      FROM org_departments f
+      LEFT JOIN org_departments p ON p.id = f.parent_id
+      WHERE f.is_active = true AND f.node_type = 'position'
+        AND (${departmentId}::int IS NULL OR f.parent_id = ${departmentId})
+        AND (${status}::text IS NULL OR f.current_state = ${status})
+      ORDER BY f.parent_id, f.name
+    `);
+  }
+
+  async findById(id: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      SELECT f.*, f.name AS position_name, f.current_state AS status, f.parent_id AS manager_id,
+             p.name AS department_name, ${this.staleExpr} AS is_stale
+      FROM org_departments f
+      LEFT JOIN org_departments p ON p.id = f.parent_id
+      WHERE f.id = ${id} AND f.is_active = true
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * Vizyon (Vysotskiy 7 vertikal): kartaning boshqaruvchisini (ota-karta = parent_id) belgilash.
+   * PHASE-00: boshqaruvchi = daraxt-ota (org_departments.parent_id) — move() bilan bir xil ustun.
+   * Sikl-himoya: boshqaruvchi o'zi YOKI quyi (farzand) karta bo'la olmaydi (rekursiv tekshiruv).
+   */
+  async setCardManager(cardId: number, managerId: number | null): Promise<Result<Row | null>> {
+    if (managerId !== null) {
+      if (managerId === cardId) return Err("Karta o'zini boshqara olmaydi");
+      const sub = await this.exec(sql`
+        WITH RECURSIVE descendants AS (
+          SELECT id FROM org_departments WHERE id = ${cardId}
+          UNION ALL
+          SELECT f.id FROM org_departments f JOIN descendants dd ON f.parent_id = dd.id
+        )
+        SELECT 1 AS hit FROM descendants WHERE id = ${managerId} LIMIT 1
+      `);
+      if (!sub.ok) return Err(sub.error);
+      if (sub.data.length > 0) return Err("Sikl: boshqaruvchi quyi (farzand) karta bo'la olmaydi");
+    }
+    const r = await this.exec(sql`
+      UPDATE org_departments SET parent_id = ${managerId}
+      WHERE id = ${cardId} AND is_active = true
+      RETURNING id, name AS position_name, parent_id AS manager_id
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /** Boshqaruvchi-nomzodlar: o'zidan va quyi (farzand) kartalardan tashqari barcha faol kartalar. */
+  async listManagerCandidates(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      WITH RECURSIVE descendants AS (
+        SELECT id FROM org_departments WHERE id = ${cardId}
+        UNION ALL
+        SELECT f.id FROM org_departments f JOIN descendants dd ON f.parent_id = dd.id
+      )
+      SELECT f.id, f.name AS position_name, f.code, f.level
+      FROM org_departments f
+      WHERE f.is_active = true AND f.id NOT IN (SELECT id FROM descendants)
+      ORDER BY f.level NULLS LAST, f.name
+    `);
+  }
+
+  /**
+   * SB0107 — karta-kod avto-raqamlash (masalan "Operator-01", "Operator-02"). Slug = lotin
+   * harf/raqamga tushirilgan `positionName` (bo'sh joy → '-'). Mavjud kodlar orasidan shu slug
+   * bilan boshlanganlarning eng katta suffiksi topiladi (2 xonali, 99 dan keyin 3 xonaga o'sadi —
+   * cheklov yo'q). Bo'sh positionName → 'karta' fallback (fabrikatsiya emas, neytral slug).
+   * Race-safe emas (oddiy SELECT MAX — bir vaqtda 2 ta bir xil nomli karta yaratilsa duplikat kod
+   * chiqishi mumkin, lekin `code` UNIQUE emas — faqat displey-yorliq, funksional konflikt yo'q).
+   */
+  async nextCodeForName(positionName: string): Promise<Result<string>> {
+    const slug = (positionName || 'karta')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/gi, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'karta';
+    const prefix = slug.charAt(0).toUpperCase() + slug.slice(1);
+    const r = await this.exec(sql`
+      SELECT code FROM org_departments
+      WHERE code ~* ('^' || ${prefix} || '-[0-9]+$')
+      ORDER BY (regexp_match(code, '-([0-9]+)$'))[1]::int DESC
+      LIMIT 1
+    `);
+    if (!r.ok) return Err(r.error);
+    const lastCode = r.data[0]?.['code'] as string | undefined;
+    const lastNum = lastCode ? parseInt(lastCode.slice(lastCode.lastIndexOf('-') + 1), 10) : 0;
+    const nextNum = (Number.isFinite(lastNum) ? lastNum : 0) + 1;
+    const padded = String(nextNum).padStart(2, '0');
+    return Ok(`${prefix}-${padded}`);
+  }
+
+  async create(dto: CardInput): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      INSERT INTO org_departments
+        (name, name_ru, parent_id, code, level, razryad_level_id,
+         salary_type, min_salary, max_salary, rbac_tier, current_state, tskp, tskp_target,
+         tskp_measurement_unit, statistics_type, ai_exam_enabled,
+         description, description_ru, node_type, is_active, created_at)
+      VALUES
+        (${dto.positionName ?? ''}, ${dto.positionNameRu ?? null}, ${dto.departmentId ?? null},
+         ${dto.code ?? null}, ${dto.level ?? null}, ${dto.razryadLevelId ?? null},
+         ${dto.salaryType ?? null}, ${dto.minSalary ?? null}, ${dto.maxSalary ?? null},
+         ${dto.rbacTier ?? null}, ${dto.status ?? 'active'}, ${dto.tskp ?? null},
+         ${dto.tskpTarget ?? null}, ${dto.tskpMeasurementUnit ?? null}, ${dto.statisticsType ?? null},
+         ${dto.aiExamEnabled ?? false},
+         ${dto.functionDescription ?? null}, ${dto.functionDescriptionRu ?? null},
+         'position', true, NOW())
+      RETURNING *, name AS position_name, current_state AS status, parent_id AS manager_id
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * SB0777 — manual PATCH (bypasses the 2-signature razryad-history request flow) MUST still
+   * leave an audit trail. When `dto.razryadLevelId` differs from the card's current value, the
+   * old value + card's active occupant (employee_cards) are read BEFORE the UPDATE, and a
+   * `razryad_history` row (change_type='manual', no signatures — this is a direct admin edit,
+   * not the guarded increase/decrease workflow) is inserted in the SAME transaction (Q-40: no
+   * half-state). Guards (min_months/exam_pass_threshold) intentionally do NOT apply here — those
+   * belong to the request-flow (`razryad-history.service.ts`); this only records WHAT happened.
+   */
+  async update(id: number, dto: CardInput, reason: string | null = null): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      return await db.transaction(async (tx) => {
+        let oldRazryadId: number | null = null;
+        let employeeId: number | null = null;
+        const razryadChanging = dto.razryadLevelId != null;
+        if (razryadChanging) {
+          const cur = await tx.execute(sql`SELECT razryad_level_id FROM org_departments WHERE id = ${id}`);
+          const curRow = (cur as unknown as { rows: Row[] }).rows?.[0];
+          oldRazryadId = curRow?.razryad_level_id == null ? null : Number(curRow.razryad_level_id);
+          const occ = await tx.execute(sql`
+            SELECT employee_id FROM employee_cards
+            WHERE card_id = ${id} AND is_active = true AND COALESCE(is_acting, false) = false
+            ORDER BY is_primary DESC NULLS LAST, id ASC LIMIT 1
+          `);
+          const occRow = (occ as unknown as { rows: Row[] }).rows?.[0];
+          employeeId = occRow?.employee_id == null ? null : Number(occRow.employee_id);
+        }
+
+        const upd = await tx.execute(sql`
+          UPDATE org_departments SET
+            name                  = COALESCE(${dto.positionName ?? null}, name),
+            name_ru               = COALESCE(${dto.positionNameRu ?? null}, name_ru),
+            parent_id             = COALESCE(${dto.departmentId ?? null}, parent_id),
+            code                  = COALESCE(${dto.code ?? null}, code),
+            level                 = COALESCE(${dto.level ?? null}, level),
+            razryad_level_id      = COALESCE(${dto.razryadLevelId ?? null}, razryad_level_id),
+            salary_type           = COALESCE(${dto.salaryType ?? null}, salary_type),
+            min_salary            = COALESCE(${dto.minSalary ?? null}, min_salary),
+            max_salary            = COALESCE(${dto.maxSalary ?? null}, max_salary),
+            rbac_tier             = COALESCE(${dto.rbacTier ?? null}, rbac_tier),
+            current_state         = COALESCE(${dto.status ?? null}, current_state),
+            tskp                  = COALESCE(${dto.tskp ?? null}, tskp),
+            tskp_target           = COALESCE(${dto.tskpTarget ?? null}, tskp_target),
+            tskp_measurement_unit = COALESCE(${dto.tskpMeasurementUnit ?? null}, tskp_measurement_unit),
+            statistics_type       = COALESCE(${dto.statisticsType ?? null}, statistics_type),
+            ai_exam_enabled       = COALESCE(${dto.aiExamEnabled ?? null}, ai_exam_enabled),
+            description           = COALESCE(${dto.functionDescription ?? null}, description),
+            description_ru        = COALESCE(${dto.functionDescriptionRu ?? null}, description_ru)
+          WHERE id = ${id} AND is_active = true
+          RETURNING *, name AS position_name, current_state AS status, parent_id AS manager_id
+        `);
+        const updRow = (upd as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        if (razryadChanging && updRow && dto.razryadLevelId !== oldRazryadId) {
+          let changeType: 'increase' | 'decrease' = 'increase';
+          if (oldRazryadId != null) {
+            const lvls = await tx.execute(sql`
+              SELECT
+                (SELECT level FROM razryad_levels WHERE id = ${oldRazryadId}) AS old_level,
+                (SELECT level FROM razryad_levels WHERE id = ${dto.razryadLevelId}) AS new_level
+            `);
+            const lvlRow = (lvls as unknown as { rows: Row[] }).rows?.[0];
+            const oldLevel = lvlRow?.old_level == null ? null : Number(lvlRow.old_level);
+            const newLevel = lvlRow?.new_level == null ? null : Number(lvlRow.new_level);
+            if (oldLevel != null && newLevel != null && newLevel < oldLevel) changeType = 'decrease';
+          }
+          await tx.execute(sql`
+            INSERT INTO razryad_history
+              (card_id, employee_id, old_razryad_id, new_razryad_id, change_type, reason, ai_suggested, effective_at, created_at)
+            VALUES
+              (${id}, ${employeeId}, ${oldRazryadId}, ${dto.razryadLevelId}, ${changeType},
+               ${reason ?? DEFAULT_MANUAL_RAZRYAD_REASON}, false, NOW(), NOW())
+          `);
+        }
+
+        return updRow as Row | null;
+      });
+    }, 'DB_ERROR');
+  }
+
+  /** Soft-delete (EP-ORG-005): is_active=false + current_state='archived'. Never hard-DELETE. */
+  async softDelete(id: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments SET is_active = false, current_state = 'archived'
+      WHERE id = ${id} AND is_active = true
+      RETURNING id, current_state AS status
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * EP-ORG-002 atomic guard input: how many SUBSTANTIVE active employees occupy this card.
+   * Phase 6: counts via the canonical M:N link `employee_cards` (card_id → org_departments, PHASE-00).
+   * Phase 7: EXCLUDES i.o./acting occupants + on-read revert guard (expired dated link no longer counts).
+   */
+  async activeOccupantCount(cardId: number): Promise<Result<number>> {
+    const r = await this.exec(sql`
+      SELECT COUNT(*)::int AS c FROM employee_cards
+      WHERE card_id = ${cardId} AND is_active
+        AND COALESCE(is_acting, false) = false
+        AND (ended_at IS NULL OR ended_at > now())
+    `);
+    return r.ok ? Ok(Number(r.data[0]?.c ?? 0)) : Err(r.error);
+  }
+
+  /**
+   * A24 EP-ORG-066/142 stake-cap input: the SUM of an employee's EXISTING active stake fractions,
+   * read from the canonical stake table `employee_org_departments` (the only table that carries
+   * `stake_fraction`; `employee_cards` has no stake column). The employee→user bridge is
+   * `users.employee_id`. The candidate card (`excludeCardId`) is excluded so a re-assign that only
+   * updates the same card's stake does not double-count. COALESCE NULL→0 (acting/unstaked links
+   * contribute nothing). Returns 0 when the employee has no linked user or no active stakes.
+   *
+   * Vizyon (egasi 2026-06-25, Q5/Q7): oylik = barcha FAOL kartalar ulush yig'indisi; ulushlar
+   * yig'indisi 1.0 dan oshmasligi kerak (owner-override bilan istisno) — bu metod cap-tekshiruvining
+   * DB-tomonini beradi, qaror service qatlamida (allowOverload) qabul qilinadi.
+   */
+  async employeeActiveStakeSum(employeeId: number, excludeCardId: number | null): Promise<Result<number>> {
+    const r = await this.exec(sql`
+      SELECT COALESCE(SUM(eod.stake_fraction), 0)::numeric AS total
+      FROM   employee_org_departments eod
+      JOIN   users u ON u.id = eod.user_id
+      WHERE  u.employee_id = ${employeeId}
+        AND  eod.is_active = true
+        AND  (${excludeCardId}::int IS NULL OR eod.org_department_id <> ${excludeCardId})
+    `);
+    return r.ok ? Ok(Number(r.data[0]?.total ?? 0)) : Err(r.error);
+  }
+
+  /**
+   * A24 stake-cap verdict (EP-ORG-066/142). Given an employee, a candidate card and the stake the
+   * caller wants to attach to it, decide whether the new TOTAL active stake stays within 1.0.
+   *   newTotal = (employee's existing active stake, candidate card excluded) + addedStake
+   * Rules:
+   *   - addedStake NULL/≤0 → not a stake-bearing assign; the cap is N/A → allowed (existing<=1.0 holds).
+   *   - newTotal ≤ 1.0          → allowed.
+   *   - newTotal > 1.0 + allowOverload=false → REJECTED with an exact message.
+   *   - newTotal > 1.0 + allowOverload=true  → allowed (owner-override, egasi qarori Q7).
+   * EPSILON 1e-6 absorbs numeric(4,3) rounding so an exact 1.000 sum is never falsely rejected.
+   * Pure-read (no writes) — safe to call before the assign and inside a rollback-tx DB-proof.
+   */
+  async checkStakeCap(
+    employeeId: number,
+    candidateCardId: number,
+    addedStake: number | null,
+    allowOverload = false,
+  ): Promise<Result<{ allowed: boolean; existingTotal: number; newTotal: number; reason: string | null }>> {
+    const added = typeof addedStake === 'number' && Number.isFinite(addedStake) ? addedStake : 0;
+    const sum = await this.employeeActiveStakeSum(employeeId, candidateCardId);
+    if (!sum.ok) return Err(sum.error);
+    const existingTotal = sum.data;
+
+    if (added <= 0) {
+      return Ok({ allowed: true, existingTotal, newTotal: existingTotal, reason: null });
+    }
+
+    const newTotal = existingTotal + added;
+    const EPSILON = 1e-6;
+    if (newTotal > 1.0 + EPSILON && !allowOverload) {
+      return Ok({
+        allowed: false,
+        existingTotal,
+        newTotal,
+        reason:
+          `Ulush yig'indisi ${newTotal.toFixed(3)} > 1.0 (mavjud ${existingTotal.toFixed(3)} + ` +
+          `yangi ${added.toFixed(3)}). Bir xodimning barcha faol kartalar ulushi 1.0 dan oshmasligi ` +
+          `kerak. Owner ruxsati (allowOverload) bilan istisno.`,
+      });
+    }
+    return Ok({ allowed: true, existingTotal, newTotal, reason: null });
+  }
+
+  // ─── Phase 5 card-detail tabs (read-only related data) ─────────────────────
+
+  /**
+   * Xodimlar tab: a card's active occupants (canonical `employee_cards` M:N link, card_id → org_departments)
+   * plus each occupant's FORMULA-A total salary (SUM of all their active cards' max_salary, EP-ORG-142).
+   */
+  async listEmployees(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT e.id, e.first_name, e.last_name, COALESCE(e.status,'active') AS status,
+             ec.is_primary, COALESCE(ec.is_acting, false) AS is_acting, ec.acting_supplement, ec.ended_at,
+             COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
+             (SELECT COALESCE(SUM(CASE WHEN COALESCE(ec2.is_acting,false) THEN 0 ELSE COALESCE(f2.max_salary,0) END),0)
+                   + COALESCE(SUM(CASE WHEN ec2.is_acting THEN COALESCE(ec2.acting_supplement,0) ELSE 0 END),0)
+                FROM employee_cards ec2 JOIN org_departments f2 ON f2.id = ec2.card_id
+               WHERE ec2.employee_id = e.id AND ec2.is_active
+                 AND (ec2.ended_at IS NULL OR ec2.ended_at > now()) AND f2.is_active = true) AS total_salary
+      FROM employee_cards ec
+      JOIN employees e ON e.id = ec.employee_id
+      WHERE ec.card_id = ${cardId} AND ec.is_active AND (ec.ended_at IS NULL OR ec.ended_at > now())
+      ORDER BY ec.is_primary DESC, ec.is_acting, e.last_name, e.first_name
+    `);
+  }
+
+  /**
+   * Karta↔xodim moslik (fit) — deterministik v1. Mavjud REAL signallardan (fabrikatsiyasiz):
+   * biriktirish sifati (primary/acting) + karta-ta'rif to'liqligi (razryad + portret-talab).
+   * PHASE-00: kanonik karta = org_departments.
+   */
+  async computeCardFit(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT e.id AS employee_id,
+             COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
+             ec.is_primary, COALESCE(ec.is_acting,false) AS is_acting,
+             (CASE WHEN COALESCE(ec.is_acting,false) THEN 50 WHEN ec.is_primary THEN 100 ELSE 70 END)::int AS assignment_score,
+             (CASE WHEN f.razryad_level_id IS NOT NULL THEN 50 ELSE 0 END
+              + CASE WHEN COALESCE(NULLIF(TRIM(p.portret_data->>'requirements'),''),'') <> '' THEN 50 ELSE 0 END)::int AS definition_score,
+             (f.razryad_level_id IS NOT NULL) AS razryad_set,
+             (COALESCE(NULLIF(TRIM(p.portret_data->>'requirements'),''),'') <> '') AS requirements_set
+      FROM employee_cards ec
+      JOIN employees e ON e.id = ec.employee_id
+      JOIN org_departments f ON f.id = ec.card_id
+      LEFT JOIN org_node_portret p ON p.card_id = f.id
+      WHERE ec.card_id = ${cardId} AND ec.is_active AND (ec.ended_at IS NULL OR ec.ended_at > now())
+      ORDER BY ec.is_primary DESC, ec.is_acting, e.last_name
+    `);
+  }
+
+  /** Farzandlar tab: child cards (parent_id = this card, EP-ORG-021). */
+  async listChildren(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT id, name AS position_name, code, level, current_state AS status
+      FROM org_departments WHERE parent_id = ${cardId} AND is_active = true
+      ORDER BY level NULLS LAST, name
+    `);
+  }
+
+  /** Vakant tab: vacancies opened for this card + priority + aging bucket (EP-ORG-072/073). */
+  async listVacancies(cardId: number): Promise<Result<Row[]>> {
+    // PHASE-00: vacancies.org_function_id re-point deferred to FAZA 9; 0 rows live, no regress.
+    return this.exec(sql`
+      SELECT id, title, status, priority, number_of_positions, open_positions, closing_date, created_at,
+             (now()::date - created_at::date) AS aging_days,
+             CASE WHEN (now()::date - created_at::date) <= 14 THEN '0-14'
+                  WHEN (now()::date - created_at::date) <= 45 THEN '15-45'
+                  ELSE '45+' END AS aging_bucket
+      FROM vacancies WHERE org_function_id = ${cardId} AND deleted_at IS NULL
+      ORDER BY created_at DESC NULLS LAST
+    `);
+  }
+
+  /** Tarix tab: card change history from the audit log (AuditInterceptor tags CardController as 'card'). */
+  async listHistory(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT id, action, user_full_name, reason, changed_fields, created_at
+      FROM audit_logs WHERE table_name = 'card' AND record_id = ${String(cardId)}
+      ORDER BY created_at DESC NULLS LAST LIMIT 50
+    `);
+  }
+
+  // ─── Phase 6: employee↔card M:N (employee_cards) + FORMULA A salary ─────────
+
+  /**
+   * Assign an employee to a card (M:N). Service guards substantive assigns with canAssignEmployee.
+   * Phase 7: an acting (i.o.) assignment carries isActing + acting_supplement + ended_at (revert date).
+   * Idempotent on the active (employee_id, card_id) pair. card_id → org_departments (PHASE-00).
+   */
+  async assignEmployee(
+    cardId: number, employeeId: number, isPrimary: boolean,
+    isActing = false, actingSupplement: number | null = null, endedAt: string | null = null,
+  ): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      INSERT INTO employee_cards
+        (employee_id, card_id, is_primary, is_active, is_acting, acting_supplement, assigned_at, ended_at, created_at, updated_at)
+      VALUES
+        (${employeeId}, ${cardId}, ${isPrimary}, true, ${isActing}, ${actingSupplement}, NOW(), ${endedAt}::timestamptz, NOW(), NOW())
+      ON CONFLICT (employee_id, card_id) WHERE is_active DO NOTHING
+      RETURNING id, employee_id, card_id, is_primary, is_acting
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * EP-ORG-002 atomic guard — DB-transaction-level (closes the check-then-insert TOCTOU race that
+   * existed between CardService.canAssignEmployee (read) and .assignEmployee (write)). Two
+   * concurrent substantive-assign requests for the SAME card could previously both read
+   * activeOccupants=0 and both INSERT before either committed.
+   *
+   * A DB partial-unique index is intentionally NOT used (owner decision D2=Variant C,
+   * `org-phase6-employee-cards-2026-06-08.sql`: live data has 10 over-occupied cards — a hard
+   * constraint would fail today; deferred until the EP-ORG-037 seat-split). Instead this method
+   * takes `pg_advisory_xact_lock(82002, cardId)` — same convention as
+   * `mes/infrastructure/repositories/drizzle-mes.repo.ts` (`pg_advisory_xact_lock(88088, workCenterId)`)
+   * — for the lifetime of ONE transaction, so a second concurrent request for the same card blocks
+   * until the first commits, then re-reads the now-up-to-date occupant count and is correctly
+   * rejected. This makes the EXISTING application-layer guard atomic without touching the deferred
+   * schema decision.
+   *
+   * i.o./acting assigns (isActing=true, Phase 7 D2) still take the lock (so they cannot race a
+   * concurrent substantive assign into a stale "0 occupants" read) but SKIP the occupant-count
+   * guard itself — they do not consume the substantive seat.
+   */
+  async assignEmployeeGuarded(
+    cardId: number, employeeId: number, isPrimary: boolean,
+    isActing = false, actingSupplement: number | null = null, endedAt: string | null = null,
+  ): Promise<Result<{ inserted: Row | null; activeOccupants: number; blocked: boolean }>> {
+    return safeCall(async () => {
+      return await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(82002, ${cardId})`);
+
+        let activeOccupants = 0;
+        if (!isActing) {
+          const cnt = await tx.execute(sql`
+            SELECT COUNT(*)::int AS c FROM employee_cards
+            WHERE card_id = ${cardId} AND is_active
+              AND COALESCE(is_acting, false) = false
+              AND (ended_at IS NULL OR ended_at > now())
+          `);
+          const cntRow = (cnt as unknown as { rows: Row[] }).rows?.[0];
+          activeOccupants = Number(cntRow?.c ?? 0);
+          if (activeOccupants > 0) {
+            // Still occupied — reject WITHOUT inserting. The advisory lock (held until this
+            // transaction ends) is released automatically here, unblocking the next waiter.
+            return { inserted: null, activeOccupants, blocked: true };
+          }
+        }
+
+        const ins = await tx.execute(sql`
+          INSERT INTO employee_cards
+            (employee_id, card_id, is_primary, is_active, is_acting, acting_supplement, assigned_at, ended_at, created_at, updated_at)
+          VALUES
+            (${employeeId}, ${cardId}, ${isPrimary}, true, ${isActing}, ${actingSupplement}, NOW(), ${endedAt}::timestamptz, NOW(), NOW())
+          ON CONFLICT (employee_id, card_id) WHERE is_active DO NOTHING
+          RETURNING id, employee_id, card_id, is_primary, is_acting
+        `);
+        const inserted = (ins as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        // Mirror sync mirrors the pre-existing (non-atomic) behaviour: ran whenever isPrimary=true,
+        // regardless of whether the INSERT produced a new row (idempotent ON CONFLICT DO NOTHING re-assign).
+        if (isPrimary) {
+          await tx.execute(sql`
+            UPDATE employee_cards SET is_primary = (card_id = ${cardId}), updated_at = NOW()
+            WHERE employee_id = ${employeeId} AND is_active
+          `);
+          await tx.execute(sql`UPDATE employees SET org_function_id = ${cardId} WHERE id = ${employeeId}`);
+        }
+
+        return { inserted, activeOccupants, blocked: false };
+      });
+    });
+  }
+
+  /** Soft-remove an employee from a card; returns the removed link (incl. was-primary) or null if none active. */
+  async unassignEmployee(cardId: number, employeeId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE employee_cards SET is_active = false, ended_at = NOW(), updated_at = NOW()
+      WHERE card_id = ${cardId} AND employee_id = ${employeeId} AND is_active
+      RETURNING id, is_primary
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /** Mirror sync: mark one card primary in employee_cards + set employees.org_function_id (back-compat, Q-39). */
+  async setPrimaryCard(employeeId: number, cardId: number): Promise<Result<Row[]>> {
+    const a = await this.exec(sql`
+      UPDATE employee_cards SET is_primary = (card_id = ${cardId}), updated_at = NOW()
+      WHERE employee_id = ${employeeId} AND is_active
+    `);
+    if (!a.ok) return a;
+    return this.exec(sql`UPDATE employees SET org_function_id = ${cardId} WHERE id = ${employeeId}`);
+  }
+
+  /** When the primary card is unassigned: repoint the org_function_id mirror to another active card (or NULL). */
+  async repointPrimaryMirror(employeeId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      UPDATE employees SET org_function_id = (
+        SELECT card_id FROM employee_cards
+        WHERE employee_id = ${employeeId} AND is_active
+        ORDER BY is_primary DESC, assigned_at DESC LIMIT 1
+      ) WHERE id = ${employeeId}
+    `);
+  }
+
+  /**
+   * An employee's active cards + each card's max_salary (the FORMULA-A components).
+   * card_id → org_departments (PHASE-00). Acting card's effective contribution = its acting_supplement.
+   * On-read revert guard excludes expired links.
+   */
+  async listEmployeeCards(employeeId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT ec.card_id, ec.is_primary, COALESCE(ec.is_acting, false) AS is_acting,
+             ec.acting_supplement, ec.ended_at, f.name AS position_name, f.code, f.max_salary,
+             (CASE WHEN COALESCE(ec.is_acting,false) THEN COALESCE(ec.acting_supplement,0) ELSE COALESCE(f.max_salary,0) END) AS card_salary
+      FROM employee_cards ec
+      JOIN org_departments f ON f.id = ec.card_id
+      WHERE ec.employee_id = ${employeeId} AND ec.is_active
+        AND (ec.ended_at IS NULL OR ec.ended_at > now()) AND f.is_active = true
+      ORDER BY ec.is_primary DESC, ec.is_acting, f.name
+    `);
+  }
+
+  /**
+   * FORMULA A (EP-ORG-142/061): employee profile total = "own + supplement", no cap.
+   * own = SUM of substantive (non-acting) cards' max_salary; supplement = SUM of acting_supplement.
+   * On-read revert guard (EP-ORG-060): expired dated links drop out. COALESCE NULL→0. card → org_departments.
+   */
+  async employeeSalaryTotal(employeeId: number): Promise<Result<number>> {
+    const r = await this.exec(sql`
+      SELECT ( COALESCE(SUM(CASE WHEN COALESCE(ec.is_acting,false) THEN 0 ELSE COALESCE(f.max_salary,0) END), 0)
+             + COALESCE(SUM(CASE WHEN ec.is_acting THEN COALESCE(ec.acting_supplement,0) ELSE 0 END), 0) )::numeric AS total
+      FROM employee_cards ec JOIN org_departments f ON f.id = ec.card_id
+      WHERE ec.employee_id = ${employeeId} AND ec.is_active
+        AND (ec.ended_at IS NULL OR ec.ended_at > now()) AND f.is_active = true
+    `);
+    return r.ok ? Ok(Number(r.data[0]?.total ?? 0)) : Err(r.error);
+  }
+
+  /**
+   * EP-ORG-047 cert-in-card: certificates earned by the card's active occupants + a 30-day expiry flag.
+   * Reuses the canonical `certificates` table. Occupants via employee_cards (M:N, card_id → org_departments).
+   */
+  async listCertificates(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT c.id, c.name, c.certificate_number, c.issued_date, c.expiry_date,
+             e.id AS employee_id,
+             COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name,
+             (c.expiry_date IS NOT NULL AND c.expiry_date <= (now()::date + 30)) AS expiring_soon
+      FROM employee_cards ec
+      JOIN employees e   ON e.id = ec.employee_id
+      JOIN certificates c ON c.employee_id = e.id
+      WHERE ec.card_id = ${cardId} AND ec.is_active AND COALESCE(c.is_active, true) = true
+      ORDER BY c.expiry_date NULLS LAST, c.issued_date DESC NULLS LAST
+    `);
+  }
+
+  // ─── FAZA-09 karta 5-holat lifecycle: muzlatish/eritish (EP-ORG-084/086) ─────
+
+  /**
+   * Karta muzlatish (active/io/vacant → frozen). State-machine: faqat 'archived' BO'LMAGAN faol karta
+   * muzlatiladi (arxivlangan/o'chirilgan karta muzlatilmaydi). frozen_at=NOW() (idempotent COALESCE),
+   * freeze_reason + freeze_until (ixtiyoriy ISO sana → NULL). Allaqachon 'frozen' bo'lsa sabab/muddat
+   * yangilanadi. Mos kelmaydigan o'tish (arxivlangan yoki yo'q karta) → null (service 404/409 qaytaradi).
+   * `freeze_*` ustunlar + current_state JONLI (FAZA-09, migrations-drift APPROVED).
+   */
+  async freeze(cardId: number, reason: string | null, until: string | null): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET current_state = 'frozen',
+             frozen_at     = COALESCE(frozen_at, now()),
+             freeze_reason = ${reason},
+             freeze_until  = ${until}::timestamp
+       WHERE id = ${cardId} AND is_active = true
+         AND node_type = 'position'
+         AND COALESCE(current_state, 'active') <> 'archived'
+      RETURNING id, current_state AS status, frozen_at, freeze_reason, freeze_until
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * Karta eritish (frozen → active). State-machine: faqat HOZIR 'frozen' karta eritiladi (boshqa
+   * holatdan eritish ma'nosiz → null, service 409 qaytaradi). frozen_at/freeze_reason/freeze_until tozalanadi.
+   */
+  async thaw(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET current_state = 'active',
+             frozen_at     = NULL,
+             freeze_reason = NULL,
+             freeze_until  = NULL
+       WHERE id = ${cardId} AND is_active = true
+         AND node_type = 'position'
+         AND current_state = 'frozen'
+      RETURNING id, current_state AS status
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /** Karta hozirgi holati (state-machine o'tishini farqlash uchun: yo'q / archived / frozen / active...). */
+  async currentState(cardId: number): Promise<Result<{ status: string } | null>> {
+    const r = await this.exec(sql`
+      SELECT COALESCE(current_state, 'active') AS status
+      FROM org_departments
+      WHERE id = ${cardId} AND is_active = true AND node_type = 'position'
+    `);
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    return Ok(row ? { status: String(row.status) } : null);
+  }
+
+  /**
+   * State-machine o'tishi uchun ARXIVLANGAN kartaning holatini ham o'qiydi (is_active=false ham qamrab).
+   * currentState() faqat faol kartani ko'radi → arxivlangan kartani restore qilishdan oldin uni topish uchun.
+   * Yo'q karta → null; topilsa { status } qaytadi (arxivlangan = 'archived').
+   */
+  async anyState(cardId: number): Promise<Result<{ status: string } | null>> {
+    const r = await this.exec(sql`
+      SELECT COALESCE(current_state, CASE WHEN is_active THEN 'active' ELSE 'archived' END) AS status
+      FROM org_departments
+      WHERE id = ${cardId} AND node_type = 'position'
+    `);
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    return Ok(row ? { status: String(row.status) } : null);
+  }
+
+  /**
+   * FAZA-09 5-holat lifecycle: kartani VAKANT qilish (active/frozen/io → vacant). State-machine:
+   * faqat 'archived' BO'LMAGAN faol karta vakant bo'ladi. Egasi ketganda karta vakant — yangi xodim
+   * qidiriladi. frozen meta tozalanadi (frozen→vacant o'tsa muzlash bekor). Mos kelmasa → null.
+   */
+  async setVacant(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET current_state = 'vacant',
+             frozen_at     = NULL,
+             freeze_reason = NULL,
+             freeze_until  = NULL
+       WHERE id = ${cardId} AND is_active = true
+         AND node_type = 'position'
+         AND COALESCE(current_state, 'active') <> 'archived'
+      RETURNING id, current_state AS status
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * FAZA-09 5-holat lifecycle: ARXIVLANGAN kartani TIKLASH (archived → active). softDelete()'ning
+   * teskarisi: is_active=true + current_state='active' + freeze meta tozalanadi. State-machine:
+   * faqat HOZIR arxivlangan (is_active=false / current_state='archived') karta tiklanadi.
+   * Mos kelmaydigan o'tish (yo'q yoki allaqachon faol karta) → null (service 404/409).
+   */
+  async restore(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET is_active     = true,
+             current_state = 'active',
+             frozen_at     = NULL,
+             freeze_reason = NULL,
+             freeze_until  = NULL
+       WHERE id = ${cardId} AND node_type = 'position'
+         AND (is_active = false OR current_state = 'archived')
+      RETURNING id, current_state AS status, is_active
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  // ─── EP-ORG-064 (merge) / EP-ORG-065 (split) ─────────────────────────────────
+  // Tavsiya A, docs/audit/decisions/01-org-kartalar.md:460-472 — Holat still OCHIQ (final owner
+  // sign-off pending); implemented per the recorded recommendation so the endpoints exist and are
+  // DB-provable meanwhile (2026-08-04 discovery-sweep item "Karta Merge/Split endpointlari
+  // umuman yo'q"). Columns `merged_into_id`/`split_from_id` were already added to org_departments
+  // (org-card-merge-split-2026-08-04.sql + migrations-drift.ts) by an earlier parallel pass — this
+  // is the first code that actually reads/writes them.
+
+  /**
+   * EP-ORG-064 · "Ikki kartani birlashtirish". Tavsiya A: asosiy karta tanlanadi, ikkinchisining
+   * tarixi (employee_cards occupancy + razryad_history) unga ko'chadi, ikkinchisi arxivlanadi
+   * (+ merged_into_id → primary). Advisory-locked (82003, primaryCardId) — same convention as
+   * assignEmployeeGuarded's 82002 lock — so a concurrent assign/merge on the primary card cannot
+   * interleave with this transaction. A moved employee_cards row that would collide with an
+   * already-active (employee_id, primaryCardId) pair (the partial unique index) is skipped rather
+   * than moved — it stays attached to the now-archived secondary card as pure history.
+   * Returns null when primaryCardId===secondaryCardId, or either card is missing/not a live
+   * (`is_active=true`, not already archived) `node_type='position'` card.
+   */
+  async mergeCards(
+    primaryCardId: number, secondaryCardId: number,
+  ): Promise<Result<{ primary: Row; secondary: Row } | null>> {
+    if (primaryCardId === secondaryCardId) return Ok(null);
+    return safeCall(async () => {
+      return await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(82003, ${primaryCardId})`);
+
+        const cards = await tx.execute(sql`
+          SELECT id, is_active, current_state FROM org_departments
+          WHERE id IN (${primaryCardId}, ${secondaryCardId}) AND node_type = 'position'
+        `);
+        const rows = (cards as unknown as { rows: Row[] }).rows;
+        const isLive = (id: number) => {
+          const row = rows.find((r) => Number(r.id) === id);
+          return !!row && row.is_active === true && row.current_state !== 'archived';
+        };
+        if (!isLive(primaryCardId) || !isLive(secondaryCardId)) return null;
+
+        await tx.execute(sql`
+          UPDATE employee_cards SET card_id = ${primaryCardId}, updated_at = NOW()
+          WHERE card_id = ${secondaryCardId}
+            AND NOT (is_active AND EXISTS (
+              SELECT 1 FROM employee_cards ec2
+              WHERE ec2.employee_id = employee_cards.employee_id
+                AND ec2.card_id = ${primaryCardId} AND ec2.is_active
+            ))
+        `);
+        await tx.execute(sql`
+          UPDATE razryad_history SET card_id = ${primaryCardId} WHERE card_id = ${secondaryCardId}
+        `);
+
+        const upd = await tx.execute(sql`
+          UPDATE org_departments
+             SET is_active = false, current_state = 'archived', merged_into_id = ${primaryCardId}
+           WHERE id = ${secondaryCardId}
+          RETURNING id, name AS position_name, current_state AS status, merged_into_id
+        `);
+        const secondary = (upd as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        const pr = await tx.execute(sql`
+          SELECT *, name AS position_name, current_state AS status, parent_id AS manager_id
+          FROM org_departments WHERE id = ${primaryCardId}
+        `);
+        const primary = (pr as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        if (!secondary || !primary) return null;
+        return { primary, secondary };
+      });
+    });
+  }
+
+  /**
+   * EP-ORG-065 · "Bitta kartani ikkiga bo'lish". Tavsiya A: yangi ikki karta ochiladi (har biri
+   * `split_from_id` orqali manba kartaga havola bilan bog'lanadi), eski karta arxivga o'tadi
+   * (softDelete bilan bir xil arxivlash semantikasi: is_active=false + current_state='archived').
+   * Advisory-locked (82004, cardId) — assignEmployeeGuarded/mergeCards bilan bir xil konvensiya.
+   * Mavjud faol xodim-biriktirishlar (employee_cards) AVTOMATIK ko'chirilmaydi — bu ochiq semantik
+   * qaror (qaysi yangi kartaga o'tishi kerakligi aniq emas); HR mavjud assign/unassign
+   * endpointlari orqali qo'lda qayta biriktiradi (freeze/vacant/restore'dagi kabi arxivlangan
+   * karta ham eski employee_cards havolalarini saqlab qoladi — mavjud konvensiya, regress emas).
+   * Returns null when the source card is missing / not a live `node_type='position'` card.
+   */
+  async splitCard(
+    cardId: number, cardA: CardInput, cardB: CardInput,
+  ): Promise<Result<{ source: Row; cardA: Row; cardB: Row } | null>> {
+    return safeCall(async () => {
+      return await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(82004, ${cardId})`);
+
+        const src = await tx.execute(sql`
+          SELECT id, is_active, current_state, parent_id FROM org_departments
+          WHERE id = ${cardId} AND node_type = 'position'
+        `);
+        const srcRow = (src as unknown as { rows: Row[] }).rows?.[0];
+        if (!srcRow || srcRow.is_active !== true || srcRow.current_state === 'archived') return null;
+        const parentId = srcRow.parent_id == null ? null : Number(srcRow.parent_id);
+
+        const insertOne = async (dto: CardInput): Promise<Row | null> => {
+          const r = await tx.execute(sql`
+            INSERT INTO org_departments
+              (name, name_ru, parent_id, code, level, razryad_level_id,
+               salary_type, min_salary, max_salary, rbac_tier, current_state, tskp, tskp_target,
+               tskp_measurement_unit, statistics_type, ai_exam_enabled,
+               description, description_ru, node_type, is_active, split_from_id, created_at)
+            VALUES
+              (${dto.positionName ?? ''}, ${dto.positionNameRu ?? null}, ${dto.departmentId ?? parentId},
+               ${dto.code ?? null}, ${dto.level ?? null}, ${dto.razryadLevelId ?? null},
+               ${dto.salaryType ?? null}, ${dto.minSalary ?? null}, ${dto.maxSalary ?? null},
+               ${dto.rbacTier ?? null}, ${dto.status ?? 'active'}, ${dto.tskp ?? null},
+               ${dto.tskpTarget ?? null}, ${dto.tskpMeasurementUnit ?? null}, ${dto.statisticsType ?? null},
+               ${dto.aiExamEnabled ?? false},
+               ${dto.functionDescription ?? null}, ${dto.functionDescriptionRu ?? null},
+               'position', true, ${cardId}, NOW())
+            RETURNING *, name AS position_name, current_state AS status, parent_id AS manager_id
+          `);
+          return (r as unknown as { rows: Row[] }).rows?.[0] ?? null;
+        };
+
+        const newA = await insertOne(cardA);
+        const newB = await insertOne(cardB);
+
+        const arch = await tx.execute(sql`
+          UPDATE org_departments SET is_active = false, current_state = 'archived'
+          WHERE id = ${cardId} AND is_active = true
+          RETURNING id, name AS position_name, current_state AS status
+        `);
+        const source = (arch as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        if (!newA || !newB || !source) return null;
+        return { source, cardA: newA, cardB: newB };
+      });
+    });
+  }
+
+  // ─── Phase 7: card staleness (EP-ORG-137) + acting auto-revert (EP-ORG-060) ──
+
+  /** EP-ORG-137: stamp last_reviewed_at = NOW() (resets the 1-year staleness clock). 404 if the card is gone. */
+  async markReviewed(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments SET last_reviewed_at = NOW()
+      WHERE id = ${cardId} AND is_active = true
+      RETURNING id, last_reviewed_at
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * EP-ORG-137: cards whose annual review is overdue (staleExpr) — feeds the daily
+   * CardExpiredEvent cron (../../cron/card-staleness.cron.ts). Archived cards excluded
+   * (nothing to review once retired). Read-only — does NOT touch last_reviewed_at.
+   */
+  async listStaleCards(): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT f.id, f.name AS position_name, f.last_reviewed_at
+      FROM org_departments f
+      WHERE f.is_active = true AND f.node_type = 'position'
+        AND COALESCE(f.current_state, 'active') <> 'archived'
+        AND ${this.staleExpr}
+      ORDER BY f.last_reviewed_at ASC NULLS FIRST
+    `);
+  }
+
+  /**
+   * Payroll frozen-card gate batch prefetch (mirrors LmsRepository.findMandatoryCoursesByCards
+   * — N+1 fix pattern, owner-approved 2026-07-05): current_state + freeze_reason for MANY cards
+   * in ONE query, keyed by cardId. A card missing from the returned map (bad id / deleted) is
+   * simply absent — PayrollService treats an absent key as fail-closed (see computeGatedMonthlySalary).
+   */
+  async listCurrentStatesByIds(
+    cardIds: number[],
+  ): Promise<Result<Map<number, { status: string; freezeReason: string | null }>>> {
+    const uniqueIds = Array.from(new Set(cardIds.filter((id) => Number.isInteger(id) && id > 0)));
+    if (uniqueIds.length === 0) return Ok(new Map());
+    const r = await this.exec(sql`
+      SELECT id, COALESCE(current_state, 'active') AS status, freeze_reason
+      FROM org_departments
+      WHERE id = ANY(${uniqueIds}) AND node_type = 'position'
+    `);
+    if (!r.ok) return Err(r.error);
+    const byId = new Map<number, { status: string; freezeReason: string | null }>();
+    for (const row of r.data) {
+      const id = Number(row.id);
+      if (!Number.isInteger(id)) continue;
+      byId.set(id, {
+        status: String(row.status),
+        freezeReason: row.freeze_reason != null ? String(row.freeze_reason) : null,
+      });
+    }
+    return Ok(byId);
+  }
+
+  /**
+   * EP-ORG-060 acting auto-revert (cron housekeeping mirror): physically deactivate acting links whose
+   * end date has passed. The on-read guard already excludes them; this keeps rows tidy.
+   */
+  async revertExpiredActing(): Promise<Result<number>> {
+    const r = await this.exec(sql`
+      UPDATE employee_cards SET is_active = false, updated_at = NOW()
+      WHERE is_acting = true AND is_active = true AND ended_at IS NOT NULL AND ended_at <= now()
+      RETURNING id
+    `);
+    return r.ok ? Ok(r.data.length) : Err(r.error);
+  }
+
+  // ─── Card-level Portret (org_node_portret, card_id-keyed → org_departments) ───
+
+  /** Read a card's portret row (org_node_portret keyed by card_id). Returns null when no portret yet. */
+  async getCardPortret(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      SELECT * FROM org_node_portret WHERE card_id = ${cardId} LIMIT 1
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * Manual upsert of a card's portret (SELECT-then-write). A card row = node_id NULL + card_id set + portret_data jsonb.
+   */
+  async saveCardPortret(
+    cardId: number,
+    portretData: Record<string, unknown>,
+    creatorId: number | null,
+  ): Promise<Result<Row | null>> {
+    const existing = await this.getCardPortret(cardId);
+    if (!existing.ok) return existing;
+
+    if (existing.data) {
+      const r = await this.exec(sql`
+        UPDATE org_node_portret
+           SET portret_data = ${sql`${JSON.stringify(portretData)}::jsonb`},
+               updated_at   = NOW()
+         WHERE card_id = ${cardId}
+        RETURNING *
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+    }
+
+    const r = await this.exec(sql`
+      INSERT INTO org_node_portret (card_id, node_id, portret_data, creator_id, created_at, updated_at)
+      VALUES (${cardId}, NULL, ${sql`${JSON.stringify(portretData)}::jsonb`}, ${creatorId}, NOW(), NOW())
+      RETURNING *
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  // ─── Kerakli jihozlar (required_equipment jsonb per card, 2026-07-13) ────────
+  // APPROVED: owner schema-approval 2026-07-13 (Muslimbek, chat) -- HR-modul to'liq qurish
+  // direktivasi. Genuinely missing data model (confirmed by multiple prior audits — no
+  // columns/tables at all). Minimal: a jsonb array of equipment-name strings on the card row
+  // itself (org_departments.required_equipment). All 3 ops are single atomic UPDATE/SELECT
+  // statements — no read-then-write race on concurrent add/remove.
+
+  /** List the card's required-equipment names. Empty array when the card has none or is archived/missing. */
+  async listRequiredEquipment(cardId: number): Promise<Result<string[]>> {
+    const r = await this.exec(sql`
+      SELECT COALESCE(required_equipment, '[]'::jsonb) AS items
+      FROM org_departments WHERE id = ${cardId} AND is_active = true
+    `);
+    if (!r.ok) return Err(r.error);
+    const items = r.data[0]?.items;
+    return Ok(Array.isArray(items) ? items.map((x) => String(x)) : []);
+  }
+
+  /**
+   * Add one equipment item. Idempotent — the jsonb `?` (array-contains-string) operator skips
+   * an exact duplicate. Atomic single UPDATE. Returns the FULL updated list, or null when the
+   * card doesn't exist / is archived (service maps that to NOT_FOUND).
+   */
+  async addRequiredEquipmentItem(cardId: number, item: string): Promise<Result<string[] | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET required_equipment = CASE
+               WHEN COALESCE(required_equipment, '[]'::jsonb) ? ${item}
+               THEN COALESCE(required_equipment, '[]'::jsonb)
+               ELSE COALESCE(required_equipment, '[]'::jsonb) || to_jsonb(${item}::text)
+             END
+       WHERE id = ${cardId} AND is_active = true
+      RETURNING required_equipment AS items
+    `);
+    if (!r.ok) return Err(r.error);
+    if (!r.data[0]) return Ok(null);
+    const items = r.data[0].items;
+    return Ok(Array.isArray(items) ? items.map((x) => String(x)) : []);
+  }
+
+  /** Remove one equipment item by exact value (atomic single UPDATE via jsonb_agg filter). */
+  async removeRequiredEquipmentItem(cardId: number, item: string): Promise<Result<string[] | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET required_equipment = (
+           SELECT COALESCE(jsonb_agg(elem), '[]'::jsonb)
+           FROM jsonb_array_elements_text(COALESCE(required_equipment, '[]'::jsonb)) AS elem
+           WHERE elem <> ${item}
+         )
+       WHERE id = ${cardId} AND is_active = true
+      RETURNING required_equipment AS items
+    `);
+    if (!r.ok) return Err(r.error);
+    if (!r.data[0]) return Ok(null);
+    const items = r.data[0].items;
+    return Ok(Array.isArray(items) ? items.map((x) => String(x)) : []);
+  }
+
+  // ─── EP-ORG-003 card-gate (RBAC + salary from the card) ─────────────────────
+
+  /**
+   * The card-gate for a user: their card (org_departments via users.org_function_id), the card-derived
+   * RBAC tier, and salary eligibility (an active employee_cards link). Read-only, non-blocking — the
+   * card-LESS case is FLAGGED (principle 1), NOT a login block. FAZA 2 wires the full login-gate.
+   * PHASE-00: canonical card join = org_departments.
+   *
+   * ⭐ T7-10-follow-up: also surfaces `lmsGateBlocked` — the SAME EP-ORG-027 mandatory-darslik
+   * verdict `LmsCardGateService.isCardTrainingComplete` already computes for payroll (reused here
+   * verbatim, NOT reimplemented), so the FE card-gate banner shows the darslik-gate too, not just
+   * RBAC/salary. `employee_id` is resolved via the bidirectional user<->employee bridge already
+   * used elsewhere in this module (employees.user_id = userId OR users.employee_id = employees.id —
+   * see org-mutations.repo.ts:330). Only evaluable when the user HAS a card AND a linked employee;
+   * otherwise there is nothing to gate (honest N/A = false, not a fabricated block).
+   */
+  async resolveGate(userId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      SELECT u.id AS user_id, u.username, u.role,
+             u.org_function_id AS card_id, ofn.name AS card_name, ofn.rbac_tier AS rbac_tier,
+             (u.org_function_id IS NOT NULL AND ofn.id IS NOT NULL) AS has_card,
+             EXISTS (SELECT 1 FROM employees e JOIN employee_cards ec ON ec.employee_id = e.id
+                     WHERE e.user_id = u.id AND ec.is_active
+                       AND (ec.ended_at IS NULL OR ec.ended_at > now())) AS salary_eligible,
+             (SELECT e2.id FROM employees e2 WHERE e2.user_id = u.id OR e2.id = u.employee_id LIMIT 1) AS employee_id
+      FROM users u
+      LEFT JOIN org_departments ofn ON ofn.id = u.org_function_id AND ofn.is_active = true
+      WHERE u.id = ${userId}
+    `);
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0] ?? null;
+    if (!row) return Ok(null);
+
+    const cardId = row.card_id == null ? null : Number(row.card_id);
+    const employeeId = row.employee_id == null ? null : Number(row.employee_id);
+    let lmsGateBlocked = false;
+    if (row.has_card === true && cardId != null && cardId > 0 && employeeId != null && employeeId > 0) {
+      const lmsR = await this.lmsGate.isCardTrainingComplete(cardId, employeeId);
+      // FAIL-CLOSED (mirrors payroll.service.ts T7-10): a read/evaluate error surfaces as
+      // blocked, so a transient problem never silently hides an open darslik-gate from the FE.
+      lmsGateBlocked = lmsR.ok ? !lmsR.data.allComplete : true;
+    }
+
+    return Ok({ ...row, lmsGateBlocked });
+  }
+}

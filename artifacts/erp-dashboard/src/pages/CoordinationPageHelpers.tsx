@@ -7,9 +7,9 @@ import { tLabel } from '@/lib/i18n/tLabel';
 // ─── DoklaStatusBadge ─────────────────────────────────────────────────────
 export function DoklaStatusBadge({ status }: { status: DoklaStatus }) {
   const cfg: Record<DoklaStatus, { label: string; cls: string }> = {
-    sent:     { label: "Yuborildi",   cls: "bg-blue-100 text-[var(--ep-blue)]"        },
+    sent:     { label: tLabel('common.CoordinationPageHelpers.tsx.yuborildi', "Yuborildi"),   cls: "bg-blue-100 text-[var(--ep-blue)]"        },
     read:     { label: tLabel('common.CoordinationPageHelpers.tsx.oqildi', "O'qildi"),     cls: "bg-amber-100 text-[var(--ep-yellow)]"      },
-    resolved: { label: "Hal qilindi", cls: "bg-emerald-100 text-[var(--ep-green)]"  },
+    resolved: { label: tLabel('common.CoordinationPageHelpers.tsx.halQilindi', "Hal qilindi"), cls: "bg-emerald-100 text-[var(--ep-green)]"  },
   };
   const { label, cls } = cfg[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
   return (
@@ -22,10 +22,40 @@ export function DoklaStatusBadge({ status }: { status: DoklaStatus }) {
 // ─── RaspoStatusBadge ─────────────────────────────────────────────────────
 export function RaspoStatusBadge({ status }: { status: RaspoStatus }) {
   const cfg: Record<RaspoStatus, { label: string; cls: string }> = {
-    assigned:    { label: "Topshirildi",   cls: "bg-blue-100 text-[var(--ep-blue)]"        },
+    assigned:    { label: tLabel('common.CoordinationPageHelpers.tsx.topshirildi', "Topshirildi"),   cls: "bg-blue-100 text-[var(--ep-blue)]"        },
     in_progress: { label: tLabel('common.CoordinationPageHelpers.tsx.bajarilmoqda', "Bajarilmoqda"),  cls: "bg-amber-100 text-[var(--ep-yellow)]"      },
-    done:        { label: "Bajarildi",     cls: "bg-emerald-100 text-[var(--ep-green)]"  },
+    done:        { label: tLabel('common.CoordinationPageHelpers.tsx.bajarildi', "Bajarildi"),     cls: "bg-emerald-100 text-[var(--ep-green)]"  },
     overdue:     { label: tLabel('common.CoordinationPageHelpers.tsx.muddatiOtdi', "Muddati o'tdi"), cls: "bg-red-100 text-[var(--ep-red)]"          },
+  };
+  const { label, cls } = cfg[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
+  return (
+    <span className={cn("text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap", cls)}>
+      {label}
+    </span>
+  );
+}
+
+// ─── PrikazStatusBadge ────────────────────────────────────────────────────
+export function PrikazStatusBadge({ status }: { status: string }) {
+  const cfg: Record<string, { label: string; cls: string }> = {
+    draft:     { label: tLabel('common.CoordinationDocs.prikazDraft', "Qoralama"),          cls: "bg-muted text-muted-foreground"        },
+    signed:    { label: tLabel('common.CoordinationDocs.prikazSigned', "Imzolangan"),        cls: "bg-emerald-100 text-[var(--ep-green)]" },
+    cancelled: { label: tLabel('common.CoordinationDocs.prikazCancelled', "Bekor qilingan"), cls: "bg-red-100 text-[var(--ep-red)]"       },
+  };
+  const { label, cls } = cfg[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
+  return (
+    <span className={cn("text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap", cls)}>
+      {label}
+    </span>
+  );
+}
+
+// ─── ProtocolStatusBadge ──────────────────────────────────────────────────
+export function ProtocolStatusBadge({ status }: { status: string }) {
+  const cfg: Record<string, { label: string; cls: string }> = {
+    draft:   { label: tLabel('common.CoordinationDocs.protocolDraft', "Qoralama"),    cls: "bg-muted text-muted-foreground"       },
+    signed:  { label: tLabel('common.CoordinationDocs.protocolSigned', "Imzolangan"), cls: "bg-emerald-100 text-[var(--ep-green)]" },
+    amended: { label: tLabel('common.CoordinationDocs.protocolAmended', "Tuzatilgan"), cls: "bg-amber-100 text-[var(--ep-yellow)]" },
   };
   const { label, cls } = cfg[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
   return (

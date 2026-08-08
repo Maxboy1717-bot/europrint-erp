@@ -8,6 +8,7 @@ import { runQuery } from '@shared/db';
 import { AgentAlertService } from './shared/agent-alert.service';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AgentEventBusService } from './shared/agent-event-bus.service';
+import { MAX_FAILED_LOGIN_ATTEMPTS } from '@common/constants/security.constants';
 
 @Injectable()
 export class SecurityAgentService {
@@ -22,10 +23,22 @@ export class SecurityAgentService {
 
   /** Noto'g'ri parol urinishlari */
   async monitorAccessAttempts(): Promise<{ failedTotal: number; blockedUsers: number[] }> {
+    // Audit 2026-08-07: bu so'rovda IKKI bo'shliq bor edi va ikkalasi ham signalni butunlay
+    // o'chirib qo'yardi (Q-40 — "xavfsizlik agenti ishlayapti" degan taassurot):
+    //   (a) 'auth_audit_log' jadvali bazada YO'Q -> '.catch' xatoni yutardi;
+    //   (b) undan ham muhimi, 'login_failed' harakati loyihada HECH QAYERGA YOZILMAYDI
+    //       (grep -rn "login_failed" -> 0 moslik). Ya'ni jadval yaratilganda ham bo'sh qolardi.
+    // Haqiqiy manba — login oqimining o'zi: 'users.failed_login_attempts' va 'users.locked_until'
+    // (login.service.ts:188 + drizzle-auth.repo.ts:223 aynan shularni yozadi/o'qiydi).
+    // Chegara ham o'sha bitta konstantadan olinadi, aks holda agent va login qulfi bir-biriga
+    // zid ishlardi ("bir joyda tuzatilib, qo'shnilari unutilgan" naqshi).
     const r = await runQuery<{ user_id: number; cnt: string }>(sql`
-      SELECT user_id, COUNT(*)::text AS cnt FROM auth_audit_log
-      WHERE action = 'login_failed' AND created_at > NOW() - INTERVAL '1 hour'
-      GROUP BY user_id HAVING COUNT(*) >= 5
+      SELECT id AS user_id, failed_login_attempts::text AS cnt
+      FROM users
+      WHERE failed_login_attempts >= ${MAX_FAILED_LOGIN_ATTEMPTS}
+        AND (locked_until IS NULL OR locked_until > NOW())
+      ORDER BY failed_login_attempts DESC
+      LIMIT 50
     `).catch(() => ({ rows: [] }));
     const blocked = r.rows.map(x => x.user_id);
     if (blocked.length > 0) {

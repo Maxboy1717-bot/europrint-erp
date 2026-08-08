@@ -17,11 +17,14 @@ export const UpdateCustomFieldDtoSchema = CreateCustomFieldDtoSchema;
 export type UpdateCustomFieldDto = z.infer<typeof UpdateCustomFieldDtoSchema>;
 
 export const ReorderCustomFieldsDtoSchema = z.object({
+  // Canonical format: [{id, order_index}]
   items: z.array(
     z.object({
       id: z.number().int().positive(),
       order_index: z.number().int().nonnegative(),
     }),
-  ).min(1),
-});
+  ).optional(),
+  // FE legacy format: ordered array of ids (position = order_index)
+  orderedIds: z.array(z.number().int().positive()).optional(),
+}).passthrough();
 export type ReorderCustomFieldsDto = z.infer<typeof ReorderCustomFieldsDtoSchema>;

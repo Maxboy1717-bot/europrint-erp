@@ -33,8 +33,41 @@ export class ProductionRepository {
 
   async createShiftReport(body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`INSERT INTO production_sessions (worker_id, equipment_id, status, started_at, worker_notes) VALUES (${body.operatorId ?? null}, ${body.workCenterId ?? null}, 'running', NOW(), ${body.notes ?? null}) RETURNING *`);
-      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+      // Resolve equipment_id: try by name first, then fallback to first row
+      const machineName = String(body.machine_name ?? '');
+      let equipmentId = body.equipment_id ? Number(body.equipment_id) : 0;
+      if (!equipmentId) {
+        const eqRes = await exec(
+          machineName
+            ? sql`SELECT id FROM equipment WHERE name ILIKE ${'%' + machineName + '%'} LIMIT 1`
+            : sql`SELECT id FROM equipment ORDER BY id LIMIT 1`,
+        );
+        equipmentId = eqRes.ok && eqRes.data[0] ? Number(eqRes.data[0].id) : 1;
+      }
+
+      // Resolve worker_id: use body.worker_id or fallback to first employee
+      let workerId = body.worker_id ? Number(body.worker_id) : 0;
+      if (!workerId) {
+        const empRes = await exec(sql`SELECT id FROM employees ORDER BY id LIMIT 1`);
+        workerId = empRes.ok && empRes.data[0] ? Number(empRes.data[0].id) : 1;
+      }
+
+      const productionOrderId = body.production_order_id ? Number(body.production_order_id) : null;
+      if (!productionOrderId) return Err('production_order_id majburiy');
+
+      const targetQty = body.planned_qty ? Number(body.planned_qty) : 0;
+      const sessionNumber = `SHIFT-${Date.now()}`;
+      const startedAt = body.shift_start ? new Date(String(body.shift_start)).toISOString() : new Date().toISOString();
+
+      const r = await exec(sql`
+        INSERT INTO production_sessions
+          (session_number, production_order_id, equipment_id, worker_id, status, target_quantity, started_at, worker_notes)
+        VALUES
+          (${sessionNumber}, ${productionOrderId}, ${equipmentId}, ${workerId}, 'running', ${targetQty}, ${startedAt}, ${body.notes ?? null})
+        RETURNING *
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -42,7 +75,13 @@ export class ProductionRepository {
 
   async updateShiftReport(id: number, body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`UPDATE production_sessions SET worker_notes = COALESCE(${body.notes ?? null}, worker_notes), status = COALESCE(${body.status ?? null}, status), updated_at = NOW() WHERE id = ${id} RETURNING *`);
+      // The DTO accepts actual_output/reject_qty/downtime_min but the UPDATE only ever set
+      // worker_notes/status, so those three were silently dropped. Map to the real columns:
+      // actual_output -> actual_quantity(int), reject_qty -> defect_quantity(int),
+      // downtime_min -> stopped_time_seconds (minutes*60; the session downtime accumulator,
+      // read as totalStoppedHours elsewhere). COALESCE keeps partial-update semantics.
+      const downtimeSec = body.downtime_min != null ? Number(body.downtime_min) * 60 : null;
+      const r = await exec(sql`UPDATE production_sessions SET worker_notes = COALESCE(${body.notes ?? null}, worker_notes), status = COALESCE(${body.status ?? null}, status), actual_quantity = COALESCE(${body.actual_output ?? null}, actual_quantity), defect_quantity = COALESCE(${body.reject_qty ?? null}, defect_quantity), stopped_time_seconds = COALESCE(${downtimeSec}, stopped_time_seconds), updated_at = NOW() WHERE id = ${id} RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -86,8 +125,428 @@ export class ProductionRepository {
 
   async getOrder360Card(id: number): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`SELECT po.*, wc.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS operator_name, bh.bom_number AS bom_code, rt.routing_number AS routing_name FROM production_orders po LEFT JOIN work_centers wc ON wc.id = po.work_center_id LEFT JOIN users u ON u.id = po.operator_id LEFT JOIN bom_headers bh ON bh.id = po.bom_header_id LEFT JOIN routings rt ON rt.id = po.routing_id WHERE po.id = ${id}`);
-      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+      // 1. Main production order row + responsible user names
+      const poRes = await exec(sql`
+        SELECT
+          po.id,
+          po.order_number,
+          po.status,
+          po.production_type,
+          po.product_name,
+          po.notes,
+          po.priority,
+          po.planned_quantity,
+          po.confirmed_quantity,
+          po.scrap_quantity,
+          po.planned_cost,
+          po.actual_cost,
+          po.bom_id,
+          po.planned_start_date,
+          po.planned_end_date,
+          po.actual_start_date,
+          po.actual_end_date,
+          TRIM(COALESCE(rm.first_name,'') || ' ' || COALESCE(rm.last_name,'')) AS responsible_manager_name,
+          TRIM(COALESCE(ss.first_name,'') || ' ' || COALESCE(ss.last_name,'')) AS shift_supervisor_name,
+          TRIM(COALESCE(qi.first_name,'') || ' ' || COALESCE(qi.last_name,'')) AS qc_inspector_name
+        FROM production_orders po
+        LEFT JOIN users rm ON rm.id = po.responsible_manager_id
+        LEFT JOIN users ss ON ss.id = po.shift_supervisor_id
+        LEFT JOIN users qi ON qi.id = po.qc_inspector_id
+        WHERE po.id = ${id} AND po.deleted_at IS NULL
+      `);
+      if (!poRes.ok) return Err(poRes.error);
+      const po = poRes.data[0];
+      if (!po) return Ok(null);
+
+      // 2. Production sessions (shifts)
+      const sessRes = await exec(sql`
+        SELECT
+          id,
+          session_number,
+          status,
+          oee,
+          target_quantity,
+          actual_quantity,
+          defect_quantity,
+          availability,
+          performance,
+          quality,
+          started_at,
+          ended_at,
+          running_time_seconds,
+          stopped_time_seconds,
+          equipment_id
+        FROM production_sessions
+        WHERE production_order_id = ${id}
+          AND deleted_at IS NULL
+        ORDER BY started_at DESC
+      `);
+      if (!sessRes.ok) return Err(sessRes.error);
+      const sessions = sessRes.data;
+
+      // 2b. Equipment used in this order (via production_sessions.equipment_id)
+      const equipRes = await exec(sql`
+        SELECT DISTINCT
+          e.id,
+          e.name,
+          e.type         AS equipment_type,
+          e.location,
+          e.status
+        FROM equipment e
+        JOIN production_sessions ps ON ps.equipment_id = e.id
+        WHERE ps.production_order_id = ${id}
+          AND ps.deleted_at IS NULL
+      `);
+      if (!equipRes.ok) return Err(equipRes.error);
+      const equipRows = equipRes.data;
+
+      // 3. Downtime events for all sessions of this order
+      const dtRes = await exec(sql`
+        SELECT
+          de.reason_description,
+          de.reason_code,
+          de.event_type,
+          de.duration_seconds,
+          de.duration_min,
+          de.started_at,
+          de.is_planned
+        FROM downtime_events de
+        WHERE de.session_id IN (
+          SELECT id FROM production_sessions
+          WHERE production_order_id = ${id}
+        )
+        ORDER BY de.started_at DESC
+      `);
+      if (!dtRes.ok) return Err(dtRes.error);
+      const downtimes = dtRes.data;
+
+      // 4. QC inspections
+      const qcRes = await exec(sql`
+        SELECT
+          pass_count,
+          fail_count,
+          total_count,
+          status,
+          result,
+          inspected_at,
+          notes
+        FROM qc_inspections
+        WHERE order_id = ${id}
+        ORDER BY inspected_at DESC
+      `);
+      if (!qcRes.ok) return Err(qcRes.error);
+      const qcChecks = qcRes.data;
+
+      // 5a. Material allocations for cost breakdown
+      // production_material_allocs.production_order_id is varchar → cast id::text
+      const allocRes = await exec(sql`
+        SELECT
+          pma.material_id,
+          mc.xom_ashyo        AS material_name,
+          mc.unit_of_measure  AS unit,
+          pma.allocated_qty   AS issued_quantity,
+          pma.unit_cost,
+          pma.total_financial_value AS total_actual_cost
+        FROM production_material_allocs pma
+        LEFT JOIN material_cards mc ON mc.id = pma.material_id
+        WHERE pma.production_order_id = ${id}::text
+      `);
+      if (!allocRes.ok) return Err(allocRes.error);
+      const allocRows = allocRes.data;
+
+      // 5b. BOM items for requiredQuantity — only runs if this order has a bom_id
+      const bomId = po.bom_id != null ? Number(po.bom_id) : null;
+      let bomRows: Row[] = [];
+      if (bomId) {
+        const bomRes = await exec(sql`
+          SELECT
+            bi.material_id,
+            mc.xom_ashyo    AS material_name,
+            mc.unit_of_measure AS mc_unit,
+            bi.quantity     AS bom_quantity,
+            bi.unit
+          FROM bom_items bi
+          LEFT JOIN material_cards mc ON mc.id::text = bi.material_id
+          WHERE bi.bom_id = ${bomId}
+            AND bi.deleted_at IS NULL
+        `);
+        if (bomRes.ok) bomRows = bomRes.data;
+      }
+
+      // Build a lookup: material_id (string) → bom required qty
+      const bomByMaterial = new Map<string, { bomQuantity: number; materialName: string; unit: string }>();
+      for (const b of bomRows) {
+        bomByMaterial.set(String(b.material_id), {
+          bomQuantity:  Number(b.bom_quantity) || 0,
+          materialName: String(b.material_name ?? ''),
+          unit:         String(b.unit ?? b.mc_unit ?? ''),
+        });
+      }
+
+      const materialCost = allocRows.reduce(
+        (sum, r) => sum + (Number(r.total_actual_cost) || 0),
+        0,
+      );
+
+      // costAnalysis.components — same as before (for Cost tab)
+      const components = allocRows.map(r => ({
+        materialId:      r.material_id,
+        materialName:    r.material_name ?? '',
+        unit:            r.unit ?? '',
+        issuedQuantity:  Number(r.issued_quantity) || 0,
+        unitCost:        Number(r.unit_cost) || 0,
+        totalActualCost: Number(r.total_actual_cost) || 0,
+      }));
+
+      // materials.components — enriched with requiredQuantity from bom_items
+      const materialComponents = allocRows.map(r => {
+        const matKey = String(r.material_id);
+        const bom = bomByMaterial.get(matKey);
+        const issuedQty   = Number(r.issued_quantity) || 0;
+        const requiredQty = bom?.bomQuantity ?? 0;
+        const diff        = issuedQty - requiredQty;
+        return {
+          id:               r.material_id,
+          materialName:     (r.material_name ?? bom?.materialName ?? '') as string,
+          unit:             (r.unit ?? bom?.unit ?? '') as string,
+          requiredQuantity: requiredQty,
+          issuedQuantity:   issuedQty,
+          diff,
+          unitCost:         Number(r.unit_cost) || 0,
+          totalActualCost:  Number(r.total_actual_cost) || 0,
+          totalPlannedCost: bom ? requiredQty * (Number(r.unit_cost) || 0) : 0,
+        };
+      });
+
+      // Also include any BOM items that have no allocation yet (required but not issued)
+      for (const b of bomRows) {
+        const matKey = String(b.material_id);
+        const alreadyIncluded = allocRows.some(r => String(r.material_id) === matKey);
+        if (!alreadyIncluded) {
+          const requiredQty = Number(b.bom_quantity) || 0;
+          materialComponents.push({
+            id:               b.material_id,
+            materialName:     String(b.material_name ?? ''),
+            unit:             String(b.unit ?? b.mc_unit ?? ''),
+            requiredQuantity: requiredQty,
+            issuedQuantity:   0,
+            diff:             -requiredQty,
+            unitCost:         0,
+            totalActualCost:  0,
+            totalPlannedCost: 0,
+          });
+        }
+      }
+
+      const totalPlannedCost = materialComponents.reduce(
+        (sum, c) => sum + (c.totalPlannedCost || 0),
+        0,
+      );
+
+      // 5. Compute derived metrics in JS
+      const plannedQty = Number(po.planned_quantity) || 0;
+      const confirmedQty = Number(po.confirmed_quantity) || 0;
+      const plannedCost = Number(po.planned_cost) || 0;
+      const actualCost = Number(po.actual_cost) || 0;
+
+      const avgOee = sessions.length > 0
+        ? sessions.reduce((sum, s) => sum + (Number(s.oee) || 0), 0) / sessions.length
+        : 0;
+
+      const qcTotalChecked = qcChecks.reduce((s, q) => s + (Number(q.total_count) || 0), 0);
+      const qcTotalPassed = qcChecks.reduce((s, q) => s + (Number(q.pass_count) || 0), 0);
+      const qcPassRate = qcTotalChecked > 0 ? Math.round((qcTotalPassed / qcTotalChecked) * 100) : 0;
+
+      const totalDowntimeMins = downtimes.reduce((s, d) => {
+        const mins = d.duration_min != null
+          ? Number(d.duration_min)
+          : (d.duration_seconds != null ? Math.round(Number(d.duration_seconds) / 60) : 0);
+        return s + mins;
+      }, 0);
+
+      const costVariance = actualCost - plannedCost;
+      const costVariancePct = plannedCost !== 0
+        ? Math.round((costVariance / plannedCost) * 100 * 100) / 100
+        : 0;
+
+      const totalRunningHours = sessions.reduce((s, ses) =>
+        s + (Number(ses.running_time_seconds) || 0), 0) / SECONDS_PER_HOUR;
+      const totalStoppedHours = sessions.reduce((s, ses) =>
+        s + (Number(ses.stopped_time_seconds) || 0), 0) / SECONDS_PER_HOUR;
+
+      const card: Row = {
+        overview: {
+          status: po.status,
+          orderNumber: po.order_number,
+          productionType: po.production_type,
+          productName: po.product_name,
+          notes: po.notes,
+          priority: po.priority,
+          responsibleManagerName: po.responsible_manager_name ?? '',
+          shiftSupervisorName: po.shift_supervisor_name ?? '',
+          qcInspectorName: po.qc_inspector_name ?? '',
+          plannedStartDate: po.planned_start_date,
+          plannedEndDate: po.planned_end_date,
+          actualStartDate: po.actual_start_date,
+          actualEndDate: po.actual_end_date,
+        },
+        kpi: {
+          completionRate: plannedQty > 0 ? Math.round((confirmedQty / plannedQty) * 100) : 0,
+          produced: confirmedQty,
+          planned: plannedQty,
+          avgOee: Math.round(avgOee * 100) / 100,
+          qcPassRate,
+          costVariance,
+          costVariancePct,
+          totalDowntimeMins,
+        },
+        shifts: {
+          sessions: sessions.map(s => ({
+            id: s.id,
+            sessionNumber: s.session_number,
+            status: s.status,
+            oee: s.oee,
+            targetQuantity: s.target_quantity,
+            actualQuantity: s.actual_quantity,
+            defectQuantity: s.defect_quantity,
+            availability: s.availability,
+            performance: s.performance,
+            quality: s.quality,
+            startedAt: s.started_at,
+            endedAt: s.ended_at,
+          })),
+          downtimes: downtimes.map(d => ({
+            reasonDescription: d.reason_description,
+            reasonCode: d.reason_code,
+            eventType: d.event_type,
+            durationMins: d.duration_min != null
+              ? Number(d.duration_min)
+              : (d.duration_seconds != null ? Math.round(Number(d.duration_seconds) / 60) : 0),
+            startedAt: d.started_at,
+            isPlanned: d.is_planned,
+          })),
+          totalRunningHours: Math.round(totalRunningHours * 100) / 100,
+          totalStoppedHours: Math.round(totalStoppedHours * 100) / 100,
+        },
+        // materials key — FE reads materials.totalPlannedCost / totalActualCost / components
+        materials: {
+          totalPlannedCost: totalPlannedCost > 0 ? totalPlannedCost : plannedCost,
+          totalActualCost:  materialCost,
+          components:       materialComponents,
+        },
+        quality: {
+          totalChecked: qcTotalChecked,
+          totalFailed: qcChecks.reduce((s, q) => s + (Number(q.fail_count) || 0), 0),
+          checks: qcChecks.map(q => ({
+            status: q.status,
+            result: q.result,
+            passCount: q.pass_count,
+            failCount: q.fail_count,
+            totalCount: q.total_count,
+            inspectedAt: q.inspected_at,
+            notes: q.notes,
+          })),
+        },
+        // equipment key — FE reads equipment.list / equipment.sessions
+        equipment: {
+          list: equipRows.map(e => ({
+            id:            e.id,
+            name:          e.name,
+            equipmentType: e.equipment_type,
+            location:      e.location,
+            status:        e.status,
+          })),
+          sessions: sessions
+            .filter(s => s.equipment_id != null)
+            .map(s => ({
+              equipmentId:     s.equipment_id,
+              actualQuantity:  s.actual_quantity != null ? Number(s.actual_quantity) : null,
+              oee:             s.oee != null ? Number(s.oee) : null,
+            })),
+        },
+        costAnalysis: {
+          plannedCost,
+          actualCost,
+          variance: costVariance,
+          variancePct: costVariancePct,
+          materialCost,
+          components,
+        },
+      };
+
+      return Ok(card);
+  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getDailyTimers(): Promise<Result<Row>>  {
+  try {
+      // EP-PP-100 (vision 07-pp#106): 3 taymer kunlik dashboard — ketgan/qolgan/boshlanmagan.
+      // Partitions the active production plan (non-deleted, non-cancelled orders) into three
+      // mutually-exclusive buckets by effective start/end, then aggregates timer minutes.
+      // eff_start = order.actual_start, or the earliest production_sessions.started_at
+      // (order.actual_start is sparse in practice; sessions carry the real floor timestamps).
+      // planned_*_date are varchar -> regex-guarded ::timestamp cast (trivial, no DDL).
+      const rows = await exec(sql`
+        WITH po AS (
+          SELECT
+            o.id,
+            o.status,
+            o.planned_start_date,
+            o.planned_end_date,
+            o.actual_start,
+            o.actual_end,
+            COALESCE(
+              o.actual_start,
+              (SELECT MIN(ps.started_at) FROM production_sessions ps
+                 WHERE ps.production_order_id = o.id AND ps.deleted_at IS NULL)
+            ) AS eff_start,
+            o.actual_end AS eff_end
+          FROM production_orders o
+          WHERE o.deleted_at IS NULL AND o.status <> 'cancelled'
+        ),
+        classified AS (
+          SELECT *,
+            CASE
+              WHEN status = 'completed' OR eff_end IS NOT NULL THEN 'completed'
+              WHEN eff_start IS NOT NULL THEN 'in_progress'
+              ELSE 'not_started'
+            END AS bucket,
+            CASE WHEN planned_end_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+                 THEN planned_end_date::timestamp END AS planned_end_ts,
+            CASE WHEN planned_start_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+                 THEN planned_start_date::timestamp END AS planned_start_ts
+          FROM po
+        )
+        SELECT
+          COUNT(*) FILTER (WHERE bucket = 'in_progress')::int AS in_progress_count,
+          COALESCE(ROUND(SUM(EXTRACT(EPOCH FROM (now() - eff_start)) / 60)
+            FILTER (WHERE bucket = 'in_progress'))::int, 0) AS elapsed_minutes,
+          COALESCE(ROUND(SUM(GREATEST(EXTRACT(EPOCH FROM (planned_end_ts - now())) / 60, 0))
+            FILTER (WHERE bucket = 'in_progress'))::int, 0) AS remaining_minutes,
+          COUNT(*) FILTER (WHERE bucket = 'not_started')::int AS not_started_count,
+          COALESCE(ROUND(SUM(GREATEST(EXTRACT(EPOCH FROM (planned_end_ts - planned_start_ts)) / 60, 0))
+            FILTER (WHERE bucket = 'not_started'))::int, 0) AS not_started_planned_minutes,
+          COUNT(*) FILTER (WHERE bucket = 'completed')::int AS completed_count
+        FROM classified
+      `);
+      if (!rows.ok) return Err(rows.error);
+      const r = rows.data[0] ?? {};
+      const timers: Row = {
+        asOf: new Date().toISOString(),
+        // ketgan — in-progress orders, wall-clock minutes already spent
+        elapsed:    { orderCount: Number(r.in_progress_count) || 0, minutes: Number(r.elapsed_minutes) || 0 },
+        // qolgan — same in-progress orders, planned minutes still left (>= 0)
+        remaining:  { orderCount: Number(r.in_progress_count) || 0, minutes: Number(r.remaining_minutes) || 0 },
+        // boshlanmagan — planned orders not yet started
+        notStarted: { orderCount: Number(r.not_started_count) || 0, plannedMinutes: Number(r.not_started_planned_minutes) || 0 },
+        // contextual: finished orders in the plan
+        completed:  { orderCount: Number(r.completed_count) || 0 },
+      };
+      return Ok(timers);
+  } catch (_e) {
     return Err(String(_e));
   }
 

@@ -9,7 +9,6 @@ const KaizenPage = lazy(() => import("@/pages/KaizenPage"));
 const OrdersRegistry = lazy(() => import("@/pages/OrdersRegistry"));
 
 const Settings = lazy(() => import("@/pages/Settings"));
-const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
 const SuperAdminPanel = lazy(() => import("@/pages/SuperAdminPanel"));
 const SystemMonitor = lazy(() => import("@/pages/SystemMonitor"));
 const TelegramBotAdmin = lazy(() => import("@/pages/TelegramBotAdmin"));
@@ -34,10 +33,13 @@ const ValidatePage = lazy(() => import("@/pages/ValidatePage"));
 const ProgressPage = lazy(() => import("@/pages/ProgressPage"));
 const EmployeesForFacePage = lazy(() => import("@/pages/EmployeesForFacePage"));
 const AuditLogPage = lazy(() => import("@/pages/AuditLogPage"));
+const BusinessSettings = lazy(() => import("@/pages/BusinessSettings"));
+const TaxonomyManager = lazy(() => import("@/pages/TaxonomyManager"));
 
 export const ADMIN_ROUTES: [string, React.ComponentType][] = [
   ['/settings',                Settings],
-  ['/settings/notifications',  NotificationSettings],
+  ['/admin/business-settings', BusinessSettings],
+  ['/admin/taxonomy',          TaxonomyManager],
   ['/super-admin',             SuperAdminPanel],
   ['/system-monitor',          SystemMonitor],
   ['/telegram-bot',            TelegramBotAdmin],

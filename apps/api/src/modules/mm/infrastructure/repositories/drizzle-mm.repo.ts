@@ -14,8 +14,16 @@ import { Material } from '../../domain/aggregates/material.aggregate';
 import { PurchaseOrder } from '../../domain/aggregates/purchase-order.aggregate';
 import { IMmRepository, DrizzleExecutor } from '../../domain/repositories/mm.repository';
 import { db , runQuery } from '@shared/db';
-import { materials, purchase_orders, purchase_orders_legacy, vendors } from '@shared/db';
-import { execMmMaterialInsert, execMmPurchaseOrderInsert } from '@common/database/queries-remaining';
+import { materials, purchase_orders_legacy } from '@shared/db';
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — live `purchase_orders`.id is
+// INTEGER, not the uuid PK schema-wms.ts declares (see schema-compat-mm-po-intpk.ts).
+import { purchase_orders } from '@shared/db/schema-compat-mm-po-intpk';
+// live `vendors`.id is also INTEGER — schema-compat-2.ts's `vendors` already has
+// the correct integer id (plus the `rating` column updateVendorRating() needs).
+import { vendors } from '@shared/db/schema-compat-2';
+import { execMmMaterialInsert } from '@common/database/queries-remaining';
+import { MM_THREE_WAY_MATCH_TOLERANCE } from '@common/constants/business.constants';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 
 type DbRow = Record<string, unknown>;
 
@@ -71,24 +79,44 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
-  async savePurchaseOrder(po: PurchaseOrder, tx?: DrizzleExecutor): Promise<Result<number>> {
+  async savePurchaseOrder(po: PurchaseOrder, _tx?: DrizzleExecutor): Promise<Result<number>> {
     try {
-      if (tx) {
-        // In-transaction path: inline against the supplied tx executor.
-        // purchase_orders status is an enum union; cast the runtime string at the call site.
-        type PoStatus = 'draft' | 'cancelled' | 'invoiced' | 'pending' | 'approved' | 'partially_received' | 'received' | 'paid';
-        const exec = asExec(tx);
-        await exec.insert(purchase_orders_legacy).values({
-          po_number: po.getPoNumber(),
-          vendor_name: String(po.getSupplierId()),
-          total_amount: String(po.getTotalAmount()),
-          status: String(po.getStatus()) as PoStatus,
-          created_by: String(po.getCreatedBy()),
-        });
-        return Ok(1);
+      // mm_purchase_orders is a VIEW over the purchase_orders base table (integer-PK).
+      // The LIST/GET endpoints read from this view. We INSERT into the base table directly.
+      // Required NOT-NULL columns: po_number, vendor_id, order_date, status, tenant_id(default=1).
+      // NOTE: raw SQL is used because the Drizzle 'purchase_orders' schema in schema-wms.ts
+      // maps to a different uuid-PK variant — not the integer-PK base table we need here.
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const poNumber = po.getPoNumber(); // generated as PO-{timestamp} in the handler
+      const result = await db.execute(sql`
+        INSERT INTO purchase_orders
+          (po_number, vendor_id, order_date, status, total_amount, currency, created_by, delivery_terms)
+        VALUES
+          (${poNumber}, ${po.getSupplierId()}, ${today},
+           ${po.getStatus()}, ${po.getTotalAmount()}, ${'UZS'}, ${po.getCreatedBy()}, ${po.getDeliveryTerms()})
+        RETURNING id
+      `);
+      const rows = Array.isArray(result) ? result : ((result as { rows?: unknown[] }).rows ?? []);
+      const poId = (rows[0] as Record<string, unknown>)?.['id'] as number | undefined;
+      if (!poId) return Err('PO saqlashda xatolik: id qaytarilmadi');
+
+      // Insert line items into purchase_order_items (integer purchase_order_id).
+      // The LIST query JOINs this table on purchase_order_id to aggregate item count/totals.
+      // NOT NULL cols: po_id, raw_material_id, quantity, unit, unit_price, total_price.
+      // 'unit' is not on PurchaseOrderItem domain object — default to the canonical
+      // unit_of_measures.code for "piece" (B13/Decision 3, 2026-07-06: was 'sht').
+      const items = po.getItems();
+      for (const item of items) {
+        await db.execute(sql`
+          INSERT INTO purchase_order_items
+            (po_id, purchase_order_id, material_id, raw_material_id, quantity, unit, unit_price, total_price)
+          VALUES
+            (${poId}, ${poId}, ${item.materialId}, ${item.materialId},
+             ${item.quantity}, ${'dona'}, ${item.unitPrice}, ${item.quantity * item.unitPrice})
+        `);
       }
-      await execMmPurchaseOrderInsert(po.getPoNumber(), String(po.getSupplierId()), po.getTotalAmount(), String(po.getStatus()), String(po.getCreatedBy()));
-      return Ok(1);
+
+      return Ok(poId);
     } catch (error: unknown) {
       this.logger.error('Failed to save purchase order');
       return Err('PO saqlashda xatolik');
@@ -98,7 +126,7 @@ export class DrizzleMmRepository implements IMmRepository {
   async getPurchaseOrder(id: number, tx?: DrizzleExecutor): Promise<Result<PurchaseOrder>> {
     try {
       const exec = asExec(tx);
-      const rows = await exec.select().from(purchase_orders).where(eq(purchase_orders.id, String(id))).limit(1);
+      const rows = await exec.select().from(purchase_orders).where(eq(purchase_orders.id, id)).limit(1);
       const row = rows[0] as DbRow | undefined;
       if (!row) return Err('PO topilmadi');
       return Ok(new PurchaseOrder(row['id'] as number, String(row['po_number'] ?? ''), row['vendor_id'] as number, Number(row['created_by'] ?? 0)));
@@ -132,11 +160,50 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
+  async getMaterialReferencePrice(
+    materialId: number,
+  ): Promise<Result<{ price: number; source: 'price_list' | 'last_po' } | null>> {
+    try {
+      // §11-MM #23 narx-nazorat reference: price-list (supplier_price_tiers) bo'lsa
+      // shundan, aks holda oxirgi PO satr narxidan. purchase_order_items.created_at
+      // jonli ma'lumotda NULL (savePurchaseOrder uni to'ldirmaydi) — shuning uchun eng
+      // oxirgi satr `id DESC` bilan olinadi (serial id kiritish tartibini ishonchli aks
+      // ettiradi). supplier_price_tiers hozir bo'sh (0 satr) → price_list_price NULL
+      // qaytadi va last_po ga tushadi (graceful; jadval to'lgach avtomatik price-list'ga o'tadi).
+      const query = sql`
+        SELECT pl.unit_price AS price_list_price, lp.unit_price AS last_po_price
+        FROM (SELECT 1) x
+        LEFT JOIN LATERAL (
+          SELECT unit_price FROM supplier_price_tiers
+          WHERE material_id = ${materialId}
+          ORDER BY id DESC LIMIT 1
+        ) pl ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT unit_price FROM purchase_order_items
+          WHERE material_id = ${materialId}
+          ORDER BY id DESC LIMIT 1
+        ) lp ON TRUE
+      `;
+      const result = await db.execute(query);
+      const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? []) as Record<string, unknown>[];
+      const row = rows[0];
+      if (!row) return Ok(null);
+      const priceListPrice = row['price_list_price'];
+      const lastPoPrice = row['last_po_price'];
+      if (priceListPrice != null) return Ok({ price: Number(priceListPrice), source: 'price_list' as const });
+      if (lastPoPrice != null) return Ok({ price: Number(lastPoPrice), source: 'last_po' as const });
+      return Ok(null);
+    } catch (error: unknown) {
+      this.logger.error('Failed to get material reference price');
+      return Err(AppErr('DB_ERROR', 'Material reference narxini olishda xatolik'));
+    }
+  }
+
   async recordGoodsReceipt(poId: number, _quantity: number): Promise<Result<void>> {
     try {
-      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, String(poId))).limit(1);
+      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, poId)).limit(1);
       if (!rows[0]) return Err('PO topilmadi');
-      await db.update(purchase_orders).set({ goods_received_at: _time.now() }).where(eq(purchase_orders.id, String(poId)));
+      await db.update(purchase_orders).set({ goods_received_at: _time.now() }).where(eq(purchase_orders.id, poId));
       return Ok(undefined);
     } catch (error: unknown) {
       this.logger.error('Failed to record goods receipt');
@@ -146,9 +213,9 @@ export class DrizzleMmRepository implements IMmRepository {
 
   async recordInvoice(poId: number, _quantity: number): Promise<Result<void>> {
     try {
-      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, String(poId))).limit(1);
+      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, poId)).limit(1);
       if (!rows[0]) return Err('PO topilmadi');
-      await db.update(purchase_orders).set({ invoice_matched: true }).where(eq(purchase_orders.id, String(poId)));
+      await db.update(purchase_orders).set({ invoice_matched: true }).where(eq(purchase_orders.id, poId));
       return Ok(undefined);
     } catch (error: unknown) {
       this.logger.error('Failed to record invoice');
@@ -161,14 +228,96 @@ export class DrizzleMmRepository implements IMmRepository {
     tx?: DrizzleExecutor,
   ): Promise<Result<{ matched: boolean; difference: number }>> {
     try {
-      const exec = asExec(tx);
-      const rows = await exec.select().from(purchase_orders).where(eq(purchase_orders.id, String(poId))).limit(1);
-      const po = rows[0] as DbRow | undefined;
-      if (!po) return Err('PO topilmadi');
-      const invoiceMatched = Boolean(po['invoice_matched']);
-      const goodsReceived = Boolean(po['goods_received_at']);
-      const matched = invoiceMatched && goodsReceived;
-      return Ok({ matched, difference: matched ? 0 : 1 });
+      // §17 3-Way Match: compare the three monetary documents tied to the PO.
+      //  1. PO total       → purchase_orders.total_amount
+      //  2. Goods receipt  → mm_goods_receipts.total_value (linked by purchase_order_id).
+      //                      When total_value is missing/zero we recompute it as
+      //                      Σ(received_qty × PO line unit_price) from the receipt items.
+      //  3. Invoice        → finance_invoices.total_amount (invoice_type='purchase'),
+      //                      linked by vendor_id — same linkage the read endpoint uses,
+      //                      since finance_invoices has no purchase_order_id column.
+      //                      finance_invoices = kanonik AP invoice-manba, OWNER QARORI
+      //                      2026-07-02 (purchase_invoices endi yozuvchisiz — commit d6286993).
+      // The match passes only when the largest pairwise spread stays within the
+      // owner-configured tolerance of the PO total. `difference` is the real
+      // numeric spread (UZS), not a boolean flag.
+      //
+      // Audit 2026-08-07: this path read the compile-time MM_THREE_WAY_MATCH_TOLERANCE
+      // (0.02) while the invoice-side matcher already read `mm.three_way_amount_tolerance_pct`
+      // from business_settings (live value 0.05). Same PO could therefore pass on one screen
+      // and fail on the other, and the owner's CRUD change had no effect on the goods-receipt
+      // path — the one that actually gates stock posting. Both now read the same row; the
+      // constant remains only as the fallback when the row is missing/inactive.
+      type AmtRow = {
+        po_total: number | string | null;
+        gr_total: number | string | null;
+        invoice_total: number | string | null;
+      };
+      // Honor the caller's transaction boundary: the goods-receipt handler runs
+      // this inside `withTransaction`, so reads must go through that `tx` executor.
+      const exec = (tx ?? db) as { execute: (q: ReturnType<typeof sql>) => Promise<unknown> };
+      const query = sql`
+          SELECT
+            po.total_amount AS po_total,
+            COALESCE(
+              gr.total_value,
+              gri.computed_value,
+              0
+            ) AS gr_total,
+            COALESCE(inv.invoice_total, 0) AS invoice_total
+          FROM purchase_orders po
+          LEFT JOIN LATERAL (
+            SELECT g.id, g.total_value
+            FROM mm_goods_receipts g
+            WHERE g.purchase_order_id = po.id
+            ORDER BY g.id DESC
+            LIMIT 1
+          ) gr ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT SUM(it.received_qty * COALESCE(poi.unit_price, 0)) AS computed_value
+            FROM mm_goods_receipts g2
+            JOIN mm_goods_receipt_items it ON it.gr_id = g2.id
+            LEFT JOIN purchase_order_items poi
+              ON poi.purchase_order_id = po.id
+             AND poi.raw_material_id = it.raw_material_id
+            WHERE g2.purchase_order_id = po.id
+          ) gri ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT SUM(COALESCE(pi.total_amount, 0)) AS invoice_total
+            FROM finance_invoices pi
+            WHERE pi.invoice_type = 'purchase' AND pi.vendor_id = po.vendor_id
+          ) inv ON TRUE
+          WHERE po.id = ${poId}
+          LIMIT 1
+        `;
+      const result = await exec.execute(query);
+      const rows = (Array.isArray(result)
+        ? result
+        : ((result as { rows?: AmtRow[] }).rows ?? [])) as AmtRow[];
+      const row = rows[0];
+      if (!row) return Err('PO topilmadi');
+
+      const poTotal = Number(row.po_total ?? 0);
+      const grTotal = Number(row.gr_total ?? 0);
+      const invoiceTotal = Number(row.invoice_total ?? 0);
+
+      // Largest pairwise spread between the three documents (real UZS difference).
+      const amounts = [poTotal, grTotal, invoiceTotal];
+      const difference = Math.max(...amounts) - Math.min(...amounts);
+
+      // Tolerance is a fraction of the PO total (absolute floor of 1 UZS so a
+      // zero-value PO still requires the other two documents to be present/zero).
+      const tolerancePct = await getBusinessSettingNumber(
+        'mm.three_way_amount_tolerance_pct',
+        MM_THREE_WAY_MATCH_TOLERANCE,
+      );
+      const toleranceAbs = Math.max(Math.abs(poTotal) * tolerancePct, 1);
+
+      // A goods receipt and an invoice must both exist for a match to be possible.
+      const documentsPresent = grTotal > 0 && invoiceTotal > 0;
+      const matched = documentsPresent && difference <= toleranceAbs;
+
+      return Ok({ matched, difference: Math.round(difference) });
     } catch (error: unknown) {
       this.logger.error('Failed to validate three-way match');
       return Err('Tekshirishda xatolik');
@@ -177,11 +326,85 @@ export class DrizzleMmRepository implements IMmRepository {
 
   async updateVendorRating(supplierId: number, newRating: number): Promise<Result<void>> {
     try {
-      await db.update(vendors).set({ rating: String(newRating) }).where(eq(vendors.id, String(supplierId)));
+      await db.update(vendors).set({ rating: String(newRating) }).where(eq(vendors.id, supplierId));
       return Ok(undefined);
     } catch (error: unknown) {
       this.logger.error('Failed to update vendor rating');
       return Err('Reyting yangilashda xatolik');
+    }
+  }
+
+  async recordPurchasePrices(
+    supplierId: number,
+    items: { materialId: number; unitPrice: number }[],
+  ): Promise<Result<void>> {
+    try {
+      // §11.8 — resolve supplier display-name for the price-history log (raw SQL to
+      // match this repo's style; `name` is nullable if the vendor row is missing).
+      const vRes = await db.execute(sql`SELECT name FROM vendors WHERE id = ${supplierId} LIMIT 1`);
+      const vRows = Array.isArray(vRes) ? vRes : ((vRes as { rows?: unknown[] }).rows ?? []);
+      const supplierName =
+        ((vRows[0] as Record<string, unknown> | undefined)?.['name'] as string | undefined) ?? null;
+
+      for (const item of items) {
+        // material_price_history = append-only price log. material_id has a FK to
+        // material_cards, so guard the insert with WHERE EXISTS to silently skip a
+        // non-catalogued material id instead of throwing a FK error.
+        await db.execute(sql`
+          INSERT INTO material_price_history (material_id, unit_price, currency, supplier_name, purchase_date)
+          SELECT ${item.materialId}, ${item.unitPrice}, ${'UZS'}, ${supplierName}, CURRENT_DATE
+          WHERE EXISTS (SELECT 1 FROM material_cards WHERE id = ${item.materialId})
+        `);
+
+        // supplier_price_tiers = "which materials this vendor delivers" + latest base
+        // price (the EOQ all-units base tier, min_qty=0). No unique index exists, so
+        // upsert = UPDATE the base tier, then INSERT only when absent. Idempotent:
+        // re-ordering the same material from the same vendor updates the price in place.
+        await db.execute(sql`
+          UPDATE supplier_price_tiers
+          SET unit_price = ${item.unitPrice}, created_at = now()
+          WHERE supplier_id = ${supplierId} AND material_id = ${item.materialId} AND min_qty = 0
+        `);
+        await db.execute(sql`
+          INSERT INTO supplier_price_tiers (supplier_id, material_id, min_qty, unit_price)
+          SELECT ${supplierId}, ${item.materialId}, 0, ${item.unitPrice}
+          WHERE EXISTS (SELECT 1 FROM material_cards WHERE id = ${item.materialId})
+            AND NOT EXISTS (
+              SELECT 1 FROM supplier_price_tiers
+              WHERE supplier_id = ${supplierId} AND material_id = ${item.materialId} AND min_qty = 0
+            )
+        `);
+      }
+      return Ok(undefined);
+    } catch (error: unknown) {
+      this.logger.error('Failed to record purchase prices');
+      return Err(AppErr('DB_ERROR', 'Narx tarixini saqlashda xatolik'));
+    }
+  }
+
+  async getVendorRating(
+    supplierId: number,
+  ): Promise<Result<{ rating: number | null; ratingLowFlag: boolean }>> {
+    try {
+      // rating_low_flag is not declared on the schema-compat-2 `vendors` Drizzle
+      // table (only `rating` is), so read both columns with raw SQL — the same
+      // `vendors` table the WMS supplier-rating pipeline writes rating_low_flag to.
+      const result = await db.execute(sql`
+        SELECT rating, COALESCE(rating_low_flag, FALSE) AS rating_low_flag
+        FROM vendors
+        WHERE id = ${supplierId} AND deleted_at IS NULL
+        LIMIT 1
+      `);
+      const rows = Array.isArray(result) ? result : ((result as { rows?: unknown[] }).rows ?? []);
+      const row = rows[0] as { rating: string | number | null; rating_low_flag: boolean | null } | undefined;
+      if (!row) return Err('Ta\'minotchi topilmadi');
+      return Ok({
+        rating: row.rating == null ? null : Number(row.rating),
+        ratingLowFlag: Boolean(row.rating_low_flag),
+      });
+    } catch (error: unknown) {
+      this.logger.error('Failed to get vendor rating');
+      return Err('Reyting oqishda xatolik');
     }
   }
 }

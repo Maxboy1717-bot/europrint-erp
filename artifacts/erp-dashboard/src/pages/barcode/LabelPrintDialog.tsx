@@ -26,10 +26,9 @@ import { Badge } from "@/components/ui/badge";
 import { Printer, Download, Copy, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { BatchData } from "./barcode-types";
-import type { translations } from "./barcode-types";
 import { apiRequest } from '@/lib/queryClient';
 
-type TranslationType = typeof translations.uz;
+type TranslationFn = (key: string, params?: Record<string, string | number>) => string;
 
 interface LabelPrintResult {
   success: boolean;
@@ -43,15 +42,13 @@ interface LabelPrintDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   batch: BatchData | null;
-  lang: "uz" | "ru";
-  t: TranslationType & ((key: string) => string);
+  t: TranslationFn;
 }
 
 export function LabelPrintDialog({
   open,
   onOpenChange,
   batch,
-  lang,
   t,
 }: LabelPrintDialogProps) {
   const { toast } = useToast();
@@ -85,7 +82,7 @@ export function LabelPrintDialog({
           success: true,
           format: "PDF",
           sentToPrinter: false,
-          message: lang === "uz" ? "PDF yuklab olindi" : "PDF скачан",
+          message: t("pdfDownloaded"),
         } as LabelPrintResult;
       }
 
@@ -95,19 +92,19 @@ export function LabelPrintDialog({
       setResult(data);
       if (data.sentToPrinter) {
         toast({
-          title: lang === "uz" ? "Printerga yuborildi" : "Отправлено на принтер",
-          description: `${data.format} | ${copies} ${lang === "uz" ? "nusxa" : "копия"}`,
+          title: t("labelSentToPrinter"),
+          description: `${data.format} | ${t("labelCopyCount", { count: copies })}`,
         });
       } else {
         toast({
-          title: lang === "uz" ? "Label tayyor" : "Этикетка готова",
+          title: t("labelReady"),
           description: String(data.message),
         });
       }
     },
     onError: (err: Error) => {
       toast({
-        title: lang === "uz" ? "Xatolik" : "Ошибка",
+        title: t("error"),
         description: err.message,
         variant: "destructive",
       });
@@ -116,7 +113,7 @@ export function LabelPrintDialog({
 
   const handleCopyContent = (content: string) => {
     navigator.clipboard.writeText(content);
-    toast({ title: lang === "uz" ? "Nusxalandi" : "Скопировано" });
+    toast({ title: t("copied") });
   };
 
   if (!batch) return null;
@@ -127,29 +124,29 @@ export function LabelPrintDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Printer className="h-5 w-5 text-primary" />
-            {t.labelPrint}
+            {t("labelPrint")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="p-4 bg-muted/60 rounded-lg space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t.batchNumber}:</span>
+              <span className="text-muted-foreground">{t("batchNumber")}:</span>
               <span className="font-mono font-bold">{batch.batchNumber}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t.material}:</span>
+              <span className="text-muted-foreground">{t("material")}:</span>
               <span className="truncate ml-4 text-right">{batch.materialName ?? "-"}</span>
             </div>
             {batch.barcode && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("barcode")}</span>
+                <span className="text-muted-foreground">{t("barcodeLabel")}:</span>
                 <span className="font-mono text-xs">{batch.barcode}</span>
               </div>
             )}
             {batch.expiryDate && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t.expiryDate}:</span>
+                <span className="text-muted-foreground">{t("expiryDate")}:</span>
                 <span className="text-orange-400">{batch.expiryDate}</span>
               </div>
             )}
@@ -157,7 +154,7 @@ export function LabelPrintDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>{t.labelFormat}</Label>
+          <Label>{t("labelFormat")}</Label>
               <Select value={format} onValueChange={(v) => setFormat(v as "ZPL" | "EPL" | "PDF")}>
                 <SelectTrigger data-testid="select-label-format" className="h-9">
                   <SelectValue />
@@ -166,13 +163,13 @@ export function LabelPrintDialog({
                   <SelectItem value="ZPL">
                     <div className="flex flex-col">
                       <span>ZPL</span>
-                      <span className="text-xs text-muted-foreground">{t("zebraPrinterlar")}</span>
+                      <span className="text-xs text-muted-foreground">{t("zebraPrinters")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="EPL">
                     <div className="flex flex-col">
                       <span>EPL</span>
-                      <span className="text-xs text-muted-foreground">{t("eltronPrinterlar")}</span>
+                      <span className="text-xs text-muted-foreground">{t("eltronPrinters")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="PDF">
@@ -186,7 +183,7 @@ export function LabelPrintDialog({
             </div>
 
             <div className="space-y-1">
-          <Label>{t.labelCopies}</Label>
+          <Label>{t("labelCopies")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -202,9 +199,7 @@ export function LabelPrintDialog({
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-blue-500/10 p-3 rounded-lg">
               <AlertCircle className="h-4 w-4 text-blue-400 shrink-0" />
               <span>
-                {lang === "uz"
-                  ? "PDF format brauzer orqali ko'rish va chop etish uchun. Printer konfiguratsiya shart emas."
-                  : "PDF формат для просмотра и печати через браузер. Конфигурация принтера не нужна."}
+                {t("pdfInfo")}
               </span>
             </div>
           )}
@@ -213,9 +208,7 @@ export function LabelPrintDialog({
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-amber-500/10 p-3 rounded-lg">
               <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
               <span>
-                {lang === "uz"
-                  ? `${format} format. Agar printer IP/port sozlangan bo'lsa avtomatik yuboriladi. Aks holda kontentni nusxalab printer dasturiga joylashtiring.`
-                  : `Формат ${format}. Если IP/порт принтера настроен — отправится автоматически. Иначе скопируйте контент в программу принтера.`}
+                {t("printerFormatInfo", { format })}
               </span>
             </div>
           )}
@@ -238,7 +231,7 @@ export function LabelPrintDialog({
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">{result.format}</Badge>
                     <span className="text-xs text-muted-foreground">
-                      {lang === "uz" ? "Kontent tayyor" : "Контент готов"}
+                      {t("contentReady")}
                     </span>
                   </div>
                   <pre className="text-xs bg-black/30 p-2 rounded overflow-auto max-h-40 font-mono whitespace-pre">
@@ -252,7 +245,7 @@ export function LabelPrintDialog({
                     data-testid="button-copy-label-content"
                   >
                     <Copy className="h-3 w-3 mr-2" />
-                    {result.format === "ZPL" ? t.labelCopyZpl : t.labelCopyEpl}
+                    {result.format === "ZPL" ? t("labelCopyZpl") : t("labelCopyEpl")}
                   </Button>
                 </div>
               )}
@@ -262,7 +255,7 @@ export function LabelPrintDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.close ?? (lang === "uz" ? "Yopish" : "Закрыть")}
+            {t("close")}
           </Button>
           <Button
             onClick={() => printMutation.mutate()}
@@ -270,10 +263,10 @@ export function LabelPrintDialog({
             data-testid="button-print-label"
           >
             {printMutation.isPending
-              ? t.labelPrinting
+              ? t("labelPrinting")
               : format === "PDF"
-                ? (<><Download className="h-4 w-4 mr-2" />{t.labelDownloadPdf}</>)
-                : (<><Printer className="h-4 w-4 mr-2" />{t.print}</>)}
+                ? (<><Download className="h-4 w-4 mr-2" />{t("labelDownloadPdf")}</>)
+                : (<><Printer className="h-4 w-4 mr-2" />{t("print")}</>)}
           </Button>
         </DialogFooter>
       </DialogContent>

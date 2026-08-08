@@ -42,8 +42,7 @@ export const DEFAULT_BATCH_FORM: BatchFormState = {
 
 // ── Prop interfaces shared across sections ────────────────────────────────────
 export interface BatchesTabProps {
-  lang: "uz" | "ru";
-  t: Record<string, unknown>;
+  t: (key: string, params?: Record<string, string | number>) => string;
   batches: BatchData[];
   batchesLoading: boolean;
   materials: MaterialCard[];

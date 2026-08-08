@@ -17,7 +17,10 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { format } from "date-fns";
-import type { RecognitionStats, RecognitionLog, Labels } from "./FaceRecognitionMonitoringTypes";
+import type { RecognitionStats, RecognitionLog } from "./FaceRecognitionMonitoringTypes";
+import type { UseTranslationReturn } from "@/lib/i18n";
+
+type TFunc = UseTranslationReturn["t"];
 
 export function StatsCards({
   stats,
@@ -26,14 +29,14 @@ export function StatsCards({
 }: {
   stats?: RecognitionStats;
   statsLoading: boolean;
-  t: Labels;
+  t: TFunc;
 }) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.totalRecognitions}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("FaceRec.totalRecognitions")}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -44,7 +47,7 @@ export function StatsCards({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.successful}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("FaceRec.successful")}</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-[var(--ep-green)]" />
           </CardHeader>
           <CardContent>
@@ -55,7 +58,7 @@ export function StatsCards({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.failed}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("FaceRec.failed")}</CardTitle>
             <XCircle className="h-4 w-4 text-[var(--ep-red)]" />
           </CardHeader>
           <CardContent>
@@ -66,7 +69,7 @@ export function StatsCards({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.accuracy}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("FaceRec.accuracy")}</CardTitle>
             <Target className="h-4 w-4 text-[var(--ep-blue)]" />
           </CardHeader>
           <CardContent>
@@ -80,7 +83,7 @@ export function StatsCards({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.falsePositives}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("FaceRec.falsePositives")}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />
           </CardHeader>
           <CardContent>
@@ -91,7 +94,7 @@ export function StatsCards({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.falseNegatives}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("FaceRec.falseNegatives")}</CardTitle>
             <TrendingUp className="h-4 w-4 text-[var(--ep-purple)]" />
           </CardHeader>
           <CardContent>
@@ -112,7 +115,7 @@ export function RecognitionChart({
 }: {
   stats?: RecognitionStats;
   statsLoading: boolean;
-  t: Labels;
+  t: TFunc;
 }) {
   const chartData = stats?.dailyStats?.map((d) => ({
     ...d,
@@ -122,7 +125,7 @@ export function RecognitionChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t.chartTitle}</CardTitle>
+        <CardTitle>{t("FaceRec.chartTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         {statsLoading ? (
@@ -141,10 +144,10 @@ export function RecognitionChart({
                 }}
               />
               <Legend />
-              <Line type="monotone" dataKey="successful" stroke="#22c55e" name={t.successful} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="failed" stroke="#ef4444" name={t.failed} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="falsePositives" stroke="#f97316" name={t.falsePositives} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="falseNegatives" stroke="#a855f7" name={t.falseNegatives} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="successful" stroke="#22c55e" name={t("FaceRec.successful")} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="failed" stroke="#ef4444" name={t("FaceRec.failed")} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="falsePositives" stroke="#f97316" name={t("FaceRec.falsePositives")} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="falseNegatives" stroke="#a855f7" name={t("FaceRec.falseNegatives")} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -169,7 +172,7 @@ export function LogsTable({
   logsLoading: boolean;
   filter: string;
   onFilterChange: (v: string) => void;
-  t: Labels;
+  t: TFunc;
   getFlagBadge: (flaggedAs: string | null) => React.ReactNode;
   onFlag: (id: string, flaggedAs: string) => void;
   onUnflag: (id: string) => void;
@@ -179,16 +182,16 @@ export function LogsTable({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
-        <CardTitle>{t.recentLogs}</CardTitle>
+        <CardTitle>{t("FaceRec.recentLogs")}</CardTitle>
         <Select value={filter} onValueChange={onFilterChange}>
           <SelectTrigger className="w-full sm:w-[180px] h-9" data-testid="select-filter">
-            <SelectValue placeholder={t.filterByStatus} />
+            <SelectValue placeholder={t("FaceRec.filterByStatus")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t.all}</SelectItem>
-            <SelectItem value="recognized">{t.recognized}</SelectItem>
-            <SelectItem value="unrecognized">{t.unrecognized}</SelectItem>
-            <SelectItem value="flagged">{t.flagged}</SelectItem>
+            <SelectItem value="all">{t("FaceRec.all")}</SelectItem>
+            <SelectItem value="recognized">{t("FaceRec.recognized")}</SelectItem>
+            <SelectItem value="unrecognized">{t("FaceRec.unrecognized")}</SelectItem>
+            <SelectItem value="flagged">{t("FaceRec.flagged")}</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
@@ -204,12 +207,12 @@ export function LogsTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t.employee}</TableHead>
-                  <TableHead>{t.camera}</TableHead>
-                  <TableHead>{t.confidence}</TableHead>
-                  <TableHead>{t.status}</TableHead>
-                  <TableHead>{t.time}</TableHead>
-                  <TableHead>{t.actions}</TableHead>
+                  <TableHead>{t("FaceRec.employee")}</TableHead>
+                  <TableHead>{t("FaceRec.camera")}</TableHead>
+                  <TableHead>{t("FaceRec.confidence")}</TableHead>
+                  <TableHead>{t("FaceRec.status")}</TableHead>
+                  <TableHead>{t("FaceRec.time")}</TableHead>
+                  <TableHead>{t("FaceRec.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,13 +221,13 @@ export function LogsTable({
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span>{log.employeeName || t.unknown}</span>
+                        <span>{log.employeeName || t("FaceRec.unknown")}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <CameraIcon className="h-4 w-4 text-muted-foreground" />
-                        <span>{log.cameraName || t.unknown}</span>
+                        <span>{log.cameraName || t("FaceRec.unknown")}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -236,11 +239,11 @@ export function LogsTable({
                       <div className="flex items-center gap-2">
                         {log.isRecognized ? (
                           <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />{t.recognized}
+                            <CheckCircle2 className="h-3 w-3 mr-1" />{t("FaceRec.recognized")}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                            <XCircle className="h-3 w-3 mr-1" />{t.unrecognized}
+                            <XCircle className="h-3 w-3 mr-1" />{t("FaceRec.unrecognized")}
                           </Badge>
                         )}
                         {getFlagBadge(log.flaggedAs)}
@@ -254,7 +257,7 @@ export function LogsTable({
                         {log.flaggedAs ? (
                           <Button variant="ghost" size="sm" onClick={() => onUnflag(log.id)}
                             disabled={unflagPending} data-testid={`button-unflag-${log.id}`}>
-                            {t.unflag}
+                            {t("FaceRec.unflag")}
                           </Button>
                         ) : (
                           <>
@@ -286,7 +289,7 @@ export function LogsTable({
             </Table>
           </div>
         ) : (
-          <div className="text-center py-8 text-[13px] text-muted-foreground">{t.noLogs}</div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground">{t("FaceRec.noLogs")}</div>
         )}
       </CardContent>
     </Card>

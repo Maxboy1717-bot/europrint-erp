@@ -144,6 +144,16 @@ export class WarehouseFeaturesController {
     return unwrapOrInternal(await this.autoGl.listForMovement(movementId));
   }
 
+  @Post('movement/:movementId/gl-approve')
+  @RequirePermission('pos.gl.approve')
+  @ApiOperation({ summary: 'Movement bo\'yicha pos_gl_postings yozuvlarini Moliya tasdiqlashi (is_approved=true)' })
+  async approveGl(
+    @Param('movementId', ParseIntPipe) movementId: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return unwrapOrInternal(await this.autoGl.approveForMovement(movementId, user.id));
+  }
+
   @Get('gl/journal')
   @RequirePermission('pos.reports.read')
   @ApiOperation({ summary: 'GL Journal — filtrli ro\'yxat' })

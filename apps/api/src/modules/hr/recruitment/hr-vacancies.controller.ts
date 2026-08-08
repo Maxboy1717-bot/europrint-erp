@@ -11,6 +11,8 @@ import {
   NotFoundException, UseGuards, UseInterceptors, Logger, UsePipes, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { unwrapOrInternal } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -34,7 +36,27 @@ const CreateVacancySchema = z.object({
   department: z.string().max(200).optional(),
   salary: z.union([z.string(), z.number()]).optional(),
   status: z.string().max(50).optional(),
+  // Phase 7 (D4): card link + priority + counts + closing_date — now persisted (were dropped).
+  orgFunctionId: z.number().int().positive().optional(),
+  priority: z.string().max(50).optional(),
+  openPositions: z.number().int().nonnegative().optional(),
+  numberOfPositions: z.number().int().nonnegative().optional(),
+  closingDate: z.string().optional(),
 }).passthrough();
+
+const BulkVacancySchema = z.object({
+  items: z.array(z.object({
+    title: z.string().min(1).max(500),
+    description: z.string().max(10000).optional(),
+    department: z.string().max(200).optional(),
+    status: z.string().max(50).optional(),
+    orgFunctionId: z.number().int().positive().optional(),
+    priority: z.string().max(50).optional(),
+    openPositions: z.number().int().nonnegative().optional(),
+    numberOfPositions: z.number().int().nonnegative().optional(),
+    closingDate: z.string().optional(),
+  })).min(1).max(500),
+});
 
 const PublishVacancySchema = z.object({
   channels: z.array(z.string()).optional(),
@@ -74,7 +96,11 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'hr_
 export class HrVacanciesController {
   private readonly logger = new Logger(HrVacanciesController.name);
 
-  constructor(private readonly svc: HrVacanciesService) {}
+  constructor(
+    private readonly svc: HrVacanciesService,
+    private readonly events: EventEmitter2,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get vacancies' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -91,7 +117,7 @@ export class HrVacanciesController {
   @Get('vacancies/:id')
   async getVacancy(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.findById(id);
-    if (!r.ok || !r.data) throw new NotFoundException(`Vakansiya #${id} topilmadi`);
+    if (!r.ok || !r.data) throw new NotFoundException(await this.i18n.t('errors.vacancyNotFoundWithId', { args: { id } }));
     return { data: r.data };
   }
 
@@ -119,10 +145,33 @@ export class HrVacanciesController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    await this.svc.recordFunnelHistory(String(id), 'telegram_announced', String(user.id));
     const r = await this.svc.findById(id);
-    const row = r.ok ? (r.data ?? {}) : {};
-    return { data: { announced: true, vacancy_id: id, title: (row as Record<string, unknown>)['title'], announced_by: user.id } };
+    const row = (r.ok ? (r.data ?? {}) : {}) as Record<string, unknown>;
+    const title = String(row['title'] ?? `Vakansiya #${id}`);
+    // R5 fix: this endpoint now emits its OWN event, 'vacancy.telegram-announce-requested',
+    // consumed by TelegramBotsCronRecruitmentService.onTelegramAnnounceRequested
+    // (hr/telegram-bots/telegram-bots-cron-recruitment.service.ts). That listener targets the
+    // ACTIVE (non-archived) candidate pool — the audience this endpoint's response claims to
+    // reach — via the same keyword/embedding matching used for boomerang, then dispatches
+    // Telegram (telegram_chat_id) + SMS (phone) fallback.
+    // Previously this endpoint emitted the SAME 'vacancy.published' event as alumni-notify,
+    // which only the boomerang/alumni listener consumed — "matched candidates" was never
+    // actually reached (no-op beyond the funnel-history write).
+    this.events.emit('vacancy.telegram-announce-requested', {
+      vacancyId: id,
+      title,
+      department: row['department'] ? String(row['department']) : undefined,
+    });
+    await this.svc.recordFunnelHistory(String(id), 'telegram_announced', String(user.id));
+    return {
+      data: {
+        dispatched: true,
+        vacancy_id: id,
+        title,
+        announced_by: user.id,
+        note: 'Telegram/SMS yuborish fon jarayonida amalga oshiriladi (vacancy.telegram-announce-requested hodisasi orqali, faol nomzodlar bazasiga); natija darhol qaytmaydi. Eslatma: nomzodlarning aksariyatida hozircha telegram_chat_id yo\'q — SMS integratsiyasi ham sozlanmagan (SMS_API_URL/SMS_API_KEY) bo\'lsa, yetkazish faqat mos ma\'lumot mavjud bo\'lgan nomzodlarga amalga oshadi.',
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Alumni notify' })
@@ -133,10 +182,30 @@ export class HrVacanciesController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    await this.svc.recordFunnelHistory(String(id), 'alumni_notified', String(user.id));
     const r = await this.svc.findById(id);
-    const row = r.ok ? (r.data ?? {}) : {};
-    return { data: { notified: true, vacancy_id: id, title: (row as Record<string, unknown>)['title'] } };
+    const row = (r.ok ? (r.data ?? {}) : {}) as Record<string, unknown>;
+    const title = String(row['title'] ?? `Vakansiya #${id}`);
+    // Q11 fix: real dispatch to alumni/boomerang candidates — 'vacancy.published' event;
+    // TelegramBotsCronRecruitmentService.onVacancyPublished queries ex-employees who left 2+
+    // years ago (getBoomerangCandidates), ranks them, and sends real Telegram/SMS. Previously
+    // this endpoint only wrote a history row and echoed { notified: true } with no dispatch.
+    // R5 note: this event/listener pair is DISTINCT from telegramAnnounce()'s
+    // 'vacancy.telegram-announce-requested' below — different audience (boomerang alumni vs.
+    // the active candidate pool), on purpose. Do not merge them back into one event.
+    this.events.emit('vacancy.published', {
+      vacancyId: id,
+      title,
+      department: row['department'] ? String(row['department']) : undefined,
+    });
+    await this.svc.recordFunnelHistory(String(id), 'alumni_notified', String(user.id));
+    return {
+      data: {
+        dispatched: true,
+        vacancy_id: id,
+        title,
+        note: 'Alumni (2+ yil oldin ketgan xodimlar) ga Telegram/SMS fon jarayonida yuboriladi (vacancy.published hodisasi orqali); natija darhol qaytmaydi.',
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Get market analysis' })
@@ -176,16 +245,35 @@ export class HrVacanciesController {
   @HttpCode(HttpStatus.CREATED)
   async createVacancy(@Body() body: unknown) {
     const dto = CreateVacancySchema.parse(body);
-    // NOTE: salary / vacancy_type / deadline_working_days are intentionally NOT persisted —
-    // no canonical column (vacancy_type, deadline_working_days don't exist) or ambiguous min/max
-    // mapping (salary). Recorded as a FE<->BE drift gap for a later stage.
+    // NOTE: salary / vacancy_type / deadline_working_days still NOT persisted — no canonical single
+    // column. Phase 7 (D4) NOW persists the card link + priority + counts + closing_date (were dropped).
     const row = unwrapOrInternal(await this.svc.create({
       title: dto.title,
       description: dto.description,
       department: dto.department,
       status: dto.status,
+      orgFunctionId: dto.orgFunctionId ?? null,
+      priority: dto.priority ?? null,
+      openPositions: dto.openPositions ?? null,
+      numberOfPositions: dto.numberOfPositions ?? null,
+      closingDate: dto.closingDate ?? null,
     }));
     return { data: row };
+  }
+
+  @ApiOperation({ summary: 'Bulk-import vacancies (EP-ORG-075/076)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('vacancies/bulk')
+  @HttpCode(HttpStatus.CREATED)
+  async bulkVacancies(@Body() body: unknown) {
+    const dto = BulkVacancySchema.parse(body);
+    return unwrapOrInternal(await this.svc.bulkCreate(dto.items.map((i) => ({
+      title: i.title, description: i.description, department: i.department, status: i.status,
+      orgFunctionId: i.orgFunctionId ?? null, priority: i.priority ?? null,
+      openPositions: i.openPositions ?? null, numberOfPositions: i.numberOfPositions ?? null,
+      closingDate: i.closingDate ?? null,
+    }))));
   }
 
   @ApiOperation({ summary: 'Publish vacancy' })
@@ -245,10 +333,11 @@ export class HrVacanciesController {
   @Post('vacancies/:id/market-analysis')
   @HttpCode(HttpStatus.OK)
   async postMarketAnalysis(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
-    MarketAnalysisPostSchema.parse(body ?? {});
-    const r = await this.svc.findMarketAnalysisByVacancy(id);
-    const analysis = r.ok ? (r.data ?? {}) : {};
-    return { data: { vacancy_id: id, ...analysis } };
+    const dto = MarketAnalysisPostSchema.parse(body ?? {});
+    // Q12 fix: actually persist the submitted analysis (hr_vacancy_profiles.market_analysis)
+    // — previously this discarded `dto` entirely and just echoed back a read.
+    const saved = unwrapOrInternal(await this.svc.saveMarketAnalysis(id, dto));
+    return { data: { vacancy_id: id, ...saved } };
   }
 
   @ApiOperation({ summary: 'Patch portret' })

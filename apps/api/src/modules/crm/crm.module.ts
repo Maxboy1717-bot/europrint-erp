@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TelegramModule } from '../../telegram/telegram.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { CrmLeadsController } from './presentation/crm-leads.controller';
 import { CrmLeadsOpsController } from './presentation/crm-leads-ops.controller';
 import { CrmDealsController } from './presentation/crm-deals.controller';
@@ -34,14 +35,20 @@ import { DrizzleLeadRepository } from './infrastructure/repositories/drizzle-lea
 import { DrizzleDealRepository } from './infrastructure/repositories/drizzle-deal.repo';
 import { LEAD_REPO } from './domain/repositories/i-lead.repo';
 import { DEAL_REPO } from './domain/repositories/i-deal.repo';
-import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
+// BUG #17 (T20-A2): the CRM-side DealWonListener was a SECOND @EventsHandler(DealWonEvent)
+// that ALSO created a sales_orders row — so a single won deal produced TWO sales orders.
+// Canonical SO-creation lives in sd/infrastructure/event-handlers/deal-won.listener.ts
+// (idempotency-guarded). The duplicate CRM listener is removed; the notification fan-out
+// (DealWonNotificationListener) and SD listener remain the only DealWonEvent consumers.
 import { WebsiteOrderLeadListener } from './listeners/website-order-lead.listener';
 import { WebsiteContactLeadListener } from './listeners/website-contact-lead.listener';
 import { LeadConvertedCustomerListener } from './listeners/lead-converted-customer.listener';
 import { WebsiteLeadService } from './listeners/website-lead.service';
 import { WebsiteLeadRepository } from './listeners/website-lead.repository';
+import { LeadAgingReassignCron } from './cron/lead-aging-reassign.cron';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
 import { LeadScorerService } from './domain/services/lead-scorer.service';
+import { CrmLeadScoringService } from './domain/services/crm-lead-scoring.service';
 import { CrmAiController } from './presentation/crm-ai.controller';
 import { CrmAutoLeadController } from './presentation/crm-auto-lead.controller';
 import { CrmBitrixCompatController } from './presentation/crm-bitrix-compat.controller';
@@ -113,6 +120,14 @@ import { ChurnRetrainService } from './analytics/churn-retrain.service';
 import { CrmAnalyticsController } from './presentation/crm-analytics.controller';
 import { CRM_ANALYTICS_REPO } from './analytics/repositories/i-crm-analytics.repo';
 import { DrizzleCrmAnalyticsRepository } from './analytics/repositories/drizzle-crm-analytics.repo';
+// Batch 5 Item 6 — manager-owned CRM vocabularies (loss reasons + funnel stage names).
+import { CrmSettingsController } from './settings/crm-settings.controller';
+import { CrmSettingsService } from './settings/crm-settings.service';
+import { CrmSettingsRepository } from './settings/crm-settings.repo';
+// Vision 14-marketing#2 — telefon dedup + dublikat lid merge
+import { CrmDedupController } from './presentation/crm-dedup.controller';
+import { CrmDedupService } from './application/crm-dedup.service';
+import { CrmDedupRepository } from './infrastructure/repositories/crm-dedup.repository';
 
 const commandHandlers = [
   CreateLeadHandler, QualifyLeadHandler, CreateDealHandler,
@@ -122,7 +137,8 @@ const commandHandlers = [
 ];
 const queryHandlers = [ListLeadsHandler, GetLeadByIdHandler, CrmPipelineHandler];
 const eventListeners = [
-  DealWonListener,
+  // DealWonListener REMOVED (BUG #17): duplicate sales-order creator — canonical
+  // creation is in the SD module's deal-won.listener (single, idempotent).
   WebsiteOrderLeadListener,    // Trigger 21
   WebsiteContactLeadListener,  // Trigger 22
   LeadConvertedCustomerListener,  // lead won → sd_customers
@@ -134,7 +150,7 @@ const repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot(), ConfigModule, TelegramModule],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), ConfigModule, TelegramModule, NotificationsModule],
   controllers: [
     CrmLeadsController,
     CrmLeadsOpsController,
@@ -151,6 +167,8 @@ const repositories = [
     CrmCustomFieldsController,
     CrmAiExtendedController,
     CrmAnalyticsController,
+    CrmSettingsController,
+    CrmDedupController,
   ],
   providers: [
     loggerProvider,
@@ -159,6 +177,7 @@ const repositories = [
     ...eventListeners,
     ...repositories,
     LeadScorerService,
+    CrmLeadScoringService,
     { provide: CRM_DEALS_REPO, useClass: DrizzleCrmDealsRepository },
     DealsService,
     { provide: CRM_CONTACTS_REPO, useClass: DrizzleCrmContactsRepository },
@@ -213,7 +232,15 @@ const repositories = [
     // Trigger 21/22 — Saytdan CRM Lead
     WebsiteLeadRepository,
     WebsiteLeadService,
+    // VISION-3340 #33 — Lead-aging avtomatik qayta biriktirish (daily @Cron)
+    LeadAgingReassignCron,
+    // Batch 5 Item 6 — CRM vocabulary settings
+    CrmSettingsRepository,
+    CrmSettingsService,
+    // Vision 14-marketing#2 — telefon dedup + dublikat lid merge
+    CrmDedupRepository,
+    CrmDedupService,
   ],
-  exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
+  exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, CrmLeadScoringService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
 })
 export class CrmModule {}

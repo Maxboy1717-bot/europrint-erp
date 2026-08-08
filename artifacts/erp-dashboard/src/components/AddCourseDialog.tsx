@@ -31,6 +31,8 @@ interface Course {
   mentorId: string | null;
   startDate: string | null;
   endDate: string | null;
+  cardId?: string | null;
+  courseType?: string | null;
 }
 
 interface AddCourseDialogProps {
@@ -57,6 +59,8 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
     level: "beginner" as "beginner" | "intermediate" | "advanced",
     startDate: "",
     endDate: "",
+    cardId: null as string | null,
+    courseType: null as string | null,
   });
 
   useEffect(() => {
@@ -73,6 +77,8 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
         level: course.level,
         startDate: course.startDate || "",
         endDate: course.endDate || "",
+        cardId: course.cardId ?? null,
+        courseType: course.courseType ?? null,
       });
     }
   }, [course, isEditMode, open]);
@@ -154,6 +160,7 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
       const payload = {
         ...data,
         departmentId: data.departmentId === "all" ? null : data.departmentId,
+        cardId: data.cardId ? parseInt(data.cardId, 10) : null,
       };
       
       if (isEditMode && course) {
@@ -181,6 +188,8 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
         level: "beginner",
         startDate: "",
         endDate: "",
+        cardId: null,
+        courseType: null,
       });
       setShowMentorForm(false);
     },

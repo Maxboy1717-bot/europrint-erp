@@ -5,9 +5,9 @@
 
 import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import { Body, Controller, Delete, Get, HttpStatus, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors , BadRequestException, NotFoundException} from '@nestjs/common';
-import { notImplemented } from '@common/exceptions/not-implemented';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus, EventBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -15,13 +15,20 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ReportDefectCommand } from '../application/commands/report-defect.command';
 import { ResolveDefectCommand } from '../application/commands/resolve-defect.command';
+import { RecategorizeDefectCommand } from '../application/commands/recategorize-defect.command';
+import { SetWasteCategoryCommand } from '../application/commands/set-waste-category.command';
+import { SetFaultAttributionCommand } from '../application/commands/set-fault-attribution.command';
 import { GetDefectsQuery } from '../application/queries/get-defects.query';
+import { GetDefectStatsQuery } from '../application/queries/get-defect-stats.query';
+import { GetWasteCategoryStatsQuery } from '../application/queries/get-waste-category-stats.query';
+import { GetDefectByIdQuery } from '../application/queries/get-defect-by-id.query';
 import { DefectStatus } from '../domain/aggregates/defect.aggregate';
 import { ReportDefectDtoSchema, ResolveDefectDtoSchema, GetDefectsDtoSchema } from './dto/defect.dto';
 import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
 import { z } from 'zod';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { QcPassedEvent, QcFailedEvent } from '../domain/events';
 
 const QcApprovalSchema = z.object({
   notes: z.string().max(2000).optional(),
@@ -38,10 +45,27 @@ const InspectorSubmitSchema = z.object({
   notes: z.string().max(2000).optional(),
 }).passthrough();
 
+// Vision 18-notifications#20: QC texnolog brak tabiatini (defect_type) belgilaydi.
+const RecategorizeDefectSchema = z.object({
+  defectType: z.string().min(1).max(100),
+});
+
+// vision 09-qc#96: priladka (setup) brakini ishlab-chiqarish brakidan alohida toifalash.
+const SetWasteCategorySchema = z.object({
+  wasteCategory: z.enum(['production', 'setup']),
+});
+
+// Owner decision 2026-07-13 (chat): "customer fault" belgilansa sotuv menejeriga avtomatik
+// bildirishnoma yuboriladi (SetFaultAttributionHandler -> QcDefectCustomerFaultEvent).
+const SetFaultAttributionSchema = z.object({
+  isCustomerFault: z.boolean(),
+});
+
 enum Role {
   QC_MANAGER = 'qc_manager',
   PRODUCTION_MANAGER = 'production_manager',
   SUPER_ADMIN = 'super_admin',
+  TECHNOLOGIST = 'technologist',
 }
 
 @ApiThrottle()
@@ -52,15 +76,29 @@ enum Role {
 export class QcDefectsController {
   private readonly logger = new Logger(QcDefectsController.name);
 
-  constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+    private readonly i18n: I18nService,
+    private readonly eventBus: EventBus,
+  ) {}
 
   /** Persist a QC status transition on the order's qc_inspections row (opened by the MES->QC trigger).
-   *  Was missing: the approve/reject/submit routes echoed {approved:true} without writing the DB. */
-  private async _setQcStatus(orderId: string, status: string): Promise<boolean> {
+   *  Was missing: the approve/reject/submit routes echoed {approved:true} without writing the DB.
+   *  Returns the qc_inspections.id (RETURNING) instead of a bare boolean — third-party audit
+   *  finding (2026-08-06): these raw-UPDATE approve/reject routes never published
+   *  QcPassedEvent/QcFailedEvent, so the 5 real downstream listeners (WMS defect-registration,
+   *  SD QC_HOLD, Kanban, notification, CC-document) never fired for a decision made through
+   *  the actual QCApproval.tsx/QCDashboard.tsx screens — only the separate CQRS
+   *  submit-inspection.handler.ts path (unused by any page) emitted them. */
+  private async _setQcStatus(orderId: string, status: string): Promise<string | null> {
     const oid = parseInt(orderId, 10);
-    if (!Number.isFinite(oid)) return false;
-    const r = await db.execute(sql`UPDATE qc_inspections SET status=${status}, updated_at=NOW() WHERE order_id=${oid}`);
-    return ((r as unknown as { rowCount?: number }).rowCount ?? 0) > 0;
+    if (!Number.isFinite(oid)) return null;
+    const r = await db.execute(sql`
+      UPDATE qc_inspections SET status=${status}, updated_at=NOW() WHERE order_id=${oid} RETURNING id
+    `);
+    const rows = (r as unknown as { rows?: Array<{ id: unknown }> }).rows ?? [];
+    return rows[0] ? String(rows[0].id) : null;
   }
 
   @ApiOperation({ summary: 'Get defects' })
@@ -82,10 +120,20 @@ export class QcDefectsController {
   @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async getDefectStats() {
 
-      const result = await this.commandBus.execute({ type: 'GetDefectStatsQuery' });
+      const result = await this.queryBus.execute(new GetDefectStatsQuery());
       assertOk(result);
       return (result).data;
     
+  }
+
+  @ApiOperation({ summary: 'Get setup (priladka) vs production brak counts (vision 09-qc#96)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('defects/waste-stats')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
+  async getWasteCategoryStats() {
+    const result = await this.queryBus.execute(new GetWasteCategoryStatsQuery());
+    assertOk(result);
+    return (result).data;
   }
 
   @ApiOperation({ summary: 'Get defect by id' })
@@ -94,7 +142,7 @@ export class QcDefectsController {
   @Get('defects/:id')
   async getDefectById(@Param('id') id: string) {
 
-      const result = await this.commandBus.execute({ type: 'GetDefectByIdQuery', id });
+      const result = await this.queryBus.execute(new GetDefectByIdQuery(id));
       return unwrapOrNotFoundDefined(result, 'Defect not found');
     
   }
@@ -132,16 +180,70 @@ export class QcDefectsController {
     
   }
 
+  @ApiOperation({ summary: 'Recategorize defect nature — QC technologist only (operator only flags brak)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('defects/:id/recategorize')
+  @Roles(Role.TECHNOLOGIST)
+  async recategorizeDefect(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const parsed = RecategorizeDefectSchema.parse(body);
+    const cmd = new RecategorizeDefectCommand(id, parsed.defectType, String(user?.id ?? user?.userId ?? 'system-user'));
+    const result = await this.commandBus.execute(cmd);
+    assertOk(result);
+    this.logger.log('Defect recategorized');
+    return { statusCode: HttpStatus.OK, data: (result).data };
+  }
+
+  @ApiOperation({ summary: 'Set defect waste category — separate setup (priladka) brak from production (vision 09-qc#96)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('defects/:id/waste-category')
+  @Roles(Role.QC_MANAGER, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
+  async setDefectWasteCategory(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const parsed = SetWasteCategorySchema.parse(body);
+    const cmd = new SetWasteCategoryCommand(id, parsed.wasteCategory, String(user?.id ?? user?.userId ?? 'system-user'));
+    const result = await this.commandBus.execute(cmd);
+    assertOk(result);
+    this.logger.log('Defect waste category set');
+    return { statusCode: HttpStatus.OK, data: (result).data };
+  }
+
+  @ApiOperation({ summary: 'Set defect fault attribution (customer vs internal) — customer fault auto-notifies the sales manager (owner 2026-07-13)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('defects/:id/fault-attribution')
+  @Roles(Role.QC_MANAGER, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
+  async setDefectFaultAttribution(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const parsed = SetFaultAttributionSchema.parse(body);
+    const cmd = new SetFaultAttributionCommand(id, parsed.isCustomerFault, String(user?.id ?? user?.userId ?? 'system-user'));
+    const result = await this.commandBus.execute(cmd);
+    assertOk(result);
+    this.logger.log('Defect fault attribution set');
+    return { statusCode: HttpStatus.OK, data: (result).data };
+  }
+
   @ApiOperation({ summary: 'Get braks cost impact aggregated by stage' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('braks/cost-impact')
   async getBraksCostImpact() {
+    // QC-birlashtirish (2026-07-02): brak yozuvlari endi ham qc_braks (legacy) ham
+    // qc_defects (ReportDefectCommand orqali yozilgan yangi braklar) jadvallarida
+    // bo'lishi mumkin — ikkalasi ham UNION ALL bilan birlashtiriladi.
     const r = await db.execute(sql`
-      SELECT stage, COUNT(*)::int AS count, SUM(quantity)::int AS total_quantity,
-        SUM(COALESCE(cost_impact, 0))::numeric AS total_cost
-      FROM qc_braks
-      WHERE deleted_at IS NULL OR deleted_at IS NULL
-      GROUP BY stage ORDER BY total_cost DESC
+      SELECT b.stage, COUNT(*)::int AS count, SUM(b.quantity)::int AS total_quantity,
+        SUM(COALESCE(b.cost_impact, 0))::numeric AS total_cost
+      FROM (
+        SELECT stage, quantity::numeric AS quantity, cost_impact FROM qc_braks
+        UNION ALL
+        SELECT stage, quantity::numeric AS quantity, cost_impact FROM qc_defects
+        WHERE papka_order_id IS NOT NULL OR brak_date IS NOT NULL OR stage IS NOT NULL
+      ) b
+      GROUP BY b.stage ORDER BY total_cost DESC
     `);
     const items = ((r as { rows?: unknown[] }).rows) ?? [];
     return { items, total: items.length };
@@ -165,9 +267,19 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approve/finance/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async approveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcApprovalSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'finance_approved');
+    const dto = QcApprovalSchema.parse(body ?? {});
+    const updated = await this._setQcStatus(orderId, 'finance_approved');
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
+      await db.execute(sql`
+        INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+        VALUES (${oid}, 'finance', ${approver}, 'approved', ${dto.notes ?? null})
+      `);
+    }
     return { orderId, approved: true };
   }
 
@@ -176,9 +288,19 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('approve/finance/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async postApproveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcApprovalSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'finance_approved');
+    const dto = QcApprovalSchema.parse(body ?? {});
+    const updated = await this._setQcStatus(orderId, 'finance_approved');
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
+      await db.execute(sql`
+        INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+        VALUES (${oid}, 'finance', ${approver}, 'approved', ${dto.notes ?? null})
+      `);
+    }
     return { orderId, approved: true };
   }
 
@@ -187,9 +309,24 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approve/qc/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async approveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcApprovalSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'qc_approved');
+    const dto = QcApprovalSchema.parse(body ?? {});
+    const inspectionId = await this._setQcStatus(orderId, 'qc_approved');
+    if (!inspectionId) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
+      await db.execute(sql`
+        INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+        VALUES (${oid}, 'qc', ${approver}, 'approved', ${dto.notes ?? null})
+      `);
+      // Third-party audit finding (2026-08-06): this raw-UPDATE approve path never
+      // published QcPassedEvent, so WMS/SD/Kanban/notification/CC listeners never
+      // fired for a decision made through the real QCApproval.tsx screen.
+      this.eventBus.publish(new QcPassedEvent(inspectionId, oid));
+      this.logger.log({ orderId: oid, inspectionId }, 'QC approved (approve/qc route) - Trigger 11');
+    }
     return { orderId, approved: true };
   }
 
@@ -198,10 +335,36 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('approve/qc/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async postApproveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcApprovalSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'qc_approved');
+    const dto = QcApprovalSchema.parse(body ?? {});
+    const inspectionId = await this._setQcStatus(orderId, 'qc_approved');
+    if (!inspectionId) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
+      await db.execute(sql`
+        INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+        VALUES (${oid}, 'qc', ${approver}, 'approved', ${dto.notes ?? null})
+      `);
+      this.eventBus.publish(new QcPassedEvent(inspectionId, oid));
+      this.logger.log({ orderId: oid, inspectionId }, 'QC approved (approve/qc route) - Trigger 11');
+    }
     return { orderId, approved: true };
+  }
+
+  /** Persist the reject decision into qc_approvals (audit trail — was missing: approve
+   *  wrote an approval row but reject only flipped qc_inspections.status, so reason/
+   *  rejectedBy were dropped and the 3-decision flow (approve/reject/rework) had no
+   *  queryable record for the reject branch). Mirrors the approve/* insert pattern. */
+  private async _recordRejection(orderId: string, dto: z.infer<typeof QcRejectionSchema>): Promise<void> {
+    const oid = parseInt(orderId, 10);
+    if (!Number.isFinite(oid)) return;
+    const rejecter = dto.rejectedBy != null ? Number(dto.rejectedBy) || null : null;
+    await db.execute(sql`
+      INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+      VALUES (${oid}, 'qc', ${rejecter}, 'rejected', ${dto.reason ?? null})
+    `);
   }
 
   @ApiOperation({ summary: 'Reject order' })
@@ -209,9 +372,19 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('reject/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async rejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcRejectionSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'rejected');
+    const dto = QcRejectionSchema.parse(body ?? {});
+    const inspectionId = await this._setQcStatus(orderId, 'rejected');
+    if (!inspectionId) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    await this._recordRejection(orderId, dto);
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      // Third-party audit finding (2026-08-06): same missing event-publish as
+      // approveQc above, on the fail branch.
+      this.eventBus.publish(new QcFailedEvent(inspectionId, oid, dto.reason ?? ''));
+      this.logger.log({ orderId: oid, inspectionId }, 'QC failed (reject route) - Trigger 11');
+    }
     return { orderId, rejected: true };
   }
 
@@ -220,9 +393,17 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('reject/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async postRejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcRejectionSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'rejected');
+    const dto = QcRejectionSchema.parse(body ?? {});
+    const inspectionId = await this._setQcStatus(orderId, 'rejected');
+    if (!inspectionId) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    await this._recordRejection(orderId, dto);
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      this.eventBus.publish(new QcFailedEvent(inspectionId, oid, dto.reason ?? ''));
+      this.logger.log({ orderId: oid, inspectionId }, 'QC failed (reject route) - Trigger 11');
+    }
     return { orderId, rejected: true };
   }
 
@@ -231,9 +412,11 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('inspector-submit/:orderId')
+  @Roles(Role.QC_MANAGER, Role.PRODUCTION_MANAGER)
   async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'inspector_submitted');
+    const updated = await this._setQcStatus(orderId, 'inspector_submitted');
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     return { orderId, submitted: true };
   }
 
@@ -242,9 +425,11 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('inspector-submit/:orderId')
+  @Roles(Role.QC_MANAGER, Role.PRODUCTION_MANAGER)
   async postInspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'inspector_submitted');
+    const updated = await this._setQcStatus(orderId, 'inspector_submitted');
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     return { orderId, submitted: true };
   }
 }

@@ -7,6 +7,7 @@
  */
 
 import { NotFoundException } from '@nestjs/common';
+import type { I18nService } from 'nestjs-i18n';
 import { ProductionOrdersService } from '../../src/modules/pp/production-orders/production-orders.service';
 import type { IPpProductionOrdersRepository } from '../../src/modules/pp/production-orders/i-pp-production-orders.repo';
 
@@ -23,6 +24,10 @@ function buildRepo(overrides: Partial<jest.Mocked<IPpProductionOrdersRepository>
   };
 }
 
+function buildI18n(): I18nService {
+  return { t: jest.fn().mockResolvedValue('Ishlab chiqarish buyurtmasi topilmadi') } as unknown as I18nService;
+}
+
 describe('ProductionOrdersService', () => {
   it('findAll wraps repository data inside a pagination envelope', async () => {
     const repo = buildRepo({
@@ -31,7 +36,7 @@ describe('ProductionOrdersService', () => {
         data: { data: [{ id: 1, status: 'draft' }, { id: 2, status: 'released' }], count: 2 },
       }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     const r = await svc.findAll({});
 
@@ -44,7 +49,7 @@ describe('ProductionOrdersService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 99, status: 'released' } }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     const result = await svc.findOne(99);
 
@@ -55,7 +60,7 @@ describe('ProductionOrdersService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: null }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     await expect(svc.findOne(404)).rejects.toBeInstanceOf(NotFoundException);
   });
@@ -64,31 +69,48 @@ describe('ProductionOrdersService', () => {
     const repo = buildRepo({
       create: jest.fn().mockResolvedValue({ ok: true, data: { id: 10 } }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     await svc.create({ productId: 5, qty: 100 }, 7);
 
     expect(repo.create).toHaveBeenCalledWith({ productId: 5, qty: 100 }, 7);
   });
 
-  it('updateStatus checks existence before calling repo.updateStatus', async () => {
+  it('updateStatus checks existence then forwards the acting user + reason to the repo (EP-PP-082)', async () => {
     const repo = buildRepo({
-      findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 5, status: 'draft' } }),
+      findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 5, status: 'planned' } }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
-    const r = await svc.updateStatus(5, 'released');
+    // planned -> confirmed is a legal PO_STATUS_TRANSITIONS hop.
+    const r = await svc.updateStatus(5, 'confirmed', 7, 'Rejaga muvofiq tasdiqlandi');
 
     expect(repo.findById).toHaveBeenCalledWith(5);
-    expect(repo.updateStatus).toHaveBeenCalledWith(5, 'released');
+    // The mandatory written justification (#2/#39) + acting user are threaded through
+    // to repo.updateStatus so production_order_status_log records kim/nima-uchun.
+    expect(repo.updateStatus).toHaveBeenCalledWith(5, 'confirmed', 7, 'Rejaga muvofiq tasdiqlandi');
     expect(r.ok).toBe(true);
+  });
+
+  it('updateStatus rejects an illegal lifecycle hop with a 400 (planned -> completed)', async () => {
+    const repo = buildRepo({
+      findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 5, status: 'planned' } }),
+    });
+    const svc = new ProductionOrdersService(repo, buildI18n());
+
+    // planned may only go to confirmed/released_to_production/cancelled — completed is illegal.
+    const r = await svc.updateStatus(5, 'completed', 7, 'noqonuniy sakrash');
+
+    // Illegal transition -> BadRequest surfaced as a failed Result; the row is never written.
+    expect(r.ok).toBe(false);
+    expect(repo.updateStatus).not.toHaveBeenCalled();
   });
 
   it('remove confirms with localized message after soft-delete', async () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 7 } }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     const r = await svc.remove(7);
 

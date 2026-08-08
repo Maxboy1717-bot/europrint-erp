@@ -8,7 +8,7 @@ import { X, Search, CornerUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore, ChatMessage } from "@/store/chatStore";
 import { ChatAvatar } from "./ChatAvatar";
-import { getChatApiBase } from "@/lib/apiBase";
+import { getChatAdvancedApiBase } from "@/lib/apiBase";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
@@ -34,7 +34,7 @@ export function ForwardModal({ message, onClose }: Props) {
     if (!selected || loading) return;
     setLoading(true);
     try {
-      await apiRequest('POST', `${getChatApiBase()}/messages/${message.id}/forward`, {
+      await apiRequest('POST', `${getChatAdvancedApiBase()}/messages/${message.id}/forward`, {
         targetRoomId: selected,
       });
       setDone(true);

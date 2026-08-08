@@ -22,8 +22,8 @@ import { IotEnhancedService } from '../application/iot-enhanced.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
 
-const IOT_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'production_manager', 'ERP_MANAGER'];
-const IOT_WRITE = ['super_admin', 'warehouse_manager', 'production_manager', 'ERP_MANAGER'];
+const IOT_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'production_manager'];
+const IOT_WRITE = ['super_admin', 'warehouse_manager', 'production_manager'];
 
 @ApiTags('IoT Material Kits')
 @ApiBearerAuth()

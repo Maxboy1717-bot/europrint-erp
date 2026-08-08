@@ -5,7 +5,13 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { leaveRequests, users, hr_leave_balances, hrEmployees } from '@shared/db';
+import { leaveRequests, hr_leave_balances, hrEmployees } from '@shared/db';
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — live `users`.id is INTEGER
+// (serial), not the uuid PK schema-core.ts declares (see schema-compat-1a.ts
+// and commit a41be596). This file previously cast userId via String(userId)
+// to satisfy the uuid type — that only "worked" by Postgres' implicit
+// text->integer parameter cast, same drift class a41be596 fixed elsewhere.
+import { users } from '@shared/db/schema-compat-1a';
 import { eq, and, isNull, count, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IHrLeaveSvcRepository } from './i-hr-leave-svc.repo';
@@ -39,7 +45,7 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
 
   async findUserById(userId: number): Promise<Result<Row | null>> {
     try {
-      const rows = await db.select().from(users).where(eq(users.id, String(userId))).limit(1).offset(0);
+      const rows = await db.select().from(users).where(eq(users.id, userId)).limit(1).offset(0);
       return Ok(((rows)[0] || null) as Row | null);
     } catch (e: unknown) { return Err((e as Error)?.message || `Foydalanuvchi #${userId} topilmadi`); }
   }
@@ -47,7 +53,7 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
   async create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
       const row: Omit<typeof leaveRequests.$inferInsert, 'id'> = {
-        employeeId: (dto.employeeId as string | undefined) ?? '',
+        employeeId: Number(dto.employeeId ?? dto.userId ?? 0),
         leaveType: (dto.leaveType as string | undefined) ?? 'annual',
         startDate: (dto.startDate as string | undefined) ?? '',
         endDate: (dto.endDate as string | undefined) ?? '',

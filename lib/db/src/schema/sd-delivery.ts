@@ -9,71 +9,19 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, uni
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
-import { crmCompanies } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): import of crmCompanies from "./crm-schema"
+// removed — that pgTable declaration was deleted (dead lib/db duplicate,
+// Q-29 verified). The 3 customerId FKs below converted to plain columns.
 import { glDocuments } from "./fi-schema";
 import { Module } from "./lms-schema";
 import { Order, Product, orders, productionOrders, products } from "./pp-schema";
 import { salesOrders, salesInvoices, salesOrderItems, orderStatusLogs } from "./sd-core";
 
-export const deliveries = pgTable("deliveries", {
-  id: serial("id").primaryKey(),
-  deliveryNumber: varchar("delivery_number", { length: 50 }).notNull().unique(), // DLV-8000012345
-  deliveryType: varchar("delivery_type", { length: 10 }).notNull().default("LF"), // LF = Standard delivery
-
-  // Shipping points
-  shippingPoint: varchar("shipping_point", { length: 10 }).notNull().default("SP01"),
-  loadingPoint: varchar("loading_point", { length: 10 }).notNull().default("LP01"),
-
-  // References
-  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
-
-  // Dates
-  plannedGoodsMovementDate: varchar("planned_goods_movement_date", { length: 10 }),
-  actualGoodsMovementDate: varchar("actual_goods_movement_date", { length: 10 }),
-
-  // Status
-  deliveryStatus: varchar("delivery_status", { length: 20 }).notNull().default("PICKING"), // PICKING, PACKING, GOODS_ISSUE, COMPLETED
-
-  // Logistics
-  totalWeight: numericMoney("total_weight"),
-  totalVolume: numericMoney("total_volume"),
-  numberOfPackages: integer("number_of_packages"),
-
-  // Driver info
-  driverName: varchar("driver_name", { length: 100 }),
-  vehicleNumber: varchar("vehicle_number", { length: 20 }),
-
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-}, (t) => [
-  index("idx_deliveries_sales_order_id").on(t.salesOrderId),
-  index("idx_deliveries_customer_id").on(t.customerId),
-  index("idx_deliveries_status").on(t.deliveryStatus),
-  index("idx_deliveries_created_at").on(t.createdAt),
-  check("deliveries_status_chk", sql`${t.deliveryStatus} IN ('PICKING','PACKING','GOODS_ISSUE','COMPLETED')`),
-]);
-
-
-export const insertDeliverySchema = createInsertSchema(deliveries, {
-  deliveryNumber: z.string().regex(/^DLV-\d{10}$/, "Format: DLV-XXXXXXXXXX"),
-  deliveryStatus: z.enum(["PICKING", "PACKING", "GOODS_ISSUE", "COMPLETED"]),
-  plannedGoodsMovementDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak").optional(),
-  actualGoodsMovementDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak").optional(),
-}).omit({ id: true, createdAt: true, updatedAt: true, deletedAt: true } as never);
-
-
-export type Delivery = typeof deliveries.$inferSelect;
-
-export type InsertDelivery = z.infer<typeof insertDeliverySchema>;
-
-
 // Delivery Items
 export const deliveryItems = pgTable("delivery_items", {
   id: serial("id").primaryKey(),
-  deliveryId: varchar("delivery_id").references(() => deliveries.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to deliveries removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  deliveryId: varchar("delivery_id").notNull(),
   itemNumber: varchar("item_number", { length: 10 }).notNull(),
 
   salesOrderItemId: varchar("sales_order_item_id").references(() => salesOrderItems.id, { onDelete: "set null" }),
@@ -120,8 +68,10 @@ export const billingDocuments = pgTable("billing_documents", {
 
   // References
   salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
-  deliveryId: varchar("delivery_id").references(() => deliveries.id, { onDelete: "set null" }),
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // NOTE: FK to deliveries removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  deliveryId: varchar("delivery_id"),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
 
   // Amounts
   netValue: numericMoney("net_value").notNull(),
@@ -224,7 +174,8 @@ export const quotations = pgTable("quotations", {
   quotationNumber: varchar("quotation_number", { length: 50 }).notNull().unique(), // QT-XXXXXXXXXX
 
   // Customer info
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
   customerName: text("customer_name").notNull(),
 
   // Dates

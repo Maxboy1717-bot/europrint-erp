@@ -39,6 +39,30 @@ export interface NodeDetail {
   headUserId?: number | null;
   headUserName?: string | null;
   headUserEmployeeId?: string | null;
+  razryadLevelId?: number | null;
+  // VISION node=karta — to'liq karta-maydonlari
+  salaryType?: string | null;
+  minSalary?: number | string | null;
+  maxSalary?: number | string | null;
+  rbacTier?: string | null;
+  tskpTarget?: number | string | null;
+  tskpMeasurementUnit?: string | null;
+  // T11-02: ЦКП achievement% formula-turi (org_departments.ckp_formula_type).
+  // 'quantity_pct' (fakt/norma) | 'boolean' (ha/yo'q→100/0) | null (default=quantity_pct).
+  ckpFormulaType?: string | null;
+  // T11-05: kunlik ЦКП-hisobot deadline soat (org_departments.ckp_report_deadline_hours).
+  // NULL=deadline qoidasi yo'q. FE OVERDUE-badge shu + fakt submitted_at orqali hisoblaydi (fabrikatsiya yo'q).
+  ckpReportDeadlineHours?: number | null;
+  workSchedule?: string | null;
+  currentState?: string | null;
+  // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga tegishli (1-7, NULL=belgilanmagan).
+  otdeleniyeNo?: number | null;
+  // VISION 5-holat lifecycle (A32): muzlatish meta — org_departments.freeze_*/archived_at/frozen_at
+  freezeReason?: string | null;
+  freezeUntil?: string | null;
+  frozenAt?: string | null;
+  archivedAt?: string | null;
+  bonusConfig?: string | null;
   employeeCount: number;
   childCount: number;
   vacantChildCount?: number;
@@ -65,18 +89,53 @@ export interface FolderItem {
   createdAt: string;
 }
 
-export const NODE_TYPE_LABELS: Record<string, string> = {
-  owner: "Egasi",
-  top_director: "Bosh Direktor",
-  director: "Direktor",
-  department: "Bo'lim",
-  section: "Sektor",
+// 2026-07-14: this used to be a hand-maintained SECOND copy of components/hr/org/types.ts's
+// tier maps, kept in sync only by convention + a vitest guard — a real drift risk (this file's
+// LEVEL_COLORS had only 5 entries vs the sibling's 7, already stale for any card at depth 5/6).
+// Re-exporting from the single canonical source makes drift structurally impossible.
+export {
+  ORG_TIERS,
+  NODE_TYPE_LABELS,
+  LEVEL_COLORS,
+  resolveNodeTypeLabel,
+  resolveLevelLabel,
+  resolveTierColor,
+  resolveTierIndex,
+} from "@/components/hr/org/types";
+
+/**
+ * KARTA 5-HOLAT LIFECYCLE (A32 — VISION EP-ORG-084/086).
+ *   active   — kartada faol xodim, normal ish.
+ *   vacant   — karta ochiq (xodim/rahbar yo'q) — ishga olish kerak.
+ *   io       — i.o. (ispolnyayushchiy obyazannosti) — vaqtincha o'rinbosar.
+ *   frozen   — muzlatilgan (sabab + muddat) — vaqtincha to'xtatilgan.
+ *   archived — arxivlangan — endi ishlatilmaydi (yumshoq o'chirish).
+ * Holat `org_departments.current_state` ustunida saqlanadi (kanonik enum).
+ * `tone` — EPStatusPill rang ohangi.
+ */
+export type CardState = "active" | "vacant" | "io" | "frozen" | "archived";
+
+export interface CardStateMeta {
+  value: CardState;
+  label: string;
+  /** EPStatusPill tone. */
+  tone: "success" | "warning" | "danger" | "info" | "neutral";
+}
+
+export const CARD_STATES: Record<CardState, CardStateMeta> = {
+  active:   { value: "active",   label: "Faol",        tone: "success" },
+  vacant:   { value: "vacant",   label: "Vakant",      tone: "warning" },
+  io:       { value: "io",       label: "I.o.",        tone: "info" },
+  frozen:   { value: "frozen",   label: "Muzlatilgan", tone: "info" },
+  archived: { value: "archived", label: "Arxivlangan", tone: "neutral" },
 };
 
-export const LEVEL_COLORS: Record<number, string> = {
-  0: "#7c3aed",
-  1: "#1d4ed8",
-  2: "#16a34a",
-  3: "#b45309",
-  4: "#dc2626",
-};
+export const CARD_STATE_ORDER: CardState[] = ["active", "vacant", "io", "frozen", "archived"];
+
+/** Joriy holatni aniqlash: current_state bo'lsa o'sha; aks holda rahbar yo'q → vacant, bor → active. */
+export function resolveCardState(node: Pick<NodeDetail, "currentState" | "headUserName" | "isActive">): CardState {
+  const raw = (node.currentState ?? "").trim().toLowerCase();
+  if (raw && raw in CARD_STATES) return raw as CardState;
+  if (node.isActive === false) return "archived";
+  return node.headUserName ? "active" : "vacant";
+}

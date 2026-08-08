@@ -4,12 +4,16 @@
  */
 
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { CRM_BITRIX_COMPAT_REPO, type ICrmBitrixCompatRepo } from '../domain/repositories/i-crm-bitrix-compat.repo';
 
 @Injectable()
 export class CrmBitrixCompatService {
-  constructor(@Inject(CRM_BITRIX_COMPAT_REPO) private readonly repo: ICrmBitrixCompatRepo) {}
+  constructor(
+    @Inject(CRM_BITRIX_COMPAT_REPO) private readonly repo: ICrmBitrixCompatRepo,
+    private readonly i18n: I18nService,
+  ) {}
 
   async listProposals(lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.listProposals(lim, off);
@@ -26,7 +30,7 @@ export class CrmBitrixCompatService {
   async getRobot(id: number) {
     const robotResult = await this.repo.getRobot(id);
     if (!robotResult.ok) return robotResult;
-    if (!robotResult.data) throw new NotFoundException(`Robot #${id} topilmadi`);
+    if (!robotResult.data) throw new NotFoundException(await this.i18n.t('errors.crmRobotNotFoundWithId', { args: { id } }));
     return { ok: true as const, data: robotResult.data };
   }
 
@@ -56,7 +60,7 @@ export class CrmBitrixCompatService {
     });
   }
 
-  async deleteInvoice(id: number) {
+  async deleteInvoice(id: string) {
     return safeCall(async () => {
       await this.repo.deleteInvoice(id);
       return { deleted: true };
@@ -67,7 +71,12 @@ export class CrmBitrixCompatService {
     return this.repo.updateProposalStage(id, status);
   }
 
-  async updateInvoiceStage(id: number, status: string) {
+  /** CRM-13#5: called by the public KP-pixel GET; best-effort, idempotent (see repo doc). */
+  async markProposalViewed(id: number) {
+    return this.repo.markProposalViewed(id);
+  }
+
+  async updateInvoiceStage(id: string, status: string) {
     return this.repo.updateInvoiceStage(id, status);
   }
 }

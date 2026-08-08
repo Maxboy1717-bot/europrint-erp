@@ -11,6 +11,9 @@
 export class MesCompletedEvent {
   constructor(
     public readonly sessionId: number,
+    /** Production-plan/order id (ProductionSession.ppId) — links downstream QC/golden-thread
+     *  records to the real production order instead of the opaque session id. */
+    public readonly ppId: number,
     public readonly timestamp: Date,
   ) {}
 }

@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { StatsCardSkeleton } from "@/components/ui/stats-card";
 import { BookOpen, Users, Award, TrendingUp, BarChart3, Activity, Clock, CheckCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -26,16 +29,32 @@ interface Certificate { id: string; userId: string; courseId: string; issuedDate
 interface User { id: string; fullName: string; completedCourses?: number; }
 interface ActivityRecord { id: string; type: "enrollment" | "completion" | "test"; description: string; timestamp: string; userName: string; }
 interface LMSLeaderboardEntry { userId: string; fullName: string; completedLessons: number; completedCourses: number; averageScore: number; passedTests: number; overallScore: number; }
+interface LmsLeaderboardEntry { userId: number; fullName: string; completedCourses: number; totalCourses: number; avgScore: number; certificatesEarned: number; }
 interface LmsExam { id: string; title: string; courseId: number | null; durationMinutes: number; passingScore: number; isActive: boolean; }
 interface LmsProgress { completedCourses: number; totalCourses: number; averageScore: number; examsPassed: number; examsFailed: number; }
+interface LmsQuestion { id: number; question_text: string; options: string[] | Record<string, string>; order_index: number; }
 
 export default function LMSDashboard() {
   const { t, language, setLanguage } = useTranslation('lms');
   const { t: tCommon } = useTranslation('common');
   const [activeTab, setActiveTab] = useState("overview");
+  /** null = no exam in progress; string = exam id being taken */
+  const [takingExamId, setTakingExamId] = useState<string | null>(null);
+  /** questionId → selectedOption (0-based index into options array) */
+  const [examAnswers, setExamAnswers] = useState<Record<number, number>>({});
+  const [enrollingCourse, setEnrollingCourse] = useState<Course | null>(null);
+  const [enrollEmpId, setEnrollEmpId] = useState("");
 
   const { data: courses = [], isLoading: isLoadingCourses, isError, error, refetch } = useQuery<Course[]>({ queryKey: ["/api/courses"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Course[] })?.data ?? []) });
-  const { data: certificates = [], isLoading: isLoadingCertificates } = useQuery<Certificate[]>({ queryKey: ["/api/certificates"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Certificate[] })?.data ?? []) });
+  // Audit 2026-08-06 (LMS): this select handled an array or a {data:[]} envelope, but
+  // /api/certificates answers {items:[], total:N} — so the list and the counter below
+  // showed 0 no matter how many certificates existed. Accept items too (same shape the
+  // employees query below already handles).
+  const { data: certificates = [], isLoading: isLoadingCertificates } = useQuery<Certificate[]>({ queryKey: ["/api/certificates"], select: (data: unknown) => {
+    if (Array.isArray(data)) return data as Certificate[];
+    const d = data as { items?: Certificate[]; data?: Certificate[] } | null;
+    return d?.items ?? d?.data ?? [];
+  } });
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
     queryKey: ["/api/hr/employees"],
     queryFn: () => apiRequest("GET", "/api/hr/employees"),
@@ -47,9 +66,20 @@ export default function LMSDashboard() {
   const { data: completionTrend = [] } = useQuery<{ month: string; completed: number; enrolled: number }[]>({ queryKey: ["/api/courses/completion-trend", language] });
   const { data: recentActivity = [] } = useQuery<ActivityRecord[]>({ queryKey: ["/api/lms/recent-activity", language] });
   const { data: lmsLeaderboard = [], isLoading: isLoadingLeaderboard } = useQuery<LMSLeaderboardEntry[]>({ queryKey: ["/api/analytics/leaderboard/employees"], select: (data: unknown) => Array.isArray(data) ? data : [] });
+  const { data: lmsTopPerformers = [], isLoading: isLoadingTopPerformers } = useQuery<LmsLeaderboardEntry[]>({
+    queryKey: ["/api/lms/leaderboard"],
+    queryFn: () => apiRequest("GET", "/api/lms/leaderboard"),
+    select: (data: unknown) => Array.isArray(data) ? (data as LmsLeaderboardEntry[]) : [],
+  });
   const { data: lmsExams = [] } = useQuery<LmsExam[]>({
     queryKey: ["/api/lms/exams"],
     select: (data: unknown) => Array.isArray(data) ? data : [],
+  });
+  const { data: examQuestions = [], isLoading: isLoadingQuestions } = useQuery<LmsQuestion[]>({
+    queryKey: ["/api/lms/exams", takingExamId, "questions"],
+    queryFn: () => apiRequest("GET", `/api/lms/exams/${takingExamId}/questions`),
+    enabled: takingExamId !== null,
+    select: (data: unknown) => Array.isArray(data) ? data as LmsQuestion[] : [],
   });
   const { data: myProgress } = useQuery<unknown, Error, LmsProgress | undefined>({
     queryKey: ["/api/lms/progress/my"],
@@ -57,21 +87,37 @@ export default function LMSDashboard() {
   });
 
   const submitExamMutation = useMutation({
-    mutationFn: ({ examId, answers }: { examId: string; answers: unknown[] }) =>
+    mutationFn: ({ examId, answers }: { examId: string; answers: Array<{ questionId: number; selectedOption: number }> }) =>
       apiRequest("POST", `/api/lms/exams/${examId}/submit`, { answers }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/lms/progress/my"] });
       queryClient.invalidateQueries({ queryKey: ["/api/lms/recent-activity"] });
+      setTakingExamId(null);
+      setExamAnswers({});
     },
   });
 
+
+  const enrollMutation = useMutation({
+    mutationFn: (course: Course) =>
+      apiRequest("POST", "/api/lms/enrollments", {
+        employeeId: Number(enrollEmpId),
+        courseId: Number(course.id),
+        courseName: course.name,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
+      setEnrollingCourse(null);
+      setEnrollEmpId("");
+    },
+    onError: () => {},
+  });
 
   const isLoading = isLoadingCourses || isLoadingCertificates || isLoadingUsers;
   const totalCourses = courses.length;
   const activeStudents = users.length;
   const completedCertificates = certificates.length;
   const averageTestScore = courses.length > 0 ? Math.round((Array.isArray(courses) ? courses : []).reduce((sum, c) => sum + c.completionRate, 0) / courses.length) : 0;
-  const topPerformers = [...users].sort((a, b) => (a.fullName || "").localeCompare(b.fullName || "")).slice(0, 5);
 
   if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
@@ -121,15 +167,16 @@ export default function LMSDashboard() {
               <CardHeader><CardTitle className="flex items-center gap-2 text-foreground"><BookOpen className="h-4 w-4 text-primary" />{t('courses')}</CardTitle></CardHeader>
               <CardContent>
                 <div className="ep-table-scroll"><Table>
-                  <TableHeader><TableRow className="border-none hover:bg-transparent">{(["#", t('course'), t('enrollment'), t('completionRate')]).map((h,i) => <TableHead key={h} className={`bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 ${i===0?"rounded-l-lg":""} ${i===3?"rounded-r-lg":""}`}>{h}</TableHead>)}</TableRow></TableHeader>
+                  <TableHeader><TableRow className="border-none hover:bg-transparent">{(["#", t('course'), t('enrollment'), t('completionRate'), ""]).map((h,i) => <TableHead key={`th-${i}`} className={`bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 ${i===0?"rounded-l-lg":""} ${i===4?"rounded-r-lg":""}`}>{h}</TableHead>)}</TableRow></TableHeader>
                   <TableBody>
-                    {courses.length === 0 ? <TableRow className="hover:bg-transparent"><TableCell colSpan={4} className="text-center text-muted-foreground py-8" data-testid="text-no-courses">{tCommon('noData')}</TableCell></TableRow>
+                    {courses.length === 0 ? <TableRow className="hover:bg-transparent"><TableCell colSpan={5} className="text-center text-muted-foreground py-8" data-testid="text-no-courses">{tCommon('noData')}</TableCell></TableRow>
                     : (Array.isArray(courses) ? courses : []).slice(0, 5).map((course, idx) => (
                       <TableRow key={course.id} data-testid={`row-course-${course.id}`} className="hover:bg-muted/40 transition-colors border-none">
                         <TableCell className="font-medium px-6">{idx + 1}</TableCell>
                         <TableCell className="px-6">{course.name}</TableCell>
                         <TableCell className="px-6">{course.enrolledCount}</TableCell>
                         <TableCell className="px-6"><Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">{course.completionRate}%</Badge></TableCell>
+                        <TableCell className="px-3"><Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setEnrollingCourse(course); setEnrollEmpId(""); }} data-testid={`btn-enroll-${course.id}`}>Yozish</Button></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -182,20 +229,24 @@ export default function LMSDashboard() {
         <TabsContent value="performers">
           <Card><CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-[var(--ep-green)]" />{t('skillMatrix')}</CardTitle></CardHeader>
             <CardContent>
-              <div className="ep-table-scroll"><Table>
-                <TableHeader><TableRow><TableHead>#</TableHead><TableHead>{t('students')}</TableHead><TableHead>{t('coursesCompleted')}</TableHead><TableHead>{t('certificatesEarned')}</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {topPerformers.length === 0 ? <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8" data-testid="text-no-performers">{tCommon('noData')}</TableCell></TableRow>
-                  : (Array.isArray(topPerformers) ? topPerformers : []).map((performer, idx) => (
-                    <TableRow key={performer.id} data-testid={`row-performer-${performer.id}`} className="hover:bg-muted/40 transition-colors">
-                      <TableCell className="font-medium">{idx + 1}</TableCell>
-                      <TableCell>{performer.fullName}</TableCell>
-                      <TableCell>{idx + 1}</TableCell>
-                      <TableCell><Badge variant="outline">{performer.completedCourses || 0}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table></div>
+              {isLoadingTopPerformers ? (
+                <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+              ) : (
+                <div className="ep-table-scroll"><Table>
+                  <TableHeader><TableRow><TableHead>#</TableHead><TableHead>{t('students')}</TableHead><TableHead>{t('coursesCompleted')}</TableHead><TableHead>{t('certificatesEarned')}</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {lmsTopPerformers.length === 0 ? <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8" data-testid="text-no-performers">{tCommon('noData')}</TableCell></TableRow>
+                    : (Array.isArray(lmsTopPerformers) ? lmsTopPerformers : []).map((performer, idx) => (
+                      <TableRow key={performer.userId} data-testid={`row-performer-${performer.userId}`} className="hover:bg-muted/40 transition-colors">
+                        <TableCell className="font-medium">{idx + 1}</TableCell>
+                        <TableCell>{performer.fullName}</TableCell>
+                        <TableCell>{performer.completedCourses}</TableCell>
+                        <TableCell><Badge variant="outline">{performer.certificatesEarned}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table></div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -224,46 +275,151 @@ export default function LMSDashboard() {
               </CardContent>
             </Card>
           </div>
-          <Card className="bg-card border-border shadow-none">
-            <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" />{t("mavjudImtihonlar")}</CardTitle></CardHeader>
-            <CardContent>
-              <div className="ep-table-scroll"><Table>
-                <TableHeader>
-                  <TableRow className="border-none hover:bg-transparent">
-                    {(["#", "Nomi", "Davomiyligi", "O'tish bali", "action"]).map((h) => (
-                      <TableHead key={h} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{h === "action" ? "" : h}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {!Array.isArray(lmsExams) || lmsExams.length === 0
-                    ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("imtihonlarMavjudEmas")}</TableCell></TableRow>
-                    : (Array.isArray(lmsExams) ? lmsExams : []).map((exam, idx) => (
-                      <TableRow key={exam.id} data-testid={`row-exam-${exam.id}`} className="hover:bg-muted/40 transition-colors">
-                        <TableCell className="font-medium">{idx + 1}</TableCell>
-                        <TableCell>{exam.title}</TableCell>
-                        <TableCell>{exam.durationMinutes} daqiqa</TableCell>
-                        <TableCell><Badge variant="outline">{exam.passingScore}%</Badge></TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={submitExamMutation.isPending}
-                            onClick={() => submitExamMutation.mutate({ examId: exam.id, answers: [] })}
-                            data-testid={`button-submit-exam-${exam.id}`}
-                          >
-                            {submitExamMutation.isPending ? "Yuborilmoqda..." : "Topshirish"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table></div>
-            </CardContent>
-          </Card>
+
+          {/* Step 2: Question UI — shown when user clicks "Boshlash" */}
+          {takingExamId !== null && (
+            <Card className="bg-card border-border shadow-none mb-6">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  {(Array.isArray(lmsExams) ? lmsExams : []).find(e => e.id === takingExamId)?.title ?? "Imtihon"}
+                </CardTitle>
+                <Button size="sm" variant="ghost" onClick={() => { setTakingExamId(null); setExamAnswers({}); }}>
+                  Bekor qilish
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isLoadingQuestions ? (
+                  <div className="space-y-4">{[1,2,3].map(i => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}</div>
+                ) : examQuestions.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Bu imtihon uchun savollar mavjud emas</p>
+                ) : (
+                  <div className="space-y-6">
+                    {examQuestions.map((q, qi) => {
+                      const opts: string[] = Array.isArray(q.options)
+                        ? (q.options as string[])
+                        : Object.values(q.options as Record<string, string>);
+                      const selected = examAnswers[q.id];
+                      return (
+                        <div key={q.id} className="p-4 rounded-lg bg-muted/40">
+                          <p className="font-medium mb-3">{qi + 1}. {q.question_text}</p>
+                          <div className="flex flex-col gap-2">
+                            {opts.map((opt, oi) => (
+                              <button
+                                key={oi}
+                                type="button"
+                                onClick={() => setExamAnswers(prev => ({ ...prev, [q.id]: oi }))}
+                                className={[
+                                  "text-left px-4 py-2 rounded-md border text-sm transition-colors",
+                                  selected === oi
+                                    ? "border-primary bg-primary/10 text-primary font-semibold"
+                                    : "border-border bg-background text-foreground hover:bg-muted/60",
+                                ].join(" ")}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        disabled={submitExamMutation.isPending || examQuestions.some(q => examAnswers[q.id] === undefined)}
+                        onClick={() => {
+                          const answers = examQuestions.map(q => ({
+                            questionId: q.id,
+                            selectedOption: examAnswers[q.id] ?? 0,
+                          }));
+                          submitExamMutation.mutate({ examId: takingExamId, answers });
+                        }}
+                        data-testid="button-submit-exam-answers"
+                      >
+                        {submitExamMutation.isPending ? "Yuborilmoqda..." : "Topshirish"}
+                      </Button>
+                    </div>
+                    {submitExamMutation.isError && (
+                      <p className="text-sm text-destructive text-right">{String((submitExamMutation.error as Error)?.message ?? "Xatolik yuz berdi")}</p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 1: Exam list — hidden while an exam is in progress */}
+          {takingExamId === null && (
+            <Card className="bg-card border-border shadow-none">
+              <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" />{t("mavjudImtihonlar")}</CardTitle></CardHeader>
+              <CardContent>
+                <div className="ep-table-scroll"><Table>
+                  <TableHeader>
+                    <TableRow className="border-none hover:bg-transparent">
+                      {(["#", "Nomi", "Davomiyligi", "O'tish bali", "action"]).map((h) => (
+                        <TableHead key={h} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{h === "action" ? "" : h}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {!Array.isArray(lmsExams) || lmsExams.length === 0
+                      ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("imtihonlarMavjudEmas")}</TableCell></TableRow>
+                      : (Array.isArray(lmsExams) ? lmsExams : []).map((exam, idx) => (
+                        <TableRow key={exam.id} data-testid={`row-exam-${exam.id}`} className="hover:bg-muted/40 transition-colors">
+                          <TableCell className="font-medium">{idx + 1}</TableCell>
+                          <TableCell>{exam.title}</TableCell>
+                          <TableCell>{exam.durationMinutes} daqiqa</TableCell>
+                          <TableCell><Badge variant="outline">{exam.passingScore}%</Badge></TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => { setTakingExamId(exam.id); setExamAnswers({}); }}
+                              data-testid={`button-start-exam-${exam.id}`}
+                            >
+                              Boshlash
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    }
+                  </TableBody>
+                </Table></div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={enrollingCourse !== null} onOpenChange={open => { if (!open) setEnrollingCourse(null); }}>
+        <DialogContent className="sm:max-w-[340px]">
+          <DialogHeader>
+            <DialogTitle>Kursga yozish — {enrollingCourse?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="enroll-emp-id">Xodim ID raqami</Label>
+              <Input
+                id="enroll-emp-id"
+                type="number"
+                placeholder="Masalan: 5"
+                value={enrollEmpId}
+                onChange={e => setEnrollEmpId(e.target.value)}
+                data-testid="input-enroll-emp-id"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEnrollingCourse(null)}>Bekor</Button>
+            <Button
+              disabled={!enrollEmpId || enrollMutation.isPending}
+              onClick={() => { if (enrollingCourse) enrollMutation.mutate(enrollingCourse); }}
+              data-testid="btn-confirm-enroll"
+            >
+              Yozish
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

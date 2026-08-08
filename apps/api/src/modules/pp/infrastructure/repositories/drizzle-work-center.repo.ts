@@ -17,6 +17,7 @@ export interface WorkCenterFilters {
   type?: WorkCenterType;
   isActive?: boolean;
   departmentId?: number;
+  departmentKind?: string; // Wave 1: FLEKSO | OFSET (sex taxonomy)
 }
 
 export interface WorkCenterStats {
@@ -62,6 +63,10 @@ export class DrizzleWorkCenterRepository {
 
       if (filters?.departmentId !== undefined) {
         conditions.push(eq(workCenters.departmentId, filters.departmentId));
+      }
+
+      if (filters?.departmentKind) {
+        conditions.push(eq(workCenters.departmentKind, filters.departmentKind));
       }
 
       conditions.push(isNull(workCenters.deletedAt));
@@ -117,6 +122,52 @@ export class DrizzleWorkCenterRepository {
     }
   }
 
+  // Wave 4: per-sex norma/brak/crew config (qisman yangilash). Faqat berilgan maydonlar yoziladi;
+  // qiymatlar egasi-DATA (PUT /pp/work-centers/:id/norms orqali kiritiladi). Numeric → string (Drizzle).
+  async updateNorms(
+    id: string,
+    norms: { normaM2PerShift?: number; normaKgPerShift?: number; brakLimitPct?: number; minCrewSize?: number; maxCrewSize?: number; unitPreference?: string },
+  ): Promise<Result<Record<string, unknown>>> {
+    try {
+      const numId = parseInt(id, 10);
+      const patch: Record<string, unknown> = {};
+      if (norms.normaM2PerShift !== undefined) patch.normaM2PerShift = String(norms.normaM2PerShift);
+      if (norms.normaKgPerShift !== undefined) patch.normaKgPerShift = String(norms.normaKgPerShift);
+      if (norms.brakLimitPct !== undefined) patch.brakLimitPct = String(norms.brakLimitPct);
+      if (norms.minCrewSize !== undefined) patch.minCrewSize = norms.minCrewSize;
+      if (norms.maxCrewSize !== undefined) patch.maxCrewSize = norms.maxCrewSize;
+      if (norms.unitPreference !== undefined) patch.unitPreference = norms.unitPreference;
+      if (Object.keys(patch).length === 0) return Err('Yangilanadigan norma maydoni yo\'q');
+      const rows = await db.update(workCenters).set(patch).where(eq(workCenters.id, numId)).returning();
+      const row = (rows as Record<string, unknown>[])[0];
+      if (!row) return Err('Work center topilmadi');
+      return Ok(row);
+    } catch (error: unknown) {
+      this.logger.error(`Failed to update work center norms: ${(error as Error).message}`);
+      return Err('Work center norma yangilashda xatolik');
+    }
+  }
+
+  // T12-04: KARTA bog'lanish yozuv-yo'li — ish markazini org_departments KARTA-siga bog'laydi
+  // (work_centers.org_department_id, FK fk_work_centers_org_dept). Qiymat egasi-DATA (qaysi karta);
+  // bu metod faqat MAVJUD orgDepartmentId qiymatini yozadi — soxta YOZMAYDI (Q-40). NULL = bog'lashni bekor.
+  async updateOrgDepartment(id: string, orgDepartmentId: number | null): Promise<Result<Record<string, unknown>>> {
+    try {
+      const numId = parseInt(id, 10);
+      const rows = await db
+        .update(workCenters)
+        .set({ orgDepartmentId })
+        .where(eq(workCenters.id, numId))
+        .returning();
+      const row = (rows as Record<string, unknown>[])[0];
+      if (!row) return Err('Work center topilmadi');
+      return Ok(row);
+    } catch (error: unknown) {
+      this.logger.error(`Failed to link work center to org department: ${(error as Error).message}`);
+      return Err('Work center KARTA bog\'lashda xatolik');
+    }
+  }
+
   async toggleActive(id: string, isActive: boolean): Promise<Result<WorkCenter>> {
     try {
       const numId = parseInt(id, 10);
@@ -148,6 +199,7 @@ export class DrizzleWorkCenterRepository {
 
       const byType: Record<string, number> = {};
       let withCertification = 0;
+      let costSum = 0;
 
       for (const wc of (allWorkCenters as Record<string, unknown>[])) {
         const wcType = String(wc['type'] ?? 'machine');
@@ -155,12 +207,14 @@ export class DrizzleWorkCenterRepository {
         if (wc['certificationLmsCourseId']) {
           withCertification++;
         }
+        costSum += safeNum(wc['costPerHour'] ?? wc['cost_per_hour'], 0);
       }
 
+      const total = allWorkCenters.length;
       const stats: WorkCenterStats = {
-        total: allWorkCenters.length,
+        total,
         byType,
-        avgCostPerHour: 0,
+        avgCostPerHour: total > 0 ? costSum / total : 0,
         withLmsCertification: withCertification,
       };
 
@@ -194,7 +248,7 @@ export class DrizzleWorkCenterRepository {
       String(row['name'] ?? ''),
       ((row['type'] ?? 'machine') as WorkCenterType),
       safeNum(row['capacity'] ?? 0),
-      0,
+      safeNum(row['costPerHour'] ?? row['cost_per_hour'], 0),
       row['certificationLmsCourseId'] ? String(row['certificationLmsCourseId']) : null,
       row['departmentId'] ? String(row['departmentId']) : null,
       Boolean(row['isActive'] ?? row['is_active']),

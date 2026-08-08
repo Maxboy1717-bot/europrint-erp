@@ -33,7 +33,7 @@ export function ERPWorkCentersTab() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: workCenters = [], isLoading } = useQuery<WorkCenter[]>({
-    queryKey: ["/api/erp/work-centers"],
+    queryKey: ["/api/pp/work-centers"],
   });
 
   const form = useForm<InsertWorkCenter>({
@@ -44,13 +44,13 @@ export function ERPWorkCentersTab() {
   const save = useMutation({
     mutationFn: async (data: InsertWorkCenter) => {
       if (editingWorkCenter) {
-        await apiRequest("PUT", `/api/erp/work-centers/${editingWorkCenter.id}`, data);
+        await apiRequest("PUT", `/api/pp/work-centers/${editingWorkCenter.id}`, data);
       } else {
-        await apiRequest("POST", "/api/erp/work-centers", data);
+        await apiRequest("POST", "/api/pp/work-centers", data);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/work-centers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/work-centers"] });
       toast({ description: editingWorkCenter ? t('workCenterUpdated') : t('workCenterAdded') });
       setOpenDialog(false);
       form.reset();
@@ -60,10 +60,10 @@ export function ERPWorkCentersTab() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/erp/work-centers/${id}`);
+      await apiRequest("PATCH", `/api/pp/work-centers/${id}/toggle-active`, { isActive: false });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/work-centers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/work-centers"] });
       toast({ description: t('workCenterDeleted') });
     },
   });

@@ -65,12 +65,12 @@ export function TaskDetailSheet({
   const [expandedChecklists, setExpandedChecklists]     = useState<Record<string, boolean>>({});
   const [newTagName, setNewTagName]                     = useState("");
   const [resultText, setResultText]                     = useState("");
-  const [taskRating, setTaskRating]                     = useState<number>(0);
+  const [taskRating, setTaskRating]                     = useState<number>(getProp<number>(card, "rating") ?? 0);
   const [hoveredRating, setHoveredRating]               = useState<number>(0);
   const [chatFiles, setChatFiles]                       = useState<File[]>([]);
   const [showHiddenFields, setShowHiddenFields]         = useState(false);
   const [showCompleteDialog, setShowCompleteDialog]     = useState(false);
-  const [completionReport, setCompletionReport]         = useState("");
+  const [completionReport, setCompletionReport]         = useState<string>(getProp<string>(card, "completion_report") ?? "");
 
   // ── Data queries ──────────────────────────────────────────────────────────
   const { data: checklists = [],  refetch: refetchChecklists } = useQuery<ChecklistWithItems[]>({
@@ -185,7 +185,7 @@ export function TaskDetailSheet({
                   onStopTime={() => m.stopTimeMutation.mutate()}
                   newTagName={newTagName} onNewTagNameChange={setNewTagName}
                   showHiddenFields={showHiddenFields} onToggleHiddenFields={() => setShowHiddenFields(v => !v)}
-                  taskRating={taskRating} onTaskRatingChange={setTaskRating}
+                  taskRating={taskRating} onTaskRatingChange={(val) => { setTaskRating(val); m.rateCardMutation.mutate(val); }}
                   hoveredRating={hoveredRating} onHoveredRatingChange={setHoveredRating}
                   t={t}
                 />

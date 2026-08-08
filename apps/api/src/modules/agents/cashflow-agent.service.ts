@@ -76,10 +76,14 @@ export class CashflowAgentService {
   /** Muddati o'tgan debitorlik */
   async checkOverduePayments(): Promise<Array<{ customerId: number; amount: number; daysOverdue: number }>> {
     const r = await runQuery<{ id: string; amount: string; days: string }>(sql`
-      SELECT customer_id::text AS id, SUM(amount)::text AS amount,
+      -- Audit 2026-08-07: 'ar_invoices' jadvali bazada YO'Q -> xato '.catch' da yutilib,
+      -- muddati o'tgan debitorlik HAR DOIM bo'sh chiqardi. Kanonik AR manbai —
+      -- finance_invoices (invoice_type='sales'); ustun moslashuvi: amount -> total_amount,
+      -- status -> payment_status (jonli lug'at: paid / unpaid / posted).
+      SELECT customer_id::text AS id, SUM(total_amount)::text AS amount,
              EXTRACT(EPOCH FROM (NOW() - MIN(due_date)))/${SECONDS_PER_DAY} AS days
-      FROM ar_invoices
-      WHERE status = 'unpaid' AND due_date < NOW()
+      FROM finance_invoices
+      WHERE invoice_type = 'sales' AND payment_status = 'unpaid' AND due_date < NOW()
       GROUP BY customer_id
       LIMIT 50
     `).catch(() => ({ rows: [] }));

@@ -15,6 +15,34 @@ import { HR_DASHBOARD_EXTRA_REPO, type IHrDashboardExtraRepo } from '../domain/r
 /** Palette used by the FE pie/bar charts. Five distinct hues. */
 const COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#C7B3E0'];
 
+/**
+ * i18n for `GET /hr/resignation-stats/:lang` (previously the `:lang` param was silently
+ * ignored — the base and `/:lang` routes returned byte-identical payloads regardless of
+ * language, see hr-dashboard-deep-audit-2026-05-28.md line ~70/108). `dismissal_type` is a
+ * CONTROLLED enum (validated in offboarding-workflow.service.ts#validateDismissalType — not
+ * free text), so translating the known codes is safe. Unknown/legacy codes fall back to the
+ * raw stored string (no fabrication).
+ */
+export type SupportedLang = 'uz' | 'uz-cyr' | 'ru';
+
+function normalizeLang(lang?: string): SupportedLang {
+  return lang === 'ru' || lang === 'uz-cyr' ? lang : 'uz';
+}
+
+const RESIGNATION_REASON_LABELS: Record<string, Record<SupportedLang, string>> = {
+  voluntary:       { uz: "O'z xohishi bilan",        'uz-cyr': 'Ўз хоҳиши билан',        ru: 'По собственному желанию' },
+  resignation:     { uz: "O'z xohishi bilan",        'uz-cyr': 'Ўз хоҳиши билан',        ru: 'По собственному желанию' },
+  termination:     { uz: "Ishdan bo'shatish",         'uz-cyr': 'Ишдан бўшатиш',          ru: 'Увольнение по инициативе компании' },
+  retirement:      { uz: 'Pensiyaga chiqish',          'uz-cyr': 'Пенсияга чиқиш',         ru: 'Выход на пенсию' },
+  end_of_contract: { uz: "Shartnoma muddati tugashi",  'uz-cyr': 'Шартнома муддати тугаши', ru: 'Истечение срока контракта' },
+  mutual:          { uz: "O'zaro kelishuv",           'uz-cyr': 'Ўзаро келишув',          ru: 'По соглашению сторон' },
+  other:           { uz: 'Boshqa sabab',               'uz-cyr': 'Бошқа сабаб',            ru: 'Другая причина' },
+};
+
+const NO_DATA_LABEL: Record<SupportedLang, string> = {
+  uz: "Ma'lumot yo'q", 'uz-cyr': 'Маълумот йўқ', ru: 'Нет данных',
+};
+
 export interface ResignationStatsRow {
   reason: string;
   count: number;
@@ -70,6 +98,25 @@ export class HrDashboardExtraService {
     return this.repo.getContractsExpiring(days);
   }
 
+  async getContractsProjected(page: number, limit: number): Promise<Result<{
+    id: unknown; fullName: string; contractNumber: string; contractType: string;
+    startDate: string; endDate: string; status: string; daysLeft: number;
+  }[], AppError>> {
+    const r = await this.repo.getContracts(page, limit);
+    if (!r.ok) return r as Result<never, AppError>;
+    const rows = (Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
+    return Ok(rows.map(row => ({
+      id:             row.id,
+      fullName:       String(row.full_name ?? ''),
+      contractNumber: String(row.contract_number ?? ''),
+      contractType:   String(row.contract_type ?? ''),
+      startDate:      String(row.start_date ?? ''),
+      endDate:        String(row.end_date ?? ''),
+      status:         String(row.status ?? ''),
+      daysLeft:       Number(row.days_left ?? 0),
+    })));
+  }
+
   async getContractsExpiringProjected(days: number): Promise<Result<{
     id: unknown; fullName: string; contractNumber: string;
     endDate: string; daysLeft: number; urgency: 'critical' | 'warning' | 'info';
@@ -106,18 +153,22 @@ export class HrDashboardExtraService {
 
   // ─── Projected views (Rule 6 — moved out of controllers) ─────────────────
 
-  async getResignationStatsProjected(): Promise<Result<ResignationStatsRow[], AppError>> {
+  async getResignationStatsProjected(lang?: string): Promise<Result<ResignationStatsRow[], AppError>> {
+    const l = normalizeLang(lang);
     const r = await this.repo.getResignationStats();
     if (!r.ok) return r as Result<never, AppError>;
     const rows = (Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
     if (rows.length === 0) {
-      return Ok([{ reason: "Ma'lumot yo'q", count: 0, color: COLORS[0] ?? '#94a3b8' }]);
+      return Ok([{ reason: NO_DATA_LABEL[l], count: 0, color: COLORS[0] ?? '#94a3b8' }]);
     }
-    return Ok(rows.map((row, i) => ({
-      reason: String(row.reason),
-      count: Number(row.count),
-      color: COLORS[i % COLORS.length] ?? '#94a3b8',
-    })));
+    return Ok(rows.map((row, i) => {
+      const code = String(row.reason ?? 'other');
+      return {
+        reason: RESIGNATION_REASON_LABELS[code]?.[l] ?? code,
+        count: Number(row.count),
+        color: COLORS[i % COLORS.length] ?? '#94a3b8',
+      };
+    }));
   }
 
   async getRiskScoresProjected(): Promise<Result<RiskScoresPayload, AppError>> {
@@ -143,33 +194,40 @@ export class HrDashboardExtraService {
   }
 
   async getSafetySummaryProjected(): Promise<Result<SafetySummary, AppError>> {
-    const r = await this.repo.getSafetySummary();
-    const row = (r.ok ? r.data : null) as Record<string, unknown> | null;
+    const [summaryR, kpisR] = await Promise.all([
+      this.repo.getSafetySummary(),
+      this.repo.getSafetyKpis(),
+    ]);
+    const row = (summaryR.ok ? summaryR.data : null) as Record<string, unknown> | null;
+    const kpis = kpisR.ok ? kpisR.data : { ppeCompliancePercent: 0, expiringTrainings: 0 };
     return Ok({
       incidentsThisMonth:   Number(row?.this_month ?? 0),
-      ppeCompliancePercent: 0,
-      expiringTrainings:    0,
+      ppeCompliancePercent: kpis.ppeCompliancePercent,
+      expiringTrainings:    kpis.expiringTrainings,
       openIncidents:        Number(row?.open_count ?? 0),
     });
   }
 
   async getSafetyOverview(): Promise<Result<SafetyOverview, AppError>> {
     return safeCall(async () => {
-      const [incidentsR, summaryR] = await Promise.allSettled([
+      const [incidentsR, summaryR, kpisR] = await Promise.allSettled([
         this.repo.getSafetyIncidents(),
         this.repo.getSafetySummary(),
+        this.repo.getSafetyKpis(),
       ]);
       const incV = incidentsR.status === 'fulfilled' ? incidentsR.value : null;
       const incidents = (incV?.ok && Array.isArray(incV.data) ? incV.data : []) as Record<string, unknown>[];
       const sumV = summaryR.status === 'fulfilled' ? summaryR.value : null;
       const summary = (sumV?.ok ? sumV.data : null) as Record<string, unknown> | null;
+      const kpisV = kpisR.status === 'fulfilled' ? kpisR.value : null;
+      const kpis = kpisV?.ok ? kpisV.data : { ppeCompliancePercent: 0, expiringTrainings: 0 };
       return {
         incidents: incidents.slice(0, 5),
         summary: {
           incidentsThisMonth:   Number(summary?.this_month ?? 0),
           openIncidents:        Number(summary?.open_count ?? 0),
-          ppeCompliancePercent: 0,
-          expiringTrainings:    0,
+          ppeCompliancePercent: kpis.ppeCompliancePercent,
+          expiringTrainings:    kpis.expiringTrainings,
         },
       };
     });

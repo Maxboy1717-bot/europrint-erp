@@ -133,6 +133,87 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'employee_org_departments.department_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS employee_org_departments ADD COLUMN IF NOT EXISTS department_id INTEGER` },
   { name: 'employee_org_departments.role ADD COLUMN', sql: `ALTER TABLE IF EXISTS employee_org_departments ADD COLUMN IF NOT EXISTS "role" TEXT` },
   { name: 'employee_org_departments.created_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS employee_org_departments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP` },
+  // VISION (egasi 2026-06-24): har org-node (bo'lim VA lavozim/xodim) razryadga ega bo'lishi kerak.
+  // org_departments YAGONA daraxt (143 node, shundan 92 'position'); razryad ustuni yo'q edi.
+  { name: 'org_departments.razryad_level_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS razryad_level_id INTEGER` },
+  // VISION (egasi 2026-06-24): har node = KARTA (org_functions birlashadi). Karta-maydonlari org_departments'ga.
+  { name: 'org_departments.salary_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS salary_type TEXT` },
+  { name: 'org_departments.min_salary ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS min_salary NUMERIC` },
+  { name: 'org_departments.max_salary ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS max_salary NUMERIC` },
+  { name: 'org_departments.rbac_tier ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS rbac_tier TEXT` },
+  { name: 'org_departments.ai_exam_enabled ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS ai_exam_enabled BOOLEAN` },
+  { name: 'org_departments.statistics_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS statistics_type TEXT` },
+  { name: 'org_departments.tskp_target ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS tskp_target INTEGER` },
+  { name: 'org_departments.tskp_measurement_unit ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS tskp_measurement_unit VARCHAR` },
+  { name: 'org_departments.last_reviewed_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMP` },
+  { name: 'org_departments.work_schedule ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS work_schedule TEXT` },
+  // APPROVED: owner schema-approval 2026-07-13 (Muslimbek, chat) -- HR-modul to'liq qurish direktivasi
+  // "Kerakli jihozlar" (required equipment per position/karta) — confirmed by multiple prior
+  // audits as genuinely missing (no columns/tables at all). Minimal additive jsonb array of
+  // equipment-name strings on the canonical card table; CRUD via CardController :id/equipment
+  // (GET/POST/DELETE) + CardRepository atomic single-UPDATE add/remove. Mirror file:
+  // apps/api/src/shared/db/migrations/org-card-required-equipment-2026-07-13.sql
+  { name: 'org_departments.required_equipment ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS required_equipment JSONB NOT NULL DEFAULT '[]'::jsonb` },
+  { name: 'org_departments.current_state ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS current_state TEXT` },
+  { name: 'org_departments.bonus_config ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS bonus_config TEXT` },
+  // VISION (egasi 2026-06-24): lavozim-karta portreti = "kerakli jihozlar" (position_equipment).
+  // Har node-kartaga biriktirilgan jihoz; xodim biriktirilganda auto-so'rov → Uskuna 360 (asset_items).
+  { name: 'position_equipment CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS position_equipment (
+    id SERIAL PRIMARY KEY,
+    org_department_id INTEGER NOT NULL,
+    equipment_name TEXT NOT NULL,
+    equipment_type VARCHAR,
+    quantity INTEGER DEFAULT 1,
+    is_required BOOLEAN DEFAULT true,
+    auto_request BOOLEAN DEFAULT false,
+    asset_item_id INTEGER,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT now()
+  )` },
+  // APPROVED (T10-09): EP-ORG-116 — onboarding davrida KARTAga mentor biriktiriladi (PHASE-07 darslik item 4).
+  // Mentor karta-markazli (xodimga emas): card_id -> org_departments (kanonik karta), mentor_user_id -> users.
+  // Additiv link-jadval; SOXTA DATA YO'Q (faqat struktura + CRUD endpoint). Idempotent IF NOT EXISTS.
+  { name: 'lms_card_mentors CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS lms_card_mentors (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL,
+    mentor_user_id INTEGER NOT NULL,
+    course_id INTEGER,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    notes TEXT,
+    assigned_by INTEGER,
+    assigned_at TIMESTAMP NOT NULL DEFAULT now(),
+    revoked_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now()
+  )` },
+  { name: 'lms_card_mentors uq idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_lms_card_mentor_active ON lms_card_mentors (card_id, mentor_user_id) WHERE is_active = true` },
+  // APPROVED (T11-03, egasi-vakolati 2026-06-26; MASSIV-100 FAZA-07 / EP-ORG-122): KARTAga kerakli domen-bilim ro'yxati.
+  //   ⭐ MUAMMO: VIZYON-MASTER-REJA "jadval MAVJUD" deb da'vo qilgan edi, lekin JONLI DB tekshiruvi
+  //     (to_regclass('public.card_required_knowledge') = NULL) jadval YO'Q ekanini isbotladi (over-claim).
+  //     Service/controller/endpoint/UI ham yo'q edi → domen-bilim talablari kiritib bo'lmas edi.
+  //   ⭐ YECHIM (ADDITIV, SOXTA DATA YO'Q — Q-40): faqat STRUKTURA + CRUD endpoint. Domen-bilim qiymatlari
+  //     (gofra-turlari, qog'oz-turlari va h.k.) EGASI/HR tomonidan UI orqali kiritiladi — agent fabrikatsiya QILMAYDI.
+  //   Karta-markazli (xodimga emas): card_id -> org_departments (kanonik KARTA, integer). Vizyon: har karta uchun
+  //     domen-bilim ro'yxati → kurs mavzulari shu talablardan kelib chiqadi (lms_card_mentors T10-09 bilan bir naqsh).
+  //   Idempotent IF NOT EXISTS; aktiv (knowledge_name) takror oldini olish uchun partial unique idx.
+  { name: 'card_required_knowledge CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS card_required_knowledge (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL,
+    knowledge_name TEXT NOT NULL,
+    knowledge_name_ru TEXT,
+    description TEXT,
+    category VARCHAR(100),
+    importance VARCHAR(20) NOT NULL DEFAULT 'required',
+    course_id INTEGER,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_by INTEGER,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMP
+  )` },
+  { name: 'card_required_knowledge card idx', sql: `CREATE INDEX IF NOT EXISTS idx_card_required_knowledge_card ON card_required_knowledge (card_id) WHERE deleted_at IS NULL` },
+  { name: 'card_required_knowledge uq active idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_card_required_knowledge_active ON card_required_knowledge (card_id, knowledge_name) WHERE is_active = true AND deleted_at IS NULL` },
   { name: 'crm_leads.title ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS title TEXT` },
   { name: 'crm_leads.second_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS second_name TEXT` },
   { name: 'crm_leads.last_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS last_name TEXT` },
@@ -587,6 +668,11 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'courses.is_active ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS is_active BOOLEAN` },
   { name: 'courses.published_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS published_at TIMESTAMP` },
   { name: 'courses.updated_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP` },
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-4/A71, 2026-06-26): karta-markazli LMS (EP-LMS-001).
+  // courses.card_id = darslik KARTAGA bog'lanadi (xodimga emas, org_departments.id). FK yo'q (cross-module ADR,
+  // schema-compat-4.ts courses.cardId bilan mos). Additiv, NULL ruxsat. lms_cross_card_credits (FAZA-07) shu bind'ga tayanadi.
+  { name: 'courses.card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS card_id INTEGER` },
+  { name: 'courses.card_id index', sql: `CREATE INDEX IF NOT EXISTS idx_courses_card_id ON courses(card_id)` },
   { name: 'lessons.lesson_number ADD COLUMN', sql: `ALTER TABLE IF EXISTS lessons ADD COLUMN IF NOT EXISTS lesson_number INTEGER` },
   { name: 'lessons.title_uz ADD COLUMN', sql: `ALTER TABLE IF EXISTS lessons ADD COLUMN IF NOT EXISTS title_uz VARCHAR` },
   { name: 'lessons.content_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS lessons ADD COLUMN IF NOT EXISTS content_type VARCHAR` },
@@ -851,6 +937,11 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'qc_root_causes.name ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_root_causes ADD COLUMN IF NOT EXISTS name TEXT` },
   { name: 'qc_root_causes.description ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_root_causes ADD COLUMN IF NOT EXISTS description TEXT` },
   { name: 'qc_root_causes.is_active ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_root_causes ADD COLUMN IF NOT EXISTS is_active BOOLEAN` },
+  // APPROVED: Claude (egasi vakolati) 2026-06-24 — qc_root_causes katalog-modelga konvergatsiya.
+  // entity_type/entity_id eski 5-Why-RCA dizaynidan qolgan NOT NULL; repo INSERT (name/description/category)
+  // ularni yozmaydi → POST /qc/root-causes 23502 bilan tushardi. Jadval bo'sh (0 qator) → NOT NULL bo'shatiladi.
+  { name: 'qc_root_causes.entity_type DROP NOT NULL', sql: `ALTER TABLE IF EXISTS qc_root_causes ALTER COLUMN entity_type DROP NOT NULL` },
+  { name: 'qc_root_causes.entity_id DROP NOT NULL', sql: `ALTER TABLE IF EXISTS qc_root_causes ALTER COLUMN entity_id DROP NOT NULL` },
   { name: 'sd_customer_contacts.contact_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS contact_type VARCHAR` },
   { name: 'sd_customer_contacts.is_active ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS is_active BOOLEAN` },
   { name: 'sd_customer_contacts.name ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS name TEXT` },
@@ -1042,6 +1133,19 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'qc_inspections.items_passed ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS items_passed INTEGER` },
   { name: 'qc_inspections.items_failed ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS items_failed INTEGER` },
   { name: 'qc_inspections.attachments ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS attachments TEXT` },
+  // A56 (2026-06-26) QC card-linkage: every inspection records the inspector's CARD
+  // (org_departments — resolved from users.card_id) and the PRODUCTION CARD (org_departments —
+  // resolved from production_orders.work_center_id -> pp_work_centers.org_department_id). Both
+  // nullable (an inspection can be opened by MES before an inspector is assigned, and the
+  // production-card path is NULL until work-centers are tied to org cards = owner data). INTEGER to
+  // match the live qc_inspections integer surface + org_departments integer id (NOT the drifted uuid
+  // Drizzle decl). FK ON DELETE SET NULL so deleting a card never erases inspection history.
+  { name: 'qc_inspections.inspector_card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS inspector_card_id INTEGER` },
+  { name: 'qc_inspections.production_card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS production_card_id INTEGER` },
+  { name: 'qc_inspections.inspector_card_id FK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'qc_inspections_inspector_card_id_fkey') THEN ALTER TABLE qc_inspections ADD CONSTRAINT qc_inspections_inspector_card_id_fkey FOREIGN KEY (inspector_card_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$;` },
+  { name: 'qc_inspections.production_card_id FK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'qc_inspections_production_card_id_fkey') THEN ALTER TABLE qc_inspections ADD CONSTRAINT qc_inspections_production_card_id_fkey FOREIGN KEY (production_card_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$;` },
+  { name: 'qc_inspections.inspector_card_id idx', sql: `CREATE INDEX IF NOT EXISTS qc_inspections_inspector_card_id_idx ON qc_inspections(inspector_card_id)` },
+  { name: 'qc_inspections.production_card_id idx', sql: `CREATE INDEX IF NOT EXISTS qc_inspections_production_card_id_idx ON qc_inspections(production_card_id)` },
   { name: 'asset_maintenance CREATE TABLE', sql: `
       CREATE TABLE IF NOT EXISTS asset_maintenance (
         id UUID PRIMARY KEY,
@@ -1472,29 +1576,6 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
         reason TEXT,
         state_version INTEGER NOT NULL,
         changed_at TIMESTAMP
-      )
-    ` },
-  { name: 'retail_pos_transactions CREATE TABLE', sql: `
-      CREATE TABLE IF NOT EXISTS retail_pos_transactions (
-        id UUID PRIMARY KEY,
-        transaction_number TEXT NOT NULL,
-        receipt_number TEXT,
-        cashier_id TEXT,
-        customer_name TEXT,
-        customer_id TEXT,
-        items JSONB NOT NULL,
-        subtotal NUMERIC NOT NULL,
-        discount_amount NUMERIC,
-        tax_rate NUMERIC,
-        tax_amount NUMERIC,
-        total_amount NUMERIC NOT NULL,
-        payment_method TEXT NOT NULL,
-        payment_details JSONB,
-        status TEXT NOT NULL,
-        notes TEXT,
-        refunded_at TIMESTAMP,
-        refunded_by TEXT,
-        created_at TIMESTAMP
       )
     ` },
   { name: 'pos_material_request_lines CREATE TABLE', sql: `
@@ -3628,5 +3709,847 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
 
   // P1.6.5: employees.base_salary text → NUMERIC(15,2) type fix
   { name: 'employees.base_salary TYPE numeric', sql: `ALTER TABLE IF EXISTS employees ALTER COLUMN base_salary TYPE NUMERIC(15,2) USING NULLIF(base_salary, '')::NUMERIC` },
+
+  // APPROVED (egasi 2026-06-25, MASSIV-100 FAZA-00): org_functions → org_departments crosswalk VIEW.
+  // Read-only yordamchi; name-match (lower/trim), dublikatda eng kichik org_departments.id (DISTINCT ON, deterministik).
+  // FK re-point UPDATE (FAZA-00 keyingi bosqich) shu VIEW orqali — bir manba, takrorlanmas.
+  { name: 'PHASE00 of->od crosswalk VIEW', sql: `CREATE OR REPLACE VIEW _of_to_od_crosswalk AS SELECT DISTINCT ON (f.id) f.id AS org_function_id, d.id AS org_department_id, f.position_name FROM org_functions f JOIN org_departments d ON lower(trim(d.name)) = lower(trim(f.position_name)) WHERE f.deleted_at IS NULL AND d.is_active = true ORDER BY f.id, d.id ASC` },
+
+  // APPROVED (egasi 2026-06-25, MASSIV-100 FAZA-00, qaror A "0 dan"): employee_cards + card_folders
+  // card_id FK org_functions -> org_departments (yagona kanonik karta). GUARDED+IDEMPOTENT: faqat FK
+  // hali org_functions'ga bo'lsa ishlaydi (test-binding tozalanadi, FK qaratiladi); qayta-bootda skip.
+  // Jonli DB allaqachon _audit/apply-phase00-fk-repoint.cjs bilan qo'llandi; bu fresh DB uchun.
+  { name: 'PHASE00 employee_cards+card_folders card_id FK -> org_departments', sql: `DO $$ BEGIN
+    IF (SELECT confrelid::regclass::text FROM pg_constraint WHERE conname='employee_cards_card_id_fkey') = 'org_functions' THEN
+      DELETE FROM card_folders;
+      DELETE FROM employee_cards;
+      ALTER TABLE employee_cards DROP CONSTRAINT IF EXISTS employee_cards_card_id_fkey;
+      ALTER TABLE employee_cards ADD CONSTRAINT employee_cards_card_id_fkey FOREIGN KEY (card_id) REFERENCES org_departments(id);
+      ALTER TABLE card_folders DROP CONSTRAINT IF EXISTS card_folders_card_id_fkey;
+      ALTER TABLE card_folders ADD CONSTRAINT card_folders_card_id_fkey FOREIGN KEY (card_id) REFERENCES org_departments(id);
+    END IF;
+  END $$` },
+
+  // APPROVED (egasi 2026-06-25, MASSIV-100 FAZA-00 D6): org_node_portret.card_id FK -> org_departments.
+  // GUARDED idempotent (0 qator -> trivial). Jonli _audit/apply-phase00-portret-fk.cjs bilan qo'llandi.
+  { name: 'PHASE00 org_node_portret card_id FK -> org_departments', sql: `DO $$ BEGIN
+    IF (SELECT confrelid::regclass::text FROM pg_constraint WHERE conname='org_node_portret_card_id_fkey') = 'org_functions' THEN
+      ALTER TABLE org_node_portret DROP CONSTRAINT IF EXISTS org_node_portret_card_id_fkey;
+      ALTER TABLE org_node_portret ADD CONSTRAINT org_node_portret_card_id_fkey FOREIGN KEY (card_id) REFERENCES org_departments(id);
+    END IF;
+  END $$` },
+
+  // APPROVED (egasi 2026-06-25, MASSIV-100 FAZA-01): xodim↔karta KO'P-KARTA + ulush + freeze.
+  // employee_org_departments = node-detal aktiv binding (assignUser yozadi). Faqat ALTER — yangi jadval YO'Q.
+  { name: 'PHASE01 eod stake/is_active/freeze cols', sql: `ALTER TABLE employee_org_departments ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true, ADD COLUMN IF NOT EXISTS stake_fraction numeric(4,3), ADD COLUMN IF NOT EXISTS frozen_at timestamptz, ADD COLUMN IF NOT EXISTS freeze_reason text, ADD COLUMN IF NOT EXISTS freeze_until timestamptz, ADD COLUMN IF NOT EXISTS ended_at timestamptz` },
+  { name: 'PHASE01 eod stake-range CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_eod_stake_range') THEN ALTER TABLE employee_org_departments ADD CONSTRAINT chk_eod_stake_range CHECK (stake_fraction IS NULL OR (stake_fraction >= 0 AND stake_fraction <= 1)); END IF; END $$` },
+  { name: 'PHASE01 eod ix_eod_user_active', sql: `CREATE INDEX IF NOT EXISTS ix_eod_user_active ON employee_org_departments (user_id) WHERE is_active = true` },
+  { name: 'PHASE01 eod ix_eod_node_active', sql: `CREATE INDEX IF NOT EXISTS ix_eod_node_active ON employee_org_departments (org_department_id) WHERE is_active = true` },
+  // Backfill (fabrikatsiya emas): YAGONA aktiv linkli xodim -> 1.0 (mantiqiy haqiqat); ko'p-linkli NULL (egasi taqsimlaydi). Guarded (faqat NULL).
+  { name: 'PHASE01 eod stake backfill solo=1.0', sql: `UPDATE employee_org_departments eod SET stake_fraction = 1.0 WHERE stake_fraction IS NULL AND is_active = true AND (SELECT COUNT(*) FROM employee_org_departments x WHERE x.user_id = eod.user_id AND x.is_active = true) = 1` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-2/A23, 2026-06-26): 1-KARTA = 1-SEAT DB darvozasi (EP-ORG-002).
+  // ⭐ NEGA partial-unique-index EMAS, TRIGGER: 1-o'rin invarianti FAQAT node_type='position' kartalarga tegishli —
+  //   guruh-kartalari (owner/ceo/director/section/department/otdeleniye) bir nechta xodim TUTADI (jonli: director=18,
+  //   section=8, ceo/owner=2 aktiv binding; 12 ta guruh-karta 2 ta aktiv+is_primary egasi bilan — bu QONUNIY).
+  //   PARTIAL UNIQUE index org_departments.node_type'ga murojaat qila olmaydi (cross-table) → blanket index
+  //   (org_department_id) WHERE is_active AND is_primary jonli 12 guruh-karta dublikatida YIQILADI + semantik XATO.
+  //   Shuning uchun position-scoped BEFORE-trigger: position kartaga 2-aktiv (boshqa user) egasi → 23505 RAD.
+  //   App-guard (org-mutations.repo.assignUser) bilan IKKI qatlam (defence-in-depth). Idempotent (CREATE OR REPLACE +
+  //   DROP IF EXISTS). Jonli data BUZMAYDI (faqat YANGI 2-egasi RAD; mavjud guruh-kartalar tegilmaydi).
+  //   Rollback-tx proof (A23, 5/5 PASS): position 173 2-egasi RAD(23505) · guruh 19 qo'shimcha egasi OK ·
+  //   shu user re-row OK · inactive 2-egasi OK · bo'sh position 1-egasi OK.
+  { name: 'A23 one-seat-per-position fn', sql: `CREATE OR REPLACE FUNCTION enforce_one_seat_per_position_card() RETURNS trigger AS $fn$
+DECLARE
+  v_node_type text;
+  v_existing  int;
+BEGIN
+  IF NEW.is_active IS DISTINCT FROM true THEN RETURN NEW; END IF;
+  SELECT node_type INTO v_node_type FROM org_departments WHERE id = NEW.org_department_id;
+  IF v_node_type IS DISTINCT FROM 'position' THEN RETURN NEW; END IF;
+  SELECT COUNT(*) INTO v_existing
+  FROM   employee_org_departments
+  WHERE  org_department_id = NEW.org_department_id
+    AND  is_active = true
+    AND  user_id <> NEW.user_id
+    AND  id <> COALESCE(NEW.id, -1);
+  IF v_existing > 0 THEN
+    RAISE EXCEPTION 'EP_ORG_002: 1 karta = 1 orin — position karta % band', NEW.org_department_id
+      USING ERRCODE = '23505';
+  END IF;
+  RETURN NEW;
+END;
+$fn$ LANGUAGE plpgsql` },
+  { name: 'A23 one-seat-per-position trigger', sql: `DO $$ BEGIN
+    DROP TRIGGER IF EXISTS trg_one_seat_per_position_card ON employee_org_departments;
+    CREATE TRIGGER trg_one_seat_per_position_card
+      BEFORE INSERT OR UPDATE OF is_active, user_id, org_department_id ON employee_org_departments
+      FOR EACH ROW EXECUTE FUNCTION enforce_one_seat_per_position_card();
+  END $$` },
+
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-03, 2026-06-25): razryad o'sish/pasayish EXECUTION audit.
+  // razryad_history (immutable tarix, EP-ORG-010..013/067/070) + razryad_requests (2-imzo workflow).
+  { name: 'razryad_history CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS razryad_history (id SERIAL PRIMARY KEY, card_id INTEGER NOT NULL, employee_id INTEGER, old_razryad_id INTEGER, new_razryad_id INTEGER NOT NULL, change_type TEXT NOT NULL, reason TEXT, exam_score NUMERIC(5,2), certificate_number TEXT, requested_by INTEGER, hr_approved_by INTEGER, manager_approved_by INTEGER, ai_suggested BOOLEAN NOT NULL DEFAULT false, effective_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'razryad_history.card_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_razryad_history_card ON razryad_history (card_id, effective_at DESC)` },
+  { name: 'razryad_history.employee_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_razryad_history_emp ON razryad_history (employee_id)` },
+  { name: 'razryad_requests CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS razryad_requests (id SERIAL PRIMARY KEY, card_id INTEGER NOT NULL, employee_id INTEGER, target_razryad_id INTEGER NOT NULL, current_razryad_id INTEGER, request_type TEXT NOT NULL, exam_score NUMERIC(5,2), reason TEXT, status TEXT NOT NULL DEFAULT 'pending', hr_approved_by INTEGER, hr_approved_at TIMESTAMP, manager_approved_by INTEGER, manager_approved_at TIMESTAMP, rejected_by INTEGER, reject_reason TEXT, requested_by INTEGER, ai_suggested BOOLEAN NOT NULL DEFAULT false, created_at TIMESTAMP NOT NULL DEFAULT NOW(), updated_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'razryad_requests.card_status idx', sql: `CREATE INDEX IF NOT EXISTS idx_razryad_requests_card ON razryad_requests (card_id, status)` },
+  { name: 'org_departments.next_attestation_date ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS next_attestation_date DATE` },
+
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-04, 2026-06-25): oylik-audit ustunlari.
+  // Oylik kartadan hisoblanganda: qaysi razryad-koeff, ko'p-karta ulush-yig'indisi, pro-rata kun.
+  { name: 'salary_history.razryad_coefficient ADD COLUMN', sql: `ALTER TABLE IF EXISTS salary_history ADD COLUMN IF NOT EXISTS razryad_coefficient NUMERIC(5,2)` },
+  { name: 'salary_history.stake_total ADD COLUMN', sql: `ALTER TABLE IF EXISTS salary_history ADD COLUMN IF NOT EXISTS stake_total NUMERIC(4,3)` },
+  { name: 'salary_history.proration_days ADD COLUMN', sql: `ALTER TABLE IF EXISTS salary_history ADD COLUMN IF NOT EXISTS proration_days INTEGER` },
+
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-05, 2026-06-25): ЦКП fakt-tizimi.
+  // ckp meta (formula-turi/chastota/deadline-soat per-karta) + ckp_fact_values (kunlik FAKT-qiymat — hozir umuman yo'q).
+  { name: 'org_departments.ckp_formula_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS ckp_formula_type TEXT` },
+  { name: 'org_departments.ckp_frequency ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS ckp_frequency TEXT` },
+  { name: 'org_departments.ckp_report_deadline_hours ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS ckp_report_deadline_hours INTEGER` },
+  { name: 'ckp_fact_values CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS ckp_fact_values (id SERIAL PRIMARY KEY, card_id INTEGER NOT NULL, employee_id INTEGER, product_id INTEGER, fact_date DATE NOT NULL, target_value NUMERIC(14,3), actual_value NUMERIC(14,3), achievement_pct NUMERIC(6,2), source TEXT NOT NULL DEFAULT 'MANUAL', formula_type TEXT, status TEXT NOT NULL DEFAULT 'submitted', submitted_at TIMESTAMP, notes TEXT, recorded_by INTEGER, created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'ckp_fact_values unique idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_ckp_fact_card_day ON ckp_fact_values (card_id, fact_date, COALESCE(employee_id,0), COALESCE(product_id,0))` },
+  { name: 'ckp_fact_values card_date idx', sql: `CREATE INDEX IF NOT EXISTS idx_ckp_fact_card_date ON ckp_fact_values (card_id, fact_date DESC)` },
+
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-07, 2026-06-25): darslik kartaga — cross-card-credit (Q562).
+  // Universal kurs bir kartada tugatilsa boshqa kartaga kredit. courses.card_id (FK yo'q) bind ishlaydi.
+  { name: 'lms_cross_card_credits CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS lms_cross_card_credits (id SERIAL PRIMARY KEY, course_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, source_card_id INTEGER, target_card_id INTEGER NOT NULL, credited_by INTEGER, credited_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'lms_cross_card_credits uniq idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_lms_credit ON lms_cross_card_credits (course_id, employee_id, target_card_id)` },
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-07/Q562, T10-10, 2026-06-26): universal kurs bayrog'i.
+  // Faqat is_universal=true kurs tugaganda cross-card kredit ko'chadi (Q562 SHART). Additiv, DEFAULT false.
+  // CourseCompletedCreditHandler (lms.course.completed listener) shu ustunga tayanadi.
+  { name: 'courses.is_universal ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS is_universal BOOLEAN DEFAULT false` },
+
+  // APPROVED (egasi vakolati, IJRO T11-04, 2026-06-26): 3-bosqich kurs-tasdiq workflow (draft->review->approved).
+  // 2-imzo: submit (yuboruvchi imzosi) -> approve (boshqa tasdiqlovchi imzosi). approve != submit (DB-guard kod ichida).
+  // Additiv, DEFAULT 'draft' (mavjud 5 kurs draft bo'ladi — fabrikatsiya yo'q). CHECK 3-holatni qotiradi.
+  { name: 'courses.approval_status ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) NOT NULL DEFAULT 'draft'` },
+  { name: 'courses.submitted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS submitted_by INTEGER` },
+  { name: 'courses.submitted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP` },
+  { name: 'courses.approved_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS approved_by INTEGER` },
+  { name: 'courses.approved_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP` },
+  { name: 'courses.approval_status CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_courses_approval_status') THEN ALTER TABLE courses ADD CONSTRAINT chk_courses_approval_status CHECK (approval_status IN ('draft','review','approved')); END IF; END $$` },
+
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-08, 2026-06-25): otdeleniye raqami (1-7 Vysotskiy).
+  // Vertikal/gorizontal: workflow_rules jadval BOR; otdeleniye_no = qaysi 7 departamentdan biri (egasi-DATA qiymat).
+  { name: 'org_departments.otdeleniye_no ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS otdeleniye_no INTEGER` },
+  { name: 'org_departments.otdeleniye_no CHECK 1-7', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_otdeleniye_no_range') THEN ALTER TABLE org_departments ADD CONSTRAINT chk_otdeleniye_no_range CHECK (otdeleniye_no IS NULL OR (otdeleniye_no >= 1 AND otdeleniye_no <= 7)); END IF; END $$` },
+
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-09, 2026-06-25): karta 5-holat lifecycle (muzlatish).
+  // current_state (BOR, FAZA-00) = active/vacant/io/frozen/archived. Freeze: sabab+muddat (EP-ORG-084/086).
+  { name: 'org_departments.frozen_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP` },
+  { name: 'org_departments.freeze_reason ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS freeze_reason TEXT` },
+  { name: 'org_departments.freeze_until ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS freeze_until TIMESTAMP` },
+  { name: 'org_departments.archived_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-1/A2, 2026-06-25): karta-markazli login/oylik poydevori.
+  // users.card_id = birlamchi karta (org_departments.id). NULL => login/oylik YO'Q (gate). Additiv, FK NO ACTION.
+  { name: 'users.card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS card_id INTEGER` },
+  { name: 'users.card_id index', sql: `CREATE INDEX IF NOT EXISTS idx_users_card_id ON users(card_id)` },
+  { name: 'users.card_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_users_card_id') THEN ALTER TABLE users ADD CONSTRAINT fk_users_card_id FOREIGN KEY (card_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
+  // Backfill: birlamchi (is_primary) faol kartadan users.card_id (employee_id orqali). Faqat NULL bo'lganda.
+  { name: 'users.card_id backfill from employee_cards', sql: `UPDATE users u SET card_id = (SELECT ec.card_id FROM employee_cards ec WHERE ec.employee_id = u.employee_id AND ec.is_active = true AND (ec.ended_at IS NULL OR ec.ended_at > NOW()) ORDER BY ec.is_primary DESC NULLS LAST, ec.assigned_at DESC NULLS LAST LIMIT 1) WHERE u.card_id IS NULL AND u.employee_id IS NOT NULL` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-2/A39, 2026-06-26): ULUSH (stake) TARIX MEXANIZMI.
+  // ⭐ NEGA alohida immutable jadval (salary_history EMAS): stake_fraction xodim↔karta bog'lanishida
+  //   o'zgaradi (assignUser UPDATE/INSERT), salary_history esa oylik-davr yopilganda yoziladi —
+  //   ular boshqa hayot-davri. razryad_history bilan bir xil naqsh (FAZA-03 EXECUTION audit):
+  //   immutable, append-only, kim-qachon-eskidan-yangiga. NULL stake (taqsimlanmagan) ham yoziladi.
+  // org-mutations.repo.assignUser HAR stake o'zgarishida (eski<>yangi) 1 qator append qiladi.
+  { name: 'stake_history CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS stake_history (id SERIAL PRIMARY KEY, eod_id INTEGER, user_id INTEGER NOT NULL, card_id INTEGER NOT NULL, old_stake NUMERIC(4,3), new_stake NUMERIC(4,3), change_type TEXT NOT NULL, reason TEXT, changed_by INTEGER, allow_overload BOOLEAN NOT NULL DEFAULT false, effective_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'stake_history stake-range CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_stake_history_range') THEN ALTER TABLE stake_history ADD CONSTRAINT chk_stake_history_range CHECK ((old_stake IS NULL OR (old_stake >= 0 AND old_stake <= 1)) AND (new_stake IS NULL OR (new_stake >= 0 AND new_stake <= 1))); END IF; END $$` },
+  { name: 'stake_history.user_card idx', sql: `CREATE INDEX IF NOT EXISTS idx_stake_history_user_card ON stake_history (user_id, card_id, effective_at DESC)` },
+  { name: 'stake_history.card idx', sql: `CREATE INDEX IF NOT EXISTS idx_stake_history_card ON stake_history (card_id, effective_at DESC)` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-4/A72, MASSIV-100 FAZA-07, 2026-06-26): LMS avto-enroll.
+  // EP-ORG-028/088: darslik KARTAGA biriktiriladi; xodim kartaga (employee_cards) ulanganda o'sha
+  //   kartaning faol kurslariga AVTO yoziladi (card-employee-assigned.handler.ts listener).
+  // enrollments.card_id       = avto-enroll qaysi karta orqali bo'lgani (Q599 tarix; qo'lda enroll => NULL).
+  // enrollments.auto_enrolled = avto (listener) vs qo'lda (EnrollCourseCommand) ajratish bayrog'i.
+  // uq_enrollments_emp_course = (employee_id, course_id) UNIQUE — autoEnroll/saveEnrollment ON CONFLICT
+  //   idempotentligi uchun MAJBURIY (jadval'da hozir faqat pkey(id) bor; dublikat juftlik DB'da 0 — xavfsiz).
+  // Additiv (FK yo'q, DATA yozilmaydi). courses.card_id allaqachon BOR (EP-LMS-001); FK Faza-0 da.
+  { name: 'A72 enrollments.card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS enrollments ADD COLUMN IF NOT EXISTS card_id INTEGER` },
+  { name: 'A72 enrollments.auto_enrolled ADD COLUMN', sql: `ALTER TABLE IF EXISTS enrollments ADD COLUMN IF NOT EXISTS auto_enrolled BOOLEAN NOT NULL DEFAULT false` },
+  { name: 'A72 enrollments emp_course UNIQUE idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_enrollments_emp_course ON enrollments (employee_id, course_id)` },
+  { name: 'A72 enrollments.card_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_enrollments_card_id ON enrollments (card_id) WHERE card_id IS NOT NULL` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-5/A89, 2026-06-26): SOFT-DELETE AUDIT USTUNLAR.
+  // Manba: docs/MASTER_DATA_STANDARTLARI.md §3 Qoida M-2 (soft delete MAJBURIY) + M-3 (deleted_at/deleted_by audit).
+  // ⭐ NEGA: master data HECH QACHON hard-DELETE qilinmaydi — boshqa transaksiyalar unga FK bilan havola
+  //   qiladi (M-2). O'chirish = deleted_at = NOW() + deleted_by = user_id. Faol satr = deleted_at IS NULL
+  //   (mavjud _of_to_od_crosswalk VIEW shu naqshni allaqachon ishlatadi: org_functions WHERE deleted_at IS NULL).
+  // Additiv, IF NOT EXISTS — allaqachon ustun bor jadval (accounts/org_functions/technology_cards/work_centers
+  //   deleted_at; technology_cards deleted_by) SKIP bo'ladi (tur ziddiyatsiz). DATA yozilmaydi (NULL = faol).
+  // deleted_at = TIMESTAMP (drift-fayl ustun naqshiga mos), deleted_by = INTEGER (technology_cards.deleted_by bilan bir xil; FK yo'q — boot-tartib bog'lanmasligi uchun, created_by/updated_by additiv naqshi kabi).
+  // ALTER TABLE IF EXISTS — hozir jonli DB'da yo'q master jadvallar (hr_employees/roles/defect_catalog/
+  //   crm_pipeline_stages/price_lists) uchun xavfsiz no-op; jadval yaratilgach keyingi boot'da qo'llanadi.
+  // Guruh A (Org/HR):
+  { name: 'A89 razryad_levels.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS razryad_levels ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 razryad_levels.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS razryad_levels ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 org_functions.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_functions ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 org_functions.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_functions ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 org_departments.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 org_departments.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 hr_employees.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_employees ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 hr_employees.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_employees ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 roles.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS roles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 roles.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS roles ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 unit_of_measures.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS unit_of_measures ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 unit_of_measures.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS unit_of_measures ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  // Guruh B (Mahsulot/Material):
+  { name: 'A89 material_cards.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS material_cards ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 material_cards.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS material_cards ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 technology_cards.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS technology_cards ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 technology_cards.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS technology_cards ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 work_centers.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 work_centers.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 defect_catalog.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS defect_catalog ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 defect_catalog.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS defect_catalog ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  // Guruh C (Moliya):
+  { name: 'A89 accounts.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 accounts.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 budget_lines.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS budget_lines ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 budget_lines.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS budget_lines ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  // Guruh D (CRM/Savdo):
+  { name: 'A89 sd_customers.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customers ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 sd_customers.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customers ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 crm_pipeline_stages.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_pipeline_stages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 crm_pipeline_stages.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_pipeline_stages ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 price_lists.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS price_lists ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 price_lists.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS price_lists ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+
+  // A91 — tenant_id rollout (PP / production_orders.*). Additive, idempotent.
+  // Type = INTEGER NOT NULL DEFAULT 1 to match the dominant live convention
+  // (17 existing integer tenant_id columns + drift-fix-01-tenant-id.sql; no `tenants` table,
+  //  tenant-1 backfill per the multi-tenancy Phase-2 mandate).
+  { name: 'A91 production_orders.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS production_orders ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A91 production_order_operations.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS production_order_operations ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A91 production_order_components.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS production_order_components ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A91 production_orders.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_production_orders_tenant_id ON production_orders(tenant_id)` },
+
+  // A92 (TENANT) — APPROVED: additive multi-tenant isolation column rollout for
+  // WMS (warehouse_*) + Finance (entries). Same canonical convention as A91:
+  // INTEGER NOT NULL DEFAULT 1 (matches the 17 live integer tenant_id columns on
+  // employees/sales_orders/purchase_orders/crm_*/departments; no `tenants` table yet,
+  // tenant-1 backfill per the multi-tenancy Phase-2 mandate). Idempotent / safe to re-run.
+  // DB-proof (rollback-tx): warehouse_stock=37, warehouse_bins=126, entries=6 rows → 0 nulls.
+  // Guruh WMS (warehouse_*):
+  { name: 'A92 warehouse_stock.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_stock ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_transactions.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_transactions ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_transfers.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_transfers ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_batches.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_batches ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_bins.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_bins ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_access_grants.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_access_grants ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_rental_settings.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_rental_settings ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_rental_records.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_rental_records ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  // Guruh Finance (entries — kanonik GL ledger):
+  { name: 'A92 entries.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS entries ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  // Indexes on the data-bearing canonical tables (tenant-scoped filtering):
+  { name: 'A92 warehouse_stock.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_stock_tenant_id ON warehouse_stock(tenant_id)` },
+  { name: 'A92 warehouse_transactions.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_transactions_tenant_id ON warehouse_transactions(tenant_id)` },
+  { name: 'A92 entries.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_entries_tenant_id ON entries(tenant_id)` },
+
+  // A90 (TENANT) — APPROVED: additive multi-tenant isolation column rollout for
+  // the SD module (sd_* base tables). Same canonical convention as A91/A92:
+  // INTEGER NOT NULL DEFAULT 1 (matches the 17 live integer tenant_id columns,
+  // incl. sales_orders/sales_invoices which already carry it; no `tenants` table
+  // yet, tenant-1 backfill per the multi-tenancy Phase-2 mandate). ADD COLUMN with
+  // NOT NULL DEFAULT 1 atomically backfills every existing row → no null-violation.
+  // Idempotent (ADD COLUMN IF NOT EXISTS / CREATE INDEX IF NOT EXISTS) — safe to re-run.
+  // sales_orders + sales_invoices already have tenant_id (Drizzle + live) — not re-added.
+  // EXCLUDED: 7 sd_* VIEWs over non-sd base tables (sd_sales_orders, sd_quotations,
+  //   sd_payments, sd_invoices, sd_customer_documents, sd_customer_complaints,
+  //   sd_customer_competitors) — ALTER TABLE on a view fails; their backing base
+  //   tables belong to CRM/FIN modules, out of A90 scope.
+  // DB-proof (rollback-tx): 14 sd_* base tables → tenant_id absent → present, 0 nulls.
+  // SD base tables WITH a Drizzle pgTable def (schema also updated to match):
+  { name: 'A90 sd_customers.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customers ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_contacts.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contacts ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_lead_activities.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_lead_activities ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_price_formulas.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_price_formulas ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_quotation_items.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_quotation_items ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_order_timeline.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_timeline ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_storage_fees.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_storage_fees ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_contracts.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contracts ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_manager_quotas.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_manager_quotas ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_customer_contacts.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_customer_interactions.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_interactions ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  // SD base tables that are live-only (no Drizzle pgTable def) — column added for tenant uniformity:
+  { name: 'A90 sd_order_departments.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_departments ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_rentals.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_rentals ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_advance_idempotency_keys.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_advance_idempotency_keys ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  // Indexes on the data-bearing SD tables (tenant-scoped filtering):
+  { name: 'A90 sd_customers.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_customers_tenant_id ON sd_customers(tenant_id)` },
+  { name: 'A90 sd_contacts.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_contacts_tenant_id ON sd_contacts(tenant_id)` },
+  { name: 'A90 sd_quotation_items.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_quotation_items_tenant_id ON sd_quotation_items(tenant_id)` },
+  { name: 'A90 sd_order_timeline.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_order_timeline_tenant_id ON sd_order_timeline(tenant_id)` },
+  { name: 'A90 sd_storage_fees.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_storage_fees_tenant_id ON sd_storage_fees(tenant_id)` },
+  { name: 'A90 sd_contracts.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_contracts_tenant_id ON sd_contracts(tenant_id)` },
+  { name: 'A90 sd_customer_contacts.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_customer_contacts_tenant_id ON sd_customer_contacts(tenant_id)` },
+  { name: 'A90 sd_customer_interactions.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_customer_interactions_tenant_id ON sd_customer_interactions(tenant_id)` },
+  { name: 'A90 sd_order_departments.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_order_departments_tenant_id ON sd_order_departments(tenant_id)` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA T11-08, 2026-06-26): SD soft-delete audit ustunlar.
+  // Manba: docs/MASTER_DATA_STANDARTLARI.md §3 Qoida M-2 (soft delete MAJBURIY) + M-3 (deleted_at/deleted_by audit).
+  // ⭐ NEGA: SD master/transaksiya data (mijoz aloqalari, shartnomalar, kotirovka satrlari,
+  //   buyurtma tarixi) HECH QACHON hard-DELETE qilinmaydi — boshqa satrlar/transaksiyalar unga
+  //   FK bilan havola qiladi (M-2). O'chirish = deleted_at = NOW() + deleted_by = user_id;
+  //   faol satr = deleted_at IS NULL. A89 master-data soft-delete naqshining SD-moduliga davomi
+  //   (sd_customers A89'da; material_cards allaqachon ikkala ustunga ega).
+  // SCOPE = A90 tenant_id rollout'ida isbotlangan view-xavfsiz SD BASE jadval ro'yxati, minus
+  //   sd_customers (A89'da bajarilgan) va sd_advance_idempotency_keys (idempotentlik-kalit ombori,
+  //   biznes-data emas → soft-delete semantik mos emas). 7 sd_* VIEW (sd_sales_orders/sd_quotations/
+  //   sd_payments/sd_invoices/sd_customer_documents/sd_customer_complaints/sd_customer_competitors)
+  //   AVTOMATIK CHIQARILGAN — ALTER TABLE viewda ishlamaydi.
+  // Tip = TIMESTAMP (drift-fayl deleted_at naqshiga mos: A89/sales_orders/crm_*) + INTEGER (deleted_by,
+  //   A89 naqshi — FK YO'Q, boot-tartib bog'lanmasligi uchun, created_by/updated_by additiv naqshi kabi).
+  // Additiv, IF NOT EXISTS — DATA yozilmaydi (NULL = faol). ALTER TABLE IF EXISTS — xavfsiz.
+  // DB-proof (T11-08): 12 sd_* base jadval × 2 ustun → yo'qdan bor → 0 ta data o'zgarmadi.
+  { name: 'A93 sd_contacts.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contacts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_contacts.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contacts ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_contracts.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contracts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_contracts.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contracts ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_customer_contacts.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_customer_contacts.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_customer_interactions.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_interactions ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_customer_interactions.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_interactions ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_lead_activities.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_lead_activities ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_lead_activities.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_lead_activities ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_manager_quotas.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_manager_quotas ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_manager_quotas.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_manager_quotas ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_order_departments.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_departments ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_order_departments.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_departments ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_order_timeline.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_timeline ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_order_timeline.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_timeline ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_price_formulas.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_price_formulas ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_price_formulas.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_price_formulas ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_quotation_items.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_quotation_items ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_quotation_items.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_quotation_items ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_rentals.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_rentals ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_rentals.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_rentals ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_storage_fees.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_storage_fees ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_storage_fees.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_storage_fees ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  // Faol-satr partial indekslar (soft-delete filtri WHERE deleted_at IS NULL — yuqori-kardinallik jadvallar):
+  { name: 'A93 sd_contacts active idx', sql: `CREATE INDEX IF NOT EXISTS idx_sd_contacts_active ON sd_contacts (id) WHERE deleted_at IS NULL` },
+  { name: 'A93 sd_contracts active idx', sql: `CREATE INDEX IF NOT EXISTS idx_sd_contracts_active ON sd_contracts (id) WHERE deleted_at IS NULL` },
+  { name: 'A93 sd_quotation_items active idx', sql: `CREATE INDEX IF NOT EXISTS idx_sd_quotation_items_active ON sd_quotation_items (id) WHERE deleted_at IS NULL` },
+  { name: 'A93 sd_order_timeline active idx', sql: `CREATE INDEX IF NOT EXISTS idx_sd_order_timeline_active ON sd_order_timeline (id) WHERE deleted_at IS NULL` },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // A97 — Director 5-metric company-state ("holat") formula data layer.
+  // APPROVED: Claude (egasi vakolati) 2026-06-25. Boot auto-apply of the P29
+  // state-engine master-data that backs CompanyStateService.getCurrent() and
+  // GET /api/company-state/{current,thresholds}. Previously these tables lived
+  // ONLY as a standalone .sql (p29-state-engine-tables.sql) applied by hand —
+  // a fresh boot left the formula's data layer absent → 500/empty. Registering
+  // them here (idempotent CREATE TABLE IF NOT EXISTS + ON CONFLICT DO NOTHING)
+  // makes the 5-metric holat formula self-sufficient on every boot.
+  // The 25 state_thresholds bands (weights sum to 1.000) + 5 levels are
+  // configurable master-data (owner-tunable via PATCH /company-state/thresholds);
+  // band VALUES (cash_flow so'm cut-offs etc.) are owner-data, not fabricated math.
+  // Mirrors apps/api/src/shared/db/migrations/p29-state-engine-tables.sql exactly.
+  { name: 'A97 company_state_levels CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS company_state_levels (
+        id        SERIAL PRIMARY KEY,
+        code      VARCHAR(20) UNIQUE NOT NULL,
+        label_uz  TEXT NOT NULL,
+        label_ru  TEXT NOT NULL,
+        color_hex VARCHAR(7) NOT NULL,
+        rank      INTEGER NOT NULL
+      )
+    ` },
+  { name: 'A97 company_state_levels SEED', sql: `
+      INSERT INTO company_state_levels (code, label_uz, label_ru, color_hex, rank)
+      VALUES
+        ('OSISH',   'O''SISH',  'РОСТ',       '#10B981', 5),
+        ('NORMAL',  'NORMAL',   'НОРМА',      '#3B82F6', 4),
+        ('EHTIYOT', 'EHTIYOT',  'ОСТОРОЖНО',  '#F59E0B', 3),
+        ('XAVF',    'XAVF',     'РИСК',       '#F97316', 2),
+        ('INQIROZ', 'INQIROZ',  'КРИЗИС',     '#EF4444', 1)
+      ON CONFLICT (code) DO NOTHING
+    ` },
+  { name: 'A97 state_thresholds CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS state_thresholds (
+        id         SERIAL PRIMARY KEY,
+        metric_key VARCHAR(50) NOT NULL,
+        level_code VARCHAR(20) NOT NULL REFERENCES company_state_levels(code) ON DELETE CASCADE,
+        min_value  NUMERIC(14,4),
+        max_value  NUMERIC(14,4),
+        weight     NUMERIC(4,3) NOT NULL DEFAULT 0.2,
+        CONSTRAINT state_thresholds_metric_chk
+          CHECK (metric_key IN ('cash_flow','production_plan','orders','hr','quality')),
+        CONSTRAINT state_thresholds_metric_level_uq UNIQUE (metric_key, level_code)
+      )
+    ` },
+  { name: 'A97 state_thresholds SEED', sql: `
+      INSERT INTO state_thresholds (metric_key, level_code, min_value, max_value, weight)
+      VALUES
+        ('cash_flow','OSISH',   180000000, NULL,      0.25),
+        ('cash_flow','NORMAL',  130000000, 179999999, 0.25),
+        ('cash_flow','EHTIYOT',  80000000, 129999999, 0.25),
+        ('cash_flow','XAVF',     30000000,  79999999, 0.25),
+        ('cash_flow','INQIROZ',       NULL,  29999999, 0.25),
+        ('production_plan','OSISH',   90, 100, 0.25),
+        ('production_plan','NORMAL',  75,  89, 0.25),
+        ('production_plan','EHTIYOT', 55,  74, 0.25),
+        ('production_plan','XAVF',    35,  54, 0.25),
+        ('production_plan','INQIROZ', NULL, 34, 0.25),
+        ('orders','OSISH',   90, 100, 0.20),
+        ('orders','NORMAL',  75,  89, 0.20),
+        ('orders','EHTIYOT', 55,  74, 0.20),
+        ('orders','XAVF',    35,  54, 0.20),
+        ('orders','INQIROZ', NULL, 34, 0.20),
+        ('hr','OSISH',   95, 100, 0.15),
+        ('hr','NORMAL',  87,  94, 0.15),
+        ('hr','EHTIYOT', 75,  86, 0.15),
+        ('hr','XAVF',    60,  74, 0.15),
+        ('hr','INQIROZ', NULL, 59, 0.15),
+        ('quality','OSISH',   95, 100, 0.15),
+        ('quality','NORMAL',  87,  94, 0.15),
+        ('quality','EHTIYOT', 75,  86, 0.15),
+        ('quality','XAVF',    60,  74, 0.15),
+        ('quality','INQIROZ', NULL, 59, 0.15)
+      ON CONFLICT (metric_key, level_code) DO NOTHING
+    ` },
+  { name: 'A97 company_state_log CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS company_state_log (
+        id          SERIAL PRIMARY KEY,
+        state_code  VARCHAR(20) NOT NULL,
+        kpis        JSONB NOT NULL,
+        score_total NUMERIC(5,2),
+        detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      )
+    ` },
+  { name: 'A97 company_state_log detected_at INDEX', sql: `CREATE INDEX IF NOT EXISTS company_state_log_detected_at_idx ON company_state_log (detected_at DESC)` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA T8-01, 2026-06-26): sales_orders kim-yaratdi karta-bog'lanishi.
+  // ⭐ MUAMMO: jonli sales_orders.created_by = UUID (Drizzle sxema varchar deydi, repo Number() ga cast
+  //   qiladi — uch tomonlama drift) va users(id)=INTEGER ga FK qo'yib bo'lmaydi (tur ziddiyati). Bu ustun
+  //   uzilgan: golden-thread auditda buyurtmani qaysi xodim (login=birlamchi karta) yaratgani bog'lanmagan.
+  // ⭐ YECHIM (ADDITIV, DATA YO'QOTMASDAN): yangi created_by_user_id INTEGER FK -> users(id) ON DELETE SET NULL.
+  //   Eski created_by (UUID) ustuni TEGILMAYDI (DROP yo'q — destruktiv emas). Jonli DB'da created_by 100% NULL
+  //   (13 satr, 0 non-null) => backfill mumkin emas/kerak emas; FABRIKATSIYA YO'Q (Q-40) — yangi ustun NULL
+  //   bilan tug'iladi, kelgusi yozuvchilar (drizzle-sales-order.repo) auth user.id dan to'ldiradi.
+  //   FK NO ACTION emas SET NULL — users o'chsa buyurtma qolsin (audit-bog'lanish yumshoq).
+  { name: 'T8-01 sales_orders.created_by_user_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sales_orders ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER` },
+  { name: 'T8-01 sales_orders.created_by_user_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_sales_orders_created_by_user_id ON sales_orders (created_by_user_id) WHERE created_by_user_id IS NOT NULL` },
+  { name: 'T8-01 sales_orders.created_by_user_id FK -> users', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_sales_orders_created_by_user_id') THEN ALTER TABLE sales_orders ADD CONSTRAINT fk_sales_orders_created_by_user_id FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL; END IF; END $$` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA T8-03, 2026-06-26): logout token-blacklist tuzatish.
+  // ⭐ MUAMMO: logout `blacklistToken` jonli `refresh_tokens` jadvaliga YOZMASDI (jim no-op) — 3 sabab:
+  //   (1) `sub` JWT-da NUMBER (JwtPayload.sub:number), eski kod faqat string qabul qilardi → null → early-return;
+  //   (2) `user_id` ustuni UUID NOT NULL, lekin auth user.id INTEGER → insert tur-ziddiyatda yiqilardi;
+  //   (3) `ON CONFLICT (jti)` PARTIAL unique index'ga (idx_refresh_tokens_jti WHERE jti IS NOT NULL) mos
+  //       predikatsiz → arbiter inference XATO → insert otib, catch jim yutib yuborardi.
+  //   Natija: logout'dan keyin access-token HAMON yaroqli edi (blacklist bo'sh), refresh-token revoke yo'q edi.
+  // ⭐ YECHIM (ADDITIV, DATA YO'QOTMASDAN): kod ON CONFLICT predikatini to'g'rilaydi + `sub` number qabul qiladi.
+  //   DB: user_id UUID NOT NULL → NULLABLE (FK YO'Q, default YO'Q, jadval bo'sh; lookup jti/token orqali —
+  //   user_id baribir o'qilmaydi). Yangi user_id_text (INTEGER user.id matn ko'rinishi) audit uchun —
+  //   FABRIKATSIYA YO'Q (Q-40): haqiqiy user.id yoziladi, soxta UUID O'YLAB topilmaydi.
+  { name: 'T8-03 refresh_tokens.user_id DROP NOT NULL', sql: `ALTER TABLE IF EXISTS refresh_tokens ALTER COLUMN user_id DROP NOT NULL` },
+  { name: 'T8-03 refresh_tokens.user_id_text ADD COLUMN', sql: `ALTER TABLE IF EXISTS refresh_tokens ADD COLUMN IF NOT EXISTS user_id_text TEXT` },
+  // id UUID NOT NULL, DB-default YO'Q edi (Drizzle $defaultFn faqat app-code) → blacklist insert
+  // har doim "id NOT NULL" da yiqilardi. DB-default qo'shamiz (defense-in-depth; kod ham beradi).
+  { name: 'T8-03 refresh_tokens.id SET DEFAULT gen_random_uuid', sql: `ALTER TABLE IF EXISTS refresh_tokens ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA T8-06, 2026-06-26): WMS manzil-struktura FK-zanjiri Zona→Qator→Javon→Yacheyka.
+  // ⭐ MUAMMO (JONLI): ombor manzili FK-zanjir EMAS. Bor: warehouse_zones (Zona, 9 qator, int PK) → warehouse_bins
+  //   (Yacheyka-leaf, 126 qator, int PK). Oraliq pog'onalar (Qator/Javon) warehouse_bins ichida `row`/`shelf`/`level`
+  //   bo'sh varchar matn (FK YO'Q, lug'at YO'Q, izchillik YO'Q). Zanjir struktura sifatida mavjud emas.
+  // ⭐ YECHIM (ADDITIV, DATA YO'QOTMASDAN): 2 ta yangi lug'at-jadval (Qator=warehouse_rows, Javon=warehouse_shelves)
+  //   + warehouse_bins ga 2 ta yangi FK ustun (row_id, shelf_id). Yangi jadvallar BO'SH → FK toza. Mavjud bin
+  //   qatorlari row_id/shelf_id = NULL bilan tug'iladi (FK NULL'ga ruxsat) → 1 ham qator BUZILMAYDI, FABRIKATSIYA
+  //   YO'Q (Q-40): qiymat o'ylab topilmaydi, kelgusi yozuvchi (WMS UI/import) to'ldiradi.
+  //   To'liq zanjir: warehouse_zones(Zona) → warehouse_rows(Qator).zone_id → warehouse_shelves(Javon).row_id
+  //   → warehouse_bins(Yacheyka).shelf_id. Eski `row`/`shelf`/`level` varchar ustunlar TEGILMAYDI (DROP yo'q).
+  //   ⚠️ DESTRUKTIV EMAS: legacy ustunlar (warehouse_zones.warehouse_id, warehouse_bins.warehouse_id/zone_id) ga
+  //   hard-FK qo'shish JONLI iflos data sababli BLOK (zones 1/9, bins.warehouse_id 60/126, bins.zone_id 54/126
+  //   orphan) — bu egasi-DATA tozalash qarori, alohida gated .sql (wms-address-legacy-fk.sql) bilan USHLANGAN.
+  { name: 'T8-06 warehouse_rows CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS warehouse_rows (id SERIAL PRIMARY KEY, zone_id INTEGER NOT NULL REFERENCES warehouse_zones(id) ON DELETE CASCADE, warehouse_id INTEGER, code VARCHAR(50) NOT NULL, name TEXT, name_ru TEXT, sort_order INTEGER NOT NULL DEFAULT 0, capacity NUMERIC, is_active BOOLEAN NOT NULL DEFAULT true, deleted_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'T8-06 warehouse_rows zone_code unique idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_warehouse_rows_zone_code ON warehouse_rows (zone_id, code) WHERE deleted_at IS NULL` },
+  { name: 'T8-06 warehouse_rows zone_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_rows_zone ON warehouse_rows (zone_id)` },
+
+  { name: 'T8-06 warehouse_shelves CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS warehouse_shelves (id SERIAL PRIMARY KEY, row_id INTEGER NOT NULL REFERENCES warehouse_rows(id) ON DELETE CASCADE, zone_id INTEGER, warehouse_id INTEGER, code VARCHAR(50) NOT NULL, name TEXT, name_ru TEXT, sort_order INTEGER NOT NULL DEFAULT 0, max_weight NUMERIC, max_volume NUMERIC, is_active BOOLEAN NOT NULL DEFAULT true, deleted_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'T8-06 warehouse_shelves row_code unique idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_warehouse_shelves_row_code ON warehouse_shelves (row_id, code) WHERE deleted_at IS NULL` },
+  { name: 'T8-06 warehouse_shelves row_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_shelves_row ON warehouse_shelves (row_id)` },
+
+  // warehouse_bins (Yacheyka = leaf) ga FK ustunlar — mavjud qatorlar NULL (FK toza), kelgusi yozuvchi to'ldiradi.
+  { name: 'T8-06 warehouse_bins.row_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_bins ADD COLUMN IF NOT EXISTS row_id INTEGER` },
+  { name: 'T8-06 warehouse_bins.shelf_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_bins ADD COLUMN IF NOT EXISTS shelf_id INTEGER` },
+  { name: 'T8-06 warehouse_bins.row_id FK -> warehouse_rows', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_warehouse_bins_row_id') THEN ALTER TABLE warehouse_bins ADD CONSTRAINT fk_warehouse_bins_row_id FOREIGN KEY (row_id) REFERENCES warehouse_rows(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'T8-06 warehouse_bins.shelf_id FK -> warehouse_shelves', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_warehouse_bins_shelf_id') THEN ALTER TABLE warehouse_bins ADD CONSTRAINT fk_warehouse_bins_shelf_id FOREIGN KEY (shelf_id) REFERENCES warehouse_shelves(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'T8-06 warehouse_bins.row_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_bins_row_id ON warehouse_bins (row_id) WHERE row_id IS NOT NULL` },
+  { name: 'T8-06 warehouse_bins.shelf_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_bins_shelf_id ON warehouse_bins (shelf_id) WHERE shelf_id IS NOT NULL` },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // APPROVED (egasi vakolati, IJRO-REJA T8-09, 2026-06-26): QC master-data STRUKTURA.
+  // ⭐ MAQSAD: sifat-nazorati uchun 4 ta konfiguratsiya jadvali — har biri STRUKTURA
+  //   (ustun + CHECK + unique), QIYMAT esa EGASI-DATA. Q-40 FABRIKATSIYA TAQIQ: SOXTA
+  //   koeffitsient/og'irlik/narx/AQL O'YLAB topilmaydi — jadvallar BO'SH yaratiladi,
+  //   egasi master-data UI orqali to'ldiradi. Hech bir SEED (default qiymat) yo'q.
+  // ⭐ NEGA STRUKTURA: kod-tarafda mexanizm bor (GradePricingService koeffitsientni
+  //   chaqiruvchidan kutadi, qc-aql.constants ISO-jadvalni beradi) lekin DB-da master
+  //   jadval yo'q edi => egasi qiymatni biror joyda saqlay olmasdi. Bu jadvallar shu
+  //   bo'shliqni yopadi: STRUKTURA tayyor, qiymat kelganda hisob ishlaydi.
+  // Idempotent: CREATE TABLE IF NOT EXISTS + CREATE INDEX IF NOT EXISTS. SEED YO'Q.
+  // Drizzle ta'rif: apps/api/src/shared/db/schema-misc-qc.ts (4 yangi pgTable).
+
+  // (1) qc_defect_severity_weights — defekt-og'irligi: CRITICAL/MAJOR/MINOR → og'irlik
+  //     koeffitsienti (sifat-ball / DPMO og'irlashtirilgan hisob uchun). Og'irlik QIYMATI
+  //     egasi-data (masalan CRITICAL=10, MAJOR=3, MINOR=1 — lekin BU YERDA SOXTA YOZILMAYDI).
+  { name: 'T8-09 qc_defect_severity_weights CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS qc_defect_severity_weights (
+        id          SERIAL PRIMARY KEY,
+        severity    TEXT NOT NULL UNIQUE
+          CHECK (severity IN ('CRITICAL','MAJOR','MINOR')),
+        weight      NUMERIC(8,3) NOT NULL
+          CHECK (weight >= 0),
+        auto_reject BOOLEAN NOT NULL DEFAULT FALSE,
+        label_uz    TEXT,
+        label_ru    TEXT,
+        is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ` },
+
+  // (2) qc_grade_price_coefficients — sort/nav → narx koeffitsienti. GradePricingService
+  //     (graded_price = base_price × coefficient) shu jadvaldan koeffitsient o'qiydi.
+  //     QualityGrade taksonomiyasi (first/second/third/scrap) = STRUKTURA; koeffitsient =
+  //     egasi-data (1-sort=1.0, 2-sort=0.8 ... — SOXTA YOZILMAYDI).
+  { name: 'T8-09 qc_grade_price_coefficients CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS qc_grade_price_coefficients (
+        id          SERIAL PRIMARY KEY,
+        grade       TEXT NOT NULL UNIQUE
+          CHECK (grade IN ('first','second','third','scrap')),
+        coefficient NUMERIC(6,4) NOT NULL
+          CHECK (coefficient >= 0),
+        label_uz    TEXT,
+        label_ru    TEXT,
+        is_sellable BOOLEAN NOT NULL DEFAULT TRUE,
+        is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ` },
+
+  // (3) qc_certificate_templates — sifat sertifikati shabloni (sertifikat-template).
+  //     STRUKTURA: shablon meta + body matni (Mustache-uslub {{placeholder}}). Egasi
+  //     sertifikat matni/maydonlarini kiritadi; bu yerda SOXTA shablon yozilmaydi.
+  //     code unique = biznes-kalit; direction = qaysi yo'nalish uchun (universal/gofra/...).
+  { name: 'T8-09 qc_certificate_templates CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS qc_certificate_templates (
+        id            SERIAL PRIMARY KEY,
+        code          TEXT NOT NULL UNIQUE,
+        name_uz       TEXT NOT NULL,
+        name_ru       TEXT,
+        direction     TEXT NOT NULL DEFAULT 'universal'
+          CHECK (direction IN ('universal','gofra','offset','silkscreen','flexi')),
+        body_template TEXT,
+        fields        JSONB NOT NULL DEFAULT '[]'::jsonb,
+        validity_days INTEGER,
+        is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ` },
+  { name: 'T8-09 qc_certificate_templates direction idx', sql: `CREATE INDEX IF NOT EXISTS idx_qc_certificate_templates_direction ON qc_certificate_templates (direction)` },
+
+  // (4) qc_aql_config — AQL konfiguratsiya: material/yo'nalish bo'yicha AQL darajasi +
+  //     tekshiruv darajasini override qilish. qc-aql.constants.ts ISO 2859-1 jadvalini
+  //     (STRUKTURA) beradi; bu jadval egasiga "qaysi mahsulot/yo'nalish uchun qaysi AQL"
+  //     ni TANLASH imkonini beradi. AQL standart qiymatlari (2.5 default EP-QC-003) =
+  //     egasi-qarori; bu yerda majburiy SOXTA satr yozilmaydi (jadval bo'sh tug'iladi).
+  //     aql_value CHECK = ISO 2859-1 da mavjud AQL darajalari (struktura cheklovi).
+  { name: 'T8-09 qc_aql_config CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS qc_aql_config (
+        id               SERIAL PRIMARY KEY,
+        scope            TEXT NOT NULL DEFAULT 'global'
+          CHECK (scope IN ('global','direction','material','product')),
+        scope_ref        TEXT,
+        direction        TEXT
+          CHECK (direction IS NULL OR direction IN ('universal','gofra','offset','silkscreen','flexi')),
+        aql_value        NUMERIC(4,2) NOT NULL
+          CHECK (aql_value IN (0.65, 1.0, 1.5, 2.5, 4.0, 6.5)),
+        inspection_level TEXT NOT NULL DEFAULT 'II'
+          CHECK (inspection_level IN ('I','II','III')),
+        notes            TEXT,
+        is_active        BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ` },
+  { name: 'T8-09 qc_aql_config scope idx', sql: `CREATE INDEX IF NOT EXISTS idx_qc_aql_config_scope ON qc_aql_config (scope, scope_ref)` },
+  { name: 'T8-09 qc_aql_config active-global unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_qc_aql_config_global ON qc_aql_config (scope) WHERE scope = 'global' AND is_active = TRUE` },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // T10-03 — card_templates: lavozim-turi (position-type) KARTA shabloni.
+  //   Bir shablon = bir lavozim-turi uchun standart KARTA-maydon qiymatlari
+  //   (`field_defaults` JSONB) — yangi org_functions kartasini tezda urug'lash uchun.
+  //   STRUKTURA additiv (APPROVED: Claude, egasi-vakolati 2026-06-25; karta-markaz vizyoni).
+  //   ⭐ Shablon-QIYMATLARI (qaysi lavozim-turi qaysi razryad/oylik/ЦКП oladi) = EGASI-DATA →
+  //   jadval BO'SH tug'iladi; bu yerda SOXTA standart-satr yozilmaydi (Q-40 fabrikatsiya-taqiq).
+  //   field_defaults kalitlari card.controller CardCreateSchema bilan moslashadi
+  //   (positionName/razryadLevelId/salaryType/minSalary/maxSalary/rbacTier/tskp/... ixtiyoriy).
+  { name: 'T10-03 card_templates CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS card_templates (
+        id              SERIAL PRIMARY KEY,
+        position_type   TEXT NOT NULL,
+        name            TEXT NOT NULL,
+        name_ru         TEXT,
+        description     TEXT,
+        field_defaults  JSONB NOT NULL DEFAULT '{}'::jsonb,
+        is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+        created_by      INTEGER,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        deleted_at      TIMESTAMPTZ
+      )
+    ` },
+  { name: 'T10-03 card_templates position_type idx', sql: `CREATE INDEX IF NOT EXISTS idx_card_templates_position_type ON card_templates (position_type)` },
+  { name: 'T10-03 card_templates active position_type unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_card_templates_position_type_active ON card_templates (position_type) WHERE is_active = TRUE AND deleted_at IS NULL` },
+
+  // T10-08 — error_catalog: XATO-KATALOG (tipik xatolar/nuqson sabablari ro'yxati).
+  //   Tezkor nuqson-tasnif manbai (defect-dropdown): kunlik-hisobot / ЦКП-fakt / IoT-tablet
+  //   formasida "Nima xato/sabab bo'ldi?" tanlanadi → strukturalangan kategoriya (statistika).
+  //   Vizyon: EP-ORG-097 (VIZYON-MASTER-REJA: "Xato-katalogi (mishalar)" + P1/P2 bo'shliq).
+  //   Karta-bog'lanish IXTIYORIY: card_id NULL = umumiy (admin-seed 10-15 generic), NOT NULL =
+  //   o'sha kartaga xos xato. category = defect-guruh (sifat/deadline/material/qayta-ishlash/...).
+  //   STRUKTURA additiv (APPROVED: Claude, egasi-vakolati 2026-06-26; karta-markaz vizyoni EP-ORG-097).
+  //   ⭐ JADVAL BO'SH tug'iladi — bu yerda SOXTA xato-satr yozilmaydi (Q-40 fabrikatsiya-taqiq);
+  //   real xato-ro'yxati (qaysi kartaga qaysi tipik xato) = EGASI/HR-DATA, UI orqali kiritiladi.
+  { name: 'T10-08 error_catalog CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS error_catalog (
+        id            SERIAL PRIMARY KEY,
+        card_id       INTEGER,
+        code          TEXT,
+        name          TEXT NOT NULL,
+        name_ru       TEXT,
+        category      TEXT,
+        severity      TEXT,
+        description   TEXT,
+        sort_order    INTEGER NOT NULL DEFAULT 0,
+        is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+        created_by    INTEGER,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        deleted_at    TIMESTAMPTZ
+      )
+    ` },
+  { name: 'T10-08 error_catalog card_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_error_catalog_card_id ON error_catalog (card_id)` },
+  { name: 'T10-08 error_catalog category idx', sql: `CREATE INDEX IF NOT EXISTS idx_error_catalog_category ON error_catalog (category)` },
+  { name: 'T10-08 error_catalog active code unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_error_catalog_code_active ON error_catalog (code) WHERE code IS NOT NULL AND is_active = TRUE AND deleted_at IS NULL` },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // T10-16 — org_departments DARAXT TSIKL-QO'RIQCHISI (cycle-guard trigger).
+  //   APPROVED: Claude (egasi-vakolati 2026-06-26; karta-markaz org-daraxt yaxlitligi).
+  // ⭐ MUAMMO: org_departments = yagona KARTA-daraxt (parent_id self-ref, 145 qator).
+  //   parent_id BUS-logikasi (org-mutations.repo moveCard/updateCard) DB-darajada
+  //   tsikldan HIMOYALANMAGAN edi: A→B→A yoki A→A (self-parent) yozilsa daraxt buziladi —
+  //   rekursiv obxod (getDescendants/manager-treewalk, _of_to_od_crosswalk, vertikal
+  //   manager_id zanjiri) cheksiz loop'ga tushadi yoki noto'g'ri ierarxiya beradi.
+  // ⭐ YECHIM (ADDITIV, DATA YO'QOTMASDAN): BEFORE INSERT/UPDATE OF parent_id trigger.
+  //   (a) self-parent (NEW.parent_id = NEW.id) → 23514 (check_violation) RAD.
+  //   (b) ajdod-loop: NEW.parent_id'dan parent zanjiri bo'ylab YUQORIGA yurib, NEW.id'ga
+  //       qaytib kelsa (yoki visited takrorlansa) → tsikl, RAD. Rekursiya 200 pog'ona bilan
+  //       cheklangan (jonli maks chuqurlik ~6 Vysotskiy L0-L5; 200 = xavfsiz tom).
+  //   fn_bom_cycle_check (bom_items) + A23 one-seat-per-position bilan bir xil naqsh
+  //   (CREATE OR REPLACE FUNCTION + DROP TRIGGER IF EXISTS → idempotent, qayta-bootga xavfsiz).
+  // ⭐ JONLI DATA BUZMAYDI: tekshiruv FAQAT yangi/o'zgargan parent_id'ga (BEFORE) — mavjud
+  //   145 qatorda 0 self-parent + 0 tsikl-qirra (T10-16 inspect tasdiq) → trigger qo'yilishi
+  //   eski qatorlarni tegmaydi; FAQAT kelgusi tsikl-yozuv RAD bo'ladi (defence-in-depth).
+  // Rollback-tx proof (T10-16): self-parent INSERT/UPDATE → RAD(23514) · 2-bo'g'in loop
+  //   (A.parent=B, B.parent=A) UPDATE → RAD · qonuniy parent o'zgartirish → OK · parent_id
+  //   NULL'ga (root) → OK · ildiz-zanjir tegilmagan UPDATE (boshqa ustun) → OK.
+  { name: 'T10-16 org_departments cycle-guard fn', sql: `CREATE OR REPLACE FUNCTION enforce_org_departments_no_cycle() RETURNS trigger AS $fn$
+DECLARE
+  v_cur     int;
+  v_depth   int := 0;
+BEGIN
+  -- parent_id NULL (ildiz) yoki o'zgarmagan bo'lsa tekshiruvga hojat yo'q.
+  IF NEW.parent_id IS NULL THEN RETURN NEW; END IF;
+  -- (a) self-parent
+  IF NEW.parent_id = NEW.id THEN
+    RAISE EXCEPTION 'EP_ORG_TREE: karta % o''ziga ota bo''la olmaydi (self-parent)', NEW.id
+      USING ERRCODE = '23514';
+  END IF;
+  -- (b) ajdod-loop: NEW.parent_id'dan yuqoriga yurib NEW.id'ga qaytsak — tsikl.
+  v_cur := NEW.parent_id;
+  WHILE v_cur IS NOT NULL LOOP
+    IF v_cur = NEW.id THEN
+      RAISE EXCEPTION 'EP_ORG_TREE: parent_id=% karta %da tsikl hosil qiladi', NEW.parent_id, NEW.id
+        USING ERRCODE = '23514';
+    END IF;
+    v_depth := v_depth + 1;
+    IF v_depth > 200 THEN
+      RAISE EXCEPTION 'EP_ORG_TREE: ota-zanjiri 200 pog''onadan oshdi (buzilgan daraxt), karta %', NEW.id
+        USING ERRCODE = '23514';
+    END IF;
+    SELECT parent_id INTO v_cur FROM org_departments WHERE id = v_cur;
+  END LOOP;
+  RETURN NEW;
+END;
+$fn$ LANGUAGE plpgsql` },
+  { name: 'T10-16 org_departments cycle-guard trigger', sql: `DO $$ BEGIN
+    DROP TRIGGER IF EXISTS trg_org_departments_no_cycle ON org_departments;
+    CREATE TRIGGER trg_org_departments_no_cycle
+      BEFORE INSERT OR UPDATE OF parent_id ON org_departments
+      FOR EACH ROW EXECUTE FUNCTION enforce_org_departments_no_cycle();
+  END $$` },
+
+  // ===== T11-06: QC REWORK link + cost tracking (APPROVED — additive) =====
+  // qc_final_inspections.result='rework' uchun: parent_order_id (qaysi papka_orders qayta ishlanmoqda)
+  // + rework_cost (qayta ishlash narxi). Ikkalasi NULLABLE — faqat rework holatida to'ldiriladi.
+  // papka_orders.id JONLI=integer (Drizzle varchar drift), shuning uchun parent_order_id=INTEGER
+  // (mavjud papka_order_id ham integer). Bo'sh jadval (0/0 qator) → FK toza qo'shiladi.
+  { name: 'T11-06 qc_final_inspections.parent_order_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_final_inspections ADD COLUMN IF NOT EXISTS parent_order_id INTEGER` },
+  { name: 'T11-06 qc_final_inspections.rework_cost ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_final_inspections ADD COLUMN IF NOT EXISTS rework_cost NUMERIC(14,2)` },
+  { name: 'T11-06 qc_final_inspections.parent_order_id FK -> papka_orders', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_qc_final_inspections_parent_order_id') THEN ALTER TABLE qc_final_inspections ADD CONSTRAINT fk_qc_final_inspections_parent_order_id FOREIGN KEY (parent_order_id) REFERENCES papka_orders(id) ON DELETE SET NULL; END IF; END $$` },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // T21-A2-QC — Gap #18 (sort/nav narx-koeffitsienti) + Gap #19 (sertifikat PDF raqami).
+  //   APPROVED: egasi "hamma vizyon" 2026-06-26. Hammasi ADDITIV + idempotent.
+  // ───────────────────────────────────────────────────────────────────────────
+  // (A) qc_inspections / qc_final_inspections → sort_grade ustun (mahsulot navi).
+  //   NAV taksonomiyasi = STRUKTURA (GradePricingService.QualityGrade bilan bir xil):
+  //     first | second | third | scrap.  NULLABLE: faqat sifat-saralash bo'lganda
+  //     to'ldiriladi (eski qatorlar NULL = saralanmagan). CHECK = struktura cheklovi.
+  //   ⭐ Bu yerda SOXTA nav-qiymat yozilmaydi (Q-40): faqat ustun + CHECK qo'shiladi.
+  { name: 'T21-A2 qc_inspections.sort_grade ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS sort_grade TEXT` },
+  { name: 'T21-A2 qc_inspections.sort_grade CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_qc_inspections_sort_grade') THEN ALTER TABLE qc_inspections ADD CONSTRAINT chk_qc_inspections_sort_grade CHECK (sort_grade IS NULL OR sort_grade IN ('first','second','third','scrap')); END IF; END $$` },
+  { name: 'T21-A2 qc_final_inspections.sort_grade ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_final_inspections ADD COLUMN IF NOT EXISTS sort_grade TEXT` },
+  { name: 'T21-A2 qc_final_inspections.sort_grade CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_qc_final_inspections_sort_grade') THEN ALTER TABLE qc_final_inspections ADD CONSTRAINT chk_qc_final_inspections_sort_grade CHECK (sort_grade IS NULL OR sort_grade IN ('first','second','third','scrap')); END IF; END $$` },
+
+  // (B) qc_sort_price_config — task-named "nav → narx koeffitsienti" konfiguratsiyasi.
+  //   ⭐ KANONIK manba = qc_grade_price_coefficients (T8-09, allaqachon mavjud: GradePricingService
+  //   shundan o'qiydi). DUPLIKAT JADVAL YO'Q (Q-46): qc_sort_price_config = shu jadval ustidan
+  //   nomli VIEW (grade, coefficient, is_sellable, ...). Shunday qilib ikkala nom ham bitta
+  //   data-manbaga ishora qiladi — saqlash bir joyda, o'qish ikkala nom bilan.
+  { name: 'T21-A2 qc_sort_price_config VIEW (over qc_grade_price_coefficients)', sql: `CREATE OR REPLACE VIEW qc_sort_price_config AS
+    SELECT id, grade, coefficient, label_uz, label_ru, is_sellable, is_active, created_at, updated_at
+    FROM qc_grade_price_coefficients` },
+
+  // (C) Default nav-koeffitsient SEED (egasi-override). Task talab: 1-sort=1.0, 2-sort=0.75,
+  //   3-sort=0.5, brak=0.0. ON CONFLICT DO NOTHING => egasi UI'da o'zgartirgan qiymatni
+  //   HECH QACHON ustiga yozmaydi (faqat jadval BO'SH bo'lsa default o'rnatadi). Bu Q-40 bilan
+  //   mos: default = sanoat-standart boshlang'ich qiymat (1-sort=to'liq narx), egasi istalgan
+  //   vaqtda master-data UI orqali override qiladi (ON CONFLICT yangilanishni bloklaydi).
+  { name: 'T21-A2 qc_grade_price_coefficients default seed', sql: `INSERT INTO qc_grade_price_coefficients (grade, coefficient, label_uz, label_ru, is_sellable, is_active)
+    VALUES
+      ('first',  1.0000, '1-sort (oliy nav)',  '1-sort', TRUE,  TRUE),
+      ('second', 0.7500, '2-sort',             '2-sort', TRUE,  TRUE),
+      ('third',  0.5000, '3-sort',             '3-sort', TRUE,  TRUE),
+      ('scrap',  0.0000, 'Brak',               'Брак',   FALSE, TRUE)
+    ON CONFLICT (grade) DO NOTHING` },
+
+  // (D) qc_certificate_seq — sertifikat raqami SF-2026-NNNNN uchun ketma-ket sekvensiya.
+  //   PostgreSQL SEQUENCE = atomar+konkurent-xavfsiz raqam manbai (NNNNN = 5-xona, nextval).
+  //   Yil prefiks (SF-<YYYY>-) servis tomonidan qo'shiladi; sekvens butun yil davom etadi.
+  { name: 'T21-A2 qc_certificate_seq CREATE SEQUENCE', sql: `CREATE SEQUENCE IF NOT EXISTS qc_certificate_seq START WITH 1 INCREMENT BY 1 MINVALUE 1 NO MAXVALUE CACHE 1` },
+
+  // APPROVED: egasi-intervyu qazish 2026-07-03, manba docs/audit/decisions/01-org-kartalar.md:106-111
+  // (EP-ORG-014, Holat: JAVOBLANGAN — "Har kartada GSD: maqsad + birlik + chastota majburiy").
+  // Kanonik karta = org_departments (node=karta, PHASE-00 re-point). Ustunlar tskp_target/
+  // tskp_measurement_unit/ckp_frequency ALLAQACHON mavjud (ADD COLUMN yuqorida) lekin 93/93
+  // 'position' kartada bo'sh — hozir hard NOT NULL qo'yish Q-39/Q-46 regressiya (mavjud
+  // kartalar buziladi). Shu sabab additiv: faqat COMMENT — ustun "majburiy GSD maydoni"
+  // ekanini hujjatlashtiradi; qat'iy NOT NULL egasi mavjud kartalarni to'ldirgach qo'yiladi.
+  { name: 'org_departments.tskp_target COMMENT EP-ORG-014', sql: `COMMENT ON COLUMN org_departments.tskp_target IS 'EP-ORG-014: GSD/ЦКП MAQSAD (majburiy — norma qiymati). Hozircha nullable: mavjud kartalar to''ldirilmagan (Q-39 regressiya-taqiq), egasi to''ldirgach NOT NULL qotiriladi.'` },
+  { name: 'org_departments.tskp_measurement_unit COMMENT EP-ORG-014', sql: `COMMENT ON COLUMN org_departments.tskp_measurement_unit IS 'EP-ORG-014: GSD/ЦКП BIRLIK (majburiy — masalan m², kg, dona). Hozircha nullable: mavjud kartalar to''ldirilmagan (Q-39 regressiya-taqiq), egasi to''ldirgach NOT NULL qotiriladi.'` },
+  { name: 'org_departments.ckp_frequency COMMENT EP-ORG-014', sql: `COMMENT ON COLUMN org_departments.ckp_frequency IS 'EP-ORG-014: GSD/ЦКП CHASTOTA (majburiy — kunlik/haftalik/oylik hisobot). Hozircha nullable: mavjud kartalar to''ldirilmagan (Q-39 regressiya-taqiq), egasi to''ldirgach NOT NULL qotiriladi.'` },
+
+  // APPROVED: egasi-intervyu qazish 2026-07-03, EP-ORG-018/EP-ORG-052
+  // (docs/audit/decisions/01-org-kartalar.md:134-139,376-381 — Holat: ✅ JAVOBLANGAN;
+  // qayta-tasdiq VIZYON-TASDIQ-2146-TOLIQ-2026-06-27.md:78-80 Q10). Egasi javobi so'zma-so'z:
+  // "16 soat ichida ЦКП yo'q → o'sha kun oylik yozilmaydi". Gate mexanizmi (ckp-gate.ts
+  // applyCkpGate) allaqachon TO'G'RI implementatsiya qilingan va parametrlangan
+  // (org_departments.ckp_report_deadline_hours soat-son sifatida o'qiladi) — bu SLICE
+  // faqat kanonik 16-soat qiymatini DEFAULT + mavjud NULL qatorlarga backfill qiladi.
+  // ⚠️ Buning oldida 144/145 karta NULL edi → applyCkpGate() NULL da deadlineAt=null
+  // qaytarib, darvozani doim OCHIQ qoldirar edi (fakt bo'lsa kifoya, deadline tekshirilmas
+  // edi) — bu vizyonga zid edi (Q-40: "ishlaydi ≠ to'g'ri"). Backfill faqat NULL qatorlarni
+  // to'ldiradi (1 karta allaqachon 24 soat bilan qo'lda sozlangan — egasi override,
+  // ON CONFLICT emas WHERE IS NULL bilan teginilmaydi, chunki bu ustunni UI orqali
+  // o'zgartirish mumkin — Q-46 ishlab turgan sozlamani ustidan yozmaymiz).
+  { name: 'org_departments.ckp_report_deadline_hours SET DEFAULT 16', sql: `ALTER TABLE org_departments ALTER COLUMN ckp_report_deadline_hours SET DEFAULT 16` },
+  { name: 'org_departments.ckp_report_deadline_hours backfill 16 (NULL only)', sql: `UPDATE org_departments SET ckp_report_deadline_hours = 16 WHERE ckp_report_deadline_hours IS NULL` },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 06-PP audit (SB0233/SB0234/SB0258, 2026-07-04) — production_orders karta-markazli
+  // ERP-ORG bilan bog'lanishi. APPROVED: additiv, egasi-vakolat (Q-34 toza-fix — jadval
+  // aniq/naqsh mavjud: work_centers.org_department_id bilan BIR XIL naqsh, faqat naqsh
+  // takrorlanmoqda). NULLABLE: hozircha avtomatik karta-tayinlash qoidasi yo'q
+  // (egasi-DATA) — create-vaqtida qiymat berilmasa NULL qoladi, hech narsa
+  // fabrikatsiya qilinmaydi (Q-40). Dry-run (rollback-tx) tasdiqlandi: valid FK insert OK,
+  // bad FK (999999) → 23503 RAD.
+  { name: 'SB0233 production_orders.org_department_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS production_orders ADD COLUMN IF NOT EXISTS org_department_id INTEGER` },
+  { name: 'SB0233 production_orders.org_department_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_production_orders_org_dept') THEN ALTER TABLE production_orders ADD CONSTRAINT fk_production_orders_org_dept FOREIGN KEY (org_department_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'SB0233 production_orders.org_department_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_production_orders_org_department_id ON production_orders (org_department_id)` },
+
+  // SB0241/SB0271/SB0261/SB0262 (06-PP audit) — production_orders_status_chk CHECK
+  // constraint ALLAQACHON Drizzle sxemasida e'lon qilingan (lib/db/src/schema/pp/pp-production.ts,
+  // EP-PP-082 9-status FSM) va aggregate/servis darajasida to'liq amalga oshirilgan
+  // (ProductionOrder aggregate PO_STATUS_TRANSITIONS + ProductionOrdersService.updateStatus
+  // choke-point) — LEKIN jonli DB'da constraint hech qachon qo'llanilmagan edi (drift).
+  // Bu yopiq FSM'ni DB darajasida ham qotiradi (defence-in-depth), aggregate bilan bir xil
+  // superset-qiymatlar. Jonli 7/7 qator (created/pending/planned/confirmed/released/
+  // released_to_production/in_progress/in_qc/qc_hold/completed/closed/cancelled/paused
+  // supersetiga) TEKSHIRILDI — barchasi mos (0 regressiya). Dry-run (rollback-tx): bogus
+  // status → 23514 RAD, live qatorlar hammasi OK.
+  { name: 'SB0241 production_orders_status_chk CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='production_orders_status_chk') THEN ALTER TABLE production_orders ADD CONSTRAINT production_orders_status_chk CHECK (status IN ('created','pending','planned','confirmed','released','released_to_production','in_progress','in_qc','qc_hold','completed','closed','cancelled','paused')); END IF; END $$` },
+
+  // MM-11 #11.44 -- "QQS to'lovchi" (VAT payer) bayrog'i. `mm_vendors` BAZA JADVAL EMAS --
+  // `vendors` ustidan oddiy VIEW (pg_get_viewdef bilan tasdiqlandi, 2026-07-11). Ustun asl
+  // `vendors` jadvaliga qo'shiladi, so'ng view uni ko'rsatishi uchun CREATE OR REPLACE VIEW
+  // bilan qayta e'lon qilinadi (bir xil ustun ro'yxati + yangi ustun -- Q-39 regressiyasiz).
+  // Default TRUE -- mavjud vendor qatorlari QQS to'lovchi deb hisoblanadi.
+  { name: 'MM-11 #11.44 vendors.is_vat_payer ADD COLUMN', sql: `ALTER TABLE vendors ADD COLUMN IF NOT EXISTS is_vat_payer boolean NOT NULL DEFAULT true` },
+  {
+    name: 'MM-11 #11.44 mm_vendors VIEW +is_vat_payer',
+    sql: `CREATE OR REPLACE VIEW mm_vendors AS
+      SELECT id, vendor_code, name, name_ru, address, phone, email, tax_id, payment_terms,
+             currency, is_active, created_at, deleted_at, tin, rating, code, contact_person,
+             is_vat_payer
+      FROM vendors`,
+  },
+
+  // 2026-08-04 P0 fix (HR-ORG discovery sweep): onboarding_tasks.org_function_id FK re-point
+  // org_functions -> org_departments (canonical karta table, PHASE-00/MASSIV-100). Same
+  // ID-space-mismatch bug the PHASE00 employee_cards/card_folders/org_node_portret entries
+  // above already fixed for their tables — this table was missed. `findTemplateTasksForCard`/
+  // `findRequiredDocumentTasksByCard` (drizzle-hr-onboarding.repo.ts) always compare
+  // org_function_id against a `cardId` that is an org_departments.id (every caller —
+  // OnboardingCardAssignedHandler, OnboardingDocumentGateService — documents this), but the
+  // live FK constrained the column to org_functions(id) — a disjoint id-range (org_functions
+  // 1..97 vs org_departments 19..166) that is now 0 rows post the 2026-07-11 full-company
+  // reset. Result: any future INSERT binding a task-template to a real card would be rejected
+  // by the FK (23503), and the template would never be findable by cardId. onboarding_tasks
+  // itself is 0 rows live (confirmed 2026-08-04) — pure structural FK re-point, no data to
+  // migrate/backfill. GUARDED+IDEMPOTENT (same shape as the PHASE00 entries above): only acts
+  // while the constraint still points at org_functions.
+  { name: 'onboarding_tasks.org_function_id FK -> org_departments', sql: `DO $$ BEGIN
+    IF (SELECT confrelid::regclass::text FROM pg_constraint WHERE conname='fk_onboarding_tasks_org_fn') = 'org_functions' THEN
+      ALTER TABLE onboarding_tasks DROP CONSTRAINT IF EXISTS fk_onboarding_tasks_org_fn;
+      ALTER TABLE onboarding_tasks ADD CONSTRAINT fk_onboarding_tasks_org_fn FOREIGN KEY (org_function_id) REFERENCES org_departments(id) ON DELETE SET NULL;
+    END IF;
+  END $$` },
+
+  // 2026-08-04 (HR-ORG discovery sweep, task #5): EP-ORG-064 (merge)/EP-ORG-065 (split) card
+  // endpoints. Tavsiya A recorded in docs/audit/decisions/01-org-kartalar.md:460-472 (status
+  // still OCHIQ -- final owner sign-off pending, implemented per the recorded recommendation
+  // so the endpoints exist and are DB-provable meanwhile; SCOPED, follows existing precedent —
+  // no new mechanism invented). Both are plain nullable self-FK columns on the canonical card
+  // table, mirroring the SB0233 production_orders.org_department_id FK pattern above.
+  // merged_into_id: stamped on the SECONDARY card when two cards merge (EP-ORG-064) — points at
+  // the surviving primary. split_from_id: stamped on each of the two brand-new cards created by
+  // a split (EP-ORG-065) — points back at the now-archived source ("havola bilan bog'lanadi").
+  { name: 'org_departments.merged_into_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS merged_into_id INTEGER` },
+  { name: 'org_departments.merged_into_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_org_departments_merged_into') THEN ALTER TABLE org_departments ADD CONSTRAINT fk_org_departments_merged_into FOREIGN KEY (merged_into_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'org_departments.merged_into_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_org_departments_merged_into_id ON org_departments (merged_into_id) WHERE merged_into_id IS NOT NULL` },
+  { name: 'org_departments.split_from_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS split_from_id INTEGER` },
+  { name: 'org_departments.split_from_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_org_departments_split_from') THEN ALTER TABLE org_departments ADD CONSTRAINT fk_org_departments_split_from FOREIGN KEY (split_from_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'org_departments.split_from_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_org_departments_split_from_id ON org_departments (split_from_id) WHERE split_from_id IS NOT NULL` },
 
 ];

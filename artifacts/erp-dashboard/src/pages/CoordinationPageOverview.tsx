@@ -161,7 +161,7 @@ export function OverviewSection({
               <div key={r.id} className="flex items-center gap-2 p-2 rounded-md bg-orange-50 hover:bg-orange-100/60 transition-colors">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{r.task}</p>
-                  <p className="text-[11px] text-muted-foreground">{r.to_user} · {shortDate(r.deadline)}</p>
+                  <p className="text-[11px] text-muted-foreground">{r.to_name ?? r.to_user} · {shortDate(r.deadline)}</p>
                 </div>
                 <RaspoStatusBadge status={r.status} />
               </div>

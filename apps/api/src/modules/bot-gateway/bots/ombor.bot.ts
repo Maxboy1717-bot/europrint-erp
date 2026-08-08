@@ -25,11 +25,22 @@ export class OmborBotService {
   }
 
   private async getLowStock(): Promise<BotReply> {
+    // Audit 2026-08-07: `warehouse_materials` jadvali BAZADA YO'Q (`to_regclass` -> null).
+    // `execSql` xatoni yutgani uchun bot har doim "Barcha materiallar yetarli" deb javob
+    // berardi — ya'ni past qoldiq bo'lsa ham yaxshi xabar aytardi (Q-40). Kanonik manba:
+    // `warehouse_stock` + `material_cards` (aynan `PosFifoService.getLowStockMaterials()`
+    // ishlatadigan juftlik).
     const rows = await execSql<{ name: string; qty: string; unit: string; min_qty: string }>(sql`
-      SELECT name, current_qty AS qty, unit, min_qty
-      FROM warehouse_materials
-      WHERE current_qty <= min_qty
-      ORDER BY (current_qty::float / NULLIF(min_qty,0)) ASC
+      SELECT COALESCE(mc.xom_ashyo, mc.kod)         AS name,
+             COALESCE(ws.available_quantity, 0)     AS qty,
+             COALESCE(mc.unit_of_measure, '')       AS unit,
+             COALESCE(mc.min_stock, 0)              AS min_qty
+      FROM warehouse_stock ws
+      JOIN material_cards mc ON mc.id = ws.material_id
+      WHERE COALESCE(ws.available_quantity, 0) <= COALESCE(mc.min_stock, 0)
+        AND COALESCE(mc.min_stock, 0) > 0
+        AND mc.is_active = true
+      ORDER BY (COALESCE(ws.available_quantity,0)::float / NULLIF(mc.min_stock,0)) ASC
       LIMIT 6
     `);
     if (!rows.length) return helpReply('✅ Barcha materiallar yetarli');

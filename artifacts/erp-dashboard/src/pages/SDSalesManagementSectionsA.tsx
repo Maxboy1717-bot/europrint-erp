@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Invoice, ForecastHistory, statusVariant, statusLabel } from "./SDSalesManagementTypes";
 import { useTranslation } from '@/lib/i18n';
+import { sdApi } from "@/lib/api/sd";
 
 // ---------------------------------------------------------------------------
 // InvoicesSection
@@ -89,6 +90,7 @@ export function InvoicesSection({
                   <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("summa")}</TableHead>
                   <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("tolangan")}</TableHead>
                   <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">PDF</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -104,6 +106,18 @@ export function InvoicesSection({
                       <Badge className={`${statusVariant[inv.status || ""] || "bg-muted/60 text-foreground"} rounded-full px-2.5 py-0.5 text-xs font-semibold border-none`}>
                         {statusLabel[inv.status || ""] || inv.status || "—"}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="py-3 px-6">
+                      <a
+                        href={sdApi.getInvoicePdfUrl(inv.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        data-testid={`link-invoice-pdf-${inv.id}`}
+                      >
+                        <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                          <FileText className="w-4 h-4" /> PDF
+                        </Button>
+                      </a>
                     </TableCell>
                   </TableRow>
                 ))}

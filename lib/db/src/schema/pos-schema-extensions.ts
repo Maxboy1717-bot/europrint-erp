@@ -20,6 +20,9 @@ export const confirmStepEnum = pgEnum('pos_confirm_step_enum', [
 
 export const confirmDecisionEnum = pgEnum('pos_confirm_decision_enum', [
   'APPROVED', 'REJECTED', 'REWORK',
+  // POS-19 #131 (2026-07-11, owner schema-grant -- Q-35): topshirilgan vs
+  // qabul qilingan miqdor mos kelmasa qaror shu holatga o'tadi (nizo).
+  'DISPUTED',
 ]);
 
 export const barcodeTypeEnum = pgEnum('pos_barcode_type_enum', [
@@ -79,6 +82,12 @@ export const movementConfirmations = pgTable('pos_movement_confirmations', {
   signedAt:      timestamp('signed_at').notNull().defaultNow(),
   signatureHash: varchar('signature_hash', { length: 64 }).notNull(),
   ip:            inet('ip'),
+  // POS-19 #131 (2026-07-11, owner schema-grant -- Q-35): topshirilgan vs
+  // qabul qilingan miqdor -- ikkalasi ham to'ldirilib farq qilsa `decision`
+  // 'DISPUTED' bo'ladi (StockLedgerService.recordConfirmation). Ixtiyoriy --
+  // eski qatorlar/chaqiruvlar NULL qoldiradi (additive, regress yo'q).
+  handedOverQty: numericMoney('handed_over_qty'),
+  receivedQty:   numericMoney('received_qty'),
 }, (t) => [
   index('idx_mv_confirm_movement').on(t.movementId),
   index('idx_mv_confirm_user').on(t.userId),

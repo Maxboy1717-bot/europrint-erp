@@ -6,9 +6,15 @@
 --   MANAGER_OF_SENDER  = yuboruvchining bo'lim rahbari (employees.manager_id)
 --   DEPT_HEAD          = yuboruvchining bo'lim boshlig'i (org_departments.head_user_id)
 --   CEO                = bosh direktor (org_departments root head_user_id)
+--   DIRECTOR           = Bosh Direktor (har zanjirning OXIRGI bosqichi — egasi qoidasi
+--                        "HAMMASI OXIRI DIREKTORGA"). Aniqlash: position 'Bosh Direktor' →
+--                        users.role='director' → org tree root head_user_id (cc-org-resolver.service.ts)
 --   POSITION:CFO       = moliya direktori (positions.code = 'CFO')
 --   POSITION:KASSIR    = kassir
 --   POSITION:HR_HEAD   = HR rahbari
+--
+-- EGASI QOIDASI (HAMMASI OXIRI DIREKTORGA): har bir shablon zanjiri OXIRIDA majburiy
+-- DIRECTOR tasdiqlash bosqichi turadi (oxirgi blok — pastdagi MAX(step_order)+1 INSERT).
 -- ============================================================================
 
 -- 1. AVANS uchun ariza: bo'lim rahbari → CEO → CFO → KASSIR
@@ -99,4 +105,22 @@ ON CONFLICT DO NOTHING;
 -- 14. ZRS_ZVS (Sherlovchi xabar): bo'lim rahbari (ko'rib chiqish)
 INSERT INTO cc_workflow_steps (template_id, template_version, step_order, step_type, approver_position_code, rejection_stops, time_limit_hours, is_mandatory)
 SELECT id, version, 1, 'sequential', 'MANAGER_OF_SENDER', false, 24, true FROM cc_document_templates WHERE code = 'ZRS_ZVS'
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- OXIRGI BOSQICH — DIRECTOR (egasi qoidasi: "HAMMASI OXIRI DIREKTORGA")
+-- Har bir shablon zanjiriga MAX(step_order)+1 da yagona DIRECTOR tasdiqlash
+-- bosqichi qo'shiladi. Idempotent: (template_id, template_version, step_order,
+-- approver_position_code) unique → ON CONFLICT DO NOTHING.
+-- ============================================================================
+INSERT INTO cc_workflow_steps (template_id, template_version, step_order, step_type, approver_position_code, rejection_stops, time_limit_hours, is_mandatory)
+SELECT s.template_id, s.template_version, MAX(s.step_order) + 1, 'sequential', 'DIRECTOR', true, 72, true
+FROM cc_workflow_steps s
+WHERE NOT EXISTS (
+  SELECT 1 FROM cc_workflow_steps d
+  WHERE d.template_id = s.template_id
+    AND d.template_version = s.template_version
+    AND d.approver_position_code = 'DIRECTOR'
+)
+GROUP BY s.template_id, s.template_version
 ON CONFLICT DO NOTHING;

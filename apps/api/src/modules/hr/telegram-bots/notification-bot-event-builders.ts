@@ -87,6 +87,8 @@ export function buildMiscEventMessage(event: string, d: D): string | undefined {
     });
   if (event === 'chat.new_message')
     return `💬 <b>Yangi xabar</b>\n\nKim: ${String(d['senderName'] ?? 'Xodim')}\nChat: ${String(d['roomName'] ?? 'Guruh')}\nXabar: ${String(d['preview'] ?? '')}\n\nKo'rish: ${LINK}`;
+  if (event === 'chat.mention')
+    return `🔔 <b>Sizni belgilashdi</b>\n\nKim: ${String(d['senderName'] ?? 'Xodim')}\nChat: ${String(d['roomName'] ?? 'Guruh')}\nXabar: ${String(d['preview'] ?? '')}\n\nKo'rish: ${LINK}`;
   if (event === 'penalty.assigned')
     return renderTemplate(NOTIFICATION_TEMPLATES.PENALTY_ASSIGNED.template_uz, {
       name: String(d['name'] ?? ''),

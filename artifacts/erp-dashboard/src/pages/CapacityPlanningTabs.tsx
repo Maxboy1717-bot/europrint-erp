@@ -23,7 +23,11 @@ interface CapacityDataTabProps {
 }
 
 export function CapacityDataTab({ capacityList, onAddCapacity, t }: CapacityDataTabProps) {
-  if (capacityList.length === 0) {
+  // Array.isArray guard BEFORE any .length/.map access (Qoida 2) — capacityList can
+  // arrive as undefined/non-array for an instant during refetch/error states.
+  const safeList = Array.isArray(capacityList) ? capacityList : [];
+
+  if (safeList.length === 0) {
     return (
       <Card>
         <CardContent>
@@ -40,11 +44,11 @@ export function CapacityDataTab({ capacityList, onAddCapacity, t }: CapacityData
 
   return (
     <div className="grid gap-4">
-      {(Array.isArray(capacityList) ? capacityList : []).map((item) => (
+      {safeList.map((item, idx) => (
         <Card
-          key={item.capacity.id}
+          key={item.capacity?.id ?? item.workCenter?.id ?? idx}
           className="hover-elevate"
-          data-testid={`card-capacity-${item.capacity.id}`}
+          data-testid={`card-capacity-${item.capacity?.id ?? idx}`}
         >
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -52,13 +56,13 @@ export function CapacityDataTab({ capacityList, onAddCapacity, t }: CapacityData
                 <CardTitle className="text-base">
                   {item.workCenter?.name || "Unknown"}
                 </CardTitle>
-                <CardDescription>{item.capacity.date}</CardDescription>
+                <CardDescription>{item.capacity?.date}</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <EPStatusPill tone="neutral" data-testid={`badge-hours-${item.capacity.id}`}>
-                  {item.capacity.availableHours}h
+                <EPStatusPill tone="neutral" data-testid={`badge-hours-${item.capacity?.id ?? idx}`}>
+                  {item.capacity?.availableHours}h
                 </EPStatusPill>
-                <Badge variant="outline">Efficiency: {item.capacity.efficiency}%</Badge>
+                <Badge variant="outline">Efficiency: {item.capacity?.efficiency}%</Badge>
               </div>
             </div>
           </CardHeader>

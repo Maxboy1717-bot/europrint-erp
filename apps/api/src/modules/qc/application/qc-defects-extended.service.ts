@@ -23,16 +23,15 @@ export class QcDefectsExtendedService {
     return this.repo.getBrakCostImpact(papkaOrderId);
   }
 
-  async createBrak(session_id: number | null, material_id: number | null, quantity: number, reason: string | null, root_cause_id: number | null, reported_by: number | null, papka_order_id: number | null) {
-    return this.repo.createBrak(session_id, material_id, quantity, reason, root_cause_id, reported_by, papka_order_id);
-  }
+  // NOTE: createBrak moved to CQRS — QcDefectsExtendedController.createBrak now dispatches
+  // ReportDefectCommand directly via CommandBus (QC-birlashtirish, 2026-07-02).
 
   async listSupplierQuality(vid: number | null, lim: number) {
     return this.repo.listSupplierQuality(vid, lim);
   }
 
-  async createSupplierQuality(vendor_id: number, receipt_id: number | null, material_id: number | null, batch_number: string | null, sample_size: number, defects_found: number, notes: string | null, status: string | null) {
-    return this.repo.createSupplierQuality(vendor_id, receipt_id, material_id, batch_number, sample_size, defects_found, notes, status);
+  async createSupplierQuality(vendor_id: number | null, supplier_name: string, receipt_id: number | null, material_id: number | null, batch_number: string | null, sample_size: number, defects_found: number, quality_score: number | null, notes: string | null, status: string | null) {
+    return this.repo.createSupplierQuality(vendor_id, supplier_name, receipt_id, material_id, batch_number, sample_size, defects_found, quality_score, notes, status);
   }
 
   async getDashboardStats(from?: string, to?: string) {
@@ -55,7 +54,4 @@ export class QcDefectsExtendedService {
     return this.repo.updateApproval(id, status, notes);
   }
 
-  async updateReclamation(id: number, status: string | null, resolution: string | null, root_cause_id: number | null) {
-    return this.repo.updateReclamation(id, status, resolution, root_cause_id);
-  }
 }

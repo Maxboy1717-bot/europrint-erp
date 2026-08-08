@@ -7,7 +7,7 @@ import { Ok, Err, AppErr } from '@common/result';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { IMesRepository, MES_REPO } from '../../domain/repositories/mes.repository';
+import { IMesRepository, MES_REPO, DrizzleExecutor } from '../../domain/repositories/mes.repository';
 import { ProductionSession } from '../../domain/aggregates/production-session.aggregate';
 
 export class StartSessionCommand {
@@ -30,7 +30,29 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       'Starting MES session',
     );
 
-    const sessionResult = await this.mesRepo.getSession(command.sessionId);
+    // PP#3 — bitta stanokda parallel sessiya to'qnashuvini oldini olish. Butun start
+    // oqimi bitta tranzaksiyada; work_center bo'yicha advisory xact-lock parallel start'larni
+    // serializatsiya qiladi va faol sessiya bo'lsa ikkinchisini rad etadi (poyga oynasi yo'q).
+    return this.mesRepo.withTransaction(async (tx) => this.startWithinTx(command, tx));
+  }
+
+  private async startWithinTx(
+    command: StartSessionCommand,
+    tx: DrizzleExecutor,
+  ): Promise<Result<void>> {
+    const activeResult = await this.mesRepo.lockWorkCenterAndCountActive(
+      command.workCenterId,
+      command.sessionId,
+      tx,
+    );
+    if (!activeResult.ok) return Err(activeResult.error);
+    if (activeResult.data > 0) {
+      const msg = `Stanok ${command.workCenterId} band: boshqa sessiya allaqachon ishlamoqda (parallel start rad etildi)`;
+      this.logger.warn({ workCenterId: command.workCenterId, sessionId: command.sessionId }, msg);
+      return Err(AppErr('CONFLICT', msg));
+    }
+
+    const sessionResult = await this.mesRepo.getSession(command.sessionId, tx);
     if (!sessionResult.ok) {
       return Err(sessionResult.error);
     }
@@ -44,8 +66,9 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
         'Checking LMS certification',
       );
 
-      // In real implementation, fetch workCenter and check certification
-      // For now, we assume certification is required for certain work centers
+      // Real LMS sertifikat dalili (T8-05): mesRepo.checkOperatorCertification
+      // operator_certifications ledgerini YOKI haqiqiy dalilni (lms_test_attempts
+      // testdan o'tgan + course_progress mavzular tugagan) tekshiradi. Bo'sh = bloklanadi.
       const certResult = await this.mesRepo.checkOperatorCertification(
         command.operatorId,
         command.courseId,
@@ -59,9 +82,61 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       }
     }
 
-    // Pass checklist
-    const checklistResult = session.passChecklist();
+    // Operator×mashina ruxsat-matritsasi — HARD BLOCK (P0). LMS kurs-sertifikati
+    // (yuqorida) "nazariyani bilasizmi"ni tekshiradi; bu MUSTAQIL gate "shu KONKRET
+    // mashina turiga ruxsatingiz bormi"ni tekshiradi — work_centers.required_skill_name
+    // (mavjud, texnolog sozlaydi) + employee_skills (mavjud HR skill-matrix). Cheklov
+    // sozlanmagan (NULL) mashinalar uchun hech narsa o'zgarmaydi (regressiyasiz).
+    const machineSkillResult = await this.mesRepo.checkOperatorMachineSkill(
+      command.operatorId,
+      command.workCenterId,
+      tx,
+    );
+    if (!machineSkillResult.ok) {
+      return Err(machineSkillResult.error);
+    }
+    if (!machineSkillResult.data.permitted) {
+      const msg = `Operator ${command.operatorId} ushbu mashina (${machineSkillResult.data.machineType ?? command.workCenterId}) uchun ruxsatga ega emas: talab qilinadigan ko'nikma "${machineSkillResult.data.requiredSkill}" employee_skills'da tasdiqlanmagan`;
+      this.logger.warn(
+        { operatorId: command.operatorId, workCenterId: command.workCenterId, requiredSkill: machineSkillResult.data.requiredSkill },
+        msg,
+      );
+      return Err(AppErr('FORBIDDEN', msg));
+    }
+
+    // Ikki-imzoli material-akt gate — HARD BLOCK (08-mes vizyon #49: "Akt 2 imzosiz
+    // material WMS'dan chiqmaydi + MES sessiyaga kirmaydi"). Reuses material_kits
+    // (prepared_by=1-imzo, confirmed_by=2-imzo) keyed off production_orders.id —
+    // see checkMaterialActSignatures() for the full evidence trail. Regressiyasiz:
+    // buyurtma uchun kit ochilmagan bo'lsa bloklamaydi; kit(lar) bor-yu hali
+    // 'confirmed'gacha yetmagan bo'lsa boshlashni rad etadi.
+    const actResult = await this.mesRepo.checkMaterialActSignatures(session.getPpId(), tx);
+    if (!actResult.ok) {
+      return Err(actResult.error);
+    }
+    if (actResult.data.blocked) {
+      const msg = `Material-akt 2-imzosiz: to'plam(lar) hali tasdiqlanmagan (${actResult.data.pendingKits.join(', ')}) — sessiya boshlanmaydi`;
+      this.logger.warn(
+        { sessionId: command.sessionId, ppId: session.getPpId(), pendingKits: actResult.data.pendingKits },
+        msg,
+      );
+      return Err(AppErr('FORBIDDEN', msg));
+    }
+
+    // TB-safety / smena-readiness gate (Q-40 — real enforcement, no silent flip):
+    // load REQUIRED checklist items from setup_checklists/checklist_items and BLOCK
+    // start unless every required item is completed.
+    const checklistStatusResult = await this.mesRepo.getChecklistStatus(command.sessionId, tx);
+    if (!checklistStatusResult.ok) {
+      return Err(checklistStatusResult.error);
+    }
+
+    const checklistResult = session.passChecklist(checklistStatusResult.data);
     if (!checklistResult.ok) {
+      this.logger.warn(
+        { sessionId: command.sessionId, error: checklistResult.error },
+        'MES session start BLOCKED — checklist incomplete',
+      );
       return checklistResult;
     }
 
@@ -71,9 +146,27 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       return startResult;
     }
 
-    const saveResult = await this.mesRepo.saveSession(session);
+    const saveResult = await this.mesRepo.saveSession(session, tx);
     if (!saveResult.ok) {
       return Err(saveResult.error);
+    }
+
+    // 08-mes #4 — Sessiya boshlanganda amaldagi norma versiyasini muzlatib snapshot qilamiz
+    // (retro-buzilmaslik). started_at endi saveSession orqali yozilgan; shu sanada amalda
+    // bo'lgan (effective_date <= started_at) versiya production_sessions.norma_version ga
+    // yoziladi. Snapshot xatosi/NULL START'ni BLOKLAMAYDI (norma qatori bo'lmasligi mumkin) —
+    // faqat log qilinadi, sessiya ishlashda davom etadi (Q-46 regressiya himoyasi).
+    const normaSnapshot = await this.mesRepo.snapshotNormaVersion(command.sessionId, tx);
+    if (!normaSnapshot.ok) {
+      this.logger.warn(
+        { sessionId: command.sessionId, error: normaSnapshot.error },
+        'Norma versiya snapshot xatoligi (start bloklanmadi)',
+      );
+    } else {
+      this.logger.log(
+        { sessionId: command.sessionId, normaVersion: normaSnapshot.data },
+        'Norma versiyasi snapshot qilindi',
+      );
     }
 
     this.logger.log('MES session started');

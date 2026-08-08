@@ -7,4 +7,4 @@
  *              they must NOT re-declare these tables.
  */
 
-export { kanbanBoards, kanbanColumns, kanbanCards } from '@shared/db/schema-kanban';
+export { kanbanBoards, kanbanColumns, kanbanCards, kanbanStatusColumnMap } from '@shared/db/schema-kanban';

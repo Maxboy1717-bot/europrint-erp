@@ -12,7 +12,6 @@ import {
 import { useTranslation } from "@/lib/i18n";
 import { useRoleMenus } from "@/hooks/use-role-menus";
 import { usePermissions } from "@/hooks/usePermissions";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ModuleSidebarProps, MenuItem } from "./sidebar/types";
 import { getTranslatedMenuGroups, moduleAccentColors, MODULE_PERMISSION_KEYS } from "./sidebar/constants";
 import { getAuthHeaders } from "@/lib/queryClient";
@@ -154,22 +153,30 @@ export function ModuleSidebar({ activeModule, onModuleChange }: ModuleSidebarPro
   const allItems = [...filteredItems, ...warehouseItems];
 
   return (
-    <aside className="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-64 z-40 flex-col hidden lg:flex shadow-lg border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader
-        icon={group.icon}
-        title={group.title}
-        accentBg={accentBg}
-      />
+    <aside className="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-64 z-40 flex-col hidden lg:flex shadow-lg border-r border-sidebar-border bg-sidebar overflow-hidden">
+      <div className="shrink-0">
+        <SidebarHeader
+          icon={group.icon}
+          title={group.title}
+          accentBg={accentBg}
+        />
+      </div>
       <AvatarBlock />
 
-      <ScrollArea className="flex-1">
+      {/* Native overflow scroll — flex-1 + min-h-0 caps height to the gap between
+          header/avatar and footer; menyu sig'maganda VERTIKAL scroll bo'ladi.
+          (Radix ScrollArea o'rniga — uning h-full viewport'i flex-1 parent'dan
+          ba'zan height olmasdi → scroll ishlamasdi.) */}
+      <div className="ep-sidebar-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <NavGroup
           items={allItems}
           currentPath={currentPath}
         />
-      </ScrollArea>
+      </div>
 
-      <SidebarFooter />
+      <div className="shrink-0">
+        <SidebarFooter />
+      </div>
     </aside>
   );
 }

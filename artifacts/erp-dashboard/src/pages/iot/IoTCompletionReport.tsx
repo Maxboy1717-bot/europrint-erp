@@ -7,13 +7,24 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from '@/lib/queryClient';
 import { IoTCompletionReportProps, CompletionStep } from "./IoTCompletionReportTypes";
 import { StepProgressBar, ResultsStep } from "./IoTCompletionReportSections";
 import { EvaluationStep, MaterialReturnStep, DoneStep } from "./IoTCompletionReportSteps";
+import { useTranslation } from "@/lib/i18n";
+import { tabletFetch as sharedTabletFetch } from "./tabletFetch";
 
-export function IoTCompletionReport({ lang, open, onClose, completionReport, formatTime, tabletToken }: IoTCompletionReportProps) {
-  const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
+// B14/Decision 1 (2026-07-06): these two calls previously used apiRequest (ERP
+// JWT/cookie auth) even though tabletToken was already validated in scope above --
+// the token was checked but never actually sent, so a bare kiosk tablet (no ERP
+// session) always got a silent failure here. C2 (CRITICAL-CORRECTNESS-AUDIT-
+// 2026-07-06): now routed through the shared tabletFetch client, which also
+// transparently refreshes an expired token and retries once instead of failing.
+function tabletFetch(tabletToken: string, path: string, body: unknown): Promise<Response> {
+  return sharedTabletFetch("POST", path, body, tabletToken);
+}
+
+export function IoTCompletionReport({ open, onClose, completionReport, formatTime, tabletToken }: IoTCompletionReportProps) {
+  const { t } = useTranslation("iot");
   const { toast } = useToast();
 
   const [step, setStep] = useState<CompletionStep>("results");
@@ -52,59 +63,63 @@ export function IoTCompletionReport({ lang, open, onClose, completionReport, for
 
   async function submitEvaluation() {
     if (!evalComplete) {
-      toast({ title: t("Barcha 4 mezon baholanishi kerak", "Все 4 критерия должны быть оценены"), variant: "destructive" });
+      toast({ title: t("crEvalRequired"), variant: "destructive" });
       return;
     }
     if (!sessionId || !tabletToken) {
-      toast({ title: t("Sessiya ma'lumoti yo'q", "Нет данных о сессии"), variant: "destructive" });
+      toast({ title: t("crNoSessionData"), variant: "destructive" });
       return;
     }
     setEvalSubmitting(true);
     try {
-      await apiRequest('POST', `/api/iot/production-sessions/${sessionId}/evaluation`, {
+      const res = await tabletFetch(tabletToken, `/api/iot/production-sessions/${sessionId}/evaluation`, {
         safetyScore, qualityScore, productivityScore, teamworkScore,
         issuesReported: issuesReported || undefined, suggestions: suggestions || undefined,
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setEvalDone(true);
-      toast({ title: t("Baholash saqlandi!", "Оценка сохранена!") });
+      toast({ title: t("crEvalSaved") });
       if (returnRequired) { setStep("material"); } else { setStep("done"); }
     } catch (err: unknown) {
-      toast({ title: t("Baholashda xatolik", "Ошибка оценки"), description: String(err instanceof Error ? err.message : err), variant: "destructive" });
+      toast({ title: t("crEvalError"), description: String(err instanceof Error ? err.message : err), variant: "destructive" });
     } finally { setEvalSubmitting(false); }
   }
 
   async function submitMaterialReturn() {
     const qty = parseInt(returnedQty) || 0;
     if (!sessionId || !tabletToken) {
-      toast({ title: t("Sessiya ma'lumoti yo'q", "Нет данных о сессии"), variant: "destructive" });
+      toast({ title: t("crNoSessionData"), variant: "destructive" });
       return;
     }
     setReturnSubmitting(true);
     try {
-      await apiRequest('POST', `/api/iot/production-sessions/${sessionId}/material-return`, {
+      const res = await tabletFetch(tabletToken, `/api/iot/production-sessions/${sessionId}/material-return`, {
         returnedQty: qty, unit: materialRemainder?.unit || "dona", notes: returnReason || undefined,
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setReturnDone(true);
-      toast({ title: t("Material qaytarildi!", "Материал возвращён!") });
+      toast({ title: t("crMaterialReturned") });
       setStep("done");
     } catch (err: unknown) {
-      toast({ title: t("Qaytarishda xatolik", "Ошибка возврата"), description: String(err instanceof Error ? err.message : err), variant: "destructive" });
+      toast({ title: t("crReturnError"), description: String(err instanceof Error ? err.message : err), variant: "destructive" });
     } finally { setReturnSubmitting(false); }
   }
 
   function handleClose() {
     if (step !== "done") {
-      toast({ title: t("Avval baholashni tugatib, materialni qaytaring", "Сначала завершите оценку и верните материал"), variant: "destructive" });
+      toast({ title: t("crFinishFirst"), variant: "destructive" });
       return;
     }
     resetState();
     onClose();
   }
 
-  const stepLabels: { id: CompletionStep; uz: string; ru: string }[] = [
-    { id: "results", uz: "Natijalar", ru: "Результаты" },
-    { id: "evaluation", uz: "Baholash", ru: "Оценка" },
-    ...(returnRequired ? [{ id: "material" as CompletionStep, uz: "Material", ru: "Материал" }] : []),
+  // i18n F2: was { uz, ru } with StepProgressBar always rendering .uz regardless
+  // of language -- now a single resolved `label` in the current language.
+  const stepLabels: { id: CompletionStep; label: string }[] = [
+    { id: "results", label: t("crStepResults") },
+    { id: "evaluation", label: t("crStepEvaluation") },
+    ...(returnRequired ? [{ id: "material" as CompletionStep, label: t("crStepMaterial") }] : []),
   ];
 
   return (
@@ -113,7 +128,7 @@ export function IoTCompletionReport({ lang, open, onClose, completionReport, for
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <CheckCircle className="h-6 w-6 text-[var(--ep-green)]" />
-            {t("Sessiya yakunlandi", "Сессия завершена")}
+            {t("crTitle")}
           </DialogTitle>
         </DialogHeader>
 
@@ -123,7 +138,6 @@ export function IoTCompletionReport({ lang, open, onClose, completionReport, for
 
             {step === "results" && (
               <ResultsStep
-                lang={lang}
                 completionReport={completionReport}
                 onNext={() => setStep("evaluation")}
               />
@@ -131,7 +145,6 @@ export function IoTCompletionReport({ lang, open, onClose, completionReport, for
 
             {step === "evaluation" && (
               <EvaluationStep
-                lang={lang}
                 safetyScore={safetyScore} setSafetyScore={setSafetyScore}
                 qualityScore={qualityScore} setQualityScore={setQualityScore}
                 productivityScore={productivityScore} setProductivityScore={setProductivityScore}
@@ -145,7 +158,6 @@ export function IoTCompletionReport({ lang, open, onClose, completionReport, for
 
             {step === "material" && materialRemainder && (
               <MaterialReturnStep
-                lang={lang}
                 materialRemainder={materialRemainder}
                 returnedQty={returnedQty} setReturnedQty={setReturnedQty}
                 returnReason={returnReason} setReturnReason={setReturnReason}
@@ -155,7 +167,7 @@ export function IoTCompletionReport({ lang, open, onClose, completionReport, for
             )}
 
             {step === "done" && (
-              <DoneStep lang={lang} evalDone={evalDone} returnDone={returnDone} onClose={handleClose} />
+              <DoneStep evalDone={evalDone} returnDone={returnDone} onClose={handleClose} />
             )}
           </div>
         )}

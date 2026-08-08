@@ -7,13 +7,23 @@ import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 
 import { MAX_NOTES_LENGTH, MAX_SHORT_TEXT } from '@common/constants/app.constants';
+// Discovery sweep 2026-08-03 fix ("So'rovlar ro'yxatini status bo'yicha filtrlash doim DB xatosi
+// beradi"): this used to be a lowercase vocabulary ('draft'/'pending'/...) that matched NOTHING
+// else in the system — pos_material_requests.status is UPPERCASE everywhere it's actually
+// written (pos-request.service.ts create/approve/reject) and read (PosRequests.tsx FE tab logic,
+// posMaterialRequests' Drizzle requestStatusEnum in pos-schema-v2.ts). A status filter request
+// using the real values (e.g. ?status=SUBMITTED) was rejected by this Zod enum before it ever
+// reached the DB. Aligned to the actual 7-value vocabulary (DRAFT/SUBMITTED/APPROVED/
+// PARTIALLY_ISSUED/FULLY_ISSUED/REJECTED/CANCELLED) — no PENDING/ISSUED (never written), added
+// SUBMITTED/PARTIALLY_ISSUED/FULLY_ISSUED (real statuses this schema was missing entirely).
 export enum RequestStatus {
-  DRAFT     = 'draft',
-  PENDING   = 'pending',
-  APPROVED  = 'approved',
-  REJECTED  = 'rejected',
-  ISSUED    = 'issued',
-  CANCELLED = 'cancelled',
+  DRAFT             = 'DRAFT',
+  SUBMITTED         = 'SUBMITTED',
+  APPROVED          = 'APPROVED',
+  PARTIALLY_ISSUED  = 'PARTIALLY_ISSUED',
+  FULLY_ISSUED      = 'FULLY_ISSUED',
+  REJECTED          = 'REJECTED',
+  CANCELLED         = 'CANCELLED',
 }
 
 export enum RequestPriority {
@@ -23,7 +33,7 @@ export enum RequestPriority {
   URGENT = 'urgent',
 }
 
-const REQUEST_STATUSES   = ['draft', 'pending', 'approved', 'rejected', 'issued', 'cancelled'] as const;
+const REQUEST_STATUSES   = ['DRAFT', 'SUBMITTED', 'APPROVED', 'PARTIALLY_ISSUED', 'FULLY_ISSUED', 'REJECTED', 'CANCELLED'] as const;
 const REQUEST_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
 
 // ─── Request Line ─────────────────────────────────────────────────────────────

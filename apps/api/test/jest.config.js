@@ -63,6 +63,7 @@ module.exports = {
     '^@modules/(.*)$': '<rootDir>/src/modules/$1',
     '^@config/(.*)$': '<rootDir>/src/config/$1',
     '^@shared/db(.*)$': '<rootDir>/src/shared/db/$1',
+    '^@shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@europrint/schemas$': '<rootDir>/src/shared/db/europrint-compat.ts',
     '^@workspace/db$': '<rootDir>/../../lib/db/dist/cjs/index.js',
     '^@workspace/db/(.*)$': '<rootDir>/../../lib/db/dist/cjs/$1',

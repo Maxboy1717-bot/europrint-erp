@@ -16,9 +16,9 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrThrow } from '@common/http-result';
 import { z } from 'zod';
 import { PpIntelligenceService } from '../application/services/pp-intelligence.service';
-import type { EnrichedMrpResult } from '../application/services/pp-intelligence.service';
 import { PpMpsService } from '../application/services/pp-mps.service';
 import { PpCrpService } from '../application/services/pp-crp.service';
+import { PpAiPlanningService } from '../application/services/pp-ai-planning.service';
 
 const MrpRunSchema = z.object({
   lotSizingMethod: z.enum(['L4L', 'EOQ', 'POQ', 'WAGNER_WHITIN']).optional(),
@@ -41,7 +41,16 @@ export class PpIntelligenceController {
     private readonly svc: PpIntelligenceService,
     private readonly mpsSvc: PpMpsService,
     private readonly crpSvc: PpCrpService,
+    private readonly aiPlanSvc: PpAiPlanningService,
   ) {}
+
+  @ApiOperation({ summary: 'AI-planning 7-step skeleton (key-gated step 7)' })
+  @ApiResponse({ status: 200, description: 'OK — partial when no AI key configured' })
+  @Get('ai-plan/skeleton')
+  @RequirePermission('pp:READ')
+  async getAiPlanSkeleton(@Query('planDate') planDate?: string) {
+    return unwrapOrThrow(await this.aiPlanSvc.buildSkeleton(planDate));
+  }
 
   @ApiOperation({ summary: 'Run mrp' })
   @ApiResponse({ status: 201, description: 'OK' })
@@ -52,7 +61,8 @@ export class PpIntelligenceController {
   async runMrp(@Body() body: unknown) {
     const input = MrpRunSchema.parse(body);
     const result = unwrapOrThrow(await this.svc.runMrp(input));
-    return this.formatMrpResponse(result, input.lotSizingMethod ?? 'L4L', input.horizonPeriods ?? 12);
+    // Qoida 6 (audit 2026-08-06 T22B): matrix assembly lives in the service now.
+    return this.svc.formatMrpResponse(result, input.lotSizingMethod ?? 'L4L', input.horizonPeriods ?? 12);
   }
 
   @ApiOperation({ summary: 'Get mps' })
@@ -85,51 +95,4 @@ export class PpIntelligenceController {
     return unwrapOrThrow(await this.svc.getLearningCurve(productId));
   }
 
-  private formatMrpResponse(result: EnrichedMrpResult, method: string, horizon: number) {
-    type PeriodCell = { grossReq: number; scheduledReceipts: number; netReq: number; projectedOnHand: number; plannedOrders: number };
-    const emptyPeriods = (): PeriodCell[] => Array.from({ length: horizon }, () => ({ grossReq: 0, scheduledReceipts: 0, netReq: 0, projectedOnHand: 0, plannedOrders: 0 }));
-    const byMaterial = new Map<string, PeriodCell[]>();
-
-    for (const nr of result.netRequirements ?? []) {
-      let periods = byMaterial.get(nr.materialId);
-      if (!periods) {
-        periods = emptyPeriods();
-        byMaterial.set(nr.materialId, periods);
-      }
-      const idx = Math.min(Math.max(0, nr.period), horizon - 1);
-      const p = periods[idx];
-      if (!p) continue;
-      p.grossReq = nr.gr; p.netReq = nr.nr; p.scheduledReceipts += nr.sr;
-    }
-    for (const po of result.plannedOrders ?? []) {
-      let periods = byMaterial.get(po.materialId);
-      if (!periods) {
-        periods = emptyPeriods();
-        byMaterial.set(po.materialId, periods);
-      }
-      const idx = Math.min(Math.max(0, po.periodIndex), horizon - 1);
-      const p = periods[idx];
-      if (!p) continue;
-      p.plannedOrders += po.qty;
-    }
-    for (const [materialId, periods] of byMaterial) {
-      let poh = result.openingOnHand[materialId] ?? 0;
-      for (const p of periods) { poh = poh + p.scheduledReceipts + p.plannedOrders - p.grossReq; p.projectedOnHand = poh; }
-    }
-
-    const policyMap = new Map((Array.isArray(result.policies) ? result.policies : []).map((p) => [p.materialId, p]));
-    const lines = Array.from(byMaterial.entries()).map(([materialId, periods]) => {
-      const policy = policyMap.get(materialId);
-      return {
-        itemId: materialId,
-        itemName: materialId,
-        lotSizingMethod: policy?.lotSizingMethod ?? method,
-        safetyStock: policy?.safetyStock ?? 0,
-        leadTimePeriods: Math.max(1, Math.ceil((policy?.leadTimeDays ?? 7) / 7)),
-        periods,
-      };
-    });
-
-    return { method, horizon, lines, runAt: result.runAt };
-  }
 }

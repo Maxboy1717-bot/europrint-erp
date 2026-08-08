@@ -33,9 +33,13 @@ export class PosFifoService {
    * Materialning muddatli yoki muddatsizligini tekshirish
    */
   private async hasExpiry(materialId: number): Promise<boolean> {
+    // Audit 2026-08-07: `pos_materials` jadvali BAZADA YO'Q (`to_regclass` -> null), shuning uchun
+    // bu so'rov har chaqiruvda yiqilardi va xato `getCandidates` ning `catch` ida yutilardi ->
+    // butun FIFO/FEFO oqimi jimgina ishlamasdi. Kanonik manba `material_cards`; muddatlilik
+    // belgisi = `shelf_life_days` to'ldirilganmi (alohida `has_expiry` bayrog'i mavjud emas).
     const r = await runQuery<{ has_expiry: boolean }>(sql`
-      SELECT COALESCE(has_expiry, false) AS has_expiry
-      FROM pos_materials WHERE id = ${materialId} LIMIT 1
+      SELECT COALESCE(shelf_life_days, 0) > 0 AS has_expiry
+      FROM material_cards WHERE id = ${materialId} LIMIT 1
     `).catch(() => ({ rows: [{ has_expiry: false }] }));
     return r.rows[0]?.has_expiry ?? false;
   }
@@ -51,20 +55,26 @@ export class PosFifoService {
         ? sql`b.expiry_date ASC NULLS LAST, b.received_date ASC`
         : sql`b.received_date ASC`;
 
+      // `pos_batches` ham mavjud emas — kanonik partiya jadvali `batch_lots` (WMS expiry
+      // hisoboti ham aynan shundan o'qiydi). Ustun moslashuvi: current_qty ->
+      // remaining_quantity, status='ACTIVE' -> is_active, batch_number -> lot_number (fallback
+      // batch_number). `batch_lots` da narx ustuni yo'q, shuning uchun `material_cards.unit_price`
+      // dan olinadi — bu ayni WmsCatalogAbcAgingExpiryService ishlatadigan manba.
       const r = await runQuery<BatchCandidate>(sql`
         SELECT
-          b.id         AS "batchId",
-          b.batch_number AS "batchNumber",
-          b.warehouse_id AS "warehouseId",
-          COALESCE(b.current_qty, 0) AS "availableQty",
-          COALESCE(b.unit_price, 0)  AS "unitPrice",
-          b.expiry_date  AS "expiryDate",
-          b.received_date AS "receivedDate"
-        FROM pos_batches b
+          b.id                                    AS "batchId",
+          COALESCE(b.lot_number, b.batch_number)  AS "batchNumber",
+          b.warehouse_id                          AS "warehouseId",
+          COALESCE(b.remaining_quantity, 0)       AS "availableQty",
+          COALESCE(mc.unit_price, 0)              AS "unitPrice",
+          b.expiry_date                           AS "expiryDate",
+          b.received_date                         AS "receivedDate"
+        FROM batch_lots b
+        LEFT JOIN material_cards mc ON mc.id = b.material_id
         WHERE b.warehouse_id = ${warehouseId}
           AND b.material_id  = ${materialId}
-          AND b.status = 'ACTIVE'
-          AND COALESCE(b.current_qty, 0) > 0
+          AND b.is_active = true
+          AND COALESCE(b.remaining_quantity, 0) > 0
         ORDER BY ${orderClause}
       `);
       return Ok(r.rows);
@@ -103,22 +113,35 @@ export class PosFifoService {
   }
 
   /**
-   * Muddati o'tgan partiyalarni belgilash (cron uchun)
+   * Muddati o'tgan partiyalarni SANAYDI (cron uchun).
+   *
+   * Audit 2026-08-07 — nima uchun endi belgilamaydi, sanaydi:
+   *   Avvalgi versiya mavjud bo'lmagan `pos_batches` jadvalida `status='EXPIRED'` qo'yardi, ya'ni
+   *   har kecha jimgina yiqilardi. Kanonik jadval — `batch_lots`, unda `status` ustuni umuman
+   *   yo'q; eng yaqin ekvivalent `is_active`.
+   *
+   *   ⚠️ LEKIN `is_active = false` qo'yish REGRESSIYA bo'lardi: `WmsCatalogAbcAgingExpiryService`
+   *   `getExpiry()` aynan `bl.is_active = true` bo'yicha filtrlaydi va muddati o'tgan lotlarni
+   *   `status='expired'` deb KO'RSATADI — ular ombor xodimi chora ko'rishi uchun ro'yxatda
+   *   turishi kerak. Bayroqni o'chirish ularni hisobotdan **yashirib qo'yardi**.
+   *
+   *   `batch_lots.quality_status` ustuni bor, lekin jonli bazada barcha qiymatlar NULL — ya'ni
+   *   "muddati o'tgan" uchun qabul qilingan lug'at mavjud emas. Yangi qiymat o'ylab topish
+   *   semantik qaror (Q-34) va egasi ishi. Shu sababli bu metod hozircha faqat haqiqiy sonni
+   *   qaytaradi — soxta mutatsiya ham, soxta muvaffaqiyat ham yo'q (Q-40).
    */
-  async markExpiredBatches(): Promise<Result<number>> {
+  async countExpiredBatches(): Promise<Result<number>> {
     try {
       const r = await runQuery<{ cnt: string }>(sql`
-        WITH updated AS (
-          UPDATE pos_batches
-          SET status = 'EXPIRED', updated_at = NOW()
-          WHERE status = 'ACTIVE'
-            AND expiry_date IS NOT NULL
-            AND expiry_date < CURRENT_DATE
-          RETURNING id
-        ) SELECT COUNT(*)::text AS cnt FROM updated
+        SELECT COUNT(*)::text AS cnt
+        FROM batch_lots
+        WHERE is_active = true
+          AND COALESCE(remaining_quantity, 0) > 0
+          AND expiry_date IS NOT NULL
+          AND expiry_date < CURRENT_DATE
       `);
       const count = Number(r.rows[0]?.cnt ?? 0);
-      if (count > 0) this.logger.warn(`${count} ta partiya muddati tugadi`);
+      if (count > 0) this.logger.warn(`${count} ta partiya muddati o'tgan (hamon omborda)`);
       return Ok(count);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
@@ -128,19 +151,21 @@ export class PosFifoService {
    */
   async getLowStockMaterials(): Promise<Result<Array<{ materialId: number; materialCode: string; warehouseId: number; currentQty: number; minQty: number }>>> {
     try {
+      // Canonical stock = warehouse_stock + material_cards (pos_stock_balances/pos_materials
+      // do not exist — they crashed the hourly cron every run).
       const r = await runQuery<{ materialId: number; materialCode: string; warehouseId: number; currentQty: number; minQty: number }>(sql`
         SELECT
-          m.id          AS "materialId",
-          m.code        AS "materialCode",
-          sb.warehouse_id AS "warehouseId",
-          COALESCE(sb.available_qty, 0) AS "currentQty",
-          COALESCE(m.min_stock, 0)      AS "minQty"
-        FROM pos_stock_balances sb
-        JOIN pos_materials m ON m.id = sb.material_id
-        WHERE COALESCE(sb.available_qty, 0) < COALESCE(m.min_stock, 0)
-          AND COALESCE(m.min_stock, 0) > 0
-          AND m.is_active = true
-        ORDER BY (COALESCE(sb.available_qty, 0) / NULLIF(m.min_stock, 0)) ASC
+          mc.id           AS "materialId",
+          mc.kod          AS "materialCode",
+          ws.warehouse_id AS "warehouseId",
+          COALESCE(ws.available_quantity, 0) AS "currentQty",
+          COALESCE(mc.min_stock, 0)          AS "minQty"
+        FROM warehouse_stock ws
+        JOIN material_cards mc ON mc.id = ws.material_id
+        WHERE COALESCE(ws.available_quantity, 0) < COALESCE(mc.min_stock, 0)
+          AND COALESCE(mc.min_stock, 0) > 0
+          AND mc.is_active = true
+        ORDER BY (COALESCE(ws.available_quantity, 0) / NULLIF(mc.min_stock, 0)) ASC
         LIMIT 200
       `);
       return Ok(r.rows);

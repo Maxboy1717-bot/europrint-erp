@@ -5,8 +5,6 @@
 
 import { lazy } from "react";
 
-const Stub = lazy(() => import("@/pages/StubPage"));
-
 // ── Stub → real (session 2026-05-12) ─────────────────────────────────────────
 const AgentsHubPage            = lazy(() => import("@/pages/agents/AgentsHub"));
 const CameraAIAnalyticsPage    = lazy(() => import("@/pages/CameraAIAnalytics"));
@@ -20,6 +18,7 @@ const LessonPlayerPage         = lazy(() => import("@/pages/LessonPlayer"));
 const MESWorkerAssignmentsPage = lazy(() => import("@/pages/MESWorkerAssignments"));
 const Customer360Page          = lazy(() => import("@/pages/Customer360Page"));
 const AnalyticsPage            = lazy(() => import("@/pages/Analytics"));
+const WmsAnalyticsPage         = lazy(() => import("@/pages/WmsAnalyticsPage"));
 
 // ── Real pages (prior sessions) ───────────────────────────────────────────────
 const HRVacationPage      = lazy(() => import("@/pages/HRVacationSick"));
@@ -28,7 +27,6 @@ const AttendancePage      = lazy(() => import("@/pages/AttendanceMonitorPage"));
 const OkrPage             = lazy(() => import("@/pages/OkrPage"));
 const MaterialCardsPage   = lazy(() => import("@/pages/MaterialCardsPage"));
 const EquipmentPage       = lazy(() => import("@/pages/EquipmentPage"));
-const OrgDepartmentsPage  = lazy(() => import("@/pages/OrgDepartmentsPage"));
 const WeeklyPlansPage     = lazy(() => import("@/pages/WeeklyPlansPage"));
 const CandidatesPage      = lazy(() => import("@/pages/CandidatesPage"));
 const EmployeeFilesPage   = lazy(() => import("@/pages/EmployeeFilesPage"));
@@ -69,19 +67,31 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/ai/hr',                     HRAIDashboardPage],        // HR AI dashboard
   ['/ai/marketing',              AiCrmPageComponent],       // AI CRM / marketing
   ['/ai-planning',               AIProductionPlanningPage], // AI production planning
-  ['/ai/wms',                    Stub],                     // WmsAnalytics o'chirildi (stub)
+  ['/ai/wms',                    WmsAnalyticsPage],         // Ombor tahlili (turnover/dead-stock/ROP) — real BE
   ['/assignments',               MESWorkerAssignmentsPage], // MES worker assignments
   ['/insights',                  AnalyticsPage],            // BI analytics / insights
   ['/integration/requests',      IntegrationMgmtPage],      // Integration management
   ['/iot-enhanced',              IoTExtendedPage],          // Extended IoT dashboard
   ['/video-progress',            LessonPlayerPage],         // Video lesson player
 
-  // ── Still Stub (no real backend/page built yet) ───────────────────────────
-  ['/export',                    Stub],   // export module not yet built
-  ['/micro-modules',             Stub],   // LMS micro-modules, deferred
-  ['/modules',                   Stub],   // module manager, deferred
-  ['/pos/printer-config',        Stub],   // printer HW config, deferred
-  ['/sap',                       Stub],   // SAP integration, deferred
+  // ── Removed 2026-07-03 (3.13-stub-routes, Q-46) ────────────────────────────
+  // /export            — real BE (5 CSV/PDF endpoints) already surfaced via
+  //                       RemainingTabsHr.tsx download links (HR analytics).
+  // /micro-modules     — real BE (list/create/view) already live at routed+
+  //                       sidebar page /lms/micro-learning (MicroLearningTab).
+  // /modules           — real BE (LMS module CRUD) already exercised via
+  //                       AddModuleDialog inside routed page /courses/:id;
+  //                       no vision requirement for a separate global module
+  //                       manager page — would be new scope, not wiring.
+  // /pos/printer-config — real BE (list/active/create/patch/test) but fully
+  //                       duplicated by the already-live printer settings tab
+  //                       in BarcodeSystem (uses /api/warehouse/printer-config).
+  // /sap               — BE is an internal alias/shadow of sales_orders
+  //                       (sap.repository.ts falls back to sales_orders table),
+  //                       not a real external SAP integration; functionality
+  //                       already covered by routed page /erp/sales
+  //                       (SalesOrders.tsx). Real SAP integration = egasi-qaror
+  //                       kutadi (CLAUDE.md F4), not built — kept out per Q-46.
 
   // ── Real pages (prior sessions) ───────────────────────────────────────────
   ['/3way-match',                ThreeWayMatchPage],
@@ -110,7 +120,6 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/mentorships',               MentorshipsPage],
   ['/okr',                       OkrPage],
   ['/order-status',              OrderStatusPage],
-  ['/org-departments',           OrgDepartmentsPage],
   ['/production-facts',          ProductionFactsPage],
   ['/production/shift-reports',  ShiftReportsPage],
   ['/quality-defects-camera',    QualityDefectsCameraPage],

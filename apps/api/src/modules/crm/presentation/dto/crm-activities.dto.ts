@@ -19,6 +19,11 @@ export const CreateActivityDtoSchema = z.object({
   contact_id: z.number().int().positive().optional(),
   assigned_to: z.number().int().positive().optional(),
   scheduled_at: z.string().optional(),
+  communication_data: z.object({
+    address: z.string().max(500).optional(),
+    gps_lat: z.number().min(-90).max(90).optional(),
+    gps_lng: z.number().min(-180).max(180).optional(),
+  }).passthrough().optional(),
   due_date: z.string().optional(),
   duration_minutes: z.number().int().positive().optional(),
 }).passthrough();

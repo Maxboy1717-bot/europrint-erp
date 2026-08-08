@@ -6,12 +6,21 @@
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { IS_PUBLIC_KEY } from '../src/common/decorators/public.decorator';
 
 function makeI18n() {
   return {
     t: jest.fn().mockImplementation(async (key: string) => key),
     translate: jest.fn().mockImplementation(async (key: string) => key),
   } as unknown as import('nestjs-i18n').I18nService;
+}
+
+// Real Reflector differentiates by metadata key — mock must too, since
+// RolesGuard now checks IS_PUBLIC_KEY before 'roles' (@Public() bypass).
+function mockRoles(reflector: Reflector, roles: string[] | undefined) {
+  (reflector.getAllAndOverride as jest.Mock).mockImplementation((key: string) =>
+    key === IS_PUBLIC_KEY ? undefined : roles,
+  );
 }
 
 describe('RolesGuard', () => {
@@ -26,7 +35,7 @@ describe('RolesGuard', () => {
   }
 
   it('allows access when no required roles are set', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(undefined);
+    mockRoles(reflector, undefined);
     const guard = makeGuard();
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: { role: 'employee' } }) }),
@@ -37,7 +46,7 @@ describe('RolesGuard', () => {
   });
 
   it('allows super_admin (lowercase) regardless of required roles', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['director', 'sales_manager']);
+    mockRoles(reflector, ['director', 'sales_manager']);
     const guard = makeGuard();
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: { role: 'super_admin' } }) }),
@@ -48,7 +57,7 @@ describe('RolesGuard', () => {
   });
 
   it('allows SUPER_ADMIN (uppercase from legacy token) — case insensitive', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['director', 'sales_manager']);
+    mockRoles(reflector, ['director', 'sales_manager']);
     const guard = makeGuard();
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: { role: 'SUPER_ADMIN' } }) }),
@@ -59,7 +68,7 @@ describe('RolesGuard', () => {
   });
 
   it('allows matching role (lowercase)', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['sales_manager', 'director']);
+    mockRoles(reflector, ['sales_manager', 'director']);
     const guard = makeGuard();
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: { role: 'director' } }) }),
@@ -70,7 +79,7 @@ describe('RolesGuard', () => {
   });
 
   it('allows matching role when required roles use uppercase but user role is lowercase', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['SALES_MANAGER', 'DIRECTOR']);
+    mockRoles(reflector, ['SALES_MANAGER', 'DIRECTOR']);
     const guard = makeGuard();
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: { role: 'director' } }) }),
@@ -81,7 +90,7 @@ describe('RolesGuard', () => {
   });
 
   it('throws ForbiddenException when user has no role', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['director']);
+    mockRoles(reflector, ['director']);
     const guard = makeGuard();
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: {} }) }),
@@ -92,7 +101,7 @@ describe('RolesGuard', () => {
   });
 
   it('throws ForbiddenException when user role does not match', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['director', 'sales_manager']);
+    mockRoles(reflector, ['director', 'sales_manager']);
     const guard = makeGuard();
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: { role: 'employee' } }) }),
@@ -103,7 +112,7 @@ describe('RolesGuard', () => {
   });
 
   it('throws ForbiddenException when user is missing entirely', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['director']);
+    mockRoles(reflector, ['director']);
     const guard = makeGuard();
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: undefined as unknown }) }),

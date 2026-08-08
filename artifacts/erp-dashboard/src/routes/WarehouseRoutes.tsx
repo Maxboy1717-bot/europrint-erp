@@ -8,6 +8,7 @@
 import { lazy } from "react";
 
 const InventoryCount = lazy(() => import("@/pages/InventoryCount"));
+const WMSVarianceApproval = lazy(() => import("@/pages/WMSVarianceApproval"));
 const GoodsReceiving = lazy(() => import("@/pages/GoodsReceiving"));
 const StockReservation = lazy(() => import("@/pages/StockReservation"));
 const WarehouseReports = lazy(() => import("@/pages/WarehouseReports"));
@@ -37,8 +38,17 @@ const ProcurementPage = lazy(() => import("@/pages/ProcurementPage"));
 const WarehousesPage = lazy(() => import("@/pages/WarehousesPage"));
 const WarehouseTypePage = lazy(() => import("@/pages/WarehouseTypePage"));
 const WarehouseStockPage = lazy(() => import("@/pages/WarehouseStockPage"));
+const FinishedGoodsStockPage = lazy(() => import("@/pages/FinishedGoodsStock"));
 const WarehouseDashboardPage = lazy(() => import("@/pages/WarehouseDashboardPage"));
 const PosMonitorPage = lazy(() => import("@/pages/PosMonitorPage"));
+const MaterialUnitPriceConfig = lazy(() => import("@/pages/MaterialUnitPriceConfig"));
+const RulonCards = lazy(() => import("@/pages/RulonCards"));
+const WarehouseBinsPage = lazy(() => import("@/pages/WarehouseBinsPage"));
+const WarehouseZonesPage = lazy(() => import("@/pages/WarehouseZonesPage"));
+const WmsGoodsIssuePage = lazy(() => import("@/pages/WmsGoodsIssuePage"));
+const WmsEoqPage = lazy(() => import("@/pages/WmsEoqPage"));
+const WmsInTransitPage = lazy(() => import("@/pages/WmsInTransitPage"));
+const WMSSettings = lazy(() => import("@/pages/WMSSettings"));
 
 export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   // YANGI toza ombor (ERP nazorat)
@@ -46,6 +56,7 @@ export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/procurement',            ProcurementPage],
   ['/wms/warehouses',             WarehousesPage],
   ['/wms/warehouse-stock/:id',    WarehouseStockPage],
+  ['/warehouse/finished-goods',   FinishedGoodsStockPage],   // DECISION 2 — tayyor mahsulot ombori (warehouse_stock_fg)
   ['/wms/warehouses/:type',       WarehouseTypePage],
   ['/wms/pos-monitor',            PosMonitorPage],
   // Inventar / hisobot (ishlaydigan sahifalar)
@@ -57,6 +68,7 @@ export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/grn',                    GoodsReceiving],
   ['/wms/reservation',            StockReservation],
   ['/wms/inventory',              InventoryCount],
+  ['/wms/variance-approval',      WMSVarianceApproval],
   ['/wms/rental',                 WarehouseRental],
   ['/wms/dashboard',              WMSDashboard],
   ['/wms/kpi-hub',                WarehouseKpiHub],
@@ -75,6 +87,14 @@ export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/scanner',                BarcodeScanner],
   ['/inventory/materials',        WMSMaterials],
   ['/inventory/materials/:id',    WMSMaterials],
+  ['/wms/settings',                WMSSettings],               // Ombor sozlama-hub (SD/Marketing/QC pattern)
+  ['/wms/material-unit-price',     MaterialUnitPriceConfig],  // config-mexanizm: birlik narx
+  ['/wms/rulon-cards',             RulonCards],               // WMS rulon qog'oz karta CRUD
+  ['/wms/bins',                    WarehouseBinsPage],         // WMS ombor binlari (yacheykalar) CRUD
+  ['/wms/zones',                   WarehouseZonesPage],        // WMS ombor zonalari CRUD
+  ['/wms/goods-issue',             WmsGoodsIssuePage],         // WMS tovar chiqim (goods issue) CRUD
+  ['/wms/eoq',                     WmsEoqPage],                // EOQ kalkulyator (Wilson formulasi)
+  ['/wms/in-transit',              WmsInTransitPage],          // Import xom-ashyo YO'LDA kuzatuvi (shipped→customs→arrived)
   // Ta'minot (MM) — tz09 sidebar ishlatadi
   ['/mm/vendors',                 MMVendors],
   ['/mm/purchase-orders',         MMPurchaseOrders],

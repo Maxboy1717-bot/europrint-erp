@@ -4,16 +4,7 @@
  */
 
 import React from "react";
-import { OrgNode, LayoutNode, CARD_W, CARD_H, H_GAP, V_GAP } from "./types";
-
-const DIRECTOR_TYPES = new Set(["owner", "top_director", "director"]);
-const MANAGER_TYPES = new Set(["department", "section"]);
-
-export function getCardColor(nodeType: string): string {
-  if (DIRECTOR_TYPES.has(nodeType)) return "#7c3aed"; // purple — Direktor
-  if (MANAGER_TYPES.has(nodeType)) return "#1d4ed8";  // blue — Menejer
-  return "#4b5563"; // gray — Xodim (position/lavozim)
-}
+import { OrgNode, LayoutNode, CARD_W, CARD_H, H_GAP, V_GAP, resolveTierIndex } from "./types";
 
 export function computeSubtreeWidth(node: OrgNode): number {
   if (!node.children || node.children.length === 0) return CARD_W;
@@ -24,10 +15,15 @@ export function computeSubtreeWidth(node: OrgNode): number {
   return Math.max(CARD_W, childrenWidth);
 }
 
+/** Row (Y) is TIER-driven (resolveTierIndex), NOT tree-recursion depth — owner 2026-07-14:
+ *  "hammasi o'zini qatorida bo'lsin" (every card sits in its own tier's row). A card whose
+ *  parent lives several tiers up (e.g. Departament parented directly under Egasi, skipping
+ *  Bosh Direktor/Yo'nalish direktori) still renders in the Departament row; the connector
+ *  (TreeCanvas.tsx buildConnectors) draws the longer vertical drop to reach it. X-centering
+ *  still follows the actual parent-child tree structure (recursion), only Y changed. */
 export function layoutTree(
   node: OrgNode,
-  offsetX: number,
-  offsetY: number
+  offsetX: number
 ): LayoutNode {
   const totalChildWidth = node.children && node.children.length > 0
     ? node.children?.reduce((s, c) => s + computeSubtreeWidth(c), 0) +
@@ -35,16 +31,18 @@ export function layoutTree(
     : 0;
   const myWidth = Math.max(CARD_W, totalChildWidth);
   const myX = offsetX + (myWidth - CARD_W) / 2;
+  const myRow = resolveTierIndex(node.nodeType, node.hierarchyLevel ?? 0);
+  const myY = myRow * (CARD_H + V_GAP);
 
   let childX = offsetX;
   const layoutChildren: LayoutNode[] = (node.children || []).map((c) => {
     const cw = computeSubtreeWidth(c);
-    const laid = layoutTree(c, childX, offsetY + CARD_H + V_GAP);
+    const laid = layoutTree(c, childX);
     childX += cw + H_GAP;
     return laid;
   });
 
-  return { node, x: myX, y: offsetY, children: layoutChildren };
+  return { node, x: myX, y: myY, children: layoutChildren };
 }
 
 export function flattenLayout(root: LayoutNode): LayoutNode[] {
@@ -55,6 +53,37 @@ export function flattenLayout(root: LayoutNode): LayoutNode[] {
 
 export function countNodes(nodes: OrgNode[]): number {
   return (Array.isArray(nodes) ? nodes : []).reduce((sum, n) => sum + 1 + countNodes(n.children || []), 0);
+}
+
+function flattenOrgTree(nodes: OrgNode[]): OrgNode[] {
+  const result: OrgNode[] = [];
+  (Array.isArray(nodes) ? nodes : []).forEach((n) => {
+    result.push(n);
+    result.push(...flattenOrgTree(n.children || []));
+  });
+  return result;
+}
+
+/** Per-tier "#N" sequence for the card badge — owner 2026-07-14: "# dan keyingi raqamlar
+ *  faqat karta turlariga bog'liq bo'lsin ... umumiy emas" (the number after # must depend on
+ *  the card's TYPE, not a single shared/global counter). node.id is the raw DB primary key —
+ *  global across every card regardless of tier, so a Bo'lim card and a Sektor card could show
+ *  "#8"/"#13" with no relation to how many Bo'lim or Sektor cards actually exist. This computes
+ *  an independent 1,2,3... counter PER TIER (resolveTierIndex — the same 6-tier grouping used
+ *  for color/row), ordered by id ascending (creation order), over the FULL node set (not just
+ *  whatever is currently visible after search/level filtering) so the numbers stay stable
+ *  regardless of filter state. */
+export function computeTierSequences(nodes: OrgNode[]): Map<number, number> {
+  const flat = flattenOrgTree(nodes).slice().sort((a, b) => a.id - b.id);
+  const counters: Record<number, number> = {};
+  const map = new Map<number, number>();
+  for (const n of flat) {
+    const tier = resolveTierIndex(n.nodeType, n.hierarchyLevel ?? 0);
+    const next = (counters[tier] ?? 0) + 1;
+    counters[tier] = next;
+    map.set(n.id, next);
+  }
+  return map;
 }
 
 export function getInitials(name?: string | null): string {

@@ -3,7 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IMaintenanceSvcRepository, MAINTENANCE_SVC_REPO } from './i-maintenance-svc.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class MaintenanceService {
   private readonly logger = new Logger(MaintenanceService.name);
 
-  constructor(@Inject(MAINTENANCE_SVC_REPO) private readonly maintenanceSvcRepo: IMaintenanceSvcRepository) {}
+  constructor(
+    @Inject(MAINTENANCE_SVC_REPO) private readonly maintenanceSvcRepo: IMaintenanceSvcRepository,
+    private readonly i18n: I18nService,
+  ) {}
   normalizeType(type: string): string { return type?.toUpperCase() || 'CORRECTIVE'; }
 
   private mapRow(r: Record<string, unknown>) {
@@ -42,7 +46,7 @@ export class MaintenanceService {
     return safeCall(async () => {
     const result = await this.maintenanceSvcRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Ta'mirlash #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.maintenanceOrderNotFound', { args: { id } }));
     return this.mapRow(result.data);
   
     });}
@@ -167,6 +171,31 @@ export class MaintenanceService {
       const result = await this.maintenanceSvcRepo.findSpareParts(search);
       if (!result.ok) { this.logger.warn(`findSpareParts: ${result.error}`); return { items: [] }; }
       return { items: result.data };
+    });
+  }
+
+  // ─── FAZA "Sozlama har bo'limda" (2026-07-01) — MRO sozlama-hub ───────────
+  async getSettings(): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.getSettings();
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return { items: result.data };
+    });
+  }
+
+  async saveSettings(entries: Record<string, string>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.saveSettings(entries);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  async patchSetting(id: string, value: string): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.patchSetting(id, value);
+      if (!result.ok) throw new NotFoundException(String(result.error));
+      return result.data;
     });
   }
 }

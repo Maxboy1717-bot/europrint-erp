@@ -20,12 +20,6 @@ import { z } from 'zod';
 import { SaasService } from './saas.service';
 import { OrdersRegistryService } from './orders-registry.service';
 import { DEFAULT_PAGE_SIZE } from '@common/constants/app.constants';
-import { notImplemented } from '@common/exceptions/not-implemented';
-import {
-  SaasTenantAclTranslator,
-  type LegacySaasTenantRow,
-  type SaasTenantDto,
-} from './acl/saas-tenant-acl';
 
 const CreateTenantSchema = z.object({
   name: z.string().min(1),
@@ -64,29 +58,11 @@ const OrderRegistrySchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Controller('saas')
 export class SaasController {
-  /** PA2-14 ACL demonstrator. Stateless - direct instantiation is fine. */
-  private readonly tenantAcl = new SaasTenantAclTranslator();
-
   constructor(private readonly svc: SaasService) {}
 
   @Get('tenants')
   async getTenants() {
     return unwrapOrInternal(await this.svc.getTenants());
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-10 (Platform / SaaS) consumers
-   * should target this endpoint; the legacy `/tenants` route stays for
-   * backwards-compat with the existing admin dashboard.
-   */
-  @Get('tenants/v2')
-  async getTenantsV2(): Promise<SaasTenantDto[]> {
-    const raw = unwrapOrInternal(await this.svc.getTenants()) as unknown as LegacySaasTenantRow[];
-    const list = Array.isArray(raw) ? raw : [];
-    return list
-      .map((row) => this.tenantAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: SaasTenantDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Post('tenants')

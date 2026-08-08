@@ -3,9 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
-import { Ok, Err, Result, safeCall } from '@common/result';
+import { Ok, Err, Result, safeCall, AppErr } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
@@ -89,22 +87,34 @@ export class ErpExtraRepository {
 
   }
 
-  async createMrpRun(body: Row): Promise<Result<Row>>  {
-  try {  
-      const r = await exec(sql`INSERT INTO erp_mrp_runs (run_date, status, notes, created_by) VALUES (NOW(), 'pending', ${body.notes ?? null}, ${body.createdBy ?? null}) RETURNING *`);
-      return r.ok ? Ok(r.data[0] ?? { id: 0, status: 'pending', createdAt: _time.now() }) : Err(r.error);  } catch (_e) {
-    return Err(String(_e));
+  /**
+   * DEPRECATED (Q-46): `erp_mrp_runs`/`erp_mrp_results` never receive a real
+   * calculation — {@link calculateMrpRun} only flipped status to 'running' and
+   * nothing ever wrote to `erp_mrp_results` (verified: zero INSERT sites,
+   * table always empty in prod). Creating a run here is now blocked so the
+   * UI cannot enter a state that looks "in progress" forever. Real MRP with
+   * an actual netting/lot-sizing algorithm lives in the PP module:
+   * POST /api/pp/mrp/run (see pp-intelligence.controller.ts + run-mrp.handler.ts).
+   */
+  async createMrpRun(_body: Row): Promise<Result<Row>>  {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy MRP eskirgan (DEPRECATED): haqiqiy hisob-kitob bermaydi. Real MRP uchun PP moduli — POST /api/pp/mrp/run ishlating.",
+    ));
   }
 
-  }
-
-  async calculateMrpRun(runId: number): Promise<Result<Row | null>>  {
-  try {  
-      const r = await exec(sql`UPDATE erp_mrp_runs SET status = 'running', started_at = NOW() WHERE id = ${runId} RETURNING *`);
-      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
-    return Err(String(_e));
-  }
-
+  /**
+   * DEPRECATED (Q-46): see {@link createMrpRun}. This previously flipped
+   * `erp_mrp_runs.status` to 'running' with no real computation ever
+   * following it (no writer to `erp_mrp_results` exists in the codebase) —
+   * a fake "in progress" state that misleads users. Blocked; use PP's
+   * POST /api/pp/mrp/run for a real MRP calculation.
+   */
+  async calculateMrpRun(_runId: number): Promise<Result<Row | null>>  {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy MRP eskirgan (DEPRECATED): haqiqiy hisob-kitob bermaydi (faqat status-flip, soxta). Real MRP uchun PP moduli — POST /api/pp/mrp/run ishlating.",
+    ));
   }
 
   async listMrpResults(runId?: number): Promise<Result<Row[]>>  {
@@ -117,9 +127,31 @@ export class ErpExtraRepository {
 
   }
 
+  /**
+   * Q-46 (2026-07-02): redirected off the orphan `erp_purchase_requisitions` table —
+   * that table has zero writers anywhere in the codebase (grep-verified), so it was
+   * permanently empty (silent, never surfaced any real requisition). The REAL,
+   * actively-written requisition data lives in `mm_purchase_requisitions` /
+   * `mm_purchase_requisition_items` (populated by the WMS ROP-trigger and the MM
+   * purchase-requisition CRUD — see rop-trigger.handler.ts + mm-vendors-pr.repository.ts).
+   * `procurement_requests` was considered but is a different domain (P2P vendor
+   * advance/reimbursement with an org approval chain) — not a valid stand-in for
+   * material stock-replenishment requisitions (Q-40: no fabricated cross-domain data).
+   */
   async listPurchaseRequisitions(limit: number, offset: number): Promise<Result<Row[]>>  {
-  try {  
-      return exec(sql`SELECT pr.*, mc.xom_ashyo AS material_name FROM erp_purchase_requisitions pr LEFT JOIN material_cards mc ON mc.id = pr.material_id ORDER BY pr.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+  try {
+      return exec(sql`
+        SELECT pr.id, pr.title, pr.requested_by, pr.needed_by, pr.notes, pr.status,
+               pr.created_at, pr.updated_at,
+               pri.material_id, pri.quantity, mc.xom_ashyo AS material_name
+        FROM mm_purchase_requisitions pr
+        LEFT JOIN LATERAL (
+          SELECT material_id, quantity FROM mm_purchase_requisition_items
+          WHERE requisition_id = pr.id ORDER BY id LIMIT 1
+        ) pri ON true
+        LEFT JOIN material_cards mc ON mc.id = pri.material_id
+        ORDER BY pr.created_at DESC LIMIT ${limit} OFFSET ${offset}
+      `);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -137,7 +169,15 @@ export class ErpExtraRepository {
   async createOrder(body: Row): Promise<Result<Row | null>> {
   try {
     const orderNumber = body.orderNumber ?? `PO-${Date.now()}`;
-    const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, customer_name, due_date, priority, status, notes) VALUES (${orderNumber}, ${body.productId ?? null}, ${body.quantity ?? 1}, ${body.customerName ?? null}, ${body.dueDate ?? null}, ${body.priority ?? 'normal'}, ${body.status ?? 'pending'}, ${body.notes ?? null}) RETURNING *`);
+    // planned_quantity is NOT NULL (no default); priority is integer; customer_name/due_date
+    // do not exist on production_orders (customer comes via sales_order, due → planned_end_date).
+    const qty = Number(body.quantity ?? body.plannedQuantity ?? 1);
+    const priorityNum = Number.isFinite(Number(body.priority)) ? Number(body.priority) : 3;
+    // T12-04: work_center_id YOZUV-YO'LI — agar so'rovda ish markazi berilgan bo'lsa to'ldiriladi
+    // (body.workCenterId — ERP modulida kanonik kalit). Berilmasa NULL (planner keyinroq belgilaydi).
+    // Soxta YOZMAYDI: faqat MAVJUD qiymatdan to'ldiradi (Q-40). FK -> work_centers(id).
+    const workCenterId = body.workCenterId ?? null;
+    const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_end_date, priority, status, notes, work_center_id) VALUES (${orderNumber}, ${body.productId ?? null}, ${qty}, ${qty}, ${body.dueDate ?? null}, ${priorityNum}, ${body.status ?? 'pending'}, ${body.notes ?? null}, ${workCenterId}) RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }

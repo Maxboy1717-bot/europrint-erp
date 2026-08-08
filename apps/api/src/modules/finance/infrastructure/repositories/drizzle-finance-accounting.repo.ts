@@ -7,7 +7,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { sql, SQL } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall } from '@common/result';
-import { execGlLineInsert } from '@common/database/queries-remaining';
 
 type Row = Record<string, unknown>;
 
@@ -28,17 +27,23 @@ export class DrizzleFinanceAccountingRepo {
   }
 
   async getDashboard(): Promise<Row> {
+    // OWNER QARORI 2026-07-02 (Moliya-GL-Kassa): finance_invoices = kanonik invoice-manba.
+    // sales_invoices/purchase_invoices endi yozuvchisiz (0 satr) — AR/AP shu yerdan emas,
+    // finance_invoices'dan (invoice_type='sales'/'purchase') olinadi.
     const rows = await runQuery<Row>(sql`
       SELECT
         (SELECT COUNT(*) FROM gl_documents) AS gl_total,
         (SELECT COUNT(*) FROM gl_documents WHERE status = 'posted') AS gl_posted,
-        (SELECT COUNT(*) FROM gl_lines) AS gl_entries,
+        -- GL two-world fix (2026-07-14): gl_lines has zero writers since the
+        -- 2026-06-22 SAP#76 consolidation (commit f45f5886) onto entries (ADR-003
+        -- canonical). Counting entries here so this stat isn't permanently frozen at 0.
+        (SELECT COUNT(*) FROM entries) AS gl_entries,
         (SELECT COUNT(*) FROM accounting_periods WHERE status = 'open') AS periods_open,
         (SELECT COUNT(*) FROM accounting_periods WHERE status = 'closed') AS periods_closed,
-        (SELECT COALESCE(SUM(total_amount),0) FROM sales_invoices) AS ar_total,
-        (SELECT COALESCE(SUM(total_amount),0) FROM sales_invoices WHERE payment_status = 'unpaid') AS ar_unpaid,
-        (SELECT COALESCE(SUM(total_amount),0) FROM purchase_invoices) AS ap_total,
-        (SELECT COALESCE(SUM(total_amount),0) FROM purchase_invoices WHERE payment_status = 'unpaid') AS ap_unpaid
+        (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'sales') AS ar_total,
+        (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'sales' AND payment_status = 'unpaid') AS ar_unpaid,
+        (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'purchase') AS ap_total,
+        (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'purchase' AND payment_status = 'unpaid') AS ap_unpaid
     `);
     return (rows.rows[0] ?? {}) as Row;
   }
@@ -68,30 +73,6 @@ export class DrizzleFinanceAccountingRepo {
     if (filter.moveType)    conditions.push(sql`sm.move_type = ${filter.moveType}`);
     const where = conditions.length === 0 ? sql`1=1` : sql.join(conditions, sql` AND `);
     return this.getMaterials(where, limitVal, offsetVal);
-  }
-
-  async getGlDocumentSeq(): Promise<string> {
-    try {
-      const rows = await runQuery<{ num: string }>(sql`SELECT LPAD(NEXTVAL('gl_document_seq')::text, 6, '0') AS num`);
-      return String(rows.rows[0]?.num || Date.now());
-    } catch {
-      const rows = await runQuery<{ num: string }>(sql`SELECT 'GL-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') AS num`);
-      return String(rows.rows[0]?.num || Date.now());
-    }
-  }
-
-  async insertGlDocument(documentNumber: string, body: Row): Promise<Row> {
-    const { document_type, document_date, posting_date, description, currency = 'UZS', reference_type, reference_id, cost_center_id, profit_center_id } = body;
-    const rows = await runQuery<Row>(sql`
-      INSERT INTO gl_documents (document_number, document_type, document_date, posting_date, description, currency, reference_type, reference_id, cost_center_id, profit_center_id, status)
-      VALUES (${documentNumber}, ${document_type}, ${document_date}, ${posting_date || document_date}, ${description}, ${currency}, ${reference_type || null}, ${reference_id || null}, ${cost_center_id || null}, ${profit_center_id || null}, 'draft')
-      RETURNING *
-    `);
-    return (rows.rows[0] ?? {}) as Row;
-  }
-
-  async insertGlLine(docId: number, lineNumber: number, line: Row): Promise<void> {
-    await execGlLineInsert(docId, lineNumber, line);
   }
 
   async getPeriods(): Promise<Row[]> {
@@ -131,12 +112,17 @@ export class DrizzleFinanceAccountingRepo {
 
   async getInventoryValuation(): Promise<{ materials: Row[]; summary: Row }> {
     const [matsResult, summaryResult] = await Promise.all([
+      // T21-B1 #24 master-data converge: raw_materials valuation kept as-is (canonical
+      // stock/price source); ADDITIV int-link mc.kod AS canonical_card_kod surfaces the
+      // material_cards (kanonik) tie without changing valuation numbers (Q-39/Q-40).
       runQuery<Row>(sql`
         SELECT rm.id, rm.code, rm.name, rm.category, rm.unit, rm.current_stock, rm.unit_price,
                (rm.current_stock * rm.unit_price) AS total_value,
-               COALESCE(w.name, '') AS warehouse_name
+               COALESCE(w.name, '') AS warehouse_name,
+               mc.kod AS canonical_card_kod
         FROM raw_materials rm
         LEFT JOIN warehouses w ON w.id = rm.warehouse_id
+        LEFT JOIN material_cards mc ON mc.id = rm.material_card_id
         WHERE rm.is_active = true ORDER BY (rm.current_stock * rm.unit_price) DESC
       `),
       runQuery<Row>(sql`SELECT COUNT(*) AS total_items, COALESCE(SUM(current_stock),0) AS total_stock, COALESCE(SUM(current_stock * unit_price),0) AS total_value FROM raw_materials WHERE is_active = true`),

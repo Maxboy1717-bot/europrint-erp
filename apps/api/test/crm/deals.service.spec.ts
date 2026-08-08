@@ -6,12 +6,20 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { I18nService } from 'nestjs-i18n';
 import {
   ICrmDealsRepository,
   CRM_DEALS_REPO,
 } from '../../src/modules/crm/deals/i-crm-deals.repo';
 import { DealsService } from '../../src/modules/crm/deals/deals.service';
 import { Ok, Err, AppErr } from '../../src/common/result';
+
+function makeI18n(): I18nService {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as I18nService;
+}
 
 function makeRepo(): jest.Mocked<ICrmDealsRepository> {
   return {
@@ -33,6 +41,7 @@ describe('DealsService', () => {
       providers: [
         DealsService,
         { provide: CRM_DEALS_REPO, useValue: repo },
+        { provide: I18nService, useValue: makeI18n() },
       ],
     }).compile();
     svc = module.get(DealsService);

@@ -9,6 +9,7 @@ import { Err, isErr, Ok, safeCall } from '@common/result';
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { I18nService } from 'nestjs-i18n';
 import { sql, gte } from 'drizzle-orm';
 import {
   AiRequest,
@@ -31,6 +32,26 @@ import { AI_ROUTER_REPO, type IAiRouterRepo } from '../../domain/repositories/i-
 import { MAX_NAME_LENGTH, AI_DEFAULT_MAX_TOKENS, AI_TOKENS_PER_UNIT } from '@common/constants/app.constants';
 export type { UsageStats };
 
+// ─── PII Masking ──────────────────────────────────────────────────────────
+// Q-40: real promptlarda PII (telefon, passport, email, PINFL) bo'lishi mumkin.
+// ai_usage_logs ga yozishdan OLDIN mask qilinadi.
+const PII_PATTERNS: RegExp[] = [
+  /\+998\d{9}/g,                  // O'zbekiston telefon
+  /[A-Z]{2}\d{7}/g,               // Passport (AA1234567)
+  /[\w.-]+@[\w.-]+\.\w{2,}/g,     // Email
+  /\b\d{14}\b/g,                  // PINFL (14 raqam)
+];
+
+function maskPii(text: string): string {
+  if (!text) return text;
+  let masked = text;
+  for (const pattern of PII_PATTERNS) {
+    masked = masked.replace(pattern, '[MASKED]');
+  }
+  return masked;
+}
+// ─────────────────────────────────────────────────────────────────────────
+
 @Injectable()
 export class AiRouterService {
   private readonly logger = new Logger(AiRouterService.name);
@@ -38,14 +59,43 @@ export class AiRouterService {
   constructor(private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
     private readonly drizzle: DrizzleService,
-    @Inject(AI_ROUTER_REPO) private readonly aiRouterRepo: IAiRouterRepo) {}
+    @Inject(AI_ROUTER_REPO) private readonly aiRouterRepo: IAiRouterRepo,
+    private readonly i18n: I18nService) {}
 
   async call(req: AiRequest): Promise<Result<AiResponse>> {
     const startTime = Date.now();
     const budgetErr = await this.checkBudget();
     if (budgetErr) return budgetErr;
     const providers = this.buildProviderOrder(req);
+    if (providers.length === 0) {
+      // Q-40: hech qaysi provayder kaliti yo'q — soxta javob qaytarmaymiz, aniq xato beramiz.
+      const msg = 'Hech qaysi AI provayder kaliti sozlanmagan (ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY|GOOGLE_API_KEY)';
+      this.logger.warn(`[AI] ${msg}`);
+      return Err(msg);
+    }
     return this.tryProviders(providers, req, startTime);
+  }
+
+  /**
+   * Provayder uchun API kalit sozlanganmi? Faqat kalit MAVJUDLIGINI tekshiradi —
+   * qiymatni HECH QACHON qaytarmaydi/loglmaydi (Q-30). Gemini uchun ham
+   * `GEMINI_API_KEY`, ham `GOOGLE_API_KEY` (jonli .env nomi) qabul qilinadi.
+   */
+  private resolveProviderKey(provider: AiProvider): string | undefined {
+    switch (provider) {
+      case 'openai':
+        return this.configService.get<string>('OPENAI_API_KEY');
+      case 'gemini':
+        return this.configService.get<string>('GEMINI_API_KEY')
+          ?? this.configService.get<string>('GOOGLE_API_KEY');
+      case 'claude':
+        return this.configService.get<string>('ANTHROPIC_API_KEY');
+    }
+  }
+
+  private isProviderConfigured(provider: AiProvider): boolean {
+    const key = this.resolveProviderKey(provider);
+    return typeof key === 'string' && key.length > 0;
   }
 
   private async checkBudget(): Promise<Result<AiResponse> | null> {
@@ -61,7 +111,12 @@ export class AiRouterService {
 
   private buildProviderOrder(req: AiRequest): AiProvider[] {
     const preferred = req.provider ?? TASK_PROVIDER_MAP[req.taskType] ?? 'gemini';
-    return [preferred, ...PROVIDER_FALLBACK.filter((p) => p !== preferred)];
+    const ordered = [preferred, ...PROVIDER_FALLBACK.filter((p) => p !== preferred)];
+    // Graceful fallback: faqat KALITI sozlangan provayderlar qoladi (afzallik
+    // tartibi saqlanadi). Sozlanmagan provayderni urinib log to'ldirmaymiz va
+    // kechikish qo'shmaymiz. Agar afzal provayder kalitsiz bo'lsa — keyingi
+    // sozlangan provayderga (masalan, faqat ANTHROPIC bo'lsa, claude'ga) tushadi.
+    return ordered.filter((p) => this.isProviderConfigured(p));
   }
 
   private async tryProviders(providers: AiProvider[], req: AiRequest, startTime: number): Promise<Result<AiResponse>> {
@@ -94,11 +149,13 @@ export class AiRouterService {
       const todaySpentValue = isErr(todaySpentResult) ? 0 : todaySpentResult.data;
       const providerStats = await this.collectProviderStats(today);
       const topTasks = await this.collectTopTasks(today);
+      const byCard = await this.collectSpendByCard(today);
       const requestCount = Object.values(providerStats).reduce((sum, p) => sum + p.requestCount, 0);
       return Ok({
         today: { spent: todaySpentValue, remaining: DAILY_BUDGET_USD - todaySpentValue, budget: DAILY_BUDGET_USD, requestCount },
         byProvider: providerStats,
         topTaskTypes: (Array.isArray(topTasks) ? topTasks : []).map((row) => ({ taskType: row.taskType as AiTaskType, spent: parseFloat(row.spent), count: row.count })),
+        byCard,
       });
     } catch (e) {
       this.logger.warn(`getUsageStats: fallback due to error: ${e}`);
@@ -111,6 +168,7 @@ export class AiRouterService {
       today: { spent: 0, remaining: DAILY_BUDGET_USD, budget: DAILY_BUDGET_USD, requestCount: 0 },
       byProvider: { openai: { spent: 0, requestCount: 0 }, gemini: { spent: 0, requestCount: 0 }, claude: { spent: 0, requestCount: 0 } },
       topTaskTypes: [],
+      byCard: [],
     };
   }
 
@@ -148,6 +206,23 @@ export class AiRouterService {
     return [];
   }
 
+  /** SB0529: per-karta xarajat rollup — UsageStats.byCard uchun. */
+  private async collectSpendByCard(today: Date): Promise<UsageStats['byCard']> {
+    try {
+      const byCardResult = await this.aiRouterRepo.getSpendByCard(today, 20);
+      if (byCardResult.ok) {
+        return byCardResult.data.map((row) => ({
+          cardId: row.cardId,
+          userId: row.userId,
+          fullName: row.fullName,
+          spent: parseFloat(row.spent),
+          count: row.count,
+        }));
+      }
+    } catch { this.logger.warn('getUsageStats: byCard query failed'); }
+    return [];
+  }
+
   private async callProvider(provider: AiProvider, req: AiRequest): Promise<Result<AiResponse>> {
     switch (provider) {
       case 'openai':
@@ -160,7 +235,7 @@ export class AiRouterService {
   }
 
   private async callOpenAi(req: AiRequest): Promise<Result<AiResponse>> {
-    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    const apiKey = this.resolveProviderKey('openai');
     if (!apiKey) return Err('OPENAI_API_KEY konfiguratsiyasi yo`q');
 
     return safeCall(async () => {
@@ -168,17 +243,25 @@ export class AiRouterService {
       const client = new OpenAI({ apiKey });
       const model = PROVIDER_MODELS.openai;
 
+      // Vision (2.10): image present → multi-part user content (text + image_url data URI).
+      const userContent = req.image
+        ? [
+            { type: 'text' as const, text: req.prompt },
+            { type: 'image_url' as const, image_url: { url: `data:${req.image.mediaType};base64,${req.image.base64}` } },
+          ]
+        : req.prompt;
+
       const response = await client.chat.completions.create({
         model,
         messages: [
           ...(req.systemPrompt ? [{ role: 'system' as const, content: req.systemPrompt }] : []),
-          { role: 'user' as const, content: req.prompt },
+          { role: 'user' as const, content: userContent },
         ],
         max_tokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS,
         temperature: req.temperature ?? 0.7,
       });
 
-      if (!response.choices[0]?.message?.content) throw new InternalServerErrorException('OpenAI javob bo`sh');
+      if (!response.choices[0]?.message?.content) throw new InternalServerErrorException(await this.i18n.t('errors.openAiEmptyResponse'));
 
       const text = response.choices[0].message.content;
       const inputTokens = response.usage?.prompt_tokens ?? 0;
@@ -196,8 +279,12 @@ export class AiRouterService {
     const genModel = client.getGenerativeModel({ model });
     const systemPromptPart = req.systemPrompt ? `${req.systemPrompt}\n\n` : '';
     const fullPrompt = systemPromptPart + req.prompt;
+    // Vision (2.10): image present → append an inlineData part alongside the text part.
+    const parts = req.image
+      ? [{ text: fullPrompt }, { inlineData: { mimeType: req.image.mediaType, data: req.image.base64 } }]
+      : [{ text: fullPrompt }];
     const response = await genModel.generateContent({
-      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      contents: [{ role: 'user', parts }],
       generationConfig: {
         maxOutputTokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS,
         temperature: req.temperature ?? 0.7,
@@ -207,11 +294,11 @@ export class AiRouterService {
   }
 
   private async callGemini(req: AiRequest): Promise<Result<AiResponse>> {
-    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
-    if (!apiKey) return Err('GEMINI_API_KEY konfiguratsiyasi yo`q');
+    const apiKey = this.resolveProviderKey('gemini');
+    if (!apiKey) return Err('GEMINI_API_KEY / GOOGLE_API_KEY konfiguratsiyasi yo`q');
     return safeCall(async () => {
       const { response, model } = await this.invokeGemini(apiKey, req);
-      if (!response.response?.text()) throw new InternalServerErrorException('Gemini javob bo`sh');
+      if (!response.response?.text()) throw new InternalServerErrorException(await this.i18n.t('errors.geminiEmptyResponse'));
       const text = response.response.text();
       const usageMetadata = response.response.usageMetadata;
       const inputTokens = usageMetadata?.promptTokenCount ?? 0;
@@ -222,7 +309,7 @@ export class AiRouterService {
   }
 
   private async callClaude(req: AiRequest): Promise<Result<AiResponse>> {
-    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
+    const apiKey = this.resolveProviderKey('claude');
     if (!apiKey) return Err('ANTHROPIC_API_KEY konfiguratsiyasi yo`q');
 
     return safeCall(async () => {
@@ -230,15 +317,27 @@ export class AiRouterService {
       const client = new Anthropic({ apiKey });
       const model = PROVIDER_MODELS.claude;
 
+      // Vision (2.10): image present → multi-part user content (image block + text block),
+      // matching the Anthropic vision message shape used elsewhere (AIsha vision tools).
+      const userContent = req.image
+        ? [
+            {
+              type: 'image' as const,
+              source: { type: 'base64' as const, media_type: req.image.mediaType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif', data: req.image.base64 },
+            },
+            { type: 'text' as const, text: req.prompt },
+          ]
+        : req.prompt;
+
       const response = await client.messages.create({
         model,
         max_tokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS,
         ...(req.temperature !== undefined && { temperature: req.temperature }),
         system: req.systemPrompt,
-        messages: [{ role: 'user', content: req.prompt }],
+        messages: [{ role: 'user', content: userContent }],
       });
 
-      if (!response.content?.[0] || response.content[0].type !== 'text') throw new InternalServerErrorException('Claude javob bo`sh');
+      if (!response.content?.[0] || response.content[0].type !== 'text') throw new InternalServerErrorException(await this.i18n.t('errors.claudeEmptyResponse'));
 
       const text = response.content[0].text;
       const inputTokens = response.usage?.input_tokens ?? 0;
@@ -274,10 +373,10 @@ export class AiRouterService {
       outputTokens: result.outputTokens,
       totalTokens: result.inputTokens + result.outputTokens,
       estimatedCost: result.estimatedCostUsd.toFixed(6),
-      userId: req.userId != null ? String(req.userId) : undefined,
+      userId: req.userId != null ? String(req.userId) : undefined,  // ai_usage_logs.user_id = text ustun (Number emas)
       sessionId: req.sessionId != null ? String(req.sessionId) : undefined,
-      requestSummary: req.prompt.substring(0, MAX_NAME_LENGTH),
-      responseSummary: result.text.substring(0, MAX_NAME_LENGTH),
+      requestSummary: maskPii(req.prompt).substring(0, MAX_NAME_LENGTH),
+      responseSummary: maskPii(result.text).substring(0, MAX_NAME_LENGTH),
       latencyMs: result.latencyMs,
       status: 'success' as const,
     };

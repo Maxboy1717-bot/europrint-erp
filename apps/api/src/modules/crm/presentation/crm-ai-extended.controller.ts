@@ -40,7 +40,15 @@ const CreateNbaTaskSchema = z.object({
   action: z.string().optional(),
 }).passthrough();
 
-const CRM_AI_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
+// SB-mismatch fix: ExtendedAIPanel.tsx's "accept suggested tasks" bulk-create call.
+const CreateAutoTasksSchema = z.object({
+  entityType: z.string().optional(),
+  entityId: z.union([z.string(), z.number()]).optional(),
+  tasks: z.array(z.record(z.string(), z.unknown())).optional(),
+}).passthrough();
+
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_AI_ROLES = ['sales_manager', 'manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
 
 const NBA_ACTION_LABELS: Record<string, string> = {
   make_call:        "Qo'ng'iroq qilish",
@@ -52,15 +60,6 @@ const NBA_TIP_LABELS: Record<string, string> = {
   send_email:       'Email ham yuborishni unutmang',
   schedule_meeting: 'Uchrashuv tayinlashni taklif qiling',
   make_call:        "Qo'ng'iroq qiling",
-};
-const CHURN_RISK_LABELS: Record<string, string> = { high: 'yuqori', medium: "o'rta", low: 'past' };
-const CHURN_FACTOR_LABELS: Record<string, string> = {
-  no_recent_activity:    'Yaqinda faollik yo\'q',
-  late_payment_history:  'Kechiktirilgan to\'lovlar tarixi',
-};
-const CHURN_ACTION_LABELS: Record<string, string> = {
-  personal_call:    "Shaxsiy qo'ng'iroq",
-  loyalty_discount: 'Sadoqat chegirmasi',
 };
 const SCORING_APPROACH: Record<string, string> = {
   A: 'Faol yordam va tezkor bitim',
@@ -85,36 +84,47 @@ export class CrmAiExtendedController {
     private readonly crmAiSvc: CrmAiService,
   ) {}
 
-  @ApiOperation({ summary: 'Autofill' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({ summary: 'Autofill — requires AI provider (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no AI provider configured' })
   @Get('autofill/:entityType/:id')
   async autofill(@Param('entityType') entityType: string, @Param('id') id: string) {
     return unwrapOrThrow(await this.svc.autofill(entityType, safeInt(id, 0)));
   }
 
-  @ApiOperation({ summary: 'Churn rescue' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({ summary: 'Churn rescue — requires ML model (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no ML model configured' })
   @Get('churn-rescue/:entityType/:id')
   async churnRescue(@Param('entityType') entityType: string, @Param('id') id: string) {
     return unwrapOrThrow(await this.svc.analyzeChurn(entityType, safeInt(id, 0)));
   }
 
-  @ApiOperation({ summary: 'Suggest auto tasks' })
+  @ApiOperation({ summary: 'Suggest auto tasks — returns existing crm_tasks for entity' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('extended/auto-tasks/suggest')
   async suggestAutoTasks(@Query('entityType') entityType?: string, @Query('entityId') entityId?: string) {
-    return unwrapOrThrow(await this.svc.suggestAutoTasks(entityType ?? '', safeInt(entityId, 0)));
+    return unwrapOrThrow(await this.svc.suggestAutoTasks(entityType ?? 'lead', safeInt(entityId, 0)));
   }
 
-  @ApiOperation({ summary: 'Post suggest auto tasks' })
+  @ApiOperation({ summary: 'Post suggest auto tasks — returns existing crm_tasks for entity' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('extended/auto-tasks/suggest')
   async postSuggestAutoTasks(@Body() body: unknown) {
     const dto = SuggestAutoTasksSchema.parse(body);
-    return unwrapOrThrow(await this.svc.suggestAutoTasks(String(dto.entityType ?? ''), safeInt(dto.entityId, 0)));
+    return unwrapOrThrow(await this.svc.suggestAutoTasks(String(dto.entityType ?? 'lead'), safeInt(dto.entityId, 0)));
+  }
+
+  @ApiOperation({ summary: 'Bulk-create AI-suggested tasks — real INSERT into crm_tasks' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('extended/auto-tasks/create')
+  async createAutoTasksBulk(@Body() body: unknown) {
+    const dto = CreateAutoTasksSchema.parse(body);
+    return unwrapOrThrow(await this.svc.createAutoTasks(
+      String(dto.entityType ?? 'lead'),
+      safeInt(dto.entityId, 0),
+      Array.isArray(dto.tasks) ? dto.tasks : [],
+    ));
   }
 
   @ApiOperation({ summary: 'Get ai leads' })
@@ -131,13 +141,26 @@ export class CrmAiExtendedController {
     return unwrapOrThrow(await this.svc.getAiNba(entityType ?? null, safeInt(limit, 10)));
   }
 
-  @ApiOperation({ summary: 'Create nba task' })
+  @ApiOperation({ summary: 'Portfolio-wide churn summary — real DB query (open deals × days since activity), not ML' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('extended/churn/analyze')
+  async getChurnAnalysis(@Query('limit') limit?: string) {
+    return unwrapOrThrow(await this.svc.getChurnAnalysisSummary(safeInt(limit, 20)));
+  }
+
+  @ApiOperation({ summary: 'Create NBA task — real INSERT into crm_tasks' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('nba/create-task')
   async createNbaTask(@Body() body: unknown) {
-    CreateNbaTaskSchema.parse(body ?? {});
-    return { created: true, taskId: Date.now() };
+    const dto = CreateNbaTaskSchema.parse(body ?? {});
+    const taskBody: Record<string, unknown> = {
+      title:       `NBA: ${String(dto.action ?? 'follow_up')}`,
+      lead_id:     dto.entityType === 'lead'  ? safeInt(dto.entityId, 0) : undefined,
+      deal_id:     dto.entityType === 'deal'  ? safeInt(dto.entityId, 0) : undefined,
+      priority:    'medium',
+    };
+    return unwrapOrThrow(await this.svc.createAutoTask(taskBody));
   }
 
   @ApiOperation({ summary: 'Post nba' })
@@ -165,44 +188,23 @@ export class CrmAiExtendedController {
     };
   }
 
-  @ApiOperation({ summary: 'Post churn rescue' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({ summary: 'Post churn rescue — requires ML model (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no ML model configured' })
   @Post('churn-rescue/:entityType/:id')
   async postChurnRescue(@Param('entityType') entityType: string, @Param('id') id: string) {
-    const raw = unwrapOrThrow(await this.svc.analyzeChurn(entityType, safeInt(id, 0))) as Record<string, unknown>;
-    const riskScore = Math.round(Number(raw['risk_score'] ?? 0.4) * 100);
-    const churnRisk = String(raw['churn_risk'] ?? 'medium');
-    const factors = Array.isArray(raw['factors']) ? raw['factors'] as string[] : [];
-    const actions = Array.isArray(raw['recommended_actions']) ? raw['recommended_actions'] as string[] : ['Qo\'ng\'iroq qilish', 'Chegirma taklif qilish'];
-    return {
-      churnRescue: {
-        riskLevel:    CHURN_RISK_LABELS[churnRisk] ?? 'past',
-        riskScore,
-        riskFactors:  factors.map(f => CHURN_FACTOR_LABELS[f] ?? f),
-        rescueScenario: {
-          actions:             actions.map(a => CHURN_ACTION_LABELS[a] ?? a),
-          timeline:            '3-5 kun',
-          successProbability:  Math.max(20, 90 - riskScore),
-          keyMessage:          'Sizning ehtiyojlaringiz bizga muhim, birgalikda yechim topamiz',
-        },
-        retentionOffer: riskScore > 70 ? '10% chegirma + bepul yetkazib berish' : null,
-      },
-    };
+    return unwrapOrThrow(await this.svc.analyzeChurn(entityType, safeInt(id, 0)));
   }
 
-  @ApiOperation({ summary: 'Get ai quick score' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({ summary: 'Quick score — lead uses EP-CRM-012 deterministic formula; deal not implemented' })
+  @ApiResponse({ status: 200, description: 'OK (entityType=lead)' })
+  @ApiResponse({ status: 501, description: 'Not implemented for entityType=deal — no scoring formula configured' })
   @Get('quick-score/:entityType/:id')
   async getAiQuickScore(@Param('entityType') entityType: string, @Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getAiQuickScore(entityType, safeInt(id, 0)));
   }
 
-  @ApiOperation({ summary: 'Post autofill' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiOperation({ summary: 'Post autofill — requires AI provider (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no AI provider configured' })
   @Post('autofill/:entityId')
   @UsePipes(new ZodValidationPipe(AutofillDtoSchema))
   async postAutofill(
@@ -210,19 +212,28 @@ export class CrmAiExtendedController {
     @Body() body: AutofillDto,
   ) {
     const entityType = typeof body['entityType'] === 'string' ? body['entityType'] : 'lead';
-    const raw = unwrapOrThrow(await this.svc.autofill(entityType, safeInt(entityId, 0))) as Record<string, unknown>;
-    const suggestions = (raw['suggestions'] ?? {}) as Record<string, unknown>;
-    return {
-      autoFillData: {
-        companyTitle: null,
-        industry:     String(suggestions['industry'] ?? ''),
-        segment:      String(suggestions['company_size'] ?? ''),
-        budget:       String(suggestions['budget_range'] ?? ''),
-        timeline:     String(suggestions['decision_timeline'] ?? ''),
-        needs:        [],
-        confidence:   Math.round(Number(raw['confidence'] ?? 0.7) * 100),
-      },
-    };
+    return unwrapOrThrow(await this.svc.autofill(entityType, safeInt(entityId, 0)));
+  }
+
+  // SB0641 fix: ExtendedAIPanel.tsx (real live component) calls these two exact paths —
+  // they didn't exist on the backend (404, wrong error surfaced instead of the honest
+  // 501 chatRespond()/analyzeVoiceCall() already return). Pure routing fix, no new
+  // capability — voice/chat still need a real provider (Q-40 honesty policy).
+  @ApiOperation({ summary: 'Voice call analysis — requires speech-to-text/NLP (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no AI provider configured' })
+  @Post('extended/voice/analyze-call')
+  @UsePipes(new ZodValidationPipe(AutofillDtoSchema))
+  async postAnalyzeVoiceCall(@Body() body: AutofillDto) {
+    return unwrapOrThrow(await this.svc.analyzeVoiceCall(body));
+  }
+
+  @ApiOperation({ summary: 'Chat respond — requires conversational AI backend (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no AI provider configured' })
+  @Post('extended/chat/respond')
+  @UsePipes(new ZodValidationPipe(AutofillDtoSchema))
+  async postChatRespond(@Body() body: AutofillDto) {
+    const message = typeof body['message'] === 'string' ? body['message'] : '';
+    return unwrapOrThrow(await this.svc.chatRespond(message, body));
   }
 
   @ApiOperation({ summary: 'Score lead v2' })

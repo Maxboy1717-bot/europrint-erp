@@ -10,7 +10,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and, isNull } from 'drizzle-orm';
 import { crm_proposals } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 
@@ -55,6 +55,17 @@ export class CrmBitrixCompatProposalsRepository {
         .where(eq(crm_proposals.id, id))
         .returning();
       return (rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
+  }
+
+  /** CRM-13#5: KP email-pixel birinchi ochilgan vaqtni yozadi — idempotent, faqat viewed_at
+   *  NULL bo'lganda (mirrors CC #47 markViewed's "WHERE viewed_at IS NULL" first-view pattern,
+   *  see cc-documents-write.repo.ts). Keyingi ochishlar bu ustunni o'zgartirmaydi. */
+  async markProposalViewed(id: number): Promise<Result<void>> {
+    return safeCall(async () => {
+      await db.update(crm_proposals)
+        .set({ viewed_at: new Date() })
+        .where(and(eq(crm_proposals.id, id), isNull(crm_proposals.viewed_at)));
     }, 'DB_ERROR');
   }
 }

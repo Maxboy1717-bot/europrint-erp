@@ -76,10 +76,14 @@ export interface ChatMessage {
   threadCount?: number;
   reactions?: ChatReaction[];
   poll?: ChatPollData;
+  isStarred?: boolean;
   createdAt: string;
   senderName: string;
   senderAvatar?: string;
   senderEmployeeId?: string;
+  // Optimistic-send bookkeeping (client-only until reconciled with the server echo).
+  clientMsgId?: string;
+  status?: "sending" | "sent" | "failed";
 }
 
 export interface ChatMember {
@@ -110,8 +114,13 @@ interface ChatStore {
   updateRoom: (roomId: string, update: Partial<ChatRoom>) => void;
   setMessages: (roomId: string, msgs: ChatMessage[]) => void;
   addMessage: (msg: ChatMessage) => void;
+  addOptimisticMessage: (msg: ChatMessage) => void;
+  reconcileMessage: (roomId: string, clientMsgId: string, serverMsg: ChatMessage) => void;
+  markMessageFailed: (roomId: string, clientMsgId: string) => void;
+  markMessageSending: (roomId: string, clientMsgId: string) => void;
   editMessage: (roomId: string, messageId: string, content: string, isEdited: boolean) => void;
   deleteMessage: (roomId: string, messageId: string) => void;
+  removeMessage: (roomId: string, messageId: string) => void;
   updateReactions: (roomId: string, messageId: string, reactions: ChatReaction[]) => void;
   updatePoll: (roomId: string, messageId: string, pollData: Partial<ChatPollData>) => void;
   updateThreadCount: (roomId: string, messageId: string, threadCount: number) => void;
@@ -170,6 +179,57 @@ export const useChatStore = create<ChatStore>((set) => ({
       };
     }),
 
+  // Optimistic bubble shown instantly on send, before the server echo arrives.
+  addOptimisticMessage: (msg) =>
+    set((s) => {
+      const existing = s.messages[msg.roomId] ?? [];
+      const list = Array.isArray(existing) ? existing : [];
+      if (msg.clientMsgId && list.find((m) => m.clientMsgId === msg.clientMsgId)) return s;
+      return { messages: { ...s.messages, [msg.roomId]: [...list, msg] } };
+    }),
+
+  // Replace the optimistic bubble with the persisted server message (matched by
+  // clientMsgId). If no optimistic bubble is found (e.g. echo from another
+  // device, or the send happened before this client added one), fall back to a
+  // dedup-by-id append so nothing is lost or duplicated.
+  reconcileMessage: (roomId, clientMsgId, serverMsg) =>
+    set((s) => {
+      const existing = s.messages[roomId] ?? [];
+      const list = Array.isArray(existing) ? existing : [];
+      const idx = list.findIndex((m) => m.clientMsgId === clientMsgId);
+      if (idx >= 0) {
+        const next = list.slice();
+        next[idx] = { ...serverMsg, clientMsgId, status: "sent" };
+        return { messages: { ...s.messages, [roomId]: next } };
+      }
+      if (list.find((m) => m.id === serverMsg.id)) return s;
+      return { messages: { ...s.messages, [roomId]: [...list, { ...serverMsg, status: "sent" }] } };
+    }),
+
+  markMessageFailed: (roomId, clientMsgId) =>
+    set((s) => {
+      const existing = s.messages[roomId] ?? [];
+      const list = Array.isArray(existing) ? existing : [];
+      return {
+        messages: {
+          ...s.messages,
+          [roomId]: list.map((m) => (m.clientMsgId === clientMsgId ? { ...m, status: "failed" } : m)),
+        },
+      };
+    }),
+
+  markMessageSending: (roomId, clientMsgId) =>
+    set((s) => {
+      const existing = s.messages[roomId] ?? [];
+      const list = Array.isArray(existing) ? existing : [];
+      return {
+        messages: {
+          ...s.messages,
+          [roomId]: list.map((m) => (m.clientMsgId === clientMsgId ? { ...m, status: "sending" } : m)),
+        },
+      };
+    }),
+
   editMessage: (roomId, messageId, content, isEdited) =>
     set((s) => ({
       messages: {
@@ -187,6 +247,16 @@ export const useChatStore = create<ChatStore>((set) => ({
         [roomId]: (s.messages[roomId] ?? []).map((m) =>
           m.id === messageId ? { ...m, isDeleted: true, content: undefined } : m
         ),
+      },
+    })),
+
+  // "Delete for me": drop the message from this user's local view entirely
+  // (no "deleted" placeholder — that's what delete-for-everyone shows).
+  removeMessage: (roomId, messageId) =>
+    set((s) => ({
+      messages: {
+        ...s.messages,
+        [roomId]: (s.messages[roomId] ?? []).filter((m) => m.id !== messageId),
       },
     })),
 

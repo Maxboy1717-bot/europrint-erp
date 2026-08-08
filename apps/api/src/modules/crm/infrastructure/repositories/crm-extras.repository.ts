@@ -9,7 +9,7 @@
 
 import { Injectable } from '@nestjs/common';
 import type { Result } from '@common/result';
-import type { ICrmExtrasRepo } from '../../domain/repositories/i-crm-extras.repo';
+import type { ICrmExtrasRepo, CrmActivityRow } from '../../domain/repositories/i-crm-extras.repo';
 import { CrmExtrasCommentsRepository } from './crm-extras-comments.repository';
 import { CrmExtrasDashboardRepository } from './crm-extras-dashboard.repository';
 import { CrmExtrasTasksRepository } from './crm-extras-tasks.repository';
@@ -49,6 +49,10 @@ export class CrmExtrasRepository implements ICrmExtrasRepo {
     return this.tasks.createTask(body);
   }
 
-  listInvoices(lim: number, off: number): Promise<Result<Row[]>>  { return this.documents.listInvoices(lim, off); }
-  listProposals(lim: number, off: number): Promise<Result<Row[]>> { return this.documents.listProposals(lim, off); }
+  listInvoices(lim: number, off: number): Promise<Result<Row[]>>                              { return this.documents.listInvoices(lim, off); }
+  listProposals(lim: number, off: number, dealId?: number | null): Promise<Result<Row[]>>    { return this.documents.listProposals(lim, off, dealId); }
+
+  getEntityActivities(entityType: string, entityId: number): Promise<Result<CrmActivityRow[]>> {
+    return this.dashboard.getEntityActivities(entityType, entityId);
+  }
 }

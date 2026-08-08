@@ -12,10 +12,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Translations } from "./types";
+import { TFunc } from "./types";
 interface AddBatchDialogProps {
-  t: Translations;
-  lang: "uz" | "ru";
+  t: TFunc;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   batchForm: {
@@ -37,7 +36,6 @@ interface AddBatchDialogProps {
 }
 
 export function AddBatchDialog({t,
-  lang,
   isOpen,
   onOpenChange,
   batchForm,
@@ -49,12 +47,12 @@ export function AddBatchDialog({t,
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">{t.addBatchTitle}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("Reservation.addBatchTitle")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>{t.batchNumber} *</Label>
+          <Label>{t("Reservation.batchNumber")} *</Label>
               <Input
                 value={batchForm.batchNumber}
                 onChange={(e) => setBatchForm({ ...batchForm, batchNumber: e.target.value })}
@@ -63,18 +61,18 @@ export function AddBatchDialog({t,
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.aiPanel.materialType}</Label>
+          <Label>{t("materialType")}</Label>
               <Input
                 value={batchForm.materialType}
                 onChange={(e) => setBatchForm({ ...batchForm, materialType: e.target.value })}
-                placeholder={lang === "uz" ? "masalan: qog'oz" : "напр: бумага"}
+                placeholder={t("Reservation.materialTypeExamplePlaceholder")}
                 data-testid="input-new-batch-type"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-          <Label>{t.materialName} *</Label>
+          <Label>{t("materialName")} *</Label>
             <Input
               value={batchForm.materialName}
               onChange={(e) => setBatchForm({ ...batchForm, materialName: e.target.value })}
@@ -84,7 +82,7 @@ export function AddBatchDialog({t,
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1">
-          <Label>{t.aiPanel.quantity} *</Label>
+          <Label>{t("quantity")} *</Label>
               <Input
                 type="number"
                 value={batchForm.quantity}
@@ -93,7 +91,7 @@ export function AddBatchDialog({t,
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.aiPanel.unit}</Label>
+          <Label>{t("Reservation.aiPanelUnit")}</Label>
               <Select value={batchForm.unit} onValueChange={(v) => setBatchForm({ ...batchForm, unit: v })}>
                 <SelectTrigger data-testid="select-new-batch-unit" className="h-9">
                   <SelectValue />
@@ -109,7 +107,7 @@ export function AddBatchDialog({t,
               </Select>
             </div>
             <div className="space-y-1">
-          <Label>{t.batches.grade}</Label>
+          <Label>{t("Reservation.batchesGrade")}</Label>
               <Select value={batchForm.qualityGrade} onValueChange={(v) => setBatchForm({ ...batchForm, qualityGrade: v })}>
                 <SelectTrigger data-testid="select-new-batch-grade" className="h-9">
                   <SelectValue />
@@ -125,7 +123,7 @@ export function AddBatchDialog({t,
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>{t.batches.expiry}</Label>
+          <Label>{t("Reservation.batchesExpiry")}</Label>
               <Input
                 type="date"
                 value={batchForm.expiryDate}
@@ -134,7 +132,7 @@ export function AddBatchDialog({t,
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.batches.received}</Label>
+          <Label>{t("Reservation.batchesReceived")}</Label>
               <Input
                 type="date"
                 value={batchForm.receivedDate}
@@ -146,7 +144,7 @@ export function AddBatchDialog({t,
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>{t.batches.location}</Label>
+          <Label>{t("Reservation.batchesLocation")}</Label>
               <Input
                 value={batchForm.location}
                 onChange={(e) => setBatchForm({ ...batchForm, location: e.target.value })}
@@ -155,7 +153,7 @@ export function AddBatchDialog({t,
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.batches.cost}</Label>
+          <Label>{t("Reservation.batchesCost")}</Label>
               <Input
                 type="number"
                 value={batchForm.costPerUnit}
@@ -167,10 +165,10 @@ export function AddBatchDialog({t,
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.cancel}
+            {t("cancel")}
           </Button>
           <Button onClick={handleAddBatch} disabled={isPending} data-testid="button-save-batch">
-            {t.save}
+            {t("Reservation.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

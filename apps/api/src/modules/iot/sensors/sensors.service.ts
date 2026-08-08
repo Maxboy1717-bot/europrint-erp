@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { iotSensors } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
 import { SensorsRepository } from './sensors.repository';
@@ -12,7 +13,10 @@ import { SensorsRepository } from './sensors.repository';
 export class SensorsService {
   private readonly logger = new Logger(SensorsService.name);
 
-  constructor(private readonly repo: SensorsRepository) {}
+  constructor(
+    private readonly repo: SensorsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   private mapSensor(s: Record<string, unknown>) {
     const lastReading = Number(s['lastReading'] || 0);
@@ -49,7 +53,7 @@ export class SensorsService {
 
   async findOne(id: number) {
     const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.sensorNotFoundWithId', { args: { id } }));
     return this.mapSensor(row);
   }
 

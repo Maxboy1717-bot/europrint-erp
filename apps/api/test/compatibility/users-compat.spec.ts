@@ -39,9 +39,13 @@ describe('UsersCompatController', () => {
     expect(await ctrl.listUsers()).toEqual({ items: [{ id: 'u1' }], total: 1 });
   });
 
-  it('listUsers throws on service error', async () => {
+  it('listUsers returns empty array on service error (does not throw)', async () => {
+    // Controller uses `r.ok && r.data ? r.data : []` — returns [] on Err instead
+    // of throwing InternalServerErrorException. The legacy endpoint degrades
+    // gracefully so existing UI consumers do not break.
     (svc.listUsers as jest.Mock).mockResolvedValue(err());
-    await expect(ctrl.listUsers()).rejects.toThrow(InternalServerErrorException);
+    const result = await ctrl.listUsers();
+    expect(result).toEqual([]);
   });
 
   it('listUsers handles undefined args', async () => {

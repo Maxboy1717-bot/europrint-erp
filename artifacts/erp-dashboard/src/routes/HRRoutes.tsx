@@ -15,10 +15,16 @@ const Mentorship = lazy(() => import("@/pages/Mentorship"));
 const EventsCalendar = lazy(() => import("@/pages/EventsCalendar"));
 const Applications = lazy(() => import("@/pages/Applications"));
 const ShiftSchedule = lazy(() => import("@/pages/ShiftSchedule"));
+const ShiftTypesConfig = lazy(() => import("@/pages/ShiftTypesConfig"));
+const RazryadLevelConfig = lazy(() => import("@/pages/RazryadLevelConfig"));
+const ErrorCatalogConfig = lazy(() => import("@/pages/ErrorCatalogConfig"));
+const QuestionBankConfig = lazy(() => import("@/pages/QuestionBankConfig"));
 const HRDashboard = lazy(() => import("@/pages/HRDashboard"));
 const HRCapitalTests = lazy(() => import("@/pages/HRCapitalTests"));
 const OrgStructureHierarchy = lazy(() => import("@/pages/OrgStructureHierarchy"));
 const OrgNodeDetail = lazy(() => import("@/pages/OrgNodeDetail"));
+// Cards + Razryad catalog moved INSIDE Org Tuzilma (tabs) — no standalone pages (owner 2026-06-17).
+// Old /org-structure/cards · /cards/:id · /razryad-levels routes now redirect (see AppRouter).
 const HROnboarding = lazy(() => import("@/pages/HROnboarding"));
 const HRVacationSick = lazy(() => import("@/pages/HRVacationSick"));
 const HROffboarding = lazy(() => import("@/pages/HROffboarding"));
@@ -49,6 +55,7 @@ const QuestionnaireTemplates = lazy(() => import("@/pages/QuestionnaireTemplates
 const SevenFunctions = lazy(() => import("@/pages/SevenFunctions"));
 const RaciMatrix = lazy(() => import("@/pages/RaciMatrix"));
 const HRMilestones = lazy(() => import("@/pages/HRMilestones"));
+const JobDescriptionsPage = lazy(() => import("@/pages/JobDescriptionsPage"));
 
 export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/employees',                        Employees],
@@ -60,10 +67,14 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/events-calendar',                  EventsCalendar],
   ['/applications',                     Applications],
   ['/shift-schedule',                   ShiftSchedule],
+  ['/hr/shift-types-config',            ShiftTypesConfig],
+  ['/hr/razryad-config',               RazryadLevelConfig],  // config-mexanizm: imtihon %/retakes/oylik
   ['/hr-dashboard',                     HRDashboard],
   ['/hr-capital/tests',                 HRCapitalTests],
   ['/org-structure/hierarchy',          OrgStructureHierarchy],
   ['/org-structure/hierarchy/node/:id', OrgNodeDetail],
+  ['/org-structure/error-catalog',      ErrorCatalogConfig],  // XATO-KATALOG: defect-dropdown manbai CRUD
+  ['/org-structure/question-bank',      QuestionBankConfig],  // EP-ORG-046: AI-imtihon savollar banki CRUD
   ['/hr/onboarding',                    HROnboarding],
   ['/hr/vacation-sick',                 HRVacationSick],
   ['/hr/succession',                    HRSuccessionPlanning],
@@ -93,6 +104,7 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/seven-functions',                  SevenFunctions],
   ['/raci-matrix',                      RaciMatrix],
   ['/hr/milestones',                    HRMilestones],
+  ['/hr/job-descriptions',              JobDescriptionsPage],  // HR lavozim tavsiflar CRUD
 ];
 
 export const AI_HR_ROUTES: [string, React.ComponentType][] = [

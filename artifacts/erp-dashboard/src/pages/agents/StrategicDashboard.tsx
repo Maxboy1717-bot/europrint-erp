@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Target, TrendingUp, Lightbulb, Sparkles, Send } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 interface RevenueRes { optimistic: number; realistic: number; pessimistic: number }
 interface ScenarioRes { analysis: string }
@@ -38,13 +38,10 @@ export default function StrategicDashboard() {
 
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <header className="flex items-center gap-3">
-        <Target className="h-7 w-7 text-[var(--ep-primary)]" />
-        <div>
-          <h1 className="text-2xl font-bold">{t("strategikAi")}</h1>
-          <p className="text-sm text-muted-foreground">{t("k6OylikBashoratScenarioSimulatorInvestitsiya")}</p>
-        </div>
-      </header>
+      <EPPageHeader
+        title={<span className="flex items-center gap-3"><Target className="h-7 w-7 text-[var(--ep-primary)]" />{t("strategikAi")}</span>}
+        subtitle={t("k6OylikBashoratScenarioSimulatorInvestitsiya")}
+      />
 
       {/* 6 oylik daromad bashorat — 3 scenario */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

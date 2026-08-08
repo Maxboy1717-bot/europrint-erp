@@ -44,15 +44,18 @@ export class CrmBitrixCompatInvoicesRepository {
       }, 'DB_ERROR');
   }
 
-  async deleteInvoice(id: number): Promise<void> {
-    await db.delete(invoices).where(eq(invoices.id, String(id)));
+  // invoices.id is a uuid — take the raw string id. The controller used to
+  // parseInt(id) which produced NaN->0, so eq(id, '0') matched no invoice and
+  // stage/delete silently affected zero rows.
+  async deleteInvoice(id: string): Promise<void> {
+    await db.delete(invoices).where(eq(invoices.id, id));
   }
 
-  async updateInvoiceStage(id: number, status: string): Promise<Result<Row | null>> {
+  async updateInvoiceStage(id: string, status: string): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(invoices)
         .set({ status: status as typeof invoices.$inferInsert['status'], updated_at: new Date() })
-        .where(eq(invoices.id, String(id)))
+        .where(eq(invoices.id, id))
         .returning();
       return (rows[0] ?? null) as Row | null;
     }, 'DB_ERROR');

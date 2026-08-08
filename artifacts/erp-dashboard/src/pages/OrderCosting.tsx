@@ -18,7 +18,7 @@ import {
 import { OrderCostingDetailView } from "./OrderCostingDetail";
 import { CreateCostingDialog } from "./OrderCostingDialogs";
 import { SummaryCards, CostingsTable, TopRankings, StatusBadge } from "./OrderCostingSections";
-import { EPErrorState } from "@/components/ep";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 export default function OrderCosting() {
@@ -105,24 +105,18 @@ export default function OrderCosting() {
   }
 
   return (
-    <div data-testid="order-costing-page">
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Calculator className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">{t("buyurtmaTannarxi1")}</h1>
-                <p className="text-white/75 text-sm">{t("harBirBuyurtmaUchunXarajatlar")}</p>
-              </div>
-            </div>
-            <Button className="bg-card text-[var(--ep-green)] hover:bg-green-50 gap-2" data-testid="button-create-costing" onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4" />
-              {t("yangiTannarx")}
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6" data-testid="order-costing-page">
+      <EPPageHeader
+        icon={<Calculator className="h-5 w-5" />}
+        title={t("buyurtmaTannarxi1")}
+        subtitle={t("harBirBuyurtmaUchunXarajatlar")}
+        actions={
+          <Button className="gap-2" data-testid="button-create-costing" onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4" />
+            {t("yangiTannarx")}
+          </Button>
+        }
+      />
 
       <CreateCostingDialog
         open={createDialogOpen}

@@ -3,16 +3,26 @@
  * @description React page component. Route-level UI.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, XCircle, Clock, FileText, AlertTriangle, Gauge, Activity, Wrench, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, Clock, FileText, AlertTriangle, Gauge, Activity, Wrench, RefreshCw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { useToast } from "@/hooks/use-toast";
 
 interface DailyReport {
   id: number;
@@ -102,7 +112,7 @@ function OperatorReportCard({ report }: { report: DailyReport }) {
         </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm">
         {oee !== null && (
           <div className="bg-white/60 dark:bg-black/20 rounded-md p-2 text-center">
             <Gauge className="w-4 h-4 mx-auto mb-0.5 text-[var(--ep-blue)]" />
@@ -223,8 +233,100 @@ function OfficeReportCard({ report }: { report: DailyReport }) {
   );
 }
 
+function SubmitReportDialog({ open, onClose, employeeId }: { open: boolean; onClose: () => void; employeeId: number | string }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [reportDate, setReportDate]       = useState("");
+  const [tasksCompleted, setTasksCompleted] = useState("");
+  const [tomorrowPlan, setTomorrowPlan]   = useState("");
+  const [blockers, setBlockers]           = useState("");
+  const [mood, setMood]                   = useState<string>("neutral");
+
+  const mutation = useMutation({
+    mutationFn: (dto: Record<string, unknown>) =>
+      apiRequest<{ id: number }>("POST", "/api/hr-v2/daily-reports", dto),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/hr-v2/daily-reports/employee", employeeId] });
+      toast({ title: "Hisobot topshirildi" });
+      setReportDate(""); setTasksCompleted(""); setTomorrowPlan("");
+      setBlockers(""); setMood("neutral");
+      onClose();
+    },
+    onError: () => toast({ title: "Saqlash xatoligi", variant: "destructive" }),
+  });
+
+  function handleSubmit() {
+    if (!tasksCompleted.trim()) {
+      toast({ title: "Bajarilgan ishlar maydoni majburiy", variant: "destructive" });
+      return;
+    }
+    const dto: Record<string, unknown> = {
+      employee_id: Number(employeeId),
+      tasks_completed: tasksCompleted.trim(),
+      mood,
+    };
+    if (reportDate)          dto.report_date    = reportDate;
+    if (tomorrowPlan.trim()) dto.tomorrow_plan  = tomorrowPlan.trim();
+    if (blockers.trim())     dto.blockers       = blockers.trim();
+    mutation.mutate(dto);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Kunlik hisobot topshirish</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 py-2">
+          <div className="grid gap-1.5">
+            <Label>Sana (ixtiyoriy, bo'sh = bugun)</Label>
+            <Input type="date" value={reportDate}
+              onChange={(e) => setReportDate(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Bugun bajarilgan ishlar *</Label>
+            <Input placeholder="Masalan: 500 dona quti yig'ish, sifat tekshiruvi..." value={tasksCompleted}
+              onChange={(e) => setTasksCompleted(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Ertangi reja</Label>
+            <Input placeholder="Masalan: Yangi partiya boshlash..." value={tomorrowPlan}
+              onChange={(e) => setTomorrowPlan(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>To'siqlar / muammolar</Label>
+            <Input placeholder="Masalan: Xomashyo yetishmovchiligi..." value={blockers}
+              onChange={(e) => setBlockers(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Kayfiyat</Label>
+            <Select value={mood} onValueChange={setMood}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="good">Yaxshi</SelectItem>
+                <SelectItem value="neutral">O'rtacha</SelectItem>
+                <SelectItem value="bad">Yomon</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Bekor qilish
+          </Button>
+          <Button onClick={handleSubmit}
+            disabled={mutation.isPending || !tasksCompleted.trim()}>
+            {mutation.isPending ? "Saqlanmoqda..." : "Topshirish"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
   const { t } = useTranslation("common");
+  const [submitOpen, setSubmitOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["/api/hr-v2/daily-reports/employee", employeeId],
     queryFn: () =>
@@ -243,6 +345,12 @@ export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
 
   return (
     <div className="space-y-5">
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => setSubmitOpen(true)} className="gap-1.5">
+          <Plus className="h-3.5 w-3.5" />
+          Hisobot topshirish
+        </Button>
+      </div>
       {isOperator && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-950/20 dark:border-blue-800/40">
           <Wrench className="w-4 h-4 text-[var(--ep-blue)] shrink-0" />
@@ -252,7 +360,7 @@ export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {([
           { label: "Topshirilgan", value: submitted, icon: CheckCircle, color: "text-[var(--ep-green)]", bg: "bg-green-50 dark:bg-green-950/30" },
           { label: "Sababsiz yo'qlik", value: autoAbsent, icon: XCircle, color: "text-[var(--ep-red)]", bg: "bg-red-50 dark:bg-red-950/30" },
@@ -301,6 +409,7 @@ export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
           })}
         </CardContent>
       </Card>
+      <SubmitReportDialog open={submitOpen} onClose={() => setSubmitOpen(false)} employeeId={employeeId} />
     </div>
   );
 }

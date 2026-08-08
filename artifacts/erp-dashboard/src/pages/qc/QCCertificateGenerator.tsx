@@ -4,13 +4,16 @@
  */
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileCheck } from "lucide-react";
+import { FileCheck, Save } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from '@/lib/i18n';
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const escHtml = (v: unknown): string =>
   String(v ?? '')
@@ -29,6 +32,7 @@ const STANDARD_TYPES = [
 
 export function QCCertificateGenerator() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
   const [certForm, setCertForm] = useState({
     batchNumber: "",
     productName: "",
@@ -45,6 +49,39 @@ export function QCCertificateGenerator() {
     notes: "",
     result: "passed",
   });
+
+  const year = new Date().getFullYear();
+
+  const saveCertMutation = useMutation({
+    mutationFn: (d: {
+      certNumber: string;
+      orderId?: number;
+      productName?: string;
+      issuedDate?: string;
+      status: string;
+      notes?: string;
+      issuedBy?: string;
+    }) => apiRequest("POST", "/api/qc/certificates", d),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/certificates"] });
+      toast({ title: "Sertifikat saqlandi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  function handleSave() {
+    const certNumber = "CERT-" + (certForm.batchNumber || "XXXX") + "-" + year;
+    const certStatus = certForm.result === "passed" ? "active" : "draft";
+    saveCertMutation.mutate({
+      certNumber,
+      orderId: certForm.orderNumber ? parseInt(certForm.orderNumber, 10) : undefined,
+      productName: certForm.productName || undefined,
+      issuedDate: certForm.productionDate || undefined,
+      status: certStatus,
+      notes: certForm.notes || undefined,
+      issuedBy: certForm.inspector || undefined,
+    });
+  }
 
   function printCertificate() {
     const win = window.open("", "_blank", "width=900,height=700");
@@ -207,6 +244,16 @@ export function QCCertificateGenerator() {
           <Button onClick={printCertificate} className="flex-1 gap-2" data-testid="button-print-certificate">
             <FileCheck className="w-4 h-4" />
             Sertifikat Chop Etish (PDF)
+          </Button>
+          <Button
+            variant="default"
+            onClick={handleSave}
+            disabled={saveCertMutation.isPending}
+            className="gap-2"
+            data-testid="button-save-certificate"
+          >
+            <Save className="w-4 h-4" />
+            {saveCertMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>
           <Button variant="outline" onClick={() => setCertForm({
             batchNumber: "", productName: "", customerName: "", orderNumber: "",

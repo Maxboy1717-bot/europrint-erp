@@ -1,1 +1,20 @@
-{}
+{
+  "title": "Таҳлил",
+  "loading": "Юкланмоқда...",
+  "error": "Хатолик юз берди",
+  "EngagementTab.faolFoydalanuvchilar": "Фаол фойдаланувчилар",
+  "LeaderboardTab.tugatish": "Тугатиш %",
+  "LeaderboardTab.ortachaBall": "Ўртача балл",
+  "OutcomesTab.faolOquvchilar": "Фаол ўқувчилар",
+  "OutcomesTab.tugatish": "Тугатиш %",
+  "OutcomesTab.ortachaBall": "Ўртача балл",
+  "OutcomesTab.ortachaDaraja": "Ўртача даража",
+  "OutcomesTab.tasdiqlangan": "Тасдиқланган (%)",
+  "RemainingTabsA.yangiTayinlanganlar": "Янги тайинланганлар",
+  "RemainingTabsB.ortachaBall": "Ўртача балл %",
+  "RemainingTabsB.ortachaVaqtS": "Ўртача вақт (с)",
+  "RemainingTabsB.xodimlarSoni": "Ходимлар сони",
+  "RemainingTabsB.otishFoizi": "Ўтиш фоизи %",
+  "RemainingTabsUsers.aktivXodimlar": "Актив ходимлар",
+  "RemainingTabsUsers.xodimlarSoni": "Ходимлар сони"
+}

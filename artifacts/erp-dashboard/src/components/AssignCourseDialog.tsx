@@ -69,18 +69,14 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
 
   const assignMutation = useMutation({
     mutationFn: async (data: { userIds: string[], startDate: string, endDate: string }) => {
+      const parsedCourseId = parseInt(courseId, 10);
       const promises = (Array.isArray(data.userIds) ? data.userIds : []).map(userId =>
-        apiRequest("POST", "/api/assignments", {
-          userId,
-          courseId,
-          startDate: data.startDate || null,
-          endDate: data.endDate || null,
+        apiRequest("POST", "/api/lms/enrollments", {
+          employeeId: parseInt(userId, 10),
+          courseId: parsedCourseId,
         })
       );
-      return Promise.all(promises).catch((err: unknown) => {
-        console.error('Kurs tayinlash xatosi:', err);
-        return Promise.reject(err);
-      });
+      return Promise.all(promises);
     },
     onSuccess: () => {
       toast({

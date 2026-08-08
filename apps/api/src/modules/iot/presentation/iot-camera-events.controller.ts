@@ -18,6 +18,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -39,7 +40,7 @@ const MANAGER_ROLES = ['production_manager', 'manager', 'super_admin', 'director
 @ApiTags('Iot Camera Events')
 @Controller('camera')
 export class IotCameraEventsController {
-  constructor(private readonly svc: IotCameraEventsService) {}
+  constructor(private readonly svc: IotCameraEventsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List camera events' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -57,8 +58,9 @@ export class IotCameraEventsController {
   @Roles(...MANAGER_ROLES)
   async createCameraEvent(@Body() body: unknown) {
     const dto = CreateCameraEventBodySchema.parse(body);
-    assertRequired(dto.camera_id, 'camera_id va event_type majburiy');
-    assertRequired(dto.event_type, 'camera_id va event_type majburiy');
+    const cameraEventMsg = await this.i18n.t('validation.cameraIdAndEventTypeRequired');
+    assertRequired(dto.camera_id, cameraEventMsg);
+    assertRequired(dto.event_type, cameraEventMsg);
     const _rCreateCameraEvent = await this.svc.createCameraEvent(
       dto.camera_id,
       dto.event_type,

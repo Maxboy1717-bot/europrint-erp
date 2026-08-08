@@ -2,6 +2,7 @@ import {
   Controller, Get, Patch, Post, Body, Param, Query, ParseIntPipe,
   UseGuards, UseInterceptors, UsePipes, NotFoundException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -29,13 +30,16 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'adm
 @Roles(...HR_ROLES)
 @Controller('hr/offboarding')
 export class HrOffboardingController {
-  constructor(private readonly svc: HrOffboardingService) {}
+  constructor(
+    private readonly svc: HrOffboardingService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get('cases')
   @UsePipes(new ZodValidationPipe(HrOffboardingListQuerySchema))
   // P1.18: return { items } — FE checks Array.isArray(d) || d?.items (not d?.data)
   async listCases(@Query() q: HrOffboardingListQueryDto) {
-    const r = await this.svc.listCases({ status: q.status, employeeId: q.employee_id });
+    const r = await this.svc.listCases({ status: q.status, employeeId: q.employee_id, search: q.search });
     const items = r.ok && Array.isArray(r.data) ? r.data : [];
     return { items, total: items.length };
   }
@@ -49,12 +53,23 @@ export class HrOffboardingController {
   }
 
 
+  // 2026-07-13 (HR Offboarding page fix): every mutation route below used to
+  // wrap its payload as `{ data: ... }`. The frontend's universal unwrapper
+  // (api-request.ts) only auto-unwraps `{ ok, data }` / `{ isSuccess, value }`
+  // shapes — a bare `{ data }` with no `ok` key falls through to "plain data"
+  // and is returned AS-IS. Every consumer (HROffboardingSteps.tsx,
+  // HROffboardingDialogs.tsx, employee-profile/OffboardingTab.tsx) reads the
+  // case fields at the TOP level (`caseDetail.full_name`, `caseDetail.checklist`,
+  // `caseDetail.status`, ...) — so the extra `{ data }` envelope meant every one
+  // of these fields was `undefined` in the live UI (checklist looked
+  // permanently empty, progress stuck at 0%, finalize unreachable). Returning
+  // the unwrapped payload directly fixes this without touching any consumer.
   @Get('cases/:id')
   async getCase(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getCaseDetail(id);
     const data = unwrapOrInternal(r);
-    if (data === null) throw new NotFoundException(`Offboarding case #${id} topilmadi`);
-    return { data };
+    if (data === null) throw new NotFoundException(await this.i18n.t('errors.offboardingCaseNotFound', { args: { id } }));
+    return data;
   }
 
   @Post('cases')
@@ -69,7 +84,7 @@ export class HrOffboardingController {
       lastWorkingDay: body.last_working_day,
       initiatedBy:    user?.id,
     });
-    return { data: unwrapOrInternal(r) };
+    return unwrapOrInternal(r);
   }
 
   @Patch('cases/:id/checklist/:itemId')
@@ -78,10 +93,15 @@ export class HrOffboardingController {
     @Param('id', ParseIntPipe) id: number,
     @Param('itemId', ParseIntPipe) itemId: number,
     @Body() body: HrOffboardingUpdateChecklistDto,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     const done = body.completed === true;
-    const r = await this.svc.updateChecklistItem(id, itemId, done);
-    return { data: unwrapOrInternal(r) };
+    const r = await this.svc.updateChecklistItem(id, itemId, done, {
+      notes: body.notes,
+      returnStatus: body.returnStatus,
+      doneBy: user?.id,
+    });
+    return unwrapOrInternal(r);
   }
 
   @Post('cases/:id/exit-interview')
@@ -91,13 +111,15 @@ export class HrOffboardingController {
     @Body() body: HrOffboardingExitInterviewDto,
   ) {
     const r = await this.svc.recordExitInterview(id, {
+      answers:      body.answers,
+      skipped:      body.skipped,
       rating:       body.rating,
       wouldReturn:  body.would_return,
       mainReason:   body.main_reason,
       feedback:     body.feedback,
       improvements: body.improvements,
     });
-    return { data: unwrapOrInternal(r) };
+    return unwrapOrInternal(r);
   }
 
   @Post('cases/:id/finalize')
@@ -107,7 +129,7 @@ export class HrOffboardingController {
     @Body() _body: HrOffboardingFinalizeDto,
   ) {
     const r = await this.svc.finalizeCase(id);
-    return { data: unwrapOrInternal(r) };
+    return unwrapOrInternal(r);
   }
 
   @Post('cases/:id/cancel')
@@ -117,6 +139,6 @@ export class HrOffboardingController {
     @Body() body: HrOffboardingCancelDto,
   ) {
     const r = await this.svc.cancelCase(id, body.reason);
-    return { data: unwrapOrInternal(r) };
+    return unwrapOrInternal(r);
   }
 }

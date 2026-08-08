@@ -17,7 +17,13 @@ export class PoRequiresDirectorApprovalListener implements IEventHandler<PoRequi
     try {
       // Real action (not a no-op): persist the HITL approval request. entity_type/entity_id let the
       // director dashboard join back to the PO; status='pending' until approved.
-      const note = `PO > 50M UZS (${event.totalAmount}) — direktor tasdig'i kerak`;
+      // The note reflects the actual trigger(s) so the director sees WHY (amount and/or low rating).
+      const reasons = (event.reason ?? '').split(',').filter(Boolean);
+      const parts: string[] = [];
+      if (reasons.includes('amount_over_threshold')) parts.push(`summa yuqori (${event.totalAmount} UZS)`);
+      if (reasons.includes('low_vendor_rating')) parts.push("past reytingli ta'minotchi");
+      const why = parts.length > 0 ? parts.join(' + ') : `summa (${event.totalAmount} UZS)`;
+      const note = `PO direktor tasdig'i kerak: ${why}`;
       await db.execute(sql`
         INSERT INTO hitl_approvals (entity_type, entity_id, status, requested_by, notes, created_at, updated_at)
         VALUES ('purchase_order', ${String(event.poId)}, 'pending', ${String(event.requestedBy)}, ${note}, NOW(), NOW())`);

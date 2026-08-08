@@ -40,8 +40,8 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
   async createVendor(body: Row): Promise<Result<Row>>  {
   try {
       const rows = await runQuery<Row>(sql`
-        INSERT INTO mm_vendors (name, code, contact_person, phone, email, address, payment_terms, currency)
-        VALUES (${body.name}, ${body.code ?? null}, ${body.contact_person ?? null}, ${body.phone ?? null}, ${body.email ?? null}, ${body.address ?? null}, ${body.payment_terms ?? 30}, ${body.currency ?? 'UZS'})
+        INSERT INTO mm_vendors (name, code, contact_person, phone, email, address, payment_terms, currency, is_vat_payer)
+        VALUES (${body.name}, ${body.code ?? null}, ${body.contact_person ?? null}, ${body.phone ?? null}, ${body.email ?? null}, ${body.address ?? null}, ${body.payment_terms ?? 30}, ${body.currency ?? 'UZS'}, ${body.is_vat_payer ?? true})
         RETURNING *
       `);
       return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
@@ -61,6 +61,7 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
             address = COALESCE(${body.address ?? null}, address),
             payment_terms = COALESCE(${body.payment_terms ?? null}, payment_terms),
             is_active = COALESCE(${body.is_active ?? null}, is_active),
+            is_vat_payer = COALESCE(${body.is_vat_payer ?? null}, is_vat_payer),
             updated_at = NOW()
         WHERE id = ${id} RETURNING *
       `);
@@ -80,8 +81,14 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
 
   async listRequisitions(status: string | undefined, lim: number, off: number): Promise<Result<Row[]>>  {
   try {
+      // vision 11-mm#10: expose an `overdue_days` computed field ('+N kun' warning)
+      // for the approver dashboard. Display-only — the requisition status is NEVER
+      // auto-changed (no auto-reject). NULL-safe (0 when needed_by unset) and
+      // clamped to >= 0 (never negative for not-yet-due requisitions).
       const rows = await runQuery<Row>(sql`
-        SELECT pr.*, e.full_name AS requested_by_name
+        SELECT pr.*, e.full_name AS requested_by_name,
+               CASE WHEN pr.needed_by IS NOT NULL AND pr.needed_by < CURRENT_DATE
+                    THEN (CURRENT_DATE - pr.needed_by) ELSE 0 END AS overdue_days
         FROM mm_purchase_requisitions pr
         LEFT JOIN employees e ON e.id = pr.requested_by
         WHERE ${status ?? null}::text IS NULL OR pr.status = ${status ?? null}
@@ -121,11 +128,39 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
 
   }
 
-  async createRequisition(title: unknown, requested_by: number | null, needed_by: unknown, notes: unknown): Promise<Result<Row>>  {
+  /**
+   * Q-46 (2026-07-02): `mm_purchase_requisitions` is a plain updatable VIEW —
+   * `SELECT * FROM purchase_requisitions` (pg_get_viewdef-verified) — so an INSERT
+   * through it is transparently rewritten by Postgres into an INSERT on the base
+   * table `purchase_requisitions`, which enforces NOT NULL on requisition_number,
+   * material_id, required_quantity and required_date. The previous 4-column INSERT
+   * (title, requested_by, needed_by, notes) always violated those and threw 23502
+   * — silently swallowed by the try/catch here, surfaced only as a generic 400/500
+   * to the caller. Fix: supply requisition_number (generated from the
+   * `purchase_requisition_seq` sequence, same one the canonical schema declares),
+   * material_id + required_quantity (the requisition's first real item — passed in
+   * by the service, never fabricated), and required_date (needed_by if given, else
+   * today — required_date is `varchar(10)` 'YYYY-MM-DD', not a real date column).
+   */
+  async createRequisition(
+    title: unknown,
+    requested_by: number | null,
+    needed_by: unknown,
+    notes: unknown,
+    material_id: number,
+    required_quantity: number,
+  ): Promise<Result<Row>>  {
   try {
       const rows = await runQuery<Row>(sql`
-        INSERT INTO mm_purchase_requisitions (title, requested_by, needed_by, notes, status)
-        VALUES (${title}, ${requested_by}, ${needed_by ?? null}, ${notes ?? null}, 'pending')
+        INSERT INTO mm_purchase_requisitions
+          (requisition_number, material_id, required_quantity, required_date,
+           title, requested_by, needed_by, notes, status)
+        VALUES (
+          'PR-' || to_char(NOW(), 'YYYY') || '-' || lpad(nextval('purchase_requisition_seq')::text, 6, '0'),
+          ${material_id}, ${required_quantity},
+          COALESCE(${needed_by ?? null}::text, to_char(NOW(), 'YYYY-MM-DD')),
+          ${title}, ${requested_by}, ${needed_by ?? null}::date, ${notes ?? null}, 'pending'
+        )
         RETURNING *
       `);
       return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
@@ -162,6 +197,25 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
   async deleteRequisition(rid: number): Promise<Result<void>>  {
   try {
       await db.delete(mm_purchase_requisitions).where(eq(mm_purchase_requisitions.id, rid));  return Ok();  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  /**
+   * #11.13: write back the PO id onto the source requisition. Runs through the
+   * `mm_purchase_requisitions` VIEW (base `purchase_requisitions`) — the same
+   * updatable view createRequisition() already inserts through. purchase_order_id
+   * is a nullable base column, so the UPDATE rewrites cleanly to the base table.
+   */
+  async setRequisitionPurchaseOrderId(rid: number, poId: number): Promise<Result<void>>  {
+  try {
+      await runQuery(sql`
+        UPDATE mm_purchase_requisitions
+        SET purchase_order_id = ${poId}, updated_at = NOW()
+        WHERE id = ${rid}
+      `);
+      return Ok();  } catch (_e) {
     return Err(String(_e));
   }
 

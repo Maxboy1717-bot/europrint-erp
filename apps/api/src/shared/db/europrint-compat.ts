@@ -24,7 +24,7 @@ export {
 
 export {
   mroInventory, productionOrders, routings, routingOperations, bomHeaders, bomItems,
-  workCenters, downtimeEvents, downtimeReasonCodes, machineCrews, equipmentMaintenance,
+  workCenters, downtimeEvents, downtimeReasonCodes, machineCrews, machineCrewMembers, equipmentMaintenance,
   qcReclamations, qcBraks, notifications, marketingCampaigns, marketingLeads,
   productCategories, websiteBanners, websiteSettings, securityAccess, securityAttendance,
 } from './schema-compat-3';
@@ -52,9 +52,13 @@ export {
   marketingEmailTemplates,
 } from './schema-marketing-ext';
 
-// Marketing GURUH 2: 3 tables from lib/db dist, 1 new local (calendar)
-export { blogPosts, marketingBudgetLines, marketingLeadContacts, sdCustomerCompetitors } from '@workspace/db';
+// Marketing GURUH 2: tables from lib/db dist, 1 new local (calendar)
+// marketingBudgetItems has `name` col — used by FE MarketingBudget.tsx
+export { blogPosts, marketingBudgetItems, marketingBudgetLines, marketingLeadContacts, sdCustomerCompetitors, ppPlanSnapshots } from '@workspace/db';
 export { marketingCalendarEvents } from './schema-marketing-group2';
+
+// P36 — AI-fit per-card scorer (+ sibling CKP tables)
+export { aiFitScores, aiCkpScores, aiCkpChatLogs } from './schema-ai-fit';
 
 export {
   guidelines, contactSettings, systemSettings, adminFilters,

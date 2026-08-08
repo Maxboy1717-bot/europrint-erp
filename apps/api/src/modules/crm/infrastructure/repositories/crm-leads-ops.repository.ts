@@ -13,6 +13,8 @@ import { eq, sql } from 'drizzle-orm';
 import { crmLeads, crm_lead_stages, crm_activities, crmDeals } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import type { ICrmLeadsOpsRepo } from '../../domain/repositories/i-crm-leads-ops.repo';
+import type { StageHistoryEntry } from '../../deals/i-crm-deals.repo';
+import { toBitrixStatusId } from '../../leads/lead-status-id.util';
 
 type Row = Record<string, unknown>;
 
@@ -45,13 +47,54 @@ export class CrmLeadsOpsRepository implements ICrmLeadsOpsRepo {
       }, 'DB_ERROR');
   }
 
-  async updateLeadStage(lid: number, _stageId: number): Promise<Result<Row[]>> {
+  // VISION-3340 #34: read the lead's CURRENT stage before a transition so the audit row can
+  // record from_stage. Raw SQL (not db.select().from(crmLeads)) because the @shared/db compat
+  // crmLeads def does NOT expose the live stage_id column — same reason updateLeadStage() below
+  // uses raw SQL. Returns the numeric stage_id as text (consistent with to_stage = String(id)).
+  async getLeadStage(lid: number): Promise<Result<string | null>> {
     return safeCall(async () => {
-      // crm_leads has no stage_id column; touch updated_at until column is added
-      const rows = await db.update(crmLeads).set({
-        updated_at: _time.now(),
-      }).where(eq(crmLeads.id, lid)).returning();
-      return castTo<Row[]>(rows);
+      const res = await db.execute(sql`
+        SELECT stage_id, status_description FROM crm_leads WHERE id = ${lid} LIMIT 1
+      `);
+      const row = (res.rows?.[0] ?? null) as { stage_id?: unknown; status_description?: unknown } | null;
+      if (!row) return null;
+      return row.stage_id != null ? String(row.stage_id) : null;
+      }, 'DB_ERROR');
+  }
+
+  async updateLeadStage(lid: number, stageId: number): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      // Live crm_leads HAS a stage_id integer column (FK → crm_lead_stages.id) plus the
+      // Bitrix-coarse status_id CHECK domain (NEW/IN_PROCESS/CONVERTED/JUNK) and a free-form
+      // status_description that carries the precise funnel-stage code. Moving a lead through
+      // the funnel must persist ALL THREE so the board, the status filter, and the funnel
+      // analytics stay in sync — touching updated_at alone left the lead in its old stage
+      // (200 OK but no real transition → Q-40 "works but wrong").
+      //
+      // Raw parametrized SQL is used (not db.update(crmLeads)) because the @shared/db compat
+      // crmLeads def does NOT expose the live stage_id column — and crm_lead_stages.stage_id/
+      // semantic_id are absent from its stub. This mirrors convertLead() in this same repo.
+      //
+      // Read the target stage's canonical code first so status_description/status_id stay
+      // consistent with the integer stage_id that the board writes.
+      const stageRes = await db.execute(sql`
+        SELECT stage_id, semantic_id FROM crm_lead_stages WHERE id = ${stageId} LIMIT 1
+      `);
+      const stage = (stageRes.rows?.[0] ?? null) as { stage_id?: string; semantic_id?: string } | null;
+      const stageCode = stage?.stage_id ?? null;            // e.g. NEW / IN_PROCESS / ANALYSIS / CONVERTED / LOST
+      const coarseStatusId = toBitrixStatusId(stageCode);   // map to the status_id CHECK domain
+
+      const res = await db.execute(sql`
+        UPDATE crm_leads SET
+          stage_id           = ${stageId},
+          status_description = COALESCE(${stageCode}, status_description),
+          status_id          = ${coarseStatusId},
+          updated_at         = NOW(),
+          date_modify        = NOW()
+        WHERE id = ${lid}
+        RETURNING *
+      `);
+      return castTo<Row[]>(res.rows ?? []);
       }, 'DB_ERROR');
   }
 
@@ -135,5 +178,18 @@ export class CrmLeadsOpsRepository implements ICrmLeadsOpsRepo {
 
   async deleteLead(lid: number): Promise<void> {
     await db.delete(crmLeads).where(eq(crmLeads.id, lid));
+  }
+
+  // VISION-3340 #34: append-only stage-transition audit row. Raw parametrized INSERT (same
+  // db.execute style this repo uses for convertLead/updateLeadStage) — crm_stage_history has
+  // no Drizzle binding. entity_id holds the lead id as text; to_stage is the numeric stage id
+  // as text, from_stage the prior stage (or NULL when unknown).
+  async recordStageHistory(entry: StageHistoryEntry): Promise<Result<void>> {
+    return safeCall(async () => {
+      await db.execute(sql`
+        INSERT INTO crm_stage_history (entity_type, entity_id, from_stage, to_stage, changed_by)
+        VALUES (${entry.entityType}, ${entry.entityId}, ${entry.fromStage}, ${entry.toStage}, ${entry.changedBy})
+      `);
+      }, 'DB_ERROR');
   }
 }

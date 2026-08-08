@@ -68,7 +68,7 @@ export class CompleteSessionHandler implements ICommandHandler<CompleteSessionCo
 
     // Trigger 10: MES completed → QC (only after commit)
     // PA2-18 Wave 6: canonical class form; EventBridge re-emits to legacy @OnEvent listeners.
-    this.eventBus.publish(new MesCompletedEvent(command.sessionId, _time.now()));
+    this.eventBus.publish(new MesCompletedEvent(command.sessionId, session.getPpId(), _time.now()));
 
     // Trigger 16: MES → HR 360° (only after commit)
     this.eventBus.publish(

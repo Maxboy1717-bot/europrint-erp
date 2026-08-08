@@ -47,3 +47,17 @@ export const UpdateMaterialStatusSchema = z.object({
   status: z.enum(MATERIAL_STATUSES),
 });
 export type UpdateMaterialStatusDto = z.infer<typeof UpdateMaterialStatusSchema>;
+
+// Vision 06-sd#18: physical die identity (die_code) tagged onto a mold; decoupled from order_id.
+export const SetDieCodeSchema = z.object({
+  dieCode: z.string().min(1).max(100),
+});
+export type SetDieCodeDto = z.infer<typeof SetDieCodeSchema>;
+
+// SD #18-followup: taxonomy_entries category='code_prefix' (KT/PT/E/GL) classification tag on
+// a mold/die. Validated against the LIVE taxonomy_entries set server-side (not a hardcoded
+// enum here, Q-40) — this schema only enforces shape.
+export const SetCodePrefixSchema = z.object({
+  codePrefix: z.string().min(1).max(20),
+});
+export type SetCodePrefixDto = z.infer<typeof SetCodePrefixSchema>;

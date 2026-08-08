@@ -34,6 +34,10 @@ export class PosMiniAppService {
     return this.repo.getPendingApprovals(userId);
   }
 
+  async canManageRequest(userId: number, requestId: number) {
+    return this.repo.canManageRequest(userId, requestId);
+  }
+
   async getWarehouses(userId: number) {
     return this.repo.getWarehouses(userId);
   }

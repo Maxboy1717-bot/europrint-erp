@@ -17,11 +17,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrBadRequest, unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { CalendarEventsService } from './calendar-events.service';
-import {
-  CalendarEventAclTranslator,
-  type LegacyCalendarEventRow,
-  type CalendarEventDto,
-} from './acl/calendar-event-acl';
 
 const EventSchema = z.object({
   title:       z.string().min(1),
@@ -43,28 +38,11 @@ const EventSchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Controller('calendar-events')
 export class CalendarEventsController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly acl = new CalendarEventAclTranslator();
-
   constructor(private readonly svc: CalendarEventsService) {}
 
   @Get()
   async getAll(@Query('type') type?: string) {
     return unwrapOrInternal(await this.svc.getAll(type));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New consumers should hit `/v2`; the
-   * legacy `/` endpoint stays for backwards-compat.
-   */
-  @Get('v2')
-  async getAllV2(@Query('type') type?: string): Promise<CalendarEventDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getAll(type)) as unknown as LegacyCalendarEventRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.acl.toDomain(row))
-      .filter((r): r is { ok: true; data: CalendarEventDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Get('upcoming')

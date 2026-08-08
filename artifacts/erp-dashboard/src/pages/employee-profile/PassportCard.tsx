@@ -58,15 +58,7 @@ export function PassportCard({ t, tCommon, passportData, loadingPassport, passpo
                   />
                 </div>
               </div>
-              <div className="space-y-1">
-          <Label>{t("issuedBy")}</Label>
-                <Input
-                  value={passportForm.issuedBy}
-                  onChange={(e) => setPassportForm({ ...passportForm, issuedBy: e.target.value })}
-                  placeholder="IIV"
-                  data-testid="input-passport-issued-by"
-                />
-              </div>
+              {/* audit 2026-08-06 T29: issuedBy/birthPlace/citizenship inputs removed — employees has no backing columns (Q-35-gated), so they were silently dropped on save (Q-43 fake-save). Re-add only after the owner approves the schema addition. */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
           <Label>{t("issuedDate")}</Label>
@@ -86,24 +78,6 @@ export function PassportCard({ t, tCommon, passportData, loadingPassport, passpo
                     data-testid="input-passport-expiry-date"
                   />
                 </div>
-              </div>
-              <div className="space-y-1">
-          <Label>{t("birthPlace")}</Label>
-                <Input
-                  value={passportForm.birthPlace}
-                  onChange={(e) => setPassportForm({ ...passportForm, birthPlace: e.target.value })}
-                  placeholder={t("toshkentShahri")}
-                  data-testid="input-passport-birth-place"
-                />
-              </div>
-              <div className="space-y-1">
-          <Label>{t("citizenship")}</Label>
-                <Input
-                  value={passportForm.citizenship}
-                  onChange={(e) => setPassportForm({ ...passportForm, citizenship: e.target.value })}
-                  placeholder={t("uzbekistan")}
-                  data-testid="input-passport-citizenship"
-                />
               </div>
             </div>
             <DialogFooter>
@@ -142,24 +116,12 @@ export function PassportCard({ t, tCommon, passportData, loadingPassport, passpo
                 <p className="font-medium">{passportData.passportSeries} {passportData.passportNumber}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">{t("issuedBy")}</p>
-                <p className="font-medium">{passportData.issuedBy || tCommon("notSpecified")}</p>
-              </div>
-              <div>
                 <p className="text-sm text-muted-foreground">{t("issuedDate")}</p>
                 <p className="font-medium">{passportData.issuedDate || tCommon("notSpecified")}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t("expiryDate")}</p>
                 <p className="font-medium">{passportData.expiryDate || tCommon("notSpecified")}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("birthPlace")}</p>
-                <p className="font-medium">{passportData.birthPlace || tCommon("notSpecified")}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("citizenship")}</p>
-                <p className="font-medium">{passportData.citizenship || "Uzbekistan"}</p>
               </div>
             </div>
           </RoleGate>

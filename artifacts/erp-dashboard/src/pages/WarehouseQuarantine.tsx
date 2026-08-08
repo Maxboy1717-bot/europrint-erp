@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Lock, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
+import { EPPageHeader } from "@/components/ep";
 
 interface QuarantineItem {
   id: number;
@@ -69,15 +70,17 @@ export default function WarehouseQuarantine() {
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center gap-3 mb-6">
-        <Lock className="h-8 w-8 text-[var(--ep-yellow)]" />
-        <div className="flex-1">
-          <div className="text-xs text-gray-500 font-semibold">KARANTIN</div>
-          <h1 className="text-2xl font-bold">{t("karantindagiMateriallar")}</h1>
-          <p className="text-sm text-gray-500">{t("qcInspektorQaroriKutmoqda48Soatdan")}</p>
-        </div>
-        <Button onClick={load} variant="outline">{t("yangilash")}</Button>
-      </div>
+      <EPPageHeader
+        breadcrumb="KARANTIN"
+        title={
+          <span className="flex items-center gap-2">
+            <Lock className="h-6 w-6 text-[var(--ep-yellow)]" />
+            {t("karantindagiMateriallar")}
+          </span>
+        }
+        subtitle={t("qcInspektorQaroriKutmoqda48Soatdan")}
+        actions={<Button onClick={load} variant="outline">{t("yangilash")}</Button>}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>

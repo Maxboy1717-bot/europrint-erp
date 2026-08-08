@@ -30,6 +30,17 @@ export class AiExamService {
     return this.repo.assignExam(userId, positionId);
   }
 
+  /** Per-card AI exam (ORG Phase 4B, EP-ORG-046): scope to org_function_id + razryad; pool from hr_question_bank. */
+  async assignExamToCard(userId: number, orgFunctionId: number, razryadLevelId: number | null): Promise<Result<Record<string, unknown>>> {
+    this.logger.log(`Assign AI exam to card: user=${userId}, card=${orgFunctionId}, razryad=${razryadLevelId ?? '-'}`);
+    return this.repo.assignExamToCard(userId, orgFunctionId, razryadLevelId);
+  }
+
+  /** All AI-exam attempts for a card (card UI). */
+  async getAttemptsByCard(orgFunctionId: number): Promise<Result<Record<string, unknown>[]>> {
+    return this.repo.findAttemptsByCard(orgFunctionId);
+  }
+
   async submitAttempt(attemptId: string, answers: Record<string, string>): Promise<Result<Record<string, unknown>>> {
     this.logger.log(`Submitting AI exam attempt: ${attemptId}`);
     return this.repo.submitAttempt(attemptId, answers);

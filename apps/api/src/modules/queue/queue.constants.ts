@@ -10,6 +10,10 @@ export const QUEUE_NAMES = {
   LABEL_PRINT:      'label-print',
   MRP_RUN:          'mrp-run',
   FORECAST_RECALC:  'forecast-recalc',
+  // Kanban davriy vazifalar (eskalatsiya 09:00 + takrorlanuvchi kartalar 07:00, Asia/Tashkent) —
+  // BullMQ repeatable job orqali. Markaziy ro'yxatda emas — kanban.module.ts o'zi registerQueue
+  // qiladi (qarang apps/api/src/modules/kanban/infrastructure/cron/kanban-cron.processor.ts).
+  KANBAN_CRON:      'kanban-cron',
 } as const;
 
 export type QueueName = typeof QUEUE_NAMES[keyof typeof QUEUE_NAMES];

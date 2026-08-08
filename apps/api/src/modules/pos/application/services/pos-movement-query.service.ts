@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MovementFilterDto } from '../../dto/movement.dto';
 import { safeCall, Result, AppError } from '@common/result';
 import { PosMovementQueryRepository } from '../../infrastructure/repositories/pos-movement-query.repository';
@@ -12,7 +13,10 @@ import { PosMovementQueryRepository } from '../../infrastructure/repositories/po
 export class PosMovementQueryService {
   private readonly logger = new Logger(PosMovementQueryService.name);
 
-  constructor(private readonly repo: PosMovementQueryRepository) {}
+  constructor(
+    private readonly repo: PosMovementQueryRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(filter: MovementFilterDto): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -24,7 +28,7 @@ export class PosMovementQueryService {
   async findOne(movementId: number) {
     return safeCall(async () => {
       const result = await this.repo.findOne(movementId);
-      if (!result) throw new NotFoundException(`Harakat topilmadi: ${movementId}`);
+      if (!result) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id: movementId } }));
       return result;
     });
   }

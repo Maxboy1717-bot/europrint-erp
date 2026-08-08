@@ -5,7 +5,7 @@
  *
  * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
  *   - Legacy tables (papka_orders, machine_tasks, planning_operations,
- *     erp_employees, work_centers, warehouse_stock, stock_items, stock_transfers,
+ *     erp_employees, work_centers, warehouse_stock, stock_transfers,
  *     material_lots, internal_requests, warehouse_transactions) without Drizzle schemas
  *   - COALESCE(${updates.x ?? null}, x) inline conditional UPDATE pattern for
  *     partial-update semantics with NULL-as-skip
@@ -165,12 +165,7 @@ export async function getKanbanEmployeesRaw(): Promise<Record<string, unknown>[]
   } catch { return []; }
 }
 
-export async function getOrdersByDateRaw(): Promise<Record<string, unknown>[]> {
-  try {
-    const r = await db.execute(sql`SELECT DATE(created_at) AS date, COUNT(*) AS count FROM orders GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30`);
-    return r.rows as Record<string, unknown>[];
-  } catch { return []; }
-}
+// getOrdersByDateRaw removed — route deleted; real query lives in WmsCatalogController.getOrdersByDate (papka_orders JOIN material_kits)
 
 export async function getWarehouseListRaw(): Promise<Record<string, unknown>[]> {
   try {
@@ -190,14 +185,17 @@ export async function getWarehouseListRaw(): Promise<Record<string, unknown>[]> 
 
 export async function getWarehouseStockRaw(warehouseId?: string): Promise<Record<string, unknown>[]> {
   try {
-    const whFilter = warehouseId ? sql`AND s.warehouse_id = ${warehouseId}` : sql``;
+    // G9-3: kanonik warehouse_stock + material_cards (avval 7-qatorli DEMO stock_items dan
+    // o'qir edi). Legacy maydon nomlari (product_name, warehouse_name, name, sku) saqlangan.
+    const whFilter = warehouseId ? sql`AND ws.warehouse_id = ${Number(warehouseId)}` : sql``;
     const r = await db.execute(sql`
-      SELECT s.*, p.name AS product_name, w.name AS warehouse_name
-      FROM stock_items s
-      LEFT JOIN products p ON s.product_id = p.id
-      LEFT JOIN warehouses w ON s.warehouse_id = w.id
+      SELECT ws.*, mc.kod AS sku, mc.xom_ashyo AS name, mc.category AS category,
+             mc.xom_ashyo AS product_name, w.name AS warehouse_name
+      FROM warehouse_stock ws
+      LEFT JOIN material_cards mc ON mc.id = ws.material_id
+      LEFT JOIN warehouses w ON ws.warehouse_id = w.id
       WHERE 1=1 ${whFilter}
-      ORDER BY p.name LIMIT 200
+      ORDER BY mc.xom_ashyo LIMIT 200
     `);
     return r.rows as Record<string, unknown>[];
   } catch { return []; }
@@ -226,7 +224,10 @@ export async function getWarehouseTransfersRaw(): Promise<Record<string, unknown
 
 export async function getWarehouseLotsRaw(): Promise<Record<string, unknown>[]> {
   try {
-    const r = await db.execute(sql`SELECT * FROM material_lots ORDER BY created_at DESC LIMIT 200`);
+    // Audit 2026-08-07: 'material_lots' jadvali bazada YO'Q -> 'catch' bo'sh massiv qaytarardi,
+    // ya'ni ombor partiyalari ekrani har doim bo'sh ko'rinardi. Kanonik partiya jadvali —
+    // 'batch_lots' (WMS expiry hisoboti va PosFifoService ham shundan o'qiydi).
+    const r = await db.execute(sql`SELECT * FROM batch_lots ORDER BY created_at DESC LIMIT 200`);
     return r.rows as Record<string, unknown>[];
   } catch { return []; }
 }
@@ -238,31 +239,14 @@ export async function getWarehouseInternalRequestsRaw(): Promise<Record<string, 
   } catch { return []; }
 }
 
-export async function getWarehouseDashboardKpisRaw(): Promise<Record<string, unknown>> {
-  const [whR, stockR, pendingR] = await Promise.allSettled([
-    db.execute(sql`SELECT COUNT(*) AS total FROM warehouses`),
-    db.execute(sql`SELECT COUNT(*) AS items FROM stock_items WHERE quantity > 0`),
-    db.execute(sql`SELECT COUNT(*) AS cnt FROM warehouse_transfers WHERE status = 'pending'`),
-  ]);
-  const wh      = whR.status      === 'fulfilled' ? (whR.value.rows[0]      as Record<string, unknown>) : { total: 0 };
-  const stock   = stockR.status   === 'fulfilled' ? (stockR.value.rows[0]   as Record<string, unknown>) : { items: 0 };
-  const pending = pendingR.status === 'fulfilled' ? (pendingR.value.rows[0] as Record<string, unknown>) : { cnt: 0 };
-  return {
-    totalWarehouses:  parseInt(String(wh?.['total']   ?? '0')),
-    stockItems:       parseInt(String(stock?.['items'] ?? '0')),
-    pendingTransfers: parseInt(String(pending?.['cnt'] ?? '0')),
-    occupancyRate: 72.5,
-  };
-}
-
 export async function getWarehouseOccupancyRaw(): Promise<Record<string, unknown>[]> {
   try {
     const r = await db.execute(sql`
       SELECT w.id, w.name, w.capacity,
-             COUNT(s.id) AS item_count,
-             COALESCE(SUM(s.quantity), 0) AS total_qty
+             COUNT(ws.id) AS item_count,
+             COALESCE(SUM(ws.quantity), 0) AS total_qty
       FROM warehouses w
-      LEFT JOIN stock_items s ON s.warehouse_id = w.id
+      LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
       GROUP BY w.id, w.name, w.capacity
       ORDER BY w.name
     `);

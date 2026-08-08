@@ -13,11 +13,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Play, Barcode, Package, Users, CheckCircle, Clock, ScanLine, ClipboardCheck } from "lucide-react";
 import { UseMutationResult } from "@tanstack/react-query";
-import { ChecklistMaterial, Employee, CrewAssignment, ProductionSession, IotLang } from "./iot-types";
+import { ChecklistMaterial, Employee, CrewAssignment, ProductionSession } from "./iot-types";
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 interface IoTChecklistModalProps {
-  lang: IotLang;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   checklistKitBarcode: string;
@@ -32,10 +32,10 @@ interface IoTChecklistModalProps {
 }
 
 export function IoTChecklistModal({
-  lang, open, onOpenChange, checklistKitBarcode, checklistMaterials, crewAssignment,
+  open, onOpenChange, checklistKitBarcode, checklistMaterials, crewAssignment,
   setCrewAssignment, employees, scanningItemId, scanMaterial, startProductionFromChecklist, activeSession,
 }: IoTChecklistModalProps) {
-  const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
+  const { t } = useTranslation("iot");
   const allScanned = (Array.isArray(checklistMaterials) ? checklistMaterials : []).every(m => m.isScanned);
 
   return (
@@ -44,7 +44,7 @@ export function IoTChecklistModal({
         <DialogHeader className="pb-2">
           <DialogTitle className="text-xl flex items-center gap-2">
             <ClipboardCheck className="h-6 w-6 text-primary" />
-            {t("Ishlab chiqarish oldi chek-listi", "Предпроизводственный чек-лист")}
+            {t("cmChecklistTitle")}
           </DialogTitle>
         </DialogHeader>
 
@@ -55,7 +55,7 @@ export function IoTChecklistModal({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Barcode className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{t("To'plam kodi", "Код набора")}:</span>
+                    <span className="text-sm text-muted-foreground">{t("cmKitCode")}:</span>
                   </div>
                   <span className="font-mono text-lg font-bold tracking-wider">{checklistKitBarcode}</span>
                 </div>
@@ -72,7 +72,7 @@ export function IoTChecklistModal({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Package className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-lg">{t("Materiallarni skanerlash", "Сканирование материалов")}</h3>
+                <h3 className="font-semibold text-lg">{t("cmScanMaterials")}</h3>
                 <Badge variant={allScanned ? "secondary" : "outline"}>
                   {(Array.isArray(checklistMaterials) ? checklistMaterials : []).filter(m => m.isScanned).length}/{checklistMaterials.length}
                 </Badge>
@@ -103,7 +103,7 @@ export function IoTChecklistModal({
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {material.isScanned ? (
-                            <EPStatusPill tone="success">{t("Skanlangan", "Отсканирован")}</EPStatusPill>
+                            <EPStatusPill tone="success">{t("cmScanned")}</EPStatusPill>
                           ) : (
                             <Button
                               size="sm"
@@ -113,7 +113,7 @@ export function IoTChecklistModal({
                               data-testid={`button-scan-${material.id}`}
                             >
                               {scanningItemId === material.id ? <EPLoader className="mr-1" /> : <ScanLine className="h-4 w-4 mr-1" />}
-                              {t("Skanerlash", "Сканировать")}
+                              {t("cmScan")}
                             </Button>
                           )}
                         </div>
@@ -130,14 +130,14 @@ export function IoTChecklistModal({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Users className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-lg">{t("Jamoa tayinlash", "Назначение команды")}</h3>
+                <h3 className="font-semibold text-lg">{t("cmAssignCrew")}</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {([
-                  { key: "masterId" as const, label: t("Master", "Мастер"), required: true },
-                  { key: "polmasterId" as const, label: t("Polmaster", "Полмастер"), required: false },
-                  { key: "shogirdId" as const, label: t("Shogird", "Ученик"), required: false },
-                  { key: "roklerId" as const, label: t("Roklerchi", "Роклерчи"), required: false },
+                  { key: "masterId" as const, label: t("cmMaster"), required: true },
+                  { key: "polmasterId" as const, label: t("cmPolmaster"), required: false },
+                  { key: "shogirdId" as const, label: t("cmShogird"), required: false },
+                  { key: "roklerId" as const, label: t("cmRoklerchi"), required: false },
                 ]).map(({ key, label, required }) => (
                   <div key={key} className="space-y-2">
                     <Label className="flex items-center gap-1">
@@ -152,10 +152,10 @@ export function IoTChecklistModal({
                         className={required && !crewAssignment[key] ? "border-red-300 dark:border-red-700" : required && crewAssignment[key] ? "border-green-300 dark:border-green-700" : ""}
                         data-testid={`select-${key}`}
                       >
-                        <SelectValue placeholder={required ? t("Masterni tanlang", "Выберите мастера") : t("Ixtiyoriy", "Опционально")} />
+                        <SelectValue placeholder={required ? t("cmSelectMaster") : t("cmOptional")} />
                       </SelectTrigger>
                       <SelectContent>
-                        {!required && <SelectItem value="none">{t("Tanlanmagan", "Не выбран")}</SelectItem>}
+                        {!required && <SelectItem value="none">{t("cmNotSelected")}</SelectItem>}
                         {(Array.isArray(employees) ? employees : []).filter(e => {
                             const taken = ([crewAssignment.masterId, crewAssignment.polmasterId, crewAssignment.shogirdId, crewAssignment.roklerId]).filter(Boolean);
                             return e.id === crewAssignment[key] || !taken.includes(e.id);
@@ -175,13 +175,13 @@ export function IoTChecklistModal({
               <CardContent className="p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("Materiallar", "Материалы")}</p>
+                    <p className="text-sm text-muted-foreground">{t("cmMaterials")}</p>
                     <p className={`text-xl font-bold ${allScanned ? "text-[var(--ep-green)]" : "text-[var(--ep-yellow)]"}`}>
                       {(Array.isArray(checklistMaterials) ? checklistMaterials : []).filter(m => m.isScanned).length} / {checklistMaterials.length}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("Jamoa", "Команда")}</p>
+                    <p className="text-sm text-muted-foreground">{t("cmTeam")}</p>
                     <p className={`text-xl font-bold ${crewAssignment.masterId ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
                       {([crewAssignment.masterId, crewAssignment.polmasterId, crewAssignment.shogirdId, crewAssignment.roklerId]).filter(Boolean).length} / 4
                     </p>
@@ -200,15 +200,15 @@ export function IoTChecklistModal({
             data-testid="button-start-production"
           >
             {startProductionFromChecklist.isPending ? <EPLoader size={20} className="mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-            {t("ISHLAB CHIQARISHNI BOSHLASH", "НАЧАТЬ ПРОИЗВОДСТВО")}
+            {t("cmStartProduction")}
           </Button>
           {(!allScanned || !crewAssignment.masterId) && (
             <p className="text-sm text-center text-muted-foreground mt-2">
               {!allScanned && !crewAssignment.masterId
-                ? t("Barcha materiallarni skanerlang va Masterni tayinlang", "Отсканируйте все материалы и назначьте мастера")
+                ? t("cmScanAllAndAssign")
                 : !allScanned
-                  ? t("Barcha materiallarni skanerlang", "Отсканируйте все материалы")
-                  : t("Masterni tayinlang", "Назначьте мастера")}
+                  ? t("cmScanAll")
+                  : t("cmAssignMaster")}
             </p>
           )}
         </div>

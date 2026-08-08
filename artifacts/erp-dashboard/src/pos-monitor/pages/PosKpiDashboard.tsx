@@ -66,18 +66,18 @@ export default function PosKpiDashboard() {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "20px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--pos-bg)", padding: "20px 24px" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>OMBOR KPI</div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1F2937" }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>OMBOR KPI</div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--pos-text)" }}>
             {t("realTimeKorsatgichlar")}
           </h1>
         </div>
         <button
           onClick={() => void loadData()}
-          style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB",
+          style={{ padding: "8px 16px", background: "var(--pos-bg)", border: "1px solid var(--pos-border)",
                    borderRadius: 8, cursor: "pointer", fontSize: 13 }}
         >
           {t("yangilash")}
@@ -93,10 +93,10 @@ export default function PosKpiDashboard() {
                         gap: 12, marginBottom: 24 }}>
             <KpiCard icon="🏭" label={t("omborlar")} value={String(sysKpi.totalWarehouses)} />
             <KpiCard icon="📦" label={t("Materiallar")} value={String(sysKpi.totalMaterials)} />
-            <KpiCard icon="💰" label={t("jamiQiymat1")} value={fmtMoney(sysKpi.totalStockValue) + " so'm"} color="#059669" />
-            <KpiCard icon="⚠️" label={t("pastStok")} value={String(sysKpi.lowStockAlerts)} color={sysKpi.lowStockAlerts > 0 ? "#DC2626" : "#059669"} />
-            <KpiCard icon="⏳" label={t("tasdiqlashKutmoqda")} value={String(sysKpi.pendingMovements)} color={sysKpi.pendingMovements > 0 ? "#D97706" : "#059669"} />
-            <KpiCard icon="🔬" label={tLabel('common.PosKpiDashboard.qcKutmoqda', "QC kutmoqda")} value={String(sysKpi.qcPending)} color={sysKpi.qcPending > 0 ? "#D97706" : "#059669"} />
+            <KpiCard icon="💰" label={t("jamiQiymat1")} value={fmtMoney(sysKpi.totalStockValue) + " so'm"} color="var(--pos-success)" />
+            <KpiCard icon="⚠️" label={t("pastStok")} value={String(sysKpi.lowStockAlerts)} color={sysKpi.lowStockAlerts > 0 ? "var(--pos-danger)" : "var(--pos-success)"} />
+            <KpiCard icon="⏳" label={t("tasdiqlashKutmoqda")} value={String(sysKpi.pendingMovements)} color={sysKpi.pendingMovements > 0 ? "#D97706" : "var(--pos-success)"} />
+            <KpiCard icon="🔬" label={tLabel('common.PosKpiDashboard.qcKutmoqda', "QC kutmoqda")} value={String(sysKpi.qcPending)} color={sysKpi.qcPending > 0 ? "#D97706" : "var(--pos-success)"} />
             <KpiCard icon="📅" label={t("bugungiHarakatlar")} value={String(sysKpi.todayMovements)} />
             <KpiCard icon="📊" label={t("weekly")} value={String(sysKpi.weeklyMovements)} />
             <KpiCard icon="📈" label={t("monthly")} value={String(sysKpi.monthlyMovements)} />
@@ -104,36 +104,36 @@ export default function PosKpiDashboard() {
 
           {/* Top warehouses + Movement types */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-            <div style={{ background: "#FFF", borderRadius: 12, padding: 16, border: "1px solid #E5E7EB" }}>
+            <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 16, border: "1px solid var(--pos-border)" }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>🏆 Top omborlar (qiymat ulushi)</div>
               {(Array.isArray(sysKpi.topWarehouses) ? sysKpi.topWarehouses : []).map((w, i) => (
                 <div key={w.code} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#EFF6FF",
-                                color: "#1E40AF", display: "flex", alignItems: "center",
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--pos-accent-soft)",
+                                color: "var(--pos-accent)", display: "flex", alignItems: "center",
                                 justifyContent: "center", fontSize: 11, fontWeight: 700 }}>
                     {i + 1}
                   </div>
                   <div style={{ flex: 1, fontSize: 13 }}>
-                    <b>{w.code}</b> <span style={{ color: "#6B7280" }}>{w.name}</span>
+                    <b>{w.code}</b> <span style={{ color: "var(--pos-text-muted)" }}>{w.name}</span>
                   </div>
-                  <div style={{ width: 100, height: 8, background: "#F3F4F6", borderRadius: 4, overflow: "hidden" }}>
-                    <div style={{ width: `${w.valueShare}%`, height: "100%", background: "#10B981" }} />
+                  <div style={{ width: 100, height: 8, background: "var(--pos-bg)", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ width: `${w.valueShare}%`, height: "100%", background: "var(--pos-success)" }} />
                   </div>
                   <div style={{ width: 40, textAlign: "right", fontSize: 12, fontWeight: 600 }}>{w.valueShare}%</div>
                 </div>
               ))}
             </div>
 
-            <div style={{ background: "#FFF", borderRadius: 12, padding: 16, border: "1px solid #E5E7EB" }}>
+            <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 16, border: "1px solid var(--pos-border)" }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>🔄 Harakatlar (oxirgi 30 kun)</div>
               {(Array.isArray(sysKpi.movementsByType) ? sysKpi.movementsByType : []).map(m => (
                 <div key={m.type} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                   <div style={{ flex: 1, fontSize: 13 }}>{m.label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1F2937" }}>{m.count}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--pos-text)" }}>{m.count}</div>
                 </div>
               ))}
               {(!sysKpi.movementsByType || sysKpi.movementsByType.length === 0) && (
-                <div style={{ textAlign: "center", color: "#9CA3AF", padding: 16, fontSize: 13 }}>{t("harakatlarYoq")}</div>
+                <div style={{ textAlign: "center", color: "var(--pos-text-muted)", padding: 16, fontSize: 13 }}>{t("harakatlarYoq")}</div>
               )}
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function PosKpiDashboard() {
               <div
                 key={w.warehouseId}
                 onClick={() => navigate(`/pos-monitor/warehouses/${w.warehouseId}`)}
-                style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB",
+                style={{ background: "var(--pos-card)", borderRadius: 12, border: "1px solid var(--pos-border)",
                          padding: 16, cursor: "pointer", transition: "transform 0.1s" }}
                 onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"}
                 onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.transform = ""}
@@ -158,9 +158,9 @@ export default function PosKpiDashboard() {
                   <span style={{ fontSize: 20 }}>🏭</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{w.warehouseName}</div>
-                    <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace" }}>{w.warehouseCode}</div>
+                    <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontFamily: "monospace" }}>{w.warehouseCode}</div>
                   </div>
-                  <span style={{ padding: "2px 8px", borderRadius: 6, background: "#EFF6FF", color: "#1E40AF",
+                  <span style={{ padding: "2px 8px", borderRadius: 6, background: "var(--pos-accent-soft)", color: "var(--pos-accent)",
                                 fontSize: 10, fontWeight: 700 }}>
                     {w.warehouseType}
                   </span>
@@ -168,31 +168,31 @@ export default function PosKpiDashboard() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
                   <Stat label={t('Material')} value={String(w.totalMaterials)} />
-                  <Stat label={t("pastStok")} value={String(w.lowStockCount)} color={w.lowStockCount > 0 ? "#DC2626" : undefined} />
-                  <Stat label={t("tugagan")} value={String(w.outOfStockCount)} color={w.outOfStockCount > 0 ? "#DC2626" : undefined} />
+                  <Stat label={t("pastStok")} value={String(w.lowStockCount)} color={w.lowStockCount > 0 ? "var(--pos-danger)" : undefined} />
+                  <Stat label={t("tugagan")} value={String(w.outOfStockCount)} color={w.outOfStockCount > 0 ? "var(--pos-danger)" : undefined} />
                   <Stat label={t("today")} value={String(w.movementsToday)} />
                   <Stat label={t("hafta")} value={String(w.movementsThisWeek)} />
                   <Stat label={t("kutmoqda1")} value={String(w.pendingApprovals)} color={w.pendingApprovals > 0 ? "#D97706" : undefined} />
                 </div>
 
                 {/* Jami qiymat */}
-                <div style={{ borderTop: "1px solid #F3F4F6", paddingTop: 10, marginBottom: 8 }}>
-                  <div style={{ fontSize: 10, color: "#9CA3AF" }}>JAMI QIYMAT</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: "#059669" }}>
+                <div style={{ borderTop: "1px solid var(--pos-bg)", paddingTop: 10, marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>JAMI QIYMAT</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: "var(--pos-success)" }}>
                     {fmtMoney(w.totalValue)} so'm
                   </div>
                 </div>
 
                 {/* Unit breakdown */}
                 {(w.units ?? []).length > 0 && (
-                  <div style={{ borderTop: "1px solid #F3F4F6", paddingTop: 10 }}>
-                    <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>{t("olchovBirliklari")}</div>
+                  <div style={{ borderTop: "1px solid var(--pos-bg)", paddingTop: 10 }}>
+                    <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("olchovBirliklari")}</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                       {(w.units ?? []).slice(0, 5).map(u => (
-                        <div key={u.unit} style={{ background: "#F9FAFB", borderRadius: 6, padding: "3px 8px",
-                                                    fontSize: 11, color: "#374151" }}>
+                        <div key={u.unit} style={{ background: "var(--pos-bg)", borderRadius: 6, padding: "3px 8px",
+                                                    fontSize: 11, color: "var(--pos-text-muted)" }}>
                           <b>{fmt(u.quantity, 2)}</b> {u.unit}
-                          <span style={{ color: "#9CA3AF" }}> · {u.count}</span>
+                          <span style={{ color: "var(--pos-text-muted)" }}> · {u.count}</span>
                         </div>
                       ))}
                     </div>
@@ -200,7 +200,7 @@ export default function PosKpiDashboard() {
                 )}
 
                 {w.employeeCount > 0 && (
-                  <div style={{ marginTop: 8, fontSize: 11, color: "#6B7280" }}>
+                  <div style={{ marginTop: 8, fontSize: 11, color: "var(--pos-text-muted)" }}>
                     👥 {w.employeeCount} ta xodim
                   </div>
                 )}
@@ -215,10 +215,10 @@ export default function PosKpiDashboard() {
 
 function KpiCard({ icon, label, value, color }: { icon: string; label: string; value: string; color?: string }) {
   return (
-    <div style={{ background: "#FFF", borderRadius: 12, padding: "12px 14px", border: "1px solid #E5E7EB" }}>
+    <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: "12px 14px", border: "1px solid var(--pos-border)" }}>
       <div style={{ fontSize: 18 }}>{icon}</div>
-      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4, textTransform: "uppercase" }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: color ?? "#1F2937", marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginTop: 4, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: color ?? "var(--pos-text)", marginTop: 2 }}>{value}</div>
     </div>
   );
 }
@@ -226,8 +226,8 @@ function KpiCard({ icon, label, value, color }: { icon: string; label: string; v
 function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: color ?? "#1F2937" }}>{value}</div>
-      <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: color ?? "var(--pos-text)" }}>{value}</div>
+      <div style={{ fontSize: 9, color: "var(--pos-text-muted)", textTransform: "uppercase" }}>{label}</div>
     </div>
   );
 }

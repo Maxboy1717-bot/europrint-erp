@@ -29,10 +29,10 @@ interface LeaderboardEntry {
 
 type Period = "monthly" | "quarterly" | "total";
 
-const PERIOD_TABS: { value: Period; label: string }[] = [
-  { value: "monthly",   label: "Oylik" },
-  { value: "quarterly", label: "Kvartal" },
-  { value: "total",     label: "Jami" },
+const PERIOD_TABS: { value: Period; labelKey: string }[] = [
+  { value: "monthly",   labelKey: "gamification.monthly" },
+  { value: "quarterly", labelKey: "gamification.quarterly" },
+  { value: "total",     labelKey: "gamification.total" },
 ];
 
 const RANK_COLORS = ["bg-yellow-50 border-yellow-200", "bg-gray-50 border-gray-200", "bg-orange-50 border-orange-200"];
@@ -61,7 +61,7 @@ function TableSkeleton() {
 }
 
 export default function HRGamification() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("hr");
   const [period, setPeriod] = useState<Period>("monthly");
 
   const { data: rawData, isLoading, isError } = useQuery<LeaderboardEntry[]>({
@@ -83,8 +83,8 @@ export default function HRGamification() {
       {/* Header */}
       <div className="border-b border-border/50 px-1 pb-4 flex items-center gap-3">
         <Trophy className="h-5 w-5 text-yellow-500" />
-        <h1 className="font-semibold text-base">Gamifikatsiya</h1>
-        <span className="text-xs text-muted-foreground ml-1">Reyting jadvali</span>
+        <h1 className="font-semibold text-base">{t("gamification.title")}</h1>
+        <span className="text-xs text-muted-foreground ml-1">{t("gamification.subtitle")}</span>
       </div>
 
       <div className="flex-1 overflow-auto space-y-5">
@@ -97,7 +97,7 @@ export default function HRGamification() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-blue)]">{totalParticipants}</div>
-                <div className="text-xs text-muted-foreground">Ishtirokchilar</div>
+                <div className="text-xs text-muted-foreground">{t("gamification.participants")}</div>
               </div>
             </CardContent>
           </Card>
@@ -108,7 +108,7 @@ export default function HRGamification() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-yellow-600">{topScore.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">Eng yuqori ball</div>
+                <div className="text-xs text-muted-foreground">{t("gamification.topScore")}</div>
               </div>
             </CardContent>
           </Card>
@@ -119,7 +119,7 @@ export default function HRGamification() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-purple)]">{avgScore.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">O&apos;rtacha ball</div>
+                <div className="text-xs text-muted-foreground">{t("gamification.avgScore")}</div>
               </div>
             </CardContent>
           </Card>
@@ -130,7 +130,7 @@ export default function HRGamification() {
           <TabsList>
             {PERIOD_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>
-                {tab.label}
+                {t(tab.labelKey)}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -140,7 +140,7 @@ export default function HRGamification() {
         {isError && (
           <Card>
             <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              Ma&apos;lumotlarni yuklashda xatolik yuz berdi.
+              {t("gamification.loadError")}
             </CardContent>
           </Card>
         )}
@@ -153,12 +153,12 @@ export default function HRGamification() {
                 <Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead className="w-14">O&apos;rin</TableHead>
-                      <TableHead>Xodim</TableHead>
-                      <TableHead>Bo&apos;lim</TableHead>
-                      <TableHead className="text-right">Ball</TableHead>
-                      <TableHead className="text-center">Daraja</TableHead>
-                      <TableHead className="text-center">Nishonlar</TableHead>
+                      <TableHead className="w-14">{t("gamification.colRank")}</TableHead>
+                      <TableHead>{t("employee")}</TableHead>
+                      <TableHead>{t("gamification.colDept")}</TableHead>
+                      <TableHead className="text-right">{t("gamification.colScore")}</TableHead>
+                      <TableHead className="text-center">{t("gamification.colLevel")}</TableHead>
+                      <TableHead className="text-center">{t("gamification.colBadges")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -168,7 +168,7 @@ export default function HRGamification() {
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-10 text-sm text-muted-foreground">
                           <Trophy className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                          <p>Reyting ma&apos;lumotlari mavjud emas</p>
+                          <p>{t("gamification.empty")}</p>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -196,7 +196,7 @@ export default function HRGamification() {
                             <TableCell className="text-center">
                               {entry.level != null ? (
                                 <Badge variant="info" className="text-xs">
-                                  Lv {entry.level}
+                                  {t("gamification.levelPrefix")} {entry.level}
                                 </Badge>
                               ) : (
                                 <span className="text-muted-foreground text-sm">—</span>

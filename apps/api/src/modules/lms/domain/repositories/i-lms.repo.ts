@@ -14,6 +14,23 @@ export interface Course {
   passing_score: number;
   created_by: string;
   created_at: Date;
+  // Card-centric LMS (EP-LMS-001): logical ref to the org-CARD (org_functions.id) the darslik binds to.
+  card_id?: number | null;
+  // A74 (card<->course view): real enrollment progress aggregate for this course.
+  // Populated only by findCoursesByCard (LEFT JOIN enrollments); undefined elsewhere.
+  enrolled_count?: number;
+  completed_count?: number;
+  avg_progress?: number;
+}
+
+// T11-04: kurs-tasdiq workflow snapshot (draft->review->approved + 2-imzo audit trail).
+export interface CourseApproval {
+  id: string;
+  approval_status: 'draft' | 'review' | 'approved';
+  submitted_by: number | null;
+  submitted_at: Date | null;
+  approved_by: number | null;
+  approved_at: Date | null;
 }
 
 export interface Enrollment {
@@ -26,6 +43,10 @@ export interface Enrollment {
   certificate_expires_at?: Date;
   created_at: Date;
   course_title?: string;
+  // SB0144 (03-lms-darslik): source card the enrollment was taken on (backfilled from
+  // courses.card_id at enroll-time). Null when the course itself carries no card (universal
+  // kurs) — cross-card credit logic then honestly has nothing to route (Q-40, no fabrication).
+  card_id?: number | null;
 }
 
 export interface ILmsRepo {
@@ -43,7 +64,12 @@ export interface ILmsRepo {
     limit?: number;
   }): Promise<Result<{ items: Enrollment[]; total: number }>>;
   findExpiringCertificates(daysUntilExpiry: number): Promise<Result<Enrollment[]>>;
+  findCoursesByCard(cardId: number): Promise<Result<{ items: Course[]; total: number }>>;
   saveCourse(course: Course): Promise<Result<Course>>;
+  setCourseCard(id: string, cardId: number | null): Promise<Result<Course>>;
+  // T11-04: 3-bosqich kurs-tasdiq workflow (draft->review->approved), 2-imzo.
+  submitCourseForReview(id: string, submittedBy: number): Promise<Result<CourseApproval>>;
+  approveCourse(id: string, approvedBy: number): Promise<Result<CourseApproval>>;
   saveEnrollment(enrollment: Enrollment): Promise<Result<Enrollment>>;
   updateEnrollment(id: string, data: Partial<Enrollment>): Promise<Result<Enrollment>>;
 }

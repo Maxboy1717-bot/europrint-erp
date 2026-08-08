@@ -32,6 +32,11 @@ export class ApprovalRequest {
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingApprovable'.
       throw new DomainError('INVALID_STATE', 'Faqat pending so\'rov tasdiqlanadi');
     }
+    // SoD (audit 2026-08-06 T5): requester must not approve their own request —
+    // same pattern ZNO/ZVS services already enforce (submitted_by === userId check).
+    if (userId === this.requestedBy) {
+      throw new DomainError('FORBIDDEN', "O'z so'rovingizni o'zingiz tasdiqlay olmaysiz");
+    }
     this.status = ApprovalStatus.APPROVED;
     this.approvedBy = userId;
     this.approvedAt = _time.now();

@@ -17,9 +17,17 @@ import { ReportIncidentHandler } from '../../src/modules/security/application/co
 import { ReportIncidentCommand } from '../../src/modules/security/application/commands/report-incident.command';
 import { SecurityIncidentDetectedEvent } from '../../src/modules/security/domain/events';
 import { IncidentSeverity, IncidentType } from '../../src/modules/security/domain/enums/incident-severity.enum';
+import { INCIDENT_REPO } from '../../src/modules/security/domain/repositories/i-incident.repo';
+import { Ok } from '../../src/common/result';
 
 interface BusMock { publish: jest.Mock }
 function makeBus(): BusMock { return { publish: jest.fn() }; }
+function makeIncidentRepo() {
+  return {
+    save: jest.fn().mockImplementation((incident: unknown) => Promise.resolve(Ok(incident))),
+    findById: jest.fn(), findAll: jest.fn(), findOpen: jest.fn(), update: jest.fn(),
+  };
+}
 
 function makeCmd(over: Partial<{ type: string; severity: string; reportedBy: number }> = {}): ReportIncidentCommand {
   return new ReportIncidentCommand(
@@ -41,6 +49,7 @@ describe('ReportIncidentHandler', () => {
       providers: [
         ReportIncidentHandler,
         { provide: EventBus, useValue: bus },
+        { provide: INCIDENT_REPO, useValue: makeIncidentRepo() },
       ],
     }).compile();
     handler = moduleRef.get(ReportIncidentHandler);

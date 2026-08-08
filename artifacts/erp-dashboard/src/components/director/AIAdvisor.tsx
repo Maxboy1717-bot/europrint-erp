@@ -43,7 +43,7 @@ export function AIAdvisor() {
   };
 
   return (
-    <Card className="p-4 flex flex-col" style={{ height: 480 }}>
+    <Card id="ai-advisor-panel" className="p-4 flex flex-col" style={{ height: 480 }}>
       <div className="flex items-center gap-2 mb-3">
         <Brain className="h-4 w-4 text-[var(--ep-blue)]" />
         <h3 className="font-bold text-sm">{t("aiMaslahatchi")}</h3>

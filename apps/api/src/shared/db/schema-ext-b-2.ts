@@ -62,18 +62,11 @@ export const pos_order_items = pgTable('pos_order_items', {
 // the same physical table.
 export { posMovements as pos_movements } from '@workspace/db';
 
-export const pos_printer_configs = pgTable('pos_printer_configs', {
-  id:          serial('id').primaryKey(),
-  name:        text('name'),
-  type:        text('type'),
-  ip_address:  text('ip_address'),
-  port:        integer('port'),
-  is_active:   boolean('is_active').default(true),
-  is_default:  boolean('is_default').default(false),
-  settings:    jsonb('settings').default({}),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// pos_printer_configs pgTable OLIB TASHLANDI 2026-07-02 (G9-4, Q-46): 'pos_printer_configs'
+// (ko'plik) jadvali dublikat printer-config dunyosi edi (0 qator, 0 Drizzle-iste'molchi).
+// Kanonik = posPrinterConfig ('pos_printer_config', lib/db pos-schema-v2.ts) — POS label-print
+// pipeline (PosPrinterConfigRepository.getActiveConfig) va /warehouse/printer-config CRUD
+// (wms-barcode.controller) endi bitta jadvalda. DB'dagi bo'sh jadval drop qilinmadi (alohida bosqich).
 
 // ─── CRM Extended ─────────────────────────────────────────────────────────────
 
@@ -106,6 +99,11 @@ export const budgets = canonicalBudgets;
 // budget_lines: flows through schema-finance-budgets → schema-finance → schema (canonical path).
 // No local definition or re-export here.
 
+// DEPRECATED (2026-07-02): no writer in the codebase — `payroll_advances`
+// (schema-business-b-1.ts) is the real advance-request table, written by
+// finance/advances flow (check-advance.handler → FinanceOpsRepo.recordAdvance)
+// and read by finance-actions.repository.ts. Kept only so the pre-existing
+// seed rows keep resolving; do not add new readers/writers against `advances`.
 export const advances = pgTable('advances', {
   id:          serial('id').primaryKey(),
   employee_id: integer('employee_id'),

@@ -15,18 +15,40 @@ import { ArrowUp, ArrowDown, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   VALID_TABS,
-  type Dokla, type Raspo, type BasketDoc,
+  type Council, type Dokla, type Raspo,
   type CoordinationStats, type DoklaStatus, type RaspoStatus,
-  type DoklaFormState, type RaspoFormState,
+  type DoklaFormState, type RaspoFormState, type CouncilFormState,
+  type Prikaz, type Protocol, type PrikazFormState, type ProtocolFormState,
 } from "./CoordinationPageTypes";
 import { OverviewSection } from "./CoordinationPageOverview";
 import {
   DoklaSection, RaspoSection, BasketsSection, CouncilsSection,
 } from "./CoordinationPageSections";
-import { CreateDoklaDialog, CreateRaspoDialog } from "./CoordinationPageDialogs";
+import { PrikazSection, ProtocolSection } from "./CoordinationDocsSections";
+import { CreateDoklaDialog, CreateRaspoDialog, UpdateCouncilDialog } from "./CoordinationPageDialogs";
+import { PrikazDialog, ProtocolDialog, CancelPrikazDialog } from "./CoordinationDocsDialogs";
 
-const DOKLA_INIT: DoklaFormState  = { subject: "", problem: "", result: "", proposal: "", councilLevel: "3" };
-const RASPO_INIT: RaspoFormState  = { to: "", task: "", deadline: "", priority: "medium" };
+const DOKLA_INIT: DoklaFormState   = { subject: "", problem: "", result: "", proposal: "", councilLevel: "3" };
+const RASPO_INIT: RaspoFormState   = { to: "", task: "", deadline: "", priority: "medium" };
+const COUNCIL_INIT: CouncilFormState = { chairperson_id: "", description: "", meeting_schedule: "" };
+const PRIKAZ_INIT: PrikazFormState = { title: "", content: "", supersedesId: "" };
+const PROTOCOL_INIT: ProtocolFormState = {
+  councilId: "", title: "", agenda: "", decisions: "",
+  chairpersonId: "", secretaryId: "", dissentingOpinion: "",
+};
+
+/** Build the shared приказ / протокол payload from form state (real BE fields). */
+function protocolPayload(d: ProtocolFormState) {
+  return {
+    councilId:         d.councilId ? Number(d.councilId) : undefined,
+    title:             d.title.trim(),
+    agenda:            d.agenda.trim() || undefined,
+    decisions:         d.decisions.trim() || undefined,
+    chairpersonId:     d.chairpersonId ? Number(d.chairpersonId) : undefined,
+    secretaryId:       d.secretaryId ? Number(d.secretaryId) : undefined,
+    dissentingOpinion: d.dissentingOpinion.trim() ? { note: d.dissentingOpinion.trim() } : undefined,
+  };
+}
 
 export default function CoordinationPage() {
   const { t, language } = useTranslation("coordination");
@@ -47,12 +69,27 @@ export default function CoordinationPage() {
   // ── Dialog & filter state ──
   const [doklaOpen, setDoklaOpen]                     = useState(false);
   const [raspoOpen, setRaspoOpen]                     = useState(false);
+  const [councilEditTarget, setCouncilEditTarget]     = useState<Council | null>(null);
   const [doklaSearch, setDoklaSearch]                 = useState("");
   const [raspoSearch, setRaspoSearch]                 = useState("");
   const [doklaStatusFilter, setDoklaStatusFilter]     = useState<DoklaStatus | "">("");
   const [raspoStatusFilter, setRaspoStatusFilter]     = useState<RaspoStatus | "">("");
   const [doklaForm, setDoklaForm]                     = useState<DoklaFormState>(DOKLA_INIT);
   const [raspoForm, setRaspoForm]                     = useState<RaspoFormState>(RASPO_INIT);
+  const [councilForm, setCouncilForm]                 = useState<CouncilFormState>(COUNCIL_INIT);
+
+  // ── Prikaz / Protocol state (modul 04) ──
+  const [prikazSearch, setPrikazSearch]               = useState("");
+  const [protocolSearch, setProtocolSearch]           = useState("");
+  const [prikazDialogOpen, setPrikazDialogOpen]       = useState(false);
+  const [prikazDialogMode, setPrikazDialogMode]       = useState<"create" | "edit">("create");
+  const [prikazEditId, setPrikazEditId]               = useState<number | null>(null);
+  const [prikazForm, setPrikazForm]                   = useState<PrikazFormState>(PRIKAZ_INIT);
+  const [cancelPrikazTarget, setCancelPrikazTarget]   = useState<Prikaz | null>(null);
+  const [protocolDialogOpen, setProtocolDialogOpen]   = useState(false);
+  const [protocolDialogMode, setProtocolDialogMode]   = useState<"create" | "edit" | "amend">("create");
+  const [protocolTargetId, setProtocolTargetId]       = useState<number | null>(null);
+  const [protocolForm, setProtocolForm]               = useState<ProtocolFormState>(PROTOCOL_INIT);
 
   // ── Queries ──
   const { data: doklads = [], isLoading: doklaLoading } = useQuery<Dokla[]>({
@@ -72,10 +109,21 @@ export default function CoordinationPage() {
     enabled: !!isAuthenticated,
   });
 
-  // BasketDoc query kept for potential future use; data flows to CommunicationCenter internally
-  useQuery<BasketDoc[]>({
-    queryKey: ["/api/coordination/baskets"],
-    select: selectArray<BasketDoc>,
+  const { data: councils = [], isLoading: councilsLoading } = useQuery<Council[]>({
+    queryKey: ["/api/coordination/councils"],
+    select: selectArray<Council>,
+    enabled: !!isAuthenticated,
+  });
+
+  const { data: prikazes = [], isLoading: prikazLoading } = useQuery<Prikaz[]>({
+    queryKey: ["/api/prikaz"],
+    select: selectArray<Prikaz>,
+    enabled: !!isAuthenticated,
+  });
+
+  const { data: protocols = [], isLoading: protocolLoading } = useQuery<Protocol[]>({
+    queryKey: ["/api/protocols"],
+    select: selectArray<Protocol>,
     enabled: !!isAuthenticated,
   });
 
@@ -139,6 +187,194 @@ export default function CoordinationPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/coordination/stats"] });
     },
   });
+
+  const updateCouncilMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CouncilFormState }) => {
+      const payload: Record<string, unknown> = {};
+      if (data.chairperson_id) payload.chairperson_id = parseInt(data.chairperson_id, 10);
+      if (data.description.trim()) payload.description = data.description.trim();
+      if (data.meeting_schedule.trim()) payload.meeting_schedule = data.meeting_schedule.trim();
+      return apiRequest("PATCH", `/api/coordination/councils/${id}`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/coordination/councils"] });
+      toast({ title: isRu ? "Совет обновлён" : "Kengash yangilandi" });
+      setCouncilEditTarget(null);
+      setCouncilForm(COUNCIL_INIT);
+    },
+    onError: (e: unknown) => {
+      toast({ title: isRu ? "Ошибка" : "Xatolik", description: e instanceof Error ? e.message : "", variant: "destructive" });
+    },
+  });
+
+  function handleOpenCouncilEdit(council: Council) {
+    setCouncilForm({
+      chairperson_id: council.chairperson_id != null ? String(council.chairperson_id) : "",
+      description:    council.description ?? "",
+      meeting_schedule: council.meeting_schedule ?? "",
+    });
+    setCouncilEditTarget(council);
+  }
+
+  // ── Prikaz mutations (real BE: /api/prikaz) ──
+  const errToast = (e: unknown) =>
+    toast({ title: isRu ? "Ошибка" : "Xatolik", description: e instanceof Error ? e.message : "", variant: "destructive" });
+
+  const createPrikazMutation = useMutation({
+    mutationFn: (data: PrikazFormState) =>
+      apiRequest("POST", "/api/prikaz", {
+        title:        data.title.trim(),
+        content:      data.content.trim() || undefined,
+        supersedesId: data.supersedesId ? Number(data.supersedesId) : undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prikaz"] });
+      toast({ title: isRu ? "Приказ создан" : "Приказ yaratildi" });
+      setPrikazDialogOpen(false);
+      setPrikazForm(PRIKAZ_INIT);
+    },
+    onError: errToast,
+  });
+
+  const updatePrikazMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: PrikazFormState }) =>
+      apiRequest("PATCH", `/api/prikaz/${id}`, { title: data.title.trim(), content: data.content.trim() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prikaz"] });
+      toast({ title: isRu ? "Приказ обновлён" : "Приказ yangilandi" });
+      setPrikazDialogOpen(false);
+      setPrikazForm(PRIKAZ_INIT);
+      setPrikazEditId(null);
+    },
+    onError: errToast,
+  });
+
+  const signPrikazMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("POST", `/api/prikaz/${id}/sign`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prikaz"] });
+      toast({ title: isRu ? "Приказ подписан (номер присвоен)" : "Приказ imzolandi (raqam berildi)" });
+    },
+    onError: errToast,
+  });
+
+  const cancelPrikazMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      apiRequest("POST", `/api/prikaz/${id}/cancel`, { reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prikaz"] });
+      toast({ title: isRu ? "Приказ отменён" : "Приказ bekor qilindi" });
+      setCancelPrikazTarget(null);
+    },
+    onError: errToast,
+  });
+
+  // ── Protocol mutations (real BE: /api/protocols) ──
+  const createProtocolMutation = useMutation({
+    mutationFn: (data: ProtocolFormState) => apiRequest("POST", "/api/protocols", protocolPayload(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/protocols"] });
+      toast({ title: isRu ? "Протокол создан" : "Протокол yaratildi" });
+      setProtocolDialogOpen(false);
+      setProtocolForm(PROTOCOL_INIT);
+    },
+    onError: errToast,
+  });
+
+  const updateProtocolMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ProtocolFormState }) =>
+      apiRequest("PATCH", `/api/protocols/${id}`, protocolPayload(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/protocols"] });
+      toast({ title: isRu ? "Протокол обновлён" : "Протокол yangilandi" });
+      setProtocolDialogOpen(false);
+      setProtocolForm(PROTOCOL_INIT);
+      setProtocolTargetId(null);
+    },
+    onError: errToast,
+  });
+
+  const signProtocolMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("POST", `/api/protocols/${id}/sign`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/protocols"] });
+      toast({ title: isRu ? "Протокол подписан" : "Протокол imzolandi" });
+    },
+    onError: errToast,
+  });
+
+  const amendProtocolMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ProtocolFormState }) =>
+      apiRequest("POST", `/api/protocols/${id}/amend`, protocolPayload(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/protocols"] });
+      toast({ title: isRu ? "Исправляющий протокол создан" : "Tuzatish протоколи yaratildi" });
+      setProtocolDialogOpen(false);
+      setProtocolForm(PROTOCOL_INIT);
+      setProtocolTargetId(null);
+    },
+    onError: errToast,
+  });
+
+  // ── Prikaz / Protocol open + submit handlers ──
+  function handleOpenCreatePrikaz() {
+    setPrikazForm(PRIKAZ_INIT);
+    setPrikazEditId(null);
+    setPrikazDialogMode("create");
+    setPrikazDialogOpen(true);
+  }
+  function handleOpenEditPrikaz(p: Prikaz) {
+    setPrikazForm({ title: p.title, content: p.content ?? "", supersedesId: p.supersedes_id != null ? String(p.supersedes_id) : "" });
+    setPrikazEditId(p.id);
+    setPrikazDialogMode("edit");
+    setPrikazDialogOpen(true);
+  }
+  function handleSubmitPrikaz(data: PrikazFormState) {
+    if (prikazDialogMode === "edit" && prikazEditId != null) updatePrikazMutation.mutate({ id: prikazEditId, data });
+    else createPrikazMutation.mutate(data);
+  }
+
+  function fillProtocolForm(p: Protocol) {
+    const note = (p.dissenting_opinion && typeof p.dissenting_opinion === "object" && "note" in (p.dissenting_opinion as Record<string, unknown>))
+      ? String((p.dissenting_opinion as Record<string, unknown>).note ?? "")
+      : "";
+    setProtocolForm({
+      councilId:         p.council_id != null ? String(p.council_id) : "",
+      title:             p.title,
+      agenda:            p.agenda ?? "",
+      decisions:         p.decisions ?? "",
+      chairpersonId:     p.chairperson_id != null ? String(p.chairperson_id) : "",
+      secretaryId:       p.secretary_id != null ? String(p.secretary_id) : "",
+      dissentingOpinion: note,
+    });
+  }
+  function handleOpenCreateProtocol() {
+    setProtocolForm(PROTOCOL_INIT);
+    setProtocolTargetId(null);
+    setProtocolDialogMode("create");
+    setProtocolDialogOpen(true);
+  }
+  function handleOpenEditProtocol(p: Protocol) {
+    fillProtocolForm(p);
+    setProtocolTargetId(p.id);
+    setProtocolDialogMode("edit");
+    setProtocolDialogOpen(true);
+  }
+  function handleOpenAmendProtocol(p: Protocol) {
+    fillProtocolForm(p);
+    setProtocolTargetId(p.id);
+    setProtocolDialogMode("amend");
+    setProtocolDialogOpen(true);
+  }
+  function handleSubmitProtocol(data: ProtocolFormState) {
+    if (protocolDialogMode === "edit" && protocolTargetId != null) updateProtocolMutation.mutate({ id: protocolTargetId, data });
+    else if (protocolDialogMode === "amend" && protocolTargetId != null) amendProtocolMutation.mutate({ id: protocolTargetId, data });
+    else createProtocolMutation.mutate(data);
+  }
+
+  const signedPrikazes = prikazes.filter(p => p.status === "signed");
+  const prikazDialogPending = createPrikazMutation.isPending || updatePrikazMutation.isPending;
+  const protocolDialogPending = createProtocolMutation.isPending || updateProtocolMutation.isPending || amendProtocolMutation.isPending;
 
   // ── Derived counts for stat cards ──
   const overdueCount = rasporyazheniya.filter(r => r.status === "overdue").length;
@@ -234,6 +470,8 @@ export default function CoordinationPage() {
               <Badge className="ml-1.5 text-[10px] px-1.5 py-0 bg-red-500">{overdueCount}</Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="prikaz">{isRu ? "Приказы" : "Приказлар"}</TabsTrigger>
+          <TabsTrigger value="protocols">{isRu ? "Протоколы" : "Протоколлар"}</TabsTrigger>
           <TabsTrigger value="baskets">{t("threeBasketTitle")}</TabsTrigger>
           <TabsTrigger value="councils">{t("councilSystem")}</TabsTrigger>
         </TabsList>
@@ -270,8 +508,34 @@ export default function CoordinationPage() {
           onMarkDone={markRaspoDoneMutation.mutate}
         />
 
+        <PrikazSection
+          prikazes={prikazes}
+          loading={prikazLoading}
+          search={prikazSearch}
+          setSearch={setPrikazSearch}
+          onCreate={handleOpenCreatePrikaz}
+          onEdit={handleOpenEditPrikaz}
+          onSign={signPrikazMutation.mutate}
+          onCancel={setCancelPrikazTarget}
+        />
+
+        <ProtocolSection
+          protocols={protocols}
+          loading={protocolLoading}
+          search={protocolSearch}
+          setSearch={setProtocolSearch}
+          onCreate={handleOpenCreateProtocol}
+          onEdit={handleOpenEditProtocol}
+          onSign={signProtocolMutation.mutate}
+          onAmend={handleOpenAmendProtocol}
+        />
+
         <BasketsSection />
-        <CouncilsSection />
+        <CouncilsSection
+          councils={councils}
+          councilsLoading={councilsLoading}
+          onEditCouncil={handleOpenCouncilEdit}
+        />
       </Tabs>
 
       {/* Dialogs */}
@@ -291,6 +555,48 @@ export default function CoordinationPage() {
         setForm={setRaspoForm}
         onSubmit={createRaspoMutation.mutate}
         isPending={createRaspoMutation.isPending}
+      />
+
+      <UpdateCouncilDialog
+        open={councilEditTarget !== null}
+        onOpenChange={open => { if (!open) { setCouncilEditTarget(null); setCouncilForm(COUNCIL_INIT); } }}
+        councilName={councilEditTarget?.name ?? ""}
+        form={councilForm}
+        setForm={setCouncilForm}
+        onSubmit={data => {
+          if (councilEditTarget) updateCouncilMutation.mutate({ id: councilEditTarget.id, data });
+        }}
+        isPending={updateCouncilMutation.isPending}
+      />
+
+      <PrikazDialog
+        open={prikazDialogOpen}
+        onOpenChange={open => { if (!open) { setPrikazDialogOpen(false); setPrikazForm(PRIKAZ_INIT); setPrikazEditId(null); } }}
+        mode={prikazDialogMode}
+        form={prikazForm}
+        setForm={setPrikazForm}
+        onSubmit={handleSubmitPrikaz}
+        isPending={prikazDialogPending}
+        signedPrikazes={signedPrikazes}
+      />
+
+      <CancelPrikazDialog
+        open={cancelPrikazTarget !== null}
+        onOpenChange={open => { if (!open) setCancelPrikazTarget(null); }}
+        prikazTitle={cancelPrikazTarget?.title ?? ""}
+        onConfirm={reason => { if (cancelPrikazTarget) cancelPrikazMutation.mutate({ id: cancelPrikazTarget.id, reason }); }}
+        isPending={cancelPrikazMutation.isPending}
+      />
+
+      <ProtocolDialog
+        open={protocolDialogOpen}
+        onOpenChange={open => { if (!open) { setProtocolDialogOpen(false); setProtocolForm(PROTOCOL_INIT); setProtocolTargetId(null); } }}
+        mode={protocolDialogMode}
+        form={protocolForm}
+        setForm={setProtocolForm}
+        onSubmit={handleSubmitProtocol}
+        isPending={protocolDialogPending}
+        councils={councils}
       />
     </div>
   );

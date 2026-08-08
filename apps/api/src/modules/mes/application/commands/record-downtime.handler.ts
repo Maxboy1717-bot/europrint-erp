@@ -5,12 +5,14 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import { Result, Err } from '@common/result';
 import { DowntimeEvent } from '../../domain/aggregates/downtime-event.aggregate';
+import { MesBreakdownEvent } from '../../domain/events/mes-breakdown.event';
 import { DrizzleDowntimeRepository } from '../../infrastructure/repositories/drizzle-downtime.repo';
+import { MesMaintenanceRepository } from '../../infrastructure/repositories/mes-maintenance.repo';
 import { IMesRepository, MES_REPO, DOWNTIME_REPO } from '../../domain/repositories/mes.repository';
 
 export class RecordDowntimeCommand {
@@ -31,6 +33,8 @@ export class RecordDowntimeHandler implements ICommandHandler<RecordDowntimeComm
     @Inject(DOWNTIME_REPO)
     private readonly downtimeRepo: DrizzleDowntimeRepository,
     @Inject(MES_REPO) private readonly mesRepo: IMesRepository,
+    private readonly maintenanceRepo: MesMaintenanceRepository,
+    private readonly eventBus: EventBus,
   ) {}
 
   async execute(command: RecordDowntimeCommand): Promise<Result<DowntimeEvent>> {
@@ -60,6 +64,42 @@ export class RecordDowntimeHandler implements ICommandHandler<RecordDowntimeComm
       }
 
       this.logger.log(`Downtime event recorded: ${saveResult.data?.id}`);
+
+      // VISION 08-mes#37 (Avariya remont): an emergency/breakdown downtime auto-opens
+      // a maintenance task for the technician. Best-effort — the repo itself gates on
+      // the breakdown marker and dedups, so a failure or a non-emergency reason here
+      // must NEVER fail the (already persisted) downtime write.
+      try {
+        const wc = command.workCenterId;
+        const auto = await this.maintenanceRepo.createFromDowntime({
+          sessionId: Number(command.sessionId),
+          workCenterId: wc != null && Number.isFinite(Number(wc)) ? Number(wc) : null,
+          reasonCode: command.reasonCode,
+          reasonText: command.notes ?? null,
+        });
+        if (auto.ok && auto.data.created) {
+          this.logger.log(`Avariya remont vazifasi ochildi: task ${auto.data.taskId}`);
+          // Kanban fan-out (mirrors MesCompletedEvent/QcFailedEvent — owner decision
+          // 2026-07-13): surface the auto-opened breakdown task as a Kanban card too,
+          // not just an internal mes_maintenance_requests/tasks row. Best-effort — this
+          // whole block is already wrapped in the outer try/catch below, so a publish
+          // failure can never fail the (already persisted) downtime write.
+          if (auto.data.taskId != null && auto.data.requestId != null) {
+            this.eventBus.publish(new MesBreakdownEvent(
+              auto.data.requestId,
+              auto.data.taskId,
+              Number(command.sessionId),
+              auto.data.equipmentId,
+              command.reasonCode,
+              auto.data.description ?? `Avariya to'xtash sababi: ${command.reasonCode}`,
+              now,
+            ));
+          }
+        }
+      } catch (e) {
+        this.logger.warn(`Avariya remont auto-open o'tkazib yuborildi (non-fatal): ${String(e)}`);
+      }
+
       return { ok: true, data: saveResult.data };
   }
 }

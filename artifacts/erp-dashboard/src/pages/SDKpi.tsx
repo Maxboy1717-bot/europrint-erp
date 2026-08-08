@@ -216,7 +216,7 @@ export default function SDKpi() {
       {/* ── Team + Funnel ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Team KPI Table */}
-        <div className="bg-card rounded-xl overflow-hidden">
+        <div className="bg-card rounded-xl border border-[var(--ep-border)] overflow-hidden">
           <div className="px-6 py-4 border-b border-border/40">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("menejerlarReytingi")}
@@ -416,22 +416,15 @@ export default function SDKpi() {
                 onChange={(e) => setEditTargetForm({ ...editTargetForm, revenueTarget: parseFloat(e.target.value) || 0 })}
               />
             </div>
-            <div>
-              <Label>{tLabel("sd.targets.orderCountLabel", "Buyurtmalar rejasi (dona)")}</Label>
-              <Input
-                type="number"
-                value={editTargetForm.orderCountTarget ?? ""}
-                onChange={(e) => setEditTargetForm({ ...editTargetForm, orderCountTarget: parseInt(e.target.value) || 0 })}
-              />
-            </div>
-            <div>
-              <Label>{tLabel("sd.targets.newCustomerLabel", "Yangi mijozlar rejasi (dona)")}</Label>
-              <Input
-                type="number"
-                value={editTargetForm.newCustomerTarget ?? ""}
-                onChange={(e) => setEditTargetForm({ ...editTargetForm, newCustomerTarget: parseInt(e.target.value) || 0 })}
-              />
-            </div>
+            {/* Audit 2026-08-08: sd_manager_quotas jadvalida order_count_target/
+                new_customer_target ustunlari yo'q (yangi ustun = Q-35, egasi ruxsati
+                kerak) — bu ikki maydon avval qabul qilinib, saqlashda jimgina
+                tashlab yuborilardi ("Maqsad yangilandi" muvaffaqiyat ko'rsatib, Q-43
+                buzilishi). Egasi ruxsati kelmaguncha o'chirilgan (chala-ishlash holati
+                qoldirilmadi) — faqat haqiqatan saqlanadigan Tushumlar rejasi qoladi. */}
+            <p className="text-xs text-muted-foreground italic">
+              {tLabel("sd.targets.deferredNote", "Buyurtmalar/yangi mijozlar rejasi hali qo'llab-quvvatlanmaydi (baza ustuni yo'q, egasi qarori kutilmoqda).")}
+            </p>
             <Button
               className="w-full"
               disabled={updateTargetMut.isPending}

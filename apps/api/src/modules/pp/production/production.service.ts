@@ -44,6 +44,10 @@ export class ProductionService {
   }
 
   async getOrder360Card(id: number) {
-    return safeCall(() => this.repo.getOrder360Card(id));
+    return this.repo.getOrder360Card(id);
+  }
+
+  async getDailyTimers() {
+    return this.repo.getDailyTimers();
   }
 }

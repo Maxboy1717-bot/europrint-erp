@@ -11,7 +11,31 @@ export interface IPpProductionOrdersRepository {
   findByOrderNumber(orderNumber: string): Promise<Result<any | null>>;
   create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>>;
   update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
-  updateStatus(id: number, status: string): Promise<Result<Record<string, unknown>>>;
+  updateStatus(id: number, status: string, changedBy?: number, reason?: string): Promise<Result<Record<string, unknown>>>;
+  /**
+   * SB0237 (06-PP audit) — dedicated write-path for the EP-PP-097 (ZARUR/isUrgent) and
+   * EP-PP-025/061 (frozen-zone no-preempt) flags. Kept separate from the generic
+   * `update()` whitelist because these flags are owner/director-authority-gated at the
+   * controller (@Roles), not general-purpose PATCH fields.
+   */
+  updateFlags(
+    id: number,
+    // VISION-3340 #23: reasonCodeId (pp_reason_codes.id) is an optional structured
+    // reason tag persisted onto production_orders.reason_code_id alongside the flags.
+    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null; reasonCodeId?: number },
+    // EP-PP-082 #2/#39: acting user + mandatory written justification, persisted as an
+    // order-queryable audit row (previously validated then discarded).
+    changedBy?: number,
+    reason?: string,
+  ): Promise<Result<Record<string, unknown>>>;
   softDelete(id: number): Promise<Result<void>>;
+  // EP-PP-085 "Очеред" (Batch 5 Item 4) — per-machine operator-visible queue.
+  getQueueByWorkCenter(workCenterId: string): Promise<Result<Row[]>>;
+  reorderQueue(workCenterId: string, orderedIds: number[]): Promise<Result<Row[]>>;
+  // EP-PP-110 (Batch 5 Item 14) — weekly plan view + reschedule.
+  getWeeklyPlan(weekStart: string): Promise<Result<Row[]>>;
+  rescheduleOrder(id: number, plannedStartDate: string, plannedEndDate: string | null): Promise<Result<Row>>;
+  // EP-PP-083 (#89) — Bekor qilish: atomic status->cancelled + ACTIVE material-alloc reversal + mandatory-reason audit row.
+  cancel(id: number, changedBy?: number, reason?: string): Promise<Result<{ order: Record<string, unknown>; reversedAllocs: number }>>;
 }
 export const PP_PRODUCTION_ORDERS_REPO = 'IPpProductionOrdersRepository';

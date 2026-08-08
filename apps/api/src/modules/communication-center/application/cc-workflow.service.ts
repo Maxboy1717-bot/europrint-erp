@@ -6,15 +6,21 @@
  */
 
 import { Injectable, BadRequestException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
 import { CcDocumentsRepository, type DocumentRow } from '../infrastructure/repositories/cc-documents.repo';
+import { CcDocumentFullyApprovedEvent } from '../domain/events/cc-document-fully-approved.event';
 import type { WorkflowStepRow } from '../infrastructure/repositories/cc-documents/types';
 import { CcOrgResolverService } from './cc-org-resolver.service';
 import { CcPinService } from './cc-pin.service';
 import { CcDocumentNumberService } from './cc-document-number.service';
+import { CcKanbanBridgeService } from './cc-kanban-bridge.service';
 import { unwrapOrThrow } from '@common/http-result';
 import { isOk } from '@common/result';
+import { safeNum } from '@common/math';
 import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { DocumentDeliveryService } from '@common/document-control/document-delivery.service';
 import {
   executeApproveTransaction, findMyPendingApproval, requireDocInProgress,
 } from './cc-workflow/cc-workflow-approve.helpers';
@@ -40,6 +46,9 @@ export class CcWorkflowService {
     private readonly pin:     CcPinService,
     private readonly numbers: CcDocumentNumberService,
     private readonly i18n:    I18nService,
+    private readonly eventBus: EventBus,
+    private readonly kanban:  CcKanbanBridgeService,
+    private readonly delivery: DocumentDeliveryService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────
@@ -49,6 +58,19 @@ export class CcWorkflowService {
     const tmpl = unwrapOrThrow(await this.docs.getTemplate(dto.templateId));
     if (!tmpl) throw new NotFoundException(await this.i18n.t('errors.templateNotFound'));
     if (!tmpl.isActive) throw new BadRequestException(await this.i18n.t('errors.templateInactive'));
+
+    // 20-cc#11: bola-hujjat faqat ota-hujjat 'approved' yoki 'in_progress' holatida
+    // bo'lsagina yaratilishi mumkin — ota hali qoralama/rad/bekor bo'lsa, bog'liq
+    // bola-hujjat ma'nosiz (ota hech qachon amalga oshmasligi mumkin).
+    if (dto.parentDocumentId) {
+      const parent = unwrapOrThrow(await this.docs.getById(dto.parentDocumentId));
+      if (!parent) throw new NotFoundException(await this.i18n.t('errors.documentNotFound'));
+      if (!['approved', 'in_progress'].includes(parent.workflowState)) {
+        throw new BadRequestException(
+          `Ota-hujjat holati "${parent.workflowState}" — faqat tasdiqlangan/jarayondagi ota-hujjatga bola-hujjat qo'shish mumkin`,
+        );
+      }
+    }
 
     const docNumR = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
     if (!isOk(docNumR)) throw new BadRequestException(docNumR.error.message);
@@ -65,9 +87,113 @@ export class CcWorkflowService {
       senderComment:   dto.senderComment ?? null,
       priority:        dto.priority ?? tmpl.defaultPriority,
       language:        dto.language ?? 'uz',
+      parentDocumentId: dto.parentDocumentId ?? null,
       documentNumber,
     }));
     return created;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // STEP 3.6a — surface an erkin hujjat (erp_document) into CC:
+  // create a CC record (generic ERKIN-HUJJAT template) that LINKS the erp doc,
+  // route it into the target employee's CC inbox, and ping them via chat (3.5).
+  // Reuses createDraft + transition (no parallel inbox). The erp doc itself stays
+  // untouched and editable in /documents.
+  // ─────────────────────────────────────────────────────────────────────
+  async surfaceErpInCc(
+    erpDocumentId: string,
+    senderUserId: number,
+    targetUserId: number,
+    sourceType: 'erp_document' | 'erp_spreadsheet' = 'erp_document',
+  ) {
+    if (targetUserId === senderUserId) {
+      throw new BadRequestException("O'zingizga yubora olmaysiz");
+    }
+    const isSheet = sourceType === 'erp_spreadsheet';
+    const openPath = isSheet ? '/spreadsheets' : '/documents';
+    const label = isSheet ? 'Jadval' : 'Erkin hujjat';
+    // source title (cross-module DB read; source must exist + not soft-deleted). Two literal
+    // queries (no sql.raw on a variable — Qoida B) branched by source type.
+    const titleRes = isSheet
+      ? await db.execute(sql`SELECT title FROM erp_spreadsheets WHERE id = ${erpDocumentId}::uuid AND deleted_at IS NULL LIMIT 1`)
+      : await db.execute(sql`SELECT title FROM erp_documents WHERE id = ${erpDocumentId}::uuid AND deleted_at IS NULL LIMIT 1`);
+    const title = (titleRes as unknown as { rows?: Array<{ title?: string }> }).rows?.[0]?.title;
+    if (!title) throw new NotFoundException(`${label} topilmadi`);
+
+    // reserved generic template (seeded in the 3.6a-1 migration)
+    const tplRes = await db.execute(sql`SELECT id FROM cc_document_templates WHERE code = 'ERKIN-HUJJAT' LIMIT 1`);
+    const templateId = (tplRes as unknown as { rows?: Array<{ id?: string }> }).rows?.[0]?.id;
+    if (!templateId) throw new BadRequestException("ERKIN-HUJJAT shabloni topilmadi");
+
+    const created = await this.createDraft(senderUserId, {
+      templateId,
+      subject: title,
+      aiBody: `${label}: "${title}" — ${openPath}/${erpDocumentId} orqali oching.`,
+    } as CreateDraftDto);
+    const ccDocId = String((created as { id?: unknown }).id ?? '');
+
+    // link the CC record back to the source by its own FK column (P1-9: spreadsheets now have
+    // related_erp_spreadsheet_id too, so sheet-sourced CC records are joinable by sheet id).
+    if (isSheet) {
+      await db.execute(sql`UPDATE cc_documents SET related_erp_spreadsheet_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
+    } else {
+      await db.execute(sql`UPDATE cc_documents SET related_erp_document_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
+    }
+
+    // route into the target employee's CC inbox (reuse the transition primitive)
+    unwrapOrThrow(await this.docs.transition({
+      documentId:       ccDocId,
+      newBasketState:   'inbox',
+      newBasketOwnerId: targetUserId,
+      newWorkflowState: 'in_progress',
+      newCurrentStep:   1,
+      actorUserId:      senderUserId,
+      auditAction:      'sent',
+      auditComment:     null,
+    }));
+
+    // chat ping (reuse STEP 3.5 — no second notification pathway)
+    void this.delivery.notifyDocumentAssigned(targetUserId, {
+      documentType: sourceType,
+      documentId:   erpDocumentId,
+      title,
+    });
+
+    return {
+      ccDocumentId: ccDocId, targetUserId, sourceType,
+      related_erp_document_id: isSheet ? null : erpDocumentId,
+      related_erp_spreadsheet_id: isSheet ? erpDocumentId : null,
+    };
+  }
+
+  // STEP 3.6b — "Erkin hujjat" started FROM CC's create flow: create a blank erp_document
+  // (free-form content, owned by the author) + a linked CC draft in the author's outbox, so
+  // CC drives the subsequent workflow (send/approval) while the content is written in the
+  // TipTap editor. Bypasses the template AI Q&A wizard (free-form, not template-driven).
+  async createErkinHujjatFromCc(senderUserId: number, title: string) {
+    const clean = title.trim();
+    if (!clean) throw new BadRequestException('Sarlavha majburiy');
+
+    const erpRes = await db.execute(
+      sql`INSERT INTO erp_documents (title, content, owner_id) VALUES (${clean}, ${'{"type":"doc","content":[]}'}::jsonb, ${senderUserId}) RETURNING id`,
+    );
+    const erpDocumentId = String((erpRes as unknown as { rows?: Array<{ id?: string }> }).rows?.[0]?.id ?? '');
+    if (!erpDocumentId) throw new BadRequestException("Erkin hujjat yaratilmadi");
+
+    const tplRes = await db.execute(sql`SELECT id FROM cc_document_templates WHERE code = 'ERKIN-HUJJAT' LIMIT 1`);
+    const templateId = (tplRes as unknown as { rows?: Array<{ id?: string }> }).rows?.[0]?.id;
+    if (!templateId) throw new BadRequestException("ERKIN-HUJJAT shabloni topilmadi");
+
+    const created = await this.createDraft(senderUserId, {
+      templateId,
+      subject: clean,
+      aiBody: `Erkin hujjat: "${clean}" — /documents orqali tahrirlang.`,
+    } as CreateDraftDto);
+    const ccDocId = String((created as { id?: unknown }).id ?? '');
+
+    await db.execute(sql`UPDATE cc_documents SET related_erp_document_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
+
+    return { erpDocumentId, ccDocumentId: ccDocId };
   }
 
   // ─────────────────────────────────────────────────────────────────────
@@ -79,7 +205,9 @@ export class CcWorkflowService {
       throw new ForbiddenException(await this.i18n.t('errors.onlySenderCanSend'));
     }
     if (doc.workflowState !== 'draft') {
-      throw new BadRequestException(`${await this.i18n.t('errors.duplicateEntry')} (${doc.workflowState})`);
+      throw new BadRequestException(
+        await this.i18n.t('errors.documentNotDraftState', { args: { state: doc.workflowState } }),
+      );
     }
     await this.pin.verifyAndSign(senderUserId, dto.pin, `send:${doc.id}`);
 
@@ -87,12 +215,16 @@ export class CcWorkflowService {
     const approvers = await this.createFirstStepApprovals(doc, senderUserId, firstStepRows);
     if (approvers.length === 0) {
       throw new BadRequestException(
-        `Birinchi bosqich (${firstStepOrder}) uchun mas'ul xodim topilmadi. ` +
-        `Workflow sozlamalarini tekshiring yoki administrator bilan bog'laning.`,
+        await this.i18n.t('errors.firstStepApproverNotFound', { args: { stepOrder: firstStepOrder } }),
       );
     }
 
     await this.transitionToFirstStep(doc, senderUserId, approvers[0], firstStepOrder);
+    // Doc Control #2: ping each assigned approver in-app via 'Tizim' chat with a document
+    // link (fire-and-forget — chat delivery must never delay/break the send workflow).
+    for (const uid of approvers) {
+      void this.delivery.notifyDocumentAssigned(uid, { documentType: 'cc', documentId: doc.id, title: doc.subject });
+    }
     return { ok: true, documentId: doc.id, currentStepOrder: firstStepOrder, pendingApproverIds: approvers };
   }
 
@@ -129,9 +261,68 @@ export class CcWorkflowService {
   ): Promise<number[]> {
     const approvers: number[] = [];
     for (const step of firstStepRows) {
-      const approverId = await this.org.resolveApprover(step.approverPositionCode, senderUserId);
-      if (!approverId) {
-        this.logger.warn(`Step ${step.stepOrder}: approver unresolvable — skipping. Document ${doc.id} may get stuck.`);
+      const approverResult = await this.org.resolveApprover(step.approverPositionCode, senderUserId);
+      if (!approverResult.ok) {
+        // CC #3 ambiguous_route: an unresolvable approver used to only be logger.warn'd,
+        // so the document could silently deadlock with nobody able to act. Journal it
+        // (queryable) AND proactively notify the sender so it never disappears silently.
+        this.logger.warn(
+          `Step ${step.stepOrder}: approver unresolvable (${approverResult.error.message}) — skipping. Document ${doc.id} may get stuck.`,
+        );
+        await this.docs.logAudit({
+          documentId:        doc.id,
+          action:            'approver_unresolved',
+          performedByUserId: null,
+          comment:           `Bosqich ${step.stepOrder} (${step.approverPositionCode}): imzolovchi aniqlanmadi — ${approverResult.error.message}`,
+        });
+        await this.docs.notifyUser({
+          userId:    senderUserId,
+          documentId: doc.id,
+          type:      'route_unresolved',
+          priority:  'high',
+          titleUz:   'Hujjat marshruti aniqlanmadi',
+          titleRu:   'Маршрут документа не определён',
+          messageUz: `Bosqich ${step.stepOrder} uchun imzolovchi topilmadi; hujjat yuborilmadi.`,
+          messageRu: `Не найден утверждающий для этапа ${step.stepOrder}; документ не отправлен.`,
+        });
+        continue;
+      }
+      const approverId = approverResult.data;
+      // CC #3 ambiguous_route: a POSITION:<CODE> first step matching MORE THAN ONE active
+      // employee (e.g. two uchastka heads share one positions.code) is structurally
+      // ambiguous — resolveByPosition silently picks the first (ORDER BY e.id ASC LIMIT 1).
+      // Keep the pick-one behavior, but JOURNAL the ambiguity (queryable) so the owner can
+      // make the template specify "qaysi bo'lim" (vision 20-cc #3). Read-only count, additive log.
+      if (/^\s*position:/i.test(step.approverPositionCode)) {
+        const ambigR = await this.org.countActiveByPosition(step.approverPositionCode);
+        if (ambigR.ok && ambigR.data > 1) {
+          this.logger.warn(
+            `Step ${step.stepOrder}: POSITION ${step.approverPositionCode} matched ${ambigR.data} active employees — ambiguous_route; picked user ${approverId}. Document ${doc.id}.`,
+          );
+          await this.docs.logAudit({
+            documentId:        doc.id,
+            action:            'ambiguous_route',
+            performedByUserId: null,
+            comment:           `Lavozim ${step.approverPositionCode}: ${ambigR.data} nomzod topildi — birinchisi (foydalanuvchi ${approverId}) tanlandi; shablonda "qaysi bo'lim" aniqlashtirilishi kerak.`,
+          });
+        }
+      }
+      // CC #21 self_route_blocked (SoD): the sender can NEVER be their own approver
+      // — a doc must not land in the sender's own inbox for self-sign-off. Most
+      // resolver branches (dept-head / position / director / ceo) do not exclude the
+      // sender, so this is the catch-all guard for every branch. Skip this approval
+      // and journal it; if no other approver resolves, sendDocument's
+      // approvers.length===0 guard throws firstStepApproverNotFound (400).
+      if (approverId === senderUserId) {
+        this.logger.warn(
+          `Step ${step.stepOrder}: resolved approver === sender (${senderUserId}) — self-route blocked (SoD). Document ${doc.id}.`,
+        );
+        await this.docs.logAudit({
+          documentId:        doc.id,
+          action:            'self_route_blocked',
+          performedByUserId: null,
+          comment:           `Yuboruvchi (${senderUserId}) o'ziga imzo qo'ya olmaydi (SoD); bosqich ${step.stepOrder} o'tkazib yuborildi.`,
+        });
         continue;
       }
       approvers.push(approverId);
@@ -151,17 +342,64 @@ export class CcWorkflowService {
   // ─────────────────────────────────────────────────────────────────────
   async approve(documentId: string, approverUserId: number, dto: ApproveDto) {
     const doc = await this.requireDoc(documentId);
-    requireDocInProgress(doc);
+    await requireDocInProgress(doc, this.i18n);
 
     const approvals = unwrapOrThrow(await this.docs.getPendingApprovalsAtStep(doc.id, doc.currentStepOrder));
-    const mine = findMyPendingApproval(approvals, approverUserId);
+    const mine = await findMyPendingApproval(approvals, approverUserId, this.i18n);
 
     const sigHash = await this.pin.verifyAndSign(approverUserId, dto.pin, `approve:${doc.id}:${mine.id}`);
 
-    return executeApproveTransaction(
-      { doc, approverUserId, approvalId: mine.id, signatureHash: sigHash, comment: dto.comment ?? null },
-      this.docs, this.org, this.logger,
+    const result = await executeApproveTransaction(
+      {
+        doc, approverUserId, approvalId: mine.id, signatureHash: sigHash, comment: dto.comment ?? null,
+        referenceDocumentNumber: dto.referenceDocumentNumber,
+      },
+      this.docs, this.org, this.logger, this.i18n,
     );
+
+    // G4: hujjat TO'LIQ tasdiqlandi (oxirgi bosqich) — moliyaviy shablon bo'lsa
+    // kassir-ko'prik event'i chiqadi (to'lov AVTO yaratilmaydi — faqat bildirishnoma)
+    // + (20-cc#49) GL auto-post listener shu event'ni ham qabul qiladi.
+    if (result.status === 'finalized') {
+      await this.emitFullyApprovedIfFinancial(doc, approverUserId);
+    }
+    return result;
+  }
+
+  /**
+   * G4 approve→kassir ko'prigi: to'liq tasdiqlangan hujjat shabloni
+   * ADVANCE/FINANCIAL_AID bo'lsa CcDocumentFullyApprovedEvent chiqaradi.
+   * Xato approve javobini buzmasligi kerak — shuning uchun try/catch + logger.error.
+   *
+   * 20-cc#49 (P0, owner 2026-07-11): event'ga `amount` (ai_answers.amount) va
+   * `approverUserId` ham qo'shildi — CcApprovedGlPostingListener shu ikkalasidan
+   * foydalanib GL jurnal yozuvini avtomatik yaratadi (musbat summa + gl_account_mappings
+   * xaritalash mavjud bo'lsagina — Q-40, fabrikatsiya taqiq).
+   */
+  private async emitFullyApprovedIfFinancial(doc: DocumentRow, approverUserId: number): Promise<void> {
+    try {
+      const tmplR = await this.docs.getTemplate(doc.templateId);
+      if (!isOk(tmplR) || !tmplR.data) {
+        this.logger.error(`emitFullyApprovedIfFinancial(${doc.id}): shablon topilmadi`);
+        return;
+      }
+      const code = tmplR.data.code;
+      if (code !== 'ADVANCE' && code !== 'FINANCIAL_AID') return;
+      const rawAmount = safeNum(doc.aiAnswers?.['amount'], 0);
+      const amount = rawAmount > 0 ? rawAmount : null;
+      this.eventBus.publish(new CcDocumentFullyApprovedEvent({
+        documentId:     doc.id,
+        documentNumber: doc.documentNumber,
+        templateCode:   code,
+        senderUserId:   doc.senderUserId,
+        subject:        doc.subject,
+        amount,
+        approverUserId,
+      }));
+      this.logger.log(`CcDocumentFullyApprovedEvent chiqarildi: ${doc.documentNumber} (${code}, amount=${amount ?? 'yo\'q'})`);
+    } catch (e) {
+      this.logger.error(`emitFullyApprovedIfFinancial(${doc.id}): ${String(e)}`);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────
@@ -170,10 +408,12 @@ export class CcWorkflowService {
   async reject(documentId: string, approverUserId: number, dto: RejectDto) {
     const doc = await this.requireDoc(documentId);
     if (doc.workflowState !== 'in_progress') {
-      throw new BadRequestException(`${await this.i18n.t('errors.rejectNotAllowed')} (${doc.workflowState})`);
+      throw new BadRequestException(
+        await this.i18n.t('errors.rejectNotAllowed', { args: { state: doc.workflowState } }),
+      );
     }
 
-    const mine = await findMyRejectableApproval(this.docs, doc, approverUserId);
+    const mine = await findMyRejectableApproval(this.docs, doc, approverUserId, this.i18n);
     await signRejection(this.docs, this.pin, doc, mine, approverUserId, dto);
 
     if (mine.rejectionStops || await allApprovalsResolved(doc.id)) {
@@ -202,6 +442,10 @@ export class CcWorkflowService {
       this.logger.error(`resubmit transaction failed for doc ${doc.id}: ${String(err)}`);
       throw new BadRequestException(await this.i18n.t('errors.resubmitFailed'));
     }
+    // CC #36: yangi versiya yaratildi (snapshotVersion + updateBody) — eski Kanban
+    // kartaga "[ESKIRGAN]" belgisi qo'yiladi, karta ko'chirilmaydi/o'chirilmaydi.
+    // Kanban qo'shimcha funksiya: markCardStale ichida try/catch bor, resubmit'ni to'xtatmaydi.
+    await this.kanban.markCardStale(doc.id);
     return await this.sendDocument(doc.id, senderUserId, { pin: dto.pin });
   }
 

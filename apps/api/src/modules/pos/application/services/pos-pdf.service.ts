@@ -6,12 +6,17 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { castTo } from '@common/db-rows';
 import { Result, AppError, safeCall } from '@common/result';
 import { PDFDocument, StandardFonts, rgb, PageSizes, PDFPage, PDFFont } from 'pdf-lib';
 import { posMovements, db, eq } from '@workspace/db';
+import { resolveActTitle } from '../../dto/movement-enums';
+import { toPdfSafeText } from '@common/pdf/pdf-safe-text.helper';
 import { PosPdfInventoryService } from './pos-pdf-inventory.service';
 import { PosPdfRepository } from '../../infrastructure/repositories/pos-pdf.repository';
+import { PosEmployeeBalanceRepository } from '../../infrastructure/repositories/pos-employee-balance.repository';
+import type { EmployeeInventoryItem } from '../../infrastructure/repositories/pos-employee-balance.repository';
 import type { PdfMovementData } from './pos-pdf.types';
 
 const PDF_MARGIN = 40;
@@ -46,6 +51,8 @@ export class PosPdfService {
   constructor(
     private readonly inventorySvc: PosPdfInventoryService,
     private readonly pdfRepo: PosPdfRepository,
+    private readonly employeeBalanceRepo: PosEmployeeBalanceRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   // ─── Harakat Akti ─────────────────────────────────────────────────────────
@@ -59,9 +66,14 @@ export class PosPdfService {
         .from(posMovements)
         .where(eq(posMovements.id, movementId));
 
-      if (!movement) throw new NotFoundException(`Harakat topilmadi: ${movementId}`);
+      if (!movement) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id: movementId } }));
 
-      const linesRows = await this.pdfRepo.getMovementLines(movementId);
+      // FAZA D bag-fix (2026-07-01): `linesRows` — `Result<PdfMovementLine[]>`, array emas.
+      // Avval to'g'ridan `castTo(linesRows).map(...)` chaqirilardi — Result-obyektning
+      // o'zida `.map` yo'q ("castTo(...).map is not a function", Q-46/Q-40 bag-fix).
+      const linesResultR = await this.pdfRepo.getMovementLines(movementId);
+      if (!linesResultR.ok) throw new InternalServerErrorException(linesResultR.error.message);
+      const linesRows = linesResultR.data;
       const createdByName = await this.pdfRepo.getCreatorFullName(movement.createdBy as number);
 
       const data: PdfMovementData = {
@@ -88,6 +100,94 @@ export class PosPdfService {
 
       return this._buildPdf(data);
     });
+  }
+
+  // ─── Xodim Inventar Hisoboti (Mening inventarim → PDF) ────────────────────
+  // APPROVED: egasi vizyon-qurish 2026-07-01, FAZA H (xodim inventari to'liqlash)
+
+  async generateEmployeeInventoryPdf(userId: number): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      this.logger.log(`POS xodim inventar PDF generatsiya boshlanmoqda: userId=${userId}`);
+
+      const itemsR = await this.employeeBalanceRepo.getInventory(userId);
+      if (!itemsR.ok) throw new InternalServerErrorException(itemsR.error.message);
+      const items = itemsR.data;
+
+      const nameR = await this.pdfRepo.getCreatorFullName(userId);
+      const employeeName = (nameR.ok ? nameR.data : null) ?? `Xodim #${userId}`;
+
+      return this._buildEmployeeInventoryPdf(employeeName, items);
+    });
+  }
+
+  private async _buildEmployeeInventoryPdf(
+    employeeName: string,
+    items: EmployeeInventoryItem[],
+  ): Promise<Buffer> {
+    const pdfDoc = await PDFDocument.create();
+    let page = pdfDoc.addPage(PageSizes.A4);
+    const { width, height } = page.getSize();
+    const fontBold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const margin = PDF_MARGIN;
+    let y = height - PDF_TOP_OFFSET;
+
+    // toPdfSafeText: sarlavha + xodim ismi (kirill kiritilgan bo'lishi mumkin) —
+    // WinAnsi-crash oldini oladi (Q-40, FAZA D bag-fix).
+    const title = toPdfSafeText('XODIM INVENTAR HISOBOTI / ОТЧЁТ ПО ИНВЕНТАРЮ');
+    const titleWidth = fontBold.widthOfTextAtSize(title, PDF_TITLE_FONT_SIZE);
+    page.drawText(title, { x: (width - titleWidth) / 2, y, size: PDF_TITLE_FONT_SIZE, font: fontBold, color: rgb(0, 0, 0) });
+    y -= PDF_LINE_HEIGHT_MD;
+
+    page.drawText(toPdfSafeText(`Xodim / Сотрудник: ${employeeName}`), { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontRegular, color: rgb(0.1, 0.1, 0.1) });
+    y -= PDF_LINE_HEIGHT_XS;
+    page.drawText(toPdfSafeText(`Sana / Дата: ${this._formatDate(_time.now())}`), { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+    y -= PDF_LINE_HEIGHT_MD;
+
+    const cols = ['Kod', 'Material', "O'lch.", 'Berilgan', 'Qaytarilgan', 'Balans', 'Qiymat'];
+    const colWidth = (width - margin * 2) / cols.length;
+
+    page.drawRectangle({ x: margin, y: y - PDF_LINE_HEIGHT_XS, width: width - margin * 2, height: PDF_TABLE_ROW_HEIGHT, color: rgb(0.9, 0.9, 0.9) });
+    for (let i = 0; i < cols.length; i++) {
+      page.drawText(cols[i], { x: margin + i * colWidth + PDF_CELL_OFFSET_X, y: y - PDF_CELL_TEXT_Y_OFFSET_HD, size: PDF_SMALL_FONT_SIZE, font: fontBold, color: rgb(0, 0, 0) });
+    }
+    y -= PDF_LINE_HEIGHT_MD;
+
+    let totalValue = 0;
+    for (const item of items) {
+      if (y < PDF_MIN_Y_BEFORE_NEW_PAGE) {
+        page = pdfDoc.addPage(PageSizes.A4);
+        y = page.getSize().height - PDF_TOP_OFFSET;
+      }
+      const cells = [
+        item.materialCode ?? '—',
+        this._truncate(item.materialName ?? '—', PDF_TRUNCATE_MAX_CHARS),
+        item.unitOfMeasure ?? '—',
+        item.given.toFixed(2),
+        item.returned.toFixed(2),
+        item.balance.toFixed(2),
+        this._formatMoney(item.totalValue),
+      ];
+      for (let i = 0; i < cells.length; i++) {
+        // toPdfSafeText: materialName kirill bilan kiritilgan bo'lishi mumkin.
+        page.drawText(toPdfSafeText(cells[i]), { x: margin + i * colWidth + PDF_CELL_OFFSET_X, y: y - PDF_CELL_TEXT_Y_OFFSET_BD, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
+      }
+      page.drawLine({ start: { x: margin, y: y - PDF_SEPARATOR_Y_OFFSET }, end: { x: width - margin, y: y - PDF_SEPARATOR_Y_OFFSET }, thickness: PDF_SEPARATOR_THICKNESS, color: rgb(0.8, 0.8, 0.8) });
+      totalValue += item.totalValue;
+      y -= PDF_LINE_HEIGHT_SM;
+    }
+
+    y -= PDF_ROW_SKIP;
+    page.drawText(`Jami qiymat: ${this._formatMoney(totalValue)} UZS`, { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontBold, color: rgb(0, 0, 0) });
+
+    const pages = pdfDoc.getPages();
+    const lastPage = pages[pages.length - 1] ?? page;
+    lastPage.drawText(`EuroPrint ERP | POS | ${_time.now().toLocaleDateString('uz-UZ')}`, {
+      x: margin, y: 20, size: PDF_FOOTER_FONT_SIZE, font: fontRegular, color: rgb(0.5, 0.5, 0.5),
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
   }
 
   // ─── PDF Qurishqalish ─────────────────────────────────────────────────────
@@ -133,7 +233,10 @@ export class PosPdfService {
     startY: number,
   ): number {
     let y = startY;
-    const title = `HARAKAT AKTI / АКТ ДВИЖЕНИЯ`;
+    // FAZA D (2026-07-01): kategoriya-bo'yicha akt sarlavhasi — har turi (KIRIM/
+    // CHIQIM/KOCHIRISH/INVENTARIZATSIYA/ZARAR) o'z nomi bilan chiqadi (bo'shliq
+    // yopildi: avval hammasi bitta generic "HARAKAT AKTI" edi).
+    const title = toPdfSafeText(resolveActTitle(data.typeCode));
     const titleWidth = fontBold.widthOfTextAtSize(title, PDF_TITLE_FONT_SIZE);
     page.drawText(title, {
       x: (width - titleWidth) / 2,
@@ -144,8 +247,9 @@ export class PosPdfService {
     });
     y -= PDF_LINE_HEIGHT_MD;
 
-    page.drawText(`№ ${data.movementNumber}`, {
-      x: (width - fontBold.widthOfTextAtSize(`№ ${data.movementNumber}`, PDF_HEADER_FONT_SIZE)) / 2,
+    const numLine = toPdfSafeText(`№ ${data.movementNumber}`);
+    page.drawText(numLine, {
+      x: (width - fontBold.widthOfTextAtSize(numLine, PDF_HEADER_FONT_SIZE)) / 2,
       y,
       size: PDF_HEADER_FONT_SIZE,
       font: fontBold,
@@ -172,7 +276,10 @@ export class PosPdfService {
     ];
 
     for (const [label, value] of meta) {
-      page.drawText(`${label}  ${value}`, {
+      // toPdfSafeText: `label` — static uz/ru yorliq (kirill bo'lishi mumkin);
+      // `value` — dinamik DB-qiymat (createdByName/supplierName kirill bilan
+      // kiritilgan bo'lsa ham) — ikkalasi ham WinAnsi-xavfsiz qilinadi (Q-40).
+      page.drawText(toPdfSafeText(`${label}  ${value}`), {
         x: margin,
         y,
         size: PDF_BODY_FONT_SIZE,
@@ -241,7 +348,9 @@ export class PosPdfService {
       ];
 
       for (let i = 0; i < cells.length; i++) {
-        activePage.drawText(cells[i], {
+        // toPdfSafeText: material nomi (xomAshyo) kirill bilan kiritilgan bo'lishi
+        // mumkin bo'lgan dinamik DB-qiymat — WinAnsi-crash oldini oladi (Q-40).
+        activePage.drawText(toPdfSafeText(cells[i]), {
           x: margin + i * colWidth + PDF_CELL_OFFSET_X,
           y: y - PDF_CELL_TEXT_Y_OFFSET_BD,
           size: PDF_SMALL_FONT_SIZE,
@@ -274,7 +383,7 @@ export class PosPdfService {
     y -= PDF_SIGNATURE_Y_GAP;
     const sigLabels = ['Berdi / Отпустил:', 'Qabul qildi / Принял:', 'Tekshirdi / Проверил:'];
     for (const label of sigLabels) {
-      activePage.drawText(label, { x: margin, y, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
+      activePage.drawText(toPdfSafeText(label), { x: margin, y, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
       activePage.drawLine({
         start: { x: margin + PDF_SIGNATURE_LINE_X_START, y },
         end:   { x: margin + PDF_SIGNATURE_LINE_X_END, y },

@@ -14,7 +14,18 @@
  */
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { warehouseFeaturesApi } from "@/lib/api/warehouse-features";
+import {
+  materialLifeApi,
+  type MaterialLifeView,
+  type MaterialLifeAttrs,
+  type SubstituteRow,
+  type AgingAlertRow,
+  type ListResponse,
+} from "@/lib/api/material-life";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from '@/lib/i18n';
 
 interface Material360 {
@@ -89,7 +100,9 @@ export default function WarehouseMaterial360() {
   const [data, setData] = useState<Material360 | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"stock" | "movements" | "prices" | "suppliers" | "barcodes">("stock");
+  const [tab, setTab] = useState<
+    "stock" | "movements" | "prices" | "suppliers" | "barcodes" | "aging" | "hazard" | "substitutes"
+  >("stock");
 
   useEffect(() => {
     let cancelled = false;
@@ -176,6 +189,9 @@ export default function WarehouseMaterial360() {
           { k: "prices",    l: `💰 Narx tarixi (${priceHistory?.length ?? 0})` },
           { k: "suppliers", l: `🚛 Ta'minotchilar (${suppliers?.length ?? 0})` },
           { k: "barcodes",  l: `📊 Barkodlar (${barcodes?.length ?? 0})` },
+          { k: "aging",       l: `⏳ Yaroqlilik/aging` },
+          { k: "hazard",      l: `☣️ Xavfli zaxira` },
+          { k: "substitutes", l: `🔁 Almashtiruvchilar` },
         ].map(t => (
           <button
             key={t.k}
@@ -329,7 +345,436 @@ export default function WarehouseMaterial360() {
             </tbody>
           </table>
         )}
+
+        {tab === "aging" && <AgingTab unit={material.unit} />}
+        {tab === "hazard" && <HazardTab matId={matId} />}
+        {tab === "substitutes" && <SubstitutesTab matId={matId} />}
       </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * MATERIAL-LIFE TABLAR (W4-MATERIAL-LIFE) — ADDITIVE (Q-46)
+ * Mavjud Material360 tablar (stock/movements/prices/suppliers/barcodes) o'zgarmaydi.
+ * F1 (isLoading→skeleton) + F2 (mutation onError→toast) majburiy.
+ * ───────────────────────────────────────────────────────────────────────────*/
+
+function TabSkeleton() {
+  return (
+    <div className="p-4 space-y-2">
+      {[0, 1, 2, 3, 4].map(i => (
+        <div key={i} className="h-9 bg-gray-100 rounded animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
+function TabError({ msg }: { msg?: string }) {
+  return (
+    <div className="p-8 text-center text-[var(--ep-red)]">
+      {msg || "Yuklanmadi"}
+    </div>
+  );
+}
+
+/** ⏳ Yaroqlilik/aging — yosh-ogohlantirishidagi partiyalar (EP-WMS-126). */
+function AgingTab({ unit }: { unit: string }) {
+  const { data, isLoading, isError, error } = useQuery<ListResponse<AgingAlertRow>>({
+    queryKey: ["/api/wms/material-life/aging-alerts"],
+    queryFn: () => materialLifeApi.getAgingAlerts(),
+  });
+
+  if (isLoading) return <TabSkeleton />;
+  if (isError) return <TabError msg={(error as Error)?.message} />;
+  const rows = Array.isArray(data?.items) ? data!.items : [];
+
+  return (
+    <table className="w-full text-sm">
+      <thead className="bg-gray-50">
+        <tr>
+          <Th>Material</Th><Th>Ombor</Th>
+          <Th align="right">Qoldiq</Th><Th align="right">Yosh (kun)</Th>
+          <Th align="right">Chegara (kun)</Th><Th>Holat</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(r => {
+          const over = r.ageDays >= r.ageAlertDays;
+          return (
+            <tr key={r.stockId} className="border-t border-gray-100">
+              <Td className="font-semibold">{r.materialName ?? `#${r.materialId}`}</Td>
+              <Td mono>{r.warehouseId != null ? `WH-${r.warehouseId}` : "—"}</Td>
+              <Td align="right" mono>{fmt(r.quantity, unit)}</Td>
+              <Td align="right" mono className={over ? "text-[var(--ep-red)] font-bold" : ""}>{r.ageDays}</Td>
+              <Td align="right" mono className="text-gray-500">{r.ageAlertDays}</Td>
+              <Td>
+                <span className={`px-2 py-1 rounded text-xs font-bold ${
+                  over ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"
+                }`}>
+                  {over ? "Eskirgan" : "Ogohlantirish"}
+                </span>
+              </Td>
+            </tr>
+          );
+        })}
+        {rows.length === 0 && (
+          <tr><Td colSpan={6} className="text-center text-gray-400 py-6">Yosh-ogohlantirishidagi partiyalar yo'q</Td></tr>
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+/** ☣️ Xavfli zaxira — hazard_class o'rnatilgan materiallar (EP-WMS-128). */
+function HazardTab({ matId }: { matId: number }) {
+  const { data, isLoading, isError, error } = useQuery<ListResponse<MaterialLifeView>>({
+    queryKey: ["/api/wms/material-life/hazard-stock"],
+    queryFn: () => materialLifeApi.getHazardStock(),
+  });
+
+  if (isLoading) return <TabSkeleton />;
+  if (isError) return <TabError msg={(error as Error)?.message} />;
+  const rows = Array.isArray(data?.items) ? data!.items : [];
+
+  return (
+    <table className="w-full text-sm">
+      <thead className="bg-gray-50">
+        <tr>
+          <Th>Material</Th><Th>Xavf-sinfi</Th><Th>Saqlash sharti</Th>
+          <Th>Egalik</Th><Th>Vtorichka</Th><Th>Namuna</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(r => (
+          <tr key={r.materialId} className={`border-t border-gray-100 ${r.materialId === matId ? "bg-amber-50" : ""}`}>
+            <Td className="font-semibold">{r.name ?? `#${r.materialId}`}</Td>
+            <Td>
+              <span className="px-2 py-1 rounded text-xs font-bold bg-red-100 text-red-800">
+                {r.hazardClass ?? "—"}
+              </span>
+            </Td>
+            <Td>{r.storageCondition ?? "—"}</Td>
+            <Td><Pill>{r.ownerType === "customer" ? "Mijoz-moli" : "Bizniki"}</Pill></Td>
+            <Td>{r.isRecyclable ? "Ha" : "—"}</Td>
+            <Td>{r.isSample ? "Ha" : "—"}</Td>
+          </tr>
+        ))}
+        {rows.length === 0 && (
+          <tr><Td colSpan={6} className="text-center text-gray-400 py-6">Xavfli materiallar yo'q</Td></tr>
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+/** 🔁 Almashtiruvchilar — analog (substitute) CRUD + atribut tahrir (EP-WMS-101/123). */
+function SubstitutesTab({ matId }: { matId: number }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  const subKey = ["/api/wms/material-life", matId, "substitutes"];
+  const lifeKey = ["/api/wms/material-life", matId, "life"];
+
+  const subQuery = useQuery<ListResponse<SubstituteRow>>({
+    queryKey: subKey,
+    queryFn: () => materialLifeApi.listSubstitutes(matId),
+  });
+  const lifeQuery = useQuery<MaterialLifeView>({
+    queryKey: lifeKey,
+    queryFn: () => materialLifeApi.getLife(matId),
+  });
+
+  // ── Analog qo'shish formasi (REAL saqlash — Q-43)
+  const [subId, setSubId] = useState("");
+  const [priority, setPriority] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const addMut = useMutation({
+    mutationFn: () =>
+      materialLifeApi.addSubstitute(matId, {
+        substituteId: parseInt(subId, 10),
+        priority: priority ? parseInt(priority, 10) : undefined,
+        notes: notes.trim() || null,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: subKey });
+      setSubId(""); setPriority(""); setNotes("");
+      toast({ title: "Analog qo'shildi" });
+    },
+    onError: (e) => toast({ title: "Xatolik", description: (e as Error)?.message, variant: "destructive" }),
+  });
+
+  // ── Analog o'chirish (ConfirmDialog — Q-14)
+  const [confirmId, setConfirmId] = useState<number | null>(null);
+  const delMut = useMutation({
+    mutationFn: (id: number) => materialLifeApi.removeSubstitute(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: subKey });
+      setConfirmId(null);
+      toast({ title: "Analog o'chirildi" });
+    },
+    onError: (e) => {
+      setConfirmId(null);
+      toast({ title: "Xatolik", description: (e as Error)?.message, variant: "destructive" });
+    },
+  });
+
+  // ── Atribut tahrir (PATCH /:id — Q-43 REAL saqlash)
+  const life = lifeQuery.data;
+  const [editOpen, setEditOpen] = useState(false);
+  const [attrs, setAttrs] = useState<MaterialLifeAttrs>({});
+
+  const openEdit = () => {
+    if (!life) return;
+    setAttrs({
+      ownerType: (life.ownerType === "customer" ? "customer" : "own"),
+      hazardClass: life.hazardClass,
+      storageCondition: life.storageCondition,
+      ageAlertDays: life.ageAlertDays,
+      isRecyclable: life.isRecyclable,
+      palletUnitQty: life.palletUnitQty,
+      isSample: life.isSample,
+    });
+    setEditOpen(true);
+  };
+
+  const patchMut = useMutation({
+    mutationFn: () => materialLifeApi.updateLife(matId, attrs),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: lifeKey });
+      setEditOpen(false);
+      toast({ title: "Atributlar saqlandi" });
+    },
+    onError: (e) => toast({ title: "Xatolik", description: (e as Error)?.message, variant: "destructive" }),
+  });
+
+  if (subQuery.isLoading || lifeQuery.isLoading) return <TabSkeleton />;
+  if (subQuery.isError) return <TabError msg={(subQuery.error as Error)?.message} />;
+  const subs = Array.isArray(subQuery.data?.items) ? subQuery.data!.items : [];
+
+  return (
+    <div className="p-4 space-y-6">
+      {/* ── Atribut paneli + tahrir tugma */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm font-bold text-gray-900">Hayot-tsikli atributlari</div>
+          <button
+            onClick={openEdit}
+            disabled={!life}
+            className="px-3 py-1.5 bg-[var(--ep-yellow)] text-white rounded text-sm font-semibold disabled:opacity-50"
+          >
+            ✏️ Tahrirlash
+          </button>
+        </div>
+        {life ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
+            <AttrBox label="Egalik" value={life.ownerType === "customer" ? "Mijoz-moli" : "Bizniki"} />
+            <AttrBox label="Xavf-sinfi" value={life.hazardClass ?? "—"} />
+            <AttrBox label="Saqlash sharti" value={life.storageCondition ?? "—"} />
+            <AttrBox label="Yosh chegarasi (kun)" value={life.ageAlertDays != null ? String(life.ageAlertDays) : "—"} />
+            <AttrBox label="Vtorichka" value={life.isRecyclable ? "Ha" : "Yo'q"} />
+            <AttrBox label="Poddon birligi" value={life.palletUnitQty != null ? String(life.palletUnitQty) : "—"} />
+            <AttrBox label="Namuna" value={life.isSample ? "Ha" : "Yo'q"} />
+          </div>
+        ) : (
+          <div className="text-gray-400 text-sm">{(lifeQuery.error as Error)?.message ?? "Atributlar topilmadi"}</div>
+        )}
+      </div>
+
+      {/* ── Yangi analog qo'shish */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="text-sm font-bold text-gray-900 mb-3">Yangi analog qo'shish</div>
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Analog material ID</label>
+            <input
+              type="number" value={subId} onChange={e => setSubId(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm w-36"
+              placeholder="masalan 42"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Prioritet</label>
+            <input
+              type="number" value={priority} onChange={e => setPriority(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm w-28"
+              placeholder="100"
+            />
+          </div>
+          <div className="flex-1 min-w-[160px]">
+            <label className="block text-xs text-gray-500 mb-1">Izoh</label>
+            <input
+              type="text" value={notes} onChange={e => setNotes(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm w-full"
+              placeholder="ixtiyoriy"
+            />
+          </div>
+          <button
+            onClick={() => addMut.mutate()}
+            disabled={addMut.isPending || !subId || parseInt(subId, 10) <= 0}
+            className="px-4 py-1.5 bg-[var(--ep-green)] text-white rounded text-sm font-semibold disabled:opacity-50"
+          >
+            {addMut.isPending ? "..." : "➕ Qo'shish"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Analoglar ro'yxati */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              <Th>Analog material</Th><Th align="right">ID</Th><Th align="right">Prioritet</Th>
+              <Th>Tasdiqlangan</Th><Th>Izoh</Th><Th align="right">Amal</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {subs.map(s => (
+              <tr key={s.id} className="border-t border-gray-100">
+                <Td className="font-semibold">{s.substituteName ?? `#${s.substituteId}`}</Td>
+                <Td align="right" mono>{s.substituteId}</Td>
+                <Td align="right" mono>{s.priority}</Td>
+                <Td>
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${
+                    s.isApproved ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                  }`}>
+                    {s.isApproved ? "Ha" : "Kutilmoqda"}
+                  </span>
+                </Td>
+                <Td>{s.notes ?? "—"}</Td>
+                <Td align="right">
+                  <button
+                    onClick={() => setConfirmId(s.id)}
+                    className="px-2 py-1 text-[var(--ep-red)] hover:bg-red-50 rounded text-xs font-semibold"
+                  >
+                    🗑️ O'chirish
+                  </button>
+                </Td>
+              </tr>
+            ))}
+            {subs.length === 0 && (
+              <tr><Td colSpan={6} className="text-center text-gray-400 py-6">Analoglar yo'q</Td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── O'chirish tasdiqi (Q-14) */}
+      <ConfirmDialog
+        open={confirmId !== null}
+        onOpenChange={open => { if (!open) setConfirmId(null); }}
+        title="Analogni o'chirishni tasdiqlang"
+        description="Bu analog juftlik o'chiriladi. Davom etilsinmi?"
+        confirmText="O'chirish"
+        cancelText="Bekor"
+        variant="destructive"
+        onConfirm={() => { if (confirmId) delMut.mutate(confirmId); }}
+      />
+
+      {/* ── Atribut tahrir dialogi (Q-43 REAL saqlash) */}
+      {editOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-5">
+            <div className="text-lg font-bold text-gray-900 mb-4">Atributlarni tahrirlash</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Egalik">
+                <select
+                  value={attrs.ownerType ?? "own"}
+                  onChange={e => setAttrs(a => ({ ...a, ownerType: e.target.value as "own" | "customer" }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded text-sm w-full"
+                >
+                  <option value="own">Bizniki</option>
+                  <option value="customer">Mijoz-moli</option>
+                </select>
+              </Field>
+              <Field label="Xavf-sinfi">
+                <input
+                  type="text" value={attrs.hazardClass ?? ""}
+                  onChange={e => setAttrs(a => ({ ...a, hazardClass: e.target.value || null }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded text-sm w-full"
+                  placeholder="flammable / toxic / —"
+                />
+              </Field>
+              <Field label="Saqlash sharti">
+                <input
+                  type="text" value={attrs.storageCondition ?? ""}
+                  onChange={e => setAttrs(a => ({ ...a, storageCondition: e.target.value || null }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded text-sm w-full"
+                  placeholder="masalan +5..+25°C"
+                />
+              </Field>
+              <Field label="Yosh chegarasi (kun)">
+                <input
+                  type="number" value={attrs.ageAlertDays ?? ""}
+                  onChange={e => setAttrs(a => ({ ...a, ageAlertDays: e.target.value ? parseInt(e.target.value, 10) : null }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded text-sm w-full"
+                />
+              </Field>
+              <Field label="Poddon birligi">
+                <input
+                  type="number" value={attrs.palletUnitQty ?? ""}
+                  onChange={e => setAttrs(a => ({ ...a, palletUnitQty: e.target.value ? Number(e.target.value) : null }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded text-sm w-full"
+                />
+              </Field>
+              <Field label="Vtorichka (qayta-ishlatilgan)">
+                <select
+                  value={attrs.isRecyclable ? "1" : "0"}
+                  onChange={e => setAttrs(a => ({ ...a, isRecyclable: e.target.value === "1" }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded text-sm w-full"
+                >
+                  <option value="0">Yo'q</option>
+                  <option value="1">Ha</option>
+                </select>
+              </Field>
+              <Field label="Namuna">
+                <select
+                  value={attrs.isSample ? "1" : "0"}
+                  onChange={e => setAttrs(a => ({ ...a, isSample: e.target.value === "1" }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded text-sm w-full"
+                >
+                  <option value="0">Yo'q</option>
+                  <option value="1">Ha</option>
+                </select>
+              </Field>
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                onClick={() => setEditOpen(false)}
+                className="px-4 py-2 bg-gray-100 border border-gray-200 rounded text-sm"
+              >
+                Bekor
+              </button>
+              <button
+                onClick={() => patchMut.mutate()}
+                disabled={patchMut.isPending}
+                className="px-4 py-2 bg-[var(--ep-yellow)] text-white rounded text-sm font-semibold disabled:opacity-50"
+              >
+                {patchMut.isPending ? "Saqlanmoqda..." : "Saqlash"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AttrBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-white rounded p-2 border border-gray-200">
+      <div className="text-[10px] text-gray-500 uppercase">{label}</div>
+      <div className="text-sm font-semibold text-gray-900 mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs text-gray-500 mb-1">{label}</label>
+      {children}
     </div>
   );
 }

@@ -11,16 +11,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RecognitionStats, RecognitionLog } from "./FaceRecognitionMonitoringTypes";
-import { labels } from "./FaceRecognitionMonitoringTypes";
 import { StatsCards, RecognitionChart, LogsTable } from "./FaceRecognitionMonitoringSections";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 export default function FaceRecognitionMonitoring() {
   const [lang,   setLang]   = useState<"uz" | "ru">("uz");
   const [filter, setFilter] = useState<string>("all");
   const { toast }           = useToast();
   const { isAuthenticated } = useAuth();
-  const t = labels[lang];
+  const { t } = useTranslation("iot");
 
   const { data: stats, isLoading: statsLoading, isError, error, refetch } = useQuery<RecognitionStats>({
     queryKey: ["/api/camera/recognition-stats"],
@@ -44,9 +44,9 @@ export default function FaceRecognitionMonitoring() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/camera/recognition-logs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/camera/recognition-stats"] });
-      toast({ title: t.flagSuccess });
+      toast({ title: t("FaceRec.flagSuccess") });
     },
-    onError: () => toast({ title: t.flagError, variant: "destructive" }),
+    onError: () => toast({ title: t("FaceRec.flagError"), variant: "destructive" }),
   });
 
   const unflagMutation = useMutation({
@@ -55,20 +55,20 @@ export default function FaceRecognitionMonitoring() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/camera/recognition-logs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/camera/recognition-stats"] });
-      toast({ title: t.flagSuccess });
+      toast({ title: t("FaceRec.flagSuccess") });
     },
-    onError: () => toast({ title: t.flagError, variant: "destructive" }),
+    onError: () => toast({ title: t("FaceRec.flagError"), variant: "destructive" }),
   });
 
   const getFlagBadge = (flaggedAs: string | null) => {
     if (!flaggedAs) return null;
     switch (flaggedAs) {
       case "correct":
-        return <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">{t.markAsCorrect}</Badge>;
+        return <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">{t("FaceRec.markAsCorrect")}</Badge>;
       case "false_positive":
-        return <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">{t.markAsFalsePositive}</Badge>;
+        return <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">{t("FaceRec.markAsFalsePositive")}</Badge>;
       case "false_negative":
-        return <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">{t.markAsFalseNegative}</Badge>;
+        return <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">{t("FaceRec.markAsFalseNegative")}</Badge>;
       default:
         return null;
     }
@@ -79,7 +79,7 @@ export default function FaceRecognitionMonitoring() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-semibold">{t.title}</h1>
+        <h1 className="text-2xl font-semibold">{t("FaceRec.title")}</h1>
         <div className="flex items-center gap-2">
           <Button variant={lang === "uz" ? "default" : "outline"} size="sm"
             onClick={() => setLang("uz")} data-testid="button-lang-uz">

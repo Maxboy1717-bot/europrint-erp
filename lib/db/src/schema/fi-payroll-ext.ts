@@ -9,13 +9,15 @@ import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, num
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
-import { crmCompanies, crmContacts } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): unused import of crmCompanies/crmContacts from
+// "./crm-schema" removed — those pgTable declarations were deleted (dead
+// lib/db duplicates, Q-29 verified: never used in this file).
 import { Attendance } from "./hr-schema";
-import { materialCards, purchaseInvoices, purchaseOrders, vendors } from "./mm-schema";
+import { materialCards, vendors } from "./mm-schema";
 import { Order, orders, productMasters, productionOrders } from "./pp-schema";
 import { salesInvoices, salesOrders } from "./sd-schema";
 import { warehouses } from "./wms-schema";
-import { accounts, glDocuments, glLines, accountingPeriods, costCenters, profitCenters, payrollPeriods } from "./fi-gl";
+import { accounts, glDocuments, glLines, accountingPeriods, payrollPeriods } from "./fi-gl";
 import { customerPayments, invoicePayments } from "./fi-ap-ar";
 import { cashRegisters, insertAiFinanceInsightSchema, aiFinanceInsights } from "./fi-banking";
 
@@ -151,8 +153,12 @@ export type PayrollAiRecommendation = typeof payrollAiRecommendations.$inferSele
 export type InsertPayrollAiRecommendation = z.infer<typeof insertPayrollAiRecommendationSchema>;
 
 
-// 7. STOCK LEDGER - Ombor qoldig'i real-time
-export const stockLedger = pgTable("stock_ledger", {
+// 7. STOCK BALANCE SNAPSHOT - Ombor qoldig'i real-time (balans-snapshot, LEDGER EMAS).
+//    SQL nomi 'stock_ledger' → 'stock_balance_snapshot' (schema-convergence 2026-06-19):
+//    POS pos-schema-extensions.ts dagi append-only `stock_ledger` bilan SQL-nom to'qnashuvi
+//    bor edi (drizzle-kit push'ni bloklardi). Bu eksport hech qayerda import qilinmagan;
+//    balanslar kanonik `warehouse_stock`. Eksport nomi (stockLedger) saqlandi.
+export const stockLedger = pgTable("stock_balance_snapshot", {
   id: serial("id").primaryKey(),
   productMasterId: varchar("product_master_id").references(() => productMasters.id, { onDelete: "set null" }),
   materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
@@ -171,8 +177,8 @@ export const stockLedger = pgTable("stock_ledger", {
   expiryDate: varchar("expiry_date", { length: 10 }),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
-  index("idx_stock_ledger_product_master_id").on(t.productMasterId),
-  index("idx_stock_ledger_warehouse_id").on(t.warehouseId),
+  index("idx_stock_balance_snapshot_product").on(t.productMasterId),
+  index("idx_stock_balance_snapshot_warehouse").on(t.warehouseId),
 ]);
 
 
@@ -225,37 +231,9 @@ export type InsertBudgetControl = z.infer<typeof insertBudgetControlSchema>;
 
 
 // ========== POS SYSTEM ==========
-export const posTransactions = pgTable("pos_transactions", {
-  id: serial("id").primaryKey(),
-  transactionNumber: varchar("transaction_number", { length: 30 }).notNull().unique(),
-  customerId: varchar("customer_id"),
-  customerName: text("customer_name"),
-  cashierId: integer("cashier_id").references(() => users.id, { onDelete: "set null" }),
-  items: jsonb("items").notNull(),
-  subtotal: numericMoney("subtotal").notNull(),
-  taxAmount: numericMoney("tax_amount").notNull().default(0),
-  taxRate: numericMoney("tax_rate").default(12),
-  discountAmount: numericMoney("discount_amount").default(0),
-  totalAmount: numericMoney("total_amount").notNull(),
-  paymentMethod: varchar("payment_method", { length: 20 }).notNull(),
-  paymentDetails: jsonb("payment_details"),
-  status: varchar("status", { length: 20 }).notNull().default("completed"),
-  receiptNumber: varchar("receipt_number", { length: 30 }),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  index("idx_pos_transactions_cashier_id").on(t.cashierId),
-  index("idx_pos_transactions_customer_id").on(t.customerId),
-  index("idx_pos_transactions_payment_method").on(t.paymentMethod),
-  index("idx_pos_transactions_status").on(t.status),
-  index("idx_pos_transactions_created_at").on(t.createdAt),
-  check("pos_transactions_payment_method_chk", sql`${t.paymentMethod} IN ('cash','card','transfer','mixed')`),
-  check("pos_transactions_status_chk", sql`${t.status} IN ('completed','refunded','pending','cancelled')`),
-  check("pos_transactions_subtotal_chk", sql`${t.subtotal} >= 0`),
-  check("pos_transactions_total_amount_chk", sql`${t.totalAmount} >= 0`),
-]);
-
-
+// NOTE: retail `posTransactions` pgTable (pos_transactions) o'chirildi 2026-07-02 —
+// retail-do'kon kontsepti retiring qilindi (naqd-nazorat = fi-cashier-hub.ts),
+// 0 runtime o'quvchi isbotlangan. DB jadvali DROP qilinmadi (egasi-bosqich).
 export const posProducts = pgTable("pos_products", {
   id: serial("id").primaryKey(),
   barcode: varchar("barcode", { length: 50 }).notNull().unique(),
@@ -275,14 +253,8 @@ export const posProducts = pgTable("pos_products", {
 ]);
 
 
-export const insertPosTransactionSchema = createInsertSchema(posTransactions).omit({ id: true, createdAt: true } as never);
-
 export const insertPosProductSchema = createInsertSchema(posProducts).omit({ id: true, createdAt: true } as never);
 
-
-export type PosTransaction = typeof posTransactions.$inferSelect;
-
-export type InsertPosTransaction = z.infer<typeof insertPosTransactionSchema>;
 
 export type PosProduct = typeof posProducts.$inferSelect;
 

@@ -5,7 +5,8 @@
 
 import { Injectable } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
-import { assetItems, assetMaintenance, assetDisposals, assetTransfers } from '@shared/db/europrint-compat';
+import { asset_items_ext as assetItems } from '@shared/db';
+import { assetMaintenance, assetDisposals, assetTransfers } from '@shared/db/europrint-compat';
 import { eq, desc, sql } from 'drizzle-orm';
 import { Ok, Err, safeCall, AppErr } from '@common/result';
 import { MONTHS_PER_YEAR } from '@common/constants/business.constants';
@@ -28,6 +29,32 @@ type AssetInsert = {
 
 type AssetUpdate = Partial<AssetInsert> & { updatedAt: Date };
 
+// asset_items PK is serial/integer in the live DB (see schema-business-c-1.ts) — the
+// admin-assets.ts (lib/db) uuid definition this repo used to import is a drifted stub
+// that never matched the table. Exposed row shape stays camelCase (assetCode/assignedTo/
+// departmentId/...) to preserve the AssetAclTranslator + AssetManagementService contract.
+const assetColumns = {
+  id:            assetItems.id,
+  name:          assetItems.name,
+  assetCode:     assetItems.asset_code,
+  category:      assetItems.category,
+  status:        assetItems.status,
+  location:      assetItems.location,
+  assignedTo:    assetItems.assigned_to,
+  departmentId:  assetItems.department_id,
+  serialNumber:  assetItems.serial_number,
+  purchaseDate:  assetItems.purchase_date,
+  purchaseValue: assetItems.purchase_value,
+  currentValue:  assetItems.current_value,
+  notes:         assetItems.notes,
+  createdAt:     assetItems.created_at,
+};
+
+function toAssetId(id: string): number {
+  const n = Number(id);
+  return Number.isInteger(n) ? n : -1;
+}
+
 type MaintenanceInsert = {
   assetId: string; maintenanceType: string; scheduledAt?: Date;
   completedAt?: Date; cost?: string; notes?: string; status: string;
@@ -46,11 +73,12 @@ type TransferInsert = {
 @Injectable()
 export class AssetManagementRepo {
   findAllAssets() {
-    return safeCall(() => db.select().from(assetItems).orderBy(desc(assetItems.createdAt)), 'DB_ERROR');
+    return safeCall(() => db.select(assetColumns).from(assetItems).orderBy(desc(assetItems.created_at)), 'DB_ERROR');
   }
 
   async findAssetById(id: string) {
-    const r = await safeCall(() => db.select().from(assetItems).where(eq(assetItems.id, id)), 'DB_ERROR');
+    const assetId = toAssetId(id);
+    const r = await safeCall(() => db.select(assetColumns).from(assetItems).where(eq(assetItems.id, assetId)), 'DB_ERROR');
     if (!r.ok) return Err(r.error);
     const row = r.data[0];
     if (!row) return Err(AppErr('NOT_FOUND', `Asset ${id} not found`));
@@ -60,40 +88,43 @@ export class AssetManagementRepo {
   insertAsset(data: AssetInsert) {
     return safeCall(() => db.insert(assetItems).values({
       name:          data.name,
-      assetCode:     data.assetCode ?? null,
+      asset_code:    data.assetCode ?? null,
       category:      data.category,
       status:        data.status,
       location:      data.location ?? null,
-      assignedTo:    data.assignedTo ?? null,
-      departmentId:  data.departmentId ?? null,
-      serialNumber:  data.serialNumber ?? null,
-      purchaseDate:  data.purchaseDate ?? null,
-      purchaseValue: data.purchaseValue ?? null,
-      currentValue:  data.currentValue ?? null,
+      assigned_to:   data.assignedTo != null ? toAssetId(data.assignedTo) : null,
+      department_id: data.departmentId ?? null,
+      serial_number: data.serialNumber ?? null,
+      purchase_date: data.purchaseDate ? data.purchaseDate.toISOString().slice(0, 10) : null,
+      purchase_value: data.purchaseValue ?? null,
+      current_value: data.currentValue ?? null,
       notes:         data.notes ?? null,
-    }).returning(), 'DB_ERROR');
+    }).returning(assetColumns), 'DB_ERROR');
   }
 
   updateAsset(id: string, data: AssetUpdate) {
+    const assetId = toAssetId(id);
     return safeCall(() => db.update(assetItems).set({
-      name:          data.name,
-      assetCode:     data.assetCode,
-      category:      data.category,
-      status:        data.status,
-      location:      data.location,
-      assignedTo:    data.assignedTo,
-      departmentId:  data.departmentId,
-      serialNumber:  data.serialNumber,
-      purchaseDate:  data.purchaseDate,
-      purchaseValue: data.purchaseValue,
-      currentValue:  data.currentValue,
-      notes:         data.notes,
-      updatedAt:     data.updatedAt,
-    }).where(eq(assetItems.id, id)).returning(), 'DB_ERROR');
+      name:           data.name,
+      asset_code:     data.assetCode,
+      category:       data.category,
+      status:         data.status,
+      location:       data.location,
+      assigned_to:    data.assignedTo != null ? toAssetId(data.assignedTo) : undefined,
+      department_id:  data.departmentId,
+      serial_number:  data.serialNumber,
+      purchase_date:  data.purchaseDate ? data.purchaseDate.toISOString().slice(0, 10) : undefined,
+      purchase_value: data.purchaseValue,
+      current_value:  data.currentValue,
+      notes:          data.notes,
+      // NOTE: asset_items has no updated_at column (VIEW over asset_inventory, which lacks it
+      // too — see schema-business-c-1.ts comment) — data.updatedAt is intentionally not persisted.
+    }).where(eq(assetItems.id, assetId)).returning(assetColumns), 'DB_ERROR');
   }
 
   deleteAsset(id: string) {
-    return safeCall(() => db.delete(assetItems).where(eq(assetItems.id, id)).returning(), 'DB_ERROR');
+    const assetId = toAssetId(id);
+    return safeCall(() => db.delete(assetItems).where(eq(assetItems.id, assetId)).returning(assetColumns), 'DB_ERROR');
   }
 
   findAllMaintenance() {

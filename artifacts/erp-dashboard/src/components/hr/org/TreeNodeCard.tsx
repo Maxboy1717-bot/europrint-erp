@@ -4,33 +4,48 @@
  */
 
 import { useState } from "react";
-import { Plus, UserX, Settings2, Users, ChevronUp, Brain } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Plus, UserX, Settings2, Users, ChevronUp, Brain, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { OrgNode, CARD_W, CARD_H, LEVEL_LABELS, HRC_INDICATORS } from "./types";
-import { getCardColor, getInitials } from "./helpers";
+import { OrgNode, CARD_W, CARD_H, resolveNodeTypeLabel, resolveLevelLabel, resolveTierColor, HRC_INDICATORS } from "./types";
+import { getInitials } from "./helpers";
 import { useTranslation } from '@/lib/i18n';
 
 export function TreeNodeCard({
   node,
   onClick,
   onAdd,
-  isDragging,
-  isDragTarget,
+  onDuplicate,
+  tierSeq,
 }: {
   node: OrgNode;
   onClick: (id: number) => void;
   onAdd: (parentId: string) => void;
-  isDragging?: boolean;
-  isDragTarget?: boolean;
+  /** G4 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B5): repetitive-entry speed-up —
+   * opens AddNodeDialog pre-filled from this card instead of a blank form. Optional so callers
+   * that don't wire it (if any remain) keep the old add-child-only toolbar. */
+  onDuplicate?: () => void;
+  /** Per-tier "#N" sequence (helpers.ts computeTierSequences) — falls back to the raw DB id
+   *  only if the caller didn't compute one, so the badge is never blank. */
+  tierSeq?: number;
 }) {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
   const [hrcExpanded, setHrcExpanded] = useState(false);
   const isVacant = !node.headUserName;
   const level = node.hierarchyLevel ?? 0;
-  const baseColor = getCardColor(node.nodeType);
+  const baseColor = resolveTierColor(node.nodeType, level);
   const empCount = node.employeeCount ?? 0;
   const tskpShort = node.tskp ? node.tskp.substring(0, 32) + (node.tskp.length > 32 ? "…" : "") : null;
   const hasHrc = !!node.hrcLatest && Object.keys(node.hrcLatest).length > 0;
+
+  // VISION (egasi EP-ORG: "kartada razryad badge ko'rinadi") — razryad raqamini katalogdan yechamiz
+  const { data: razryadData } = useQuery<{ items: { id: number; level: number }[] }>({
+    queryKey: ["/api/org-structure/razryad-levels"],
+    staleTime: 300_000,
+  });
+  const razryadLevel = node.razryadLevelId != null && Array.isArray(razryadData?.items)
+    ? razryadData.items.find((r) => r.id === node.razryadLevelId)?.level
+    : undefined;
 
   return (
     <div className="relative" style={{ width: CARD_W }}>
@@ -39,11 +54,9 @@ export function TreeNodeCard({
         style={{
           width: CARD_W,
           minHeight: CARD_H,
-          background: `linear-gradient(135deg, ${baseColor}f0, ${baseColor}bb)`,
-          border: isDragTarget ? "2px solid #22c55e" : isVacant ? "2px dashed #ef4444" : `2px solid ${baseColor}44`,
-          boxShadow: isDragTarget ? "0 0 0 4px #22c55e55" : `0 4px 16px ${baseColor}44`,
-          opacity: isDragging ? 0.5 : 1,
-          outline: isDragTarget ? "2px solid #22c55e" : undefined,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${baseColor} 94%, transparent), color-mix(in srgb, ${baseColor} 73%, transparent))`,
+          border: isVacant ? "2px dashed var(--ep-red)" : `2px solid color-mix(in srgb, ${baseColor} 27%, transparent)`,
+          boxShadow: `0 4px 16px color-mix(in srgb, ${baseColor} 27%, transparent)`,
         }}
         onClick={() => onClick(node.id)}
         data-testid={`node-${node.id}`}
@@ -53,15 +66,28 @@ export function TreeNodeCard({
           style={{ width: 80, height: 80, background: "white" }}
         />
 
-        <button
-          className="absolute top-1.5 right-1.5 z-20 rounded-full bg-white/20 hover:bg-white/40 transition-colors flex items-center justify-center"
-          style={{ width: 20, height: 20 }}
-          onClick={(e) => { e.stopPropagation(); onAdd(String(node.id)); }}
-          title={t("pastkiBolimQoshish")}
-          data-testid={`button-add-child-${node.id}`}
-        >
-          <Plus className="h-3 w-3 text-white" />
-        </button>
+        <div className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1">
+          {onDuplicate && (
+            <button
+              className="rounded-full bg-white/20 hover:bg-white/40 transition-colors flex items-center justify-center"
+              style={{ width: 20, height: 20 }}
+              onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+              title={t("kartaniNusxalash", "Kartani nusxalash")}
+              data-testid={`button-duplicate-${node.id}`}
+            >
+              <Copy className="h-3 w-3 text-white" />
+            </button>
+          )}
+          <button
+            className="rounded-full bg-white/20 hover:bg-white/40 transition-colors flex items-center justify-center"
+            style={{ width: 20, height: 20 }}
+            onClick={(e) => { e.stopPropagation(); onAdd(String(node.id)); }}
+            title={t("pastkiBolimQoshish")}
+            data-testid={`button-add-child-${node.id}`}
+          >
+            <Plus className="h-3 w-3 text-white" />
+          </button>
+        </div>
 
         {isVacant && (
           <div className="absolute top-1.5 left-1.5">
@@ -83,9 +109,14 @@ export function TreeNodeCard({
         <div className="p-3 space-y-1.5 relative z-10">
           <div className="flex items-center gap-1.5 mt-0.5">
             <span className="text-[9px] font-bold bg-white/25 rounded px-1.5 py-0.5 uppercase tracking-wide">
-              {LEVEL_LABELS[level] || `D${level}`}
+              {resolveNodeTypeLabel(node.nodeType, language) ?? resolveLevelLabel(level, language)}
             </span>
-            <span className="text-[9px] text-white/50">#{node.id}</span>
+            {razryadLevel != null && (
+              <span className="text-[9px] font-bold bg-amber-300/40 rounded px-1.5 py-0.5" title="Razryad">
+                {razryadLevel}-razr
+              </span>
+            )}
+            <span className="text-[9px] text-white/50">#{tierSeq ?? node.id}</span>
           </div>
 
           <p className="font-bold text-sm leading-snug line-clamp-2">{node.name}</p>
@@ -99,7 +130,7 @@ export function TreeNodeCard({
               {isVacant ? (
                 <div
                   className="rounded-full flex items-center justify-center shrink-0"
-                  style={{ width: 20, height: 20, background: "#ef444460", border: "1px solid rgba(255,255,255,0.35)" }}
+                  style={{ width: 20, height: 20, background: "color-mix(in srgb, var(--ep-red) 38%, transparent)", border: "1px solid color-mix(in srgb, white 35%, transparent)" }}
                 >
                   <UserX className="h-2.5 w-2.5" />
                 </div>
@@ -166,7 +197,7 @@ export function TreeNodeCard({
                 {(Array.isArray(HRC_INDICATORS) ? HRC_INDICATORS : []).map(key => {
                   const score = node.hrcLatest?.[key] ?? 0;
                   const pct = Math.max(4, (score + 100) / 2);
-                  const colorBar = score >= 30 ? "#22c55e" : score >= -30 ? "#f59e0b" : "#ef4444";
+                  const colorBar = score >= 30 ? "var(--ep-green)" : score >= -30 ? "var(--ep-yellow)" : "var(--ep-red)";
                   const label = score > 0 ? `+${score}` : String(score);
                   return (
                     <div key={key} className="flex flex-col items-center gap-0.5">

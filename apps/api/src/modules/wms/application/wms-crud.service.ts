@@ -53,4 +53,11 @@ export class WmsCrudService {
   getStockById(id: number): Promise<Result<Row | null>> {
     return this.repo.getStockById(id);
   }
+
+  listGoodsIssues(limit: number, offset: number): Promise<Result<Row[]>> {
+    return this.repo.listGoodsIssues(limit, offset);
+  }
+  getGoodsIssueById(id: number): Promise<Result<Row>> {
+    return this.repo.getGoodsIssueById(id);
+  }
 }

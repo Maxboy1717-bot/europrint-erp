@@ -11,6 +11,7 @@ import { AgentAlertService } from './shared/agent-alert.service';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AgentEventBusService } from './shared/agent-event-bus.service';
 import { AiRouterCallService } from '../ai/application/services/ai-router-call.service';
+import type { AiRequest } from '../ai/domain/types/ai.types';
 import { isOk } from '@common/result';
 
 interface KpiSnapshot {
@@ -137,14 +138,21 @@ export class DirectorAgentService {
       // AI xulosa (ANTHROPIC_API_KEY bo'lsa)
       let summary = `Bugun ${kpi.overdueDeals} ta muddati o'tgan bitim, ${kpi.ccInboxOverdue} ta o'qilmagan hujjat.`;
       try {
-        const r = await this.ai.callClaude({
+        const briefingReq: AiRequest = {
           taskType: 'director.kpi_explain',
           systemPrompt: "Sen Europrint korxonasi direktorining yordamchisisan. KPI ma'lumotlari asosida 3-5 jumla qisqa o'zbek tilidagi xulosa yoz.",
           prompt: `Bugungi KPI:\n${JSON.stringify(kpi, null, 2)}\n\nAlertlar: ${alerts.length}\n\nDirector uchun xulosa:`,
           maxTokens: 400,
           temperature: 0.4,
-        });
-        if (isOk(r)) summary = r.data.text.trim();
+        };
+        const r = await this.ai.callClaude(briefingReq);
+        if (isOk(r)) {
+          summary = r.data.text.trim();
+          // 20-agent audit 2026-08-06: AiRouterCallService.logUsage() is a separate,
+          // caller-invoked step (not automatic like the other router). Every agents/*
+          // consumer skipped it, so these calls never reached ai_usage_logs.
+          await this.ai.logUsage('claude', briefingReq, r.data);
+        }
       } catch { /* AI bo'lmasa standart xulosa */ }
 
       return {
@@ -160,14 +168,19 @@ export class DirectorAgentService {
   async askAdvisor(question: string, userId?: number): Promise<{ answer: string; sources: string[] }> {
     return this.audit.wrap({ agentName: this.AGENT, action: 'ask_advisor', userId, inputSummary: { question }, aiUsed: true }, async () => {
       const kpi = await this.snapshotKpi();
-      const r = await this.ai.callClaude({
+      const advisorReq: AiRequest = {
         taskType: 'director.strategic_recommend',
         systemPrompt: 'Sen Europrint kompaniyasining strategik AI maslahatchisisan. ERP KPI ma\'lumotlarini hisobga olib o\'zbek tilida professional javob ber.',
         prompt: `Joriy KPI:\n${JSON.stringify(kpi, null, 2)}\n\nDirektor savoli: ${question}\n\nJavob:`,
         maxTokens: 800,
         temperature: 0.6,
-      });
+        userId,
+      };
+      const r = await this.ai.callClaude(advisorReq);
       const answer = isOk(r) ? r.data.text.trim() : 'AI javob bera olmadi (sozlama xatosi).';
+      // 20-agent audit 2026-08-06: see getDailyBriefing() note above — logUsage()
+      // must be called explicitly or this AI call never reaches ai_usage_logs.
+      if (isOk(r)) await this.ai.logUsage('claude', advisorReq, r.data);
       return { answer, sources: ['CRM Deals', 'CC Inbox', 'Production'] };
     });
   }

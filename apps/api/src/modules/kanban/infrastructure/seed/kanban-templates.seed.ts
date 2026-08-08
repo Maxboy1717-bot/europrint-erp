@@ -6,9 +6,12 @@
  */
 
 import 'reflect-metadata';
-import * as dotenv from 'dotenv';
-dotenv.config();
+// G4 fix: `dotenv.config()` chaqiruvi hoisted importlardan KEYIN ishlardi —
+// lib/db DATABASE_URL topolmay yiqilardi. `import 'dotenv/config'` import
+// tartibida (shared/db'dan OLDIN) bajariladi.
+import 'dotenv/config';
 
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '../../../../shared/db';
 import { kanbanTemplates } from '../../../../shared/db/schema-kanban';
 
@@ -114,11 +117,18 @@ async function seed() {
   seedLogger.log('Kanban shablonlari seed boshlanmoqda...');
 
   for (const tpl of DEFAULT_TEMPLATES) {
-    // Allaqachon mavjudligini tekshirish
+    // Idempotentlik: nom bo'yicha mavjudligini tekshirish (G4 fix — avvalgi
+    // tekshiruv istalgan qatorni olib e'tiborsiz qoldirardi; `name` ustunida
+    // unique constraint yo'q, shuning uchun onConflictDoNothing ham himoya
+    // bermasdi — qayta ishga tushirish dublikat yaratardi).
     const existing = await db.select({ id: kanbanTemplates.id })
       .from(kanbanTemplates)
+      .where(and(eq(kanbanTemplates.name, tpl.name), isNull(kanbanTemplates.deletedAt)))
       .limit(1);
-    void existing; // just to not have an unused variable
+    if (existing.length > 0) {
+      seedLogger.log(`  SKIP: "${tpl.name}" allaqachon mavjud`);
+      continue;
+    }
 
     try {
       await db.insert(kanbanTemplates).values({
@@ -128,7 +138,7 @@ async function seed() {
         checklistItems: tpl.checklistItems,
         columnsConfig:  tpl.columnsConfig,
         createdById:    null,
-      }).onConflictDoNothing();
+      });
       seedLogger.log(`  OK: "${tpl.name}" qo'shildi`);
     } catch (err) {
       seedLogger.error(`  ERR: "${tpl.name}" xato: ${String(err)}`);

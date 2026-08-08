@@ -30,9 +30,26 @@ export class LabelRepository {
 
   }
 
+  /**
+   * Ombor-turi-maxsus etiket shabloni: warehouse_types.label_template (statik jadval,
+   * har doim mavjud) + pos_label_config (admin CRUD orqali to'ldiriladigan override,
+   * mavjud bo'lsa ustunlik oladi). Q-46: ikki mexanizm shu yerda BIRLASHTIRILDI
+   * (avval label.service.ts hech qaysisini o'qimas edi — audit bo'shlig'i).
+   */
   async getBatch(batchId: number): Promise<Result<Row | null>>  {
-  try {  
-      const r = await exec(sql`SELECT wb.batch_number, wb.quantity, wb.received_at AS production_date, NULL::date AS expiry_date, w.name AS warehouse_name FROM warehouse_batches wb LEFT JOIN warehouses w ON w.id = wb.warehouse_id WHERE wb.id = ${batchId}`);
+  try {
+      const r = await exec(sql`
+        SELECT wb.batch_number, wb.quantity, wb.received_at AS production_date,
+               NULL::date AS expiry_date, w.name AS warehouse_name,
+               wt.label_template AS label_template,
+               plc.label_width_mm AS label_width_mm,
+               plc.label_height_mm AS label_height_mm
+        FROM warehouse_batches wb
+        LEFT JOIN warehouses w ON w.id = wb.warehouse_id
+        LEFT JOIN warehouse_types wt ON wt.code = w.type
+        LEFT JOIN pos_label_config plc ON plc.warehouse_type = w.type AND plc.is_active = true
+        WHERE wb.id = ${batchId}
+      `);
       return Ok(r[0] ?? null);  } catch (_e) {
     return Err(String(_e));
   }
@@ -40,8 +57,26 @@ export class LabelRepository {
   }
 
   async getMovementLines(movementId: number): Promise<Result<Row[]>>  {
-  try {  
-      return Ok(await exec(sql`SELECT mc.id AS material_card_id, mc.xom_ashyo AS material_name, COALESCE(mc.kod, '') AS material_code, COALESCE(mc.barcode, '') AS barcode, COALESCE(mc.unit_of_measure, 'dona') AS unit_of_measure, ml.quantity, ml.batch_id, wb.batch_number, TO_CHAR(wb.received_at, 'YYYY-MM-DD') AS production_date, NULL AS expiry_date, w.name AS warehouse_name FROM pos_movement_lines ml JOIN material_cards mc ON mc.id = ml.material_id LEFT JOIN warehouse_batches wb ON wb.id = ml.batch_id LEFT JOIN warehouses w ON w.id = wb.warehouse_id WHERE ml.movement_id = ${movementId}`));  } catch (_e) {
+  try {
+      return Ok(await exec(sql`
+        SELECT mc.id AS material_card_id, mc.xom_ashyo AS material_name,
+               COALESCE(mc.kod, '') AS material_code, COALESCE(mc.barcode, '') AS barcode,
+               COALESCE(mc.unit_of_measure, 'dona') AS unit_of_measure,
+               ml.quantity, ml.batch_id, wb.batch_number,
+               TO_CHAR(wb.received_at, 'YYYY-MM-DD') AS production_date, NULL AS expiry_date,
+               w.name AS warehouse_name,
+               wt.label_template AS label_template,
+               plc.label_width_mm AS label_width_mm,
+               plc.label_height_mm AS label_height_mm
+        FROM pos_movement_lines ml
+        JOIN material_cards mc ON mc.id = ml.material_id
+        LEFT JOIN warehouse_batches wb ON wb.id = ml.batch_id
+        JOIN pos_movements m ON m.id = ml.movement_id
+        LEFT JOIN warehouses w ON w.id = COALESCE(wb.warehouse_id, m.to_warehouse_id, m.from_warehouse_id)
+        LEFT JOIN warehouse_types wt ON wt.code = w.type
+        LEFT JOIN pos_label_config plc ON plc.warehouse_type = w.type AND plc.is_active = true
+        WHERE ml.movement_id = ${movementId}
+      `));  } catch (_e) {
     return Err(String(_e));
   }
 

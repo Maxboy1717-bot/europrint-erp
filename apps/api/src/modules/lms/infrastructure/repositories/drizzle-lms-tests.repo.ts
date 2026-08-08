@@ -18,7 +18,13 @@ export class LmsTestsRepository {
   async findAllTests(courseId?: string): Promise<Result<object[]>> {
     try {
       const rows = await runQuery<Row>(sql`
-        SELECT t.*, c.title_uz AS course_title FROM lms_tests t LEFT JOIN courses c ON c.id = t.course_id
+        SELECT t.*,
+          c.title_uz AS course_title,
+          (SELECT COUNT(*)::int FROM lms_questions q WHERE q.test_id = t.id) AS "questionCount",
+          (SELECT COUNT(*)::int FROM lms_test_attempts a WHERE a.test_id = t.id::text) AS "attemptsCount",
+          (SELECT COALESCE(ROUND(100.0 * COUNT(*) FILTER (WHERE a.passed = true) / NULLIF(COUNT(*),0)), 0)::int FROM lms_test_attempts a WHERE a.test_id = t.id::text) AS "passRate"
+        FROM lms_tests t
+        LEFT JOIN courses c ON c.id = t.course_id
         WHERE (${courseId ? parseInt(courseId, 10) : null}::int IS NULL OR t.course_id = ${courseId ? parseInt(courseId, 10) : null})
         ORDER BY t.created_at DESC
       `);
@@ -108,9 +114,11 @@ export class LmsTestsRepository {
 
   async saveQuestion(data: Row): Promise<Result<Row>> {
     try {
+      // lms_questions is a VIEW over `questions` whose NOT NULL cols include `type` + "order" (reserved
+      // word) — the insert omitted both -> 23502. Default type='single' (correct_option is one index).
       const rows = await runQuery<Row>(sql`
-        INSERT INTO lms_questions (test_id, question_text, options, correct_option, score, created_at)
-        VALUES (${data.testId ? parseInt(String(data.testId), 10) : null}, ${String(data.questionText ?? data.text ?? '')}, ${JSON.stringify(data.options ?? [])}::jsonb, ${data.correctOption !== undefined ? parseInt(String(data.correctOption), 10) : 0}, ${data.score ? parseInt(String(data.score), 10) : 1}, NOW())
+        INSERT INTO lms_questions (test_id, question, type, "order", options, correct_option, score, created_at)
+        VALUES (${data.testId ? parseInt(String(data.testId), 10) : null}, ${String(data.questionText ?? data.text ?? '')}, ${String(data.type ?? 'single')}, ${data.order ? parseInt(String(data.order), 10) : 0}, ${JSON.stringify(data.options ?? [])}::jsonb, ${data.correctOption !== undefined ? parseInt(String(data.correctOption), 10) : 0}, ${data.score ? parseInt(String(data.score), 10) : 1}, NOW())
         RETURNING *
       `);
       return Ok((rows.rows[0] ?? data) as Row);
@@ -170,9 +178,28 @@ export class LmsTestsRepository {
       const statusVal = filters?.status ?? null;
       const empId = filters?.employeeId ? parseInt(filters.employeeId, 10) : null;
       const [itemsResult, countResult] = await Promise.all([
+        // FE (AllExams.tsx) expects camelCase userName/testName/startedAt/finishedAt.
+        // `a.*` alone returns raw snake_case columns -> attempt.startedAt was undefined
+        // -> `new Date(undefined)` -> date-fns RangeError -> blank page. Raw columns are
+        // kept alongside the aliases because AttemptsPage.tsx reads the snake_case keys.
         runQuery<Row>(sql`
-          SELECT a.*, c.title_uz AS course_title FROM lms_exam_attempts a
-          LEFT JOIN lms_exams e ON e.id = a.exam_id LEFT JOIN courses c ON c.id = e.course_id
+          SELECT a.*, c.title_uz AS course_title,
+            COALESCE(a.started_at, a.created_at) AS "startedAt",
+            a.submitted_at AS "finishedAt",
+            a.analyzed_at  AS "analyzedAt",
+            e.title AS "testName",
+            COALESCE(
+              NULLIF(TRIM(u.full_name), ''),
+              NULLIF(TRIM(CONCAT_WS(' ', u.last_name, u.first_name)), ''),
+              NULLIF(TRIM(emp.full_name), ''),
+              NULLIF(TRIM(CONCAT_WS(' ', emp.last_name, emp.first_name)), ''),
+              u.username
+            ) AS "userName"
+          FROM lms_exam_attempts a
+          LEFT JOIN lms_exams e ON e.id = a.exam_id
+          LEFT JOIN courses c ON c.id = e.course_id
+          LEFT JOIN users u ON u.id = a.user_id
+          LEFT JOIN employees emp ON emp.id::text = a.employee_id
           WHERE (${statusVal}::text IS NULL OR a.status = ${statusVal}) AND (${empId}::int IS NULL OR a.employee_id = ${empId})
           ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}
         `),
@@ -192,8 +219,14 @@ export class LmsTestsRepository {
     try {
       const rows = await runQuery<Row>(sql`
         SELECT a.*, e.title AS exam_title, emp.full_name AS employee_name
-        FROM lms_exam_attempts a JOIN lms_exams e ON e.id = a.exam_id LEFT JOIN employees emp ON emp.id = a.employee_id
-        WHERE a.attempt_number > 1 ORDER BY a.created_at DESC LIMIT 50
+        FROM lms_exam_attempts a
+        JOIN lms_exams e ON e.id = a.exam_id
+        LEFT JOIN employees emp ON emp.id::text = a.employee_id
+        WHERE (
+          SELECT COUNT(*) FROM lms_exam_attempts a2
+          WHERE a2.exam_id = a.exam_id AND a2.user_id = a.user_id
+        ) > 1
+        ORDER BY a.created_at DESC LIMIT 50
       `);
       return Ok(rows.rows as Row[]);
     } catch (error) {

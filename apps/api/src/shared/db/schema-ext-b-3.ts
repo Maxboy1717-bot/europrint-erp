@@ -7,15 +7,11 @@ import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
 
-export const vendor_performance = pgTable('vendor_performance', {
-  id:          serial('id').primaryKey(),
-  vendor_id:   integer('vendor_id'),
-  score:       numeric('score', { precision: 5, scale: 2 }),
-  on_time_rate: numeric('on_time_rate', { precision: 5, scale: 2 }),
-  quality_rate: numeric('quality_rate', { precision: 5, scale: 2 }),
-  period:      text('period'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// vendor_performance pgTable export OLIB TASHLANDI (2026-07-02, Q-46 — dead/orfan kod):
+// hech qanday repository/servis o'qimaydi/yozmaydi. DB jadvali DROP QILINMAGAN
+// (loyiha qoidasi), faqat kod-darajasida uzildi. O'rniga: vendor_rating_unified VIEW
+// (migrations/vendor-rating-unified-view-2026-07-02.sql) — mm_vendor_ratings +
+// vendor_performance_metrics birlashtiradi (faol yozuvchiga ega ikkala jadval).
 
 export const erp_purchase_requisitions = pgTable('erp_purchase_requisitions', {
   id:          serial('id').primaryKey(),
@@ -52,6 +48,9 @@ export const payroll_entries = pgTable('payroll_entries', {
 
 // ─── Finance Invoice Extended ──────────────────────────────────────────────────
 
+// finance_invoices = KANONIK invoice-manba (OWNER QARORI, Moliya-GL-Kassa, 2026-07-02).
+// customer_name/supplier_name/notes — 2026-07-02 additiv migratsiyada qo'shildi
+// (finance-invoices-canonical-backfill-2026-07-02.sql) AP/AR repository'lar uchun.
 export const finance_invoices = pgTable('finance_invoices', {
   id:             serial('id').primaryKey(),
   invoice_number: text('invoice_number'),
@@ -62,8 +61,13 @@ export const finance_invoices = pgTable('finance_invoices', {
   paid_amount:    numeric('paid_amount', { precision: 15, scale: 2 }).default('0'),
   payment_status: text('payment_status').default('unpaid'),
   due_date:       date('due_date'),
+  customer_name:  text('customer_name'),
+  supplier_name:  text('supplier_name'),
+  notes:          text('notes'),
   created_at:     timestamp('created_at').defaultNow(),
   updated_at:     timestamp('updated_at').defaultNow(),
+  created_by:     integer('created_by'),
+  approved_by:    integer('approved_by'),
 });
 
 export const finance_invoice_lines = pgTable('finance_invoice_lines', {

@@ -17,8 +17,8 @@ import { useTranslation } from '@/lib/i18n';
 
 function makeCardStyle(isDark: boolean): React.CSSProperties {
   return {
-    background: isDark ? "#1f2937" : "#f9fafb",
-    border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+    background: "var(--ep-bg)",
+    border: `1px solid var(--ep-border)`,
     borderRadius: 12,
     padding: "12px 14px",
     marginBottom: 10,
@@ -46,12 +46,12 @@ function makeBtnStyle(
       variant === "primary"
         ? colors.button
         : variant === "danger"
-          ? "#ef4444"
+          ? "var(--ep-red)"
           : isDark
-            ? "#374151"
-            : "#e5e7eb",
+            ? "var(--ep-border)"
+            : "var(--ep-border)",
     color:
-      variant === "primary" ? colors.buttonText : variant === "danger" ? "#fff" : colors.text,
+      variant === "primary" ? colors.buttonText : variant === "danger" ? "white" : colors.text,
   };
 }
 
@@ -60,8 +60,8 @@ function makeInputStyle(colors: AppColors, isDark: boolean): React.CSSProperties
     width: "100%",
     padding: "10px 12px",
     borderRadius: 10,
-    border: `1.5px solid ${isDark ? "#374151" : "#d1d5db"}`,
-    background: isDark ? "#111827" : "#fff",
+    border: `1.5px solid var(--ep-border)`,
+    background: "var(--ep-surface)",
     color: colors.text,
     fontSize: 14,
     boxSizing: "border-box",
@@ -126,7 +126,7 @@ export function ApprovalDetailScreen({
             {new Date(approval.createdAt).toLocaleString("uz-UZ")}
           </div>
           {approval.priority !== "normal" && (
-            <div style={{ marginTop: 8, fontWeight: 600, color: PRIORITY_COLORS[approval.priority] ?? "#888", fontSize: 12 }}>
+            <div style={{ marginTop: 8, fontWeight: 600, color: PRIORITY_COLORS[approval.priority] ?? "var(--ep-muted)", fontSize: 12 }}>
               ⚡ {approval.priority.toUpperCase()} ustuvorlik
             </div>
           )}
@@ -165,7 +165,7 @@ export function ApprovalDetailScreen({
             </div>
           </div>
         ) : (
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "12px 16px", background: colors.bg, borderTop: `1px solid ${isDark ? "#374151" : "#e5e7eb"}` }}>
+          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "12px 16px", background: colors.bg, borderTop: `1px solid var(--ep-border)` }}>
             <div style={{ display: "flex", gap: 8 }}>
               <button style={{ ...btnStyle("danger"), flex: 1 }} onClick={() => onShowRejectInput(true)}>{t("radEtish")}</button>
               <button
@@ -241,18 +241,18 @@ export function RequestScreen({
                     {item.nameRu && <div style={{ fontSize: 12, color: colors.hint }}>{item.nameRu}</div>}
                   </div>
                   <button
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 18, padding: 0 }}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ep-red)", fontSize: 18, padding: 0 }}
                     onClick={() => onRemoveItem(item.materialId)}
                   >✕</button>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
                   <button
-                    style={{ width: 32, height: 32, borderRadius: "50%", border: `1.5px solid ${isDark ? "#374151" : "#d1d5db"}`, background: "none", cursor: "pointer", color: colors.text, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    style={{ width: 32, height: 32, borderRadius: "50%", border: `1.5px solid var(--ep-border)`, background: "none", cursor: "pointer", color: colors.text, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
                     onClick={() => onQtyChange(item.materialId, -1)}
                   >−</button>
                   <span style={{ fontWeight: 700, minWidth: 30, textAlign: "center" }}>{item.qty}</span>
                   <button
-                    style={{ width: 32, height: 32, borderRadius: "50%", border: `1.5px solid ${isDark ? "#374151" : "#d1d5db"}`, background: "none", cursor: "pointer", color: colors.text, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    style={{ width: 32, height: 32, borderRadius: "50%", border: `1.5px solid var(--ep-border)`, background: "none", cursor: "pointer", color: colors.text, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
                     onClick={() => onQtyChange(item.materialId, 1)}
                   >+</button>
                   <span style={{ color: colors.hint, fontSize: 13 }}>{item.unit}</span>
@@ -270,7 +270,7 @@ export function RequestScreen({
       </div>
 
       {cartItems.length > 0 && (
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "12px 16px", background: colors.bg, borderTop: `1px solid ${isDark ? "#374151" : "#e5e7eb"}` }}>
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "12px 16px", background: colors.bg, borderTop: `1px solid var(--ep-border)` }}>
           <button style={btnStyle("primary")} disabled={isPending} onClick={onSubmit}>
             {isPending ? <LoadingSpinner color={colors.buttonText} size={16} /> : "📤"}
             {isPending ? " Yuborilmoqda..." : ` So'rov yuborish (${cartItems.length} ta material)`}

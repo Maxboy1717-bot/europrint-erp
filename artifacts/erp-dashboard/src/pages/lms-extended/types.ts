@@ -16,6 +16,11 @@ export interface LMSCourse {
   level?: string;
   duration?: number | string;
   enrolledCount?: number;
+  approval_status?: 'draft' | 'review' | 'approved' | string;
+  submitted_by?: number | string;
+  submitted_at?: string;
+  approved_by?: number | string;
+  approved_at?: string;
 }
 
 export interface LMSTest {

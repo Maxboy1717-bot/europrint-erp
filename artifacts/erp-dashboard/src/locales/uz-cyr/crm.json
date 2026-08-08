@@ -519,5 +519,7 @@
   "RobotsView.emailYuborish": "Email юбориш",
   "RobotsView.telegramYuborish": "Telegram юбориш",
   "EntityCard.qongiroq": "Қўнғироқ",
-  "EntityCard.orta": "→ Ўрта"
+  "EntityCard.orta": "→ Ўрта",
+  "ExtendedAIPanelSections.slaBuzilishlar": "SLA бузилишлар",
+  "ExtendedAIPanelSections.faoliyatsizBitimlar3Kun": "Фаолияциз битимлар (3+ кун)"
 }

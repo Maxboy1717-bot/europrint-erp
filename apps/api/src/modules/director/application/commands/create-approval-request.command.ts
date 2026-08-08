@@ -12,5 +12,11 @@ export class CreateApprovalRequestCommand {
     public readonly amount: number,
     public readonly currency: string,
     public readonly requestedBy: string,
-    public readonly notes: string | null) {}
+    public readonly notes: string | null,
+    /**
+     * Numeric id of the creating user — used to resolve the requester's
+     * org_department_id (the source dept of the GORIZONTAL approval chain).
+     * Threaded from the controller's @CurrentUser.
+     */
+    public readonly requesterUserId: number) {}
 }

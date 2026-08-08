@@ -24,6 +24,8 @@ describe('SaasController', () => {
       getErrorLogs: jest.fn(), updateTenantStatus: jest.fn(), getModules: jest.fn(),
       getExpiryAlerts: jest.fn(), getTenantById: jest.fn(),
       updateTenant: jest.fn(), deleteTenant: jest.fn(),
+      // onboardTenant is now a real service method (no longer calls notImplemented)
+      onboardTenant: jest.fn(),
     };
     const mod = await Test.createTestingModule({
       controllers: [SaasController],
@@ -82,8 +84,13 @@ describe('SaasController', () => {
     expect(await ctrl.updateTenant('t1', { name: 'X' })).toEqual({ id: 't1', name: 'X' });
   });
 
-  it('onboardTenant throws HttpException (not yet implemented)', async () => {
-    // The endpoint delegates to notImplemented() which throws HttpException 501.
-    await expect(ctrl.onboardTenant('t1', { plan: 'pro' })).rejects.toThrow('Endpoint not yet implemented');
+  it('onboardTenant returns service payload when service resolves Ok', async () => {
+    // SaasService.onboardTenant is now implemented (activates tenant + sets modules).
+    // The controller delegates to the service; on success it unwraps the result.
+    const payload = { tenantId: 't1', status: 'active', modules: [] };
+    (svc.onboardTenant as jest.Mock).mockResolvedValue(ok(payload));
+    const result = await ctrl.onboardTenant('t1', { plan: 'pro' });
+    expect(svc.onboardTenant).toHaveBeenCalledWith('t1', expect.objectContaining({}));
+    expect(result).toEqual(payload);
   });
 });

@@ -38,15 +38,16 @@ export class WebsiteLeadService {
    * Trigger 21 — saytdan buyurtma kelganda lead yaratadi.
    */
   async handleWebsiteOrder(event: WebsiteOrderEvent): Promise<Result<CreateLeadResult>> {
-    const managerR = await this.repo.pickNextSalesManager();
-    if (isErr(managerR)) return Err(managerR.error);
-    const managerId = managerR.data;
-    const insertR = await this.repo.insertWebsiteLead(this.buildOrderInsertPayload(event, managerId));
+    // Round-robin poyga himoyasi (Item 2): menejer tanlash + INSERT bitta advisory-lock'li
+    // tranzaksiyada seriyalanadi — bir menejer ikki marta biriktirilmaydi. managerId payload'da
+    // null; haqiqiy menejer repo ichida (lock ostida) tanlanadi va qaytariladi.
+    const insertR = await this.repo.pickAndInsertWebsiteLead(this.buildOrderInsertPayload(event, null));
     if (isErr(insertR)) return Err(insertR.error);
-    if (insertR.data.created && managerId !== null) {
-      await this.notifySalesGroup({ kind: 'order', leadId: insertR.data.leadId, managerId, event });
+    const { leadId, created, managerId } = insertR.data;
+    if (created && managerId !== null) {
+      await this.notifySalesGroup({ kind: 'order', leadId, managerId, event });
     }
-    return Ok({ leadId: insertR.data.leadId, created: insertR.data.created, managerId });
+    return Ok({ leadId, created, managerId });
   }
 
   private buildOrderInsertPayload(event: WebsiteOrderEvent, managerId: number | null) {
@@ -72,15 +73,15 @@ export class WebsiteLeadService {
    * Trigger 22 — saytda aloqa formasi yuborilganda lead yaratadi.
    */
   async handleWebsiteContact(event: WebsiteContactEvent): Promise<Result<CreateLeadResult>> {
-    const managerR = await this.repo.pickNextSalesManager();
-    if (isErr(managerR)) return Err(managerR.error);
-    const managerId = managerR.data;
-    const insertR = await this.repo.insertWebsiteLead(this.buildContactInsertPayload(event, managerId));
+    // Round-robin poyga himoyasi (Item 2): menejer tanlash + INSERT bitta advisory-lock'li
+    // tranzaksiyada seriyalanadi — bir menejer ikki marta biriktirilmaydi.
+    const insertR = await this.repo.pickAndInsertWebsiteLead(this.buildContactInsertPayload(event, null));
     if (isErr(insertR)) return Err(insertR.error);
-    if (insertR.data.created && managerId !== null) {
-      await this.notifySalesGroup({ kind: 'contact', leadId: insertR.data.leadId, managerId, event });
+    const { leadId, created, managerId } = insertR.data;
+    if (created && managerId !== null) {
+      await this.notifySalesGroup({ kind: 'contact', leadId, managerId, event });
     }
-    return Ok({ leadId: insertR.data.leadId, created: insertR.data.created, managerId });
+    return Ok({ leadId, created, managerId });
   }
 
   private buildContactInsertPayload(event: WebsiteContactEvent, managerId: number | null) {

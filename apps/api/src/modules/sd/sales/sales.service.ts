@@ -38,17 +38,17 @@ export class SalesService {
     });
   }
 
-  async getForecastAccuracy(managerId: number | null) {
-    return safeCall(async () => ({
-      manager_id: managerId,
-      accuracy_percent: 78.5,
-      periods: [
-        { month: 'January', forecast: 150_000_000, actual: 138_000_000, accuracy: 92 },
-        { month: 'February', forecast: 160_000_000, actual: 122_000_000, accuracy: 76 },
-        { month: 'March', forecast: 175_000_000, actual: 168_000_000, accuracy: 96 },
-      ],
-      calculated_at: _time.now(),
-    }));
+  async getForecastAccuracy(managerId: number | null, months = 6) {
+    return safeCall(async () => {
+      const result = await this.repo.getForecastAccuracyData(managerId, months);
+      if (!result.ok) throw new Error(result.error.message);
+      return {
+        manager_id: managerId,
+        accuracy_percent: result.data.avg_accuracy,
+        periods: result.data.periods,
+        calculated_at: _time.now(),
+      };
+    });
   }
 
   async generateForecast(managerId: number | null, period: string | null) {
@@ -67,11 +67,11 @@ export class SalesService {
   }
 
   async getForecastHistory(managerId: number | null, lim: number) {
-    return safeCall(async () => ({
-      manager_id: managerId,
-      history: [],
-      limit: lim,
-    }));
+    return safeCall(async () => {
+      const r = await this.repo.getForecastHistory(managerId, lim);
+      const history = r.ok ? r.data : [];
+      return { manager_id: managerId, history, limit: lim };
+    });
   }
 
   async getLeaderboard(period: string | null, limit: number) {

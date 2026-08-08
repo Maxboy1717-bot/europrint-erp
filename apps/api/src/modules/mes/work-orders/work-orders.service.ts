@@ -3,8 +3,9 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { I18nService } from 'nestjs-i18n';
 import { IWorkOrdersRepository, WORK_ORDERS_REPO } from './i-work-orders.repo';
 import { ERP_EVENTS } from '../../../common/constants/erp-events.constants';
 import { isTransitionAllowed, MES_TRANSITIONS } from '../../../common/constants/status-machines.constants';
@@ -16,6 +17,7 @@ export class WorkOrdersService {
 
   constructor(
     @Inject(WORK_ORDERS_REPO) private readonly workOrdersRepo: IWorkOrdersRepository,
+    private readonly i18n: I18nService,
     private eventEmitter?: EventEmitter2,
   ) {}
 
@@ -37,7 +39,7 @@ export class WorkOrdersService {
     const result = await this.workOrdersRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     const wo = result.data;
-    if (!wo) throw new NotFoundException(`Ish buyurtmasi #${id} topilmadi`);
+    if (!wo) throw new NotFoundException(await this.i18n.t('errors.workOrderNotFoundWithId', { args: { id } }));
     const [sessResult, crewResult] = await Promise.all([
       this.workOrdersRepo.findSessionsByOrderId(id),
       this.workOrdersRepo.findCrewsByOrderId(id),
@@ -61,7 +63,7 @@ export class WorkOrdersService {
     const findResult = await this.workOrdersRepo.findById(id);
     if (!findResult.ok) throw new InternalServerErrorException(findResult.error);
     const wo = findResult.data;
-    if (!wo) throw new NotFoundException(`Ish buyurtmasi #${id} topilmadi`);
+    if (!wo) throw new NotFoundException(await this.i18n.t('errors.workOrderNotFoundWithId', { args: { id } }));
     const updateResult = await this.workOrdersRepo.updateStatus(id, newStatus);
     if (!updateResult.ok) throw new InternalServerErrorException(updateResult.error);
     return updateResult.data;

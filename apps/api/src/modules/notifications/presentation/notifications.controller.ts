@@ -17,6 +17,7 @@ import {
   Put,
   Query,
   UseInterceptors, BadRequestException, InternalServerErrorException, UseGuards} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
@@ -47,6 +48,7 @@ export class NotificationsController {
     private readonly queryBus: QueryBus,
     private readonly prefsSvc: NotificationPreferencesService,
     @Inject(NOTIFICATION_REPO) private readonly notifRepo: INotificationRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List notifications' })
@@ -105,7 +107,9 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('/preferences')
   async getPreferences(@CurrentUser() user: AuthenticatedUser) {
-    const result = await this.prefsSvc.getPreferences(user.id);
+    // Granular per-type × per-channel matrix (owner-decisions batch item 7).
+    // The FE NotificationSettings page renders/hydrates this NotifPref[] matrix.
+    const result = await this.prefsSvc.getMatrix(user.id);
     assertOk(result);
     return { statusCode: HttpStatus.OK, data: result.data };
   }
@@ -116,6 +120,12 @@ export class NotificationsController {
   @Put('/preferences')
   async updatePreferences(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     const dto = parseNotificationPreferences(body);
+    // Matrix body (FE NotifPref[]) → persist the granular per-type × per-channel matrix.
+    if (dto.preferences !== undefined) {
+      const matrixResult = await this.prefsSvc.updateMatrix(user.id, dto.preferences);
+      assertOk(matrixResult);
+      return { statusCode: HttpStatus.OK, data: matrixResult.data };
+    }
     const result = await this.prefsSvc.updatePreferences(user.id, dto);
     assertOk(result);
     return { statusCode: HttpStatus.OK, data: result.data };
@@ -128,7 +138,7 @@ export class NotificationsController {
   @Patch('/:id/read')
   async markAsRead(@Param('id') notificationId: string) {
     const result = await this.notifRepo.markAsRead(notificationId);
-    if (!result.ok) throw new NotFoundException(`Bildirishnoma #${notificationId} topilmadi`);
+    if (!result.ok) throw new NotFoundException(await this.i18n.t('errors.notificationNotFoundWithId', { args: { id: notificationId } }));
     return { statusCode: HttpStatus.OK, data: { id: notificationId, isRead: true } };
   }
 
@@ -159,6 +169,12 @@ export class NotificationsController {
   @Patch('/preferences')
   async patchPreferences(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     const dto = parseNotificationPreferences(body);
+    // Matrix body (FE NotifPref[]) → persist the granular per-type × per-channel matrix.
+    if (dto.preferences !== undefined) {
+      const matrixResult = await this.prefsSvc.updateMatrix(user.id, dto.preferences);
+      assertOk(matrixResult);
+      return { statusCode: HttpStatus.OK, data: matrixResult.data };
+    }
     const result = await this.prefsSvc.updatePreferences(user.id, dto);
     assertOk(result);
     return { statusCode: HttpStatus.OK, data: result.data };
@@ -169,9 +185,10 @@ export class NotificationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles('admin', 'super_admin')
-  async createNotification(@Body() dto: CreateNotificationDto) {
+  async createNotification(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateNotificationDto) {
+    // 18-notif #88 — the authenticated caller is the originating actor (sender_id).
     const cmd = new CreateNotificationCommand(
-      dto.userId, dto.title, dto.body, dto.type, dto.referenceId, dto.referenceType);
+      dto.userId, dto.title, dto.body, dto.type, dto.referenceId, dto.referenceType, String(user.id));
     const result = await this.commandBus.execute(cmd);
     assertOk(result);
     this.logger.log({ notificationId: result.data.id, userId: dto.userId }, 'Notification created');

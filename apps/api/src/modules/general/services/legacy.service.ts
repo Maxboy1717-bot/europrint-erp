@@ -40,16 +40,16 @@ import {
   findAdminByUsernameRaw, findAdminByIdRaw,
   getFaceEmbeddingsRaw, deleteFaceEmbeddingRaw,
   getAttendanceRaw, getMyAttendanceRaw, getZoneLogsRaw, getAttendanceStatsRaw,
-  insertAttendanceRecordRaw,
+  insertAttendanceRecordRaw, insertClientErrorRaw,
   getSafetyViolationsUserRaw, getDisciplineUserRaw, getCertificatesUserRaw,
 } from './legacy-attendance.helpers';
 import {
   getPapkaOrdersRaw, createPapkaOrderRaw, updatePapkaOrderRaw,
   getMachineTasksRaw, createMachineTaskRaw,
   getPlanningOperationsRaw, createPlanningOperationRaw, getKanbanEmployeesRaw,
-  getOrdersByDateRaw, getWarehouseListRaw, getWarehouseStockRaw,
+  getWarehouseListRaw, getWarehouseStockRaw,
   getWarehouseTransfersRaw, getWarehouseLotsRaw, getWarehouseInternalRequestsRaw,
-  getWarehouseDashboardKpisRaw, getWarehouseOccupancyRaw,
+  getWarehouseOccupancyRaw,
   getSalaryBenchmarkRaw, getResourceAllocationRaw,
 } from './legacy-warehouse.helpers';
 
@@ -76,6 +76,13 @@ export class LegacyService {
     return safeCall(() => insertAttendanceRecordRaw(body), 'DB_ERROR');
   }
 
+  // ─── Client error telemetry (Q25) ───────────────────────────────────────────
+  async logClientError(
+    body: { message?: string; stack?: string; url?: string; userAgent?: string },
+  ): Promise<Result<Record<string, unknown>>> {
+    return safeCall(() => insertClientErrorRaw(body), 'DB_ERROR');
+  }
+
   // ─── Papka Orders / Machine Tasks ───────────────────────────────────────────
   async getPapkaOrders(opts?: Parameters<typeof getPapkaOrdersRaw>[0])    { return getPapkaOrdersRaw(opts); }
   async createPapkaOrder(params: Parameters<typeof createPapkaOrderRaw>[0]) { return createPapkaOrderRaw(params); }
@@ -87,13 +94,16 @@ export class LegacyService {
   async getKanbanEmployees()                                             { return getKanbanEmployeesRaw(); }
 
   // ─── Warehouse ──────────────────────────────────────────────────────────────
-  async getOrdersByDate()                       { return getOrdersByDateRaw(); }
+  // NOTE: orders-by-date route removed — handled by WmsCatalogController (wms module, production_orders JOIN material_kits)
   async getWarehouseList()                      { return getWarehouseListRaw(); }
   async getWarehouseStock(warehouseId?: string) { return getWarehouseStockRaw(warehouseId); }
   async getWarehouseTransfers()                 { return getWarehouseTransfersRaw(); }
   async getWarehouseLots()                      { return getWarehouseLotsRaw(); }
   async getWarehouseInternalRequests()          { return getWarehouseInternalRequestsRaw(); }
-  async getWarehouseDashboardKpis()             { return getWarehouseDashboardKpisRaw(); }
+  // NOTE: getWarehouseDashboardKpis removed (M3, 2026-07-05) -- dead/orphaned:
+  // its route (warehouse/dashboard/kpis) was already migrated to
+  // WmsCatalogController -> WmsCatalogDashboardService (real DB-backed),
+  // and this legacy version fabricated occupancyRate:72.5 with zero callers.
   async getWarehouseOccupancy()                 { return getWarehouseOccupancyRaw(); }
 
   // ─── Finance / KPI ──────────────────────────────────────────────────────────

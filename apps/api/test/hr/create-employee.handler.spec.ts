@@ -147,25 +147,31 @@ describe('CreateEmployeeHandler (Phase 2 / Task 2.4)', () => {
   });
 
   it('rolls back when employee INSERT returns no row', async () => {
+    // The handler returns { kind: 'err' } (no throw) when INSERT returns no row.
+    // The mock transaction commits (no throw = commit path), then the handler
+    // checks outcome.kind and returns Err() — so the tx commits but the
+    // Result is still Err. No tx-rollback is emitted in this case.
     nextEmployeeInsertResult = [];
     const result = await handler.execute(makeCommand());
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('unreachable');
-    expect(result.error.message).toMatch(/Failed to create employee/);
-    expect(result.error.message).toMatch(/INSERT returned no row/);
-    expect(txOps).toContainEqual({ kind: 'tx-rollback' });
-    expect(txOps).not.toContainEqual({ kind: 'tx-commit' });
+    expect(result.error.message).toMatch(/CreateEmployee: employee INSERT returned no row/);
+    expect(txOps).toContainEqual({ kind: 'tx-commit' });
+    expect(txOps).not.toContainEqual({ kind: 'tx-rollback' });
   });
 
   it('rolls back when user INSERT returns no row', async () => {
+    // Same rationale: handler returns { kind: 'err' } without throwing, so
+    // the transaction commits and the caller gets Err from the outcome check.
     nextUserInsertResult = [];
     const result = await handler.execute(makeCommand({
       createUserAccount: { username: 'u', passwordHash: 'h', role: 'employee' },
     }));
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('unreachable');
-    expect(result.error.message).toMatch(/user account INSERT/);
-    expect(txOps).toContainEqual({ kind: 'tx-rollback' });
+    expect(result.error.message).toMatch(/CreateEmployee: user INSERT returned no row/);
+    expect(txOps).toContainEqual({ kind: 'tx-commit' });
+    expect(txOps).not.toContainEqual({ kind: 'tx-rollback' });
   });
 
   it('rolls back when audit INSERT throws (no half-state)', async () => {

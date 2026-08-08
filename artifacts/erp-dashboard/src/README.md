@@ -68,9 +68,9 @@ inline `.toFixed(2)` for money — use these.
 ### `lib/sanitize.ts`
 DOMPurify wrapper. Use before `dangerouslySetInnerHTML`.
 
-### `lib/erp-offline-db.ts` + `lib/pos-db.ts` + `lib/pos-sync.ts`
+### `lib/erp-offline-db.ts`
 IndexedDB layer for POS-on-floor terminals that may go offline. Syncs back
-when connection returns.
+when connection returns (hook: `hooks/useErpOfflineSync.ts`).
 
 ### `lib/auth-refresh.ts` + `lib/fetchInterceptor.ts`
 Refresh-token rotation. Triggered automatically by `apiRequest` on 401.
@@ -194,7 +194,7 @@ backend-shared. Rule 3 + Rule 20 enforce Zod validation.
 
 A second SPA that runs inside the same Vite build for shop-floor terminals.
 - Self-contained pages + components + own i18n
-- Uses `lib/pos-db.ts` (IndexedDB) for offline operation
+- Uses `lib/erp-offline-db.ts` (IndexedDB) for offline operation
 - Routes mounted at `/pos-monitor/*`
 - Read `pos-monitor/README.md` if it exists, else the layout file
   `pos-monitor/layout/PosLayout.tsx` is the entry point

@@ -90,7 +90,7 @@ export class DrizzleIotMainRepo {
         department_id: sql<number>`"employees"."department_id"`,
         last_seen: camera_events.created_at, camera_name: cameras.name, location: cameras.location,
       }).from(camera_events)
-        .innerJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .innerJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .innerJoin(employees, sql`${employees.id}::text = ${camera_events.description}`)
         .where(and(eq(camera_events.event_type, 'face_recognition'), gte(camera_events.created_at, since)))
         .orderBy(desc(camera_events.created_at)).limit(100);
@@ -115,7 +115,7 @@ export class DrizzleIotMainRepo {
         created_at: camera_events.created_at, camera_name: cameras.name, location: cameras.location,
         zone_name: camera_zones.zone_name, zone_type: camera_zones.zone_type,
       }).from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .leftJoin(camera_zones, eq(camera_zones.camera_id, cameras.id))
         .where(and(...conds)).orderBy(desc(camera_events.created_at)).limit(limit);
       return Ok(rows);
@@ -216,7 +216,7 @@ export class DrizzleIotMainRepo {
         total_recognitions: sql<number>`COUNT(${camera_events.id}) FILTER (WHERE ${camera_events.event_type} = 'face_recognition')`,
         recognitions_24h: sql<number>`COUNT(${camera_events.id}) FILTER (WHERE ${camera_events.event_type} = 'face_recognition' AND ${camera_events.created_at} >= ${since24h})`,
       }).from(cameras)
-        .leftJoin(camera_events, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(camera_events, eq(cameras.id, camera_events.camera_id))
         .where(eq(cameras.is_active, true)).groupBy(cameras.id, cameras.name, cameras.location)
         .orderBy(sql`5 DESC`);
       return Ok({ summary: { ...summary, ...camCount }, by_camera: byCamera });

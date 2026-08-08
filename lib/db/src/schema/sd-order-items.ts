@@ -9,7 +9,9 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, uni
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
-import { crmCompanies } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): unused import of crmCompanies from
+// "./crm-schema" removed — that pgTable declaration was deleted (dead
+// lib/db duplicate, Q-29 verified: never used in this file).
 import { glDocuments } from "./fi-schema";
 import { Module } from "./lms-schema";
 import { Order, Product, orders, productionOrders, products } from "./pp-schema";

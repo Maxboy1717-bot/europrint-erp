@@ -19,24 +19,30 @@ export class WmsFgReceivedListener implements IEventHandler<WmsFgReceivedEvent> 
 
   async handle(event: WmsFgReceivedEvent): Promise<void> {
     try {
-      // TODO PA2-18: emit-side publishes {materialId, amount, warehouseId, timestamp}
-      // but the rental timer needs {orderId, areaM2}. Until receive-fg.handler is
-      // refactored to carry orderId/areaM2, skip when those aren't present.
-      if (event.orderId === undefined || event.areaM2 === undefined) {
+      // T23-A2: the rental timer is attributed to a sales order, so an orderId is REQUIRED —
+      // without it there is nothing to bill. areaM2, however, is now OPTIONAL: receive-fg.handler
+      // resolves it from the FG material when it can (weight-unit roll FG), but piece-unit FG has
+      // no storage footprint to derive. Rather than perpetually debug-skipping the rental the
+      // moment areaM2 is unknown, we book the rental with the area PENDING (0) so the golden-thread
+      // FI hop connects and the rental record exists to be amended with the real area later.
+      // Q-40: areaM2=0 is an explicit "pending", not a fabricated figure.
+      if (event.orderId === undefined) {
         this.logger.debug(
-          `Skipping rental timer: orderId/areaM2 missing in event (materialId=${event.materialId}, warehouseId=${event.warehouseId})`,
+          `Skipping rental timer: orderId missing in event (materialId=${event.materialId}, warehouseId=${event.warehouseId})`,
         );
         return;
       }
 
+      const areaM2 = event.areaM2 != null && Number.isFinite(event.areaM2) && event.areaM2 > 0 ? event.areaM2 : 0;
+
       this.logger.debug(
-        `Processing WMS FG received event - Order: ${event.orderId}, Warehouse: ${event.warehouseId}`,
+        `Processing WMS FG received event - Order: ${event.orderId}, Warehouse: ${event.warehouseId}, areaM2: ${areaM2}${areaM2 === 0 ? ' (pending)' : ''}`,
       );
 
       const command = new StartRentalTimerCommand(
         event.orderId,
         event.warehouseId,
-        event.areaM2,
+        areaM2,
         event.timestamp,
       );
 

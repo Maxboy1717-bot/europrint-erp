@@ -16,7 +16,7 @@ export interface ICrmActivitiesRepo {
   list(lid: number | null, did: number | null, uid: number | null, type: string | undefined, status: string | undefined, lim: number, off: number): Promise<Result<Row[]>>;
   today(): Promise<Result<Row[]>>;
   getById(aid: number): Promise<Result<Row | null>>;
-  create(type: unknown, subject: unknown, lead_id: unknown, deal_id: unknown, assigned_to: unknown, due_date: unknown, notes: unknown, status: unknown): Promise<Result<Row>>;
+  create(type: unknown, subject: unknown, lead_id: unknown, deal_id: unknown, assigned_to: unknown, due_date: unknown, notes: unknown, status: unknown, communication_data: unknown, scheduled_at: unknown): Promise<Result<Row>>;
   update(aid: number, body: Row): Promise<Result<Row | null>>;
   complete(aid: number, outcome: unknown): Promise<Result<Row | null>>;
   delete(aid: number): Promise<void>;

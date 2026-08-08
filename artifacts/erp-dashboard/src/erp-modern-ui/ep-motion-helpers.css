@@ -5,7 +5,7 @@
  * The neighbouring europrint-mockup-theme.css already defines the brand colours
  * and maps them to shadcn HSL tokens. THIS file adds the missing pieces:
  *
- *   1. Module hue tokens (--mod-sd, --mod-pp, --mod-hr, --mod-warehouse, --mod-fi)
+ *   1. Module hue tokens (--mod-sd, --mod-pp, --mod-hr, --mod-warehouse, --mod-fi, --mod-org)
  *   2. Status soft-tint helpers (--ep-green-soft, --ep-yellow-soft, …)
  *   3. The full 4px spacing scale (--space-1 … --space-20)
  *   4. The radius scale (--r-xs … --r-3xl, --r-pill)
@@ -32,6 +32,21 @@
   --mod-warehouse-light: #F8F1DD;
   --mod-fi:              #1A8FAF;
   --mod-fi-light:        #DDEFF4;
+  --mod-org:             #7c3aed;
+  --mod-org-light:       #F1EBFC;
+
+  /* ─── Org tier color tokens (owner 6-tier spec, 2026-07-14: L0=Egasi..L5=Sektsiya/Sektor) ─
+     Used by Org-sxema (TreeNodeCard/OrgStructureHierarchy/OrgNodeDetail) for karta TIER
+     accents — resolveTierColor() in src/components/hr/org/types.ts keys color off a card's
+     nodeType (ORG_TIERS), not its raw tree depth, so the color always matches the chosen
+     tier even when a card's parent skips levels. l6 is a spare/unused ramp step. ──────────── */
+  --ep-org-l0: #7c3aed; /* Egasi                  — Binafsha */
+  --ep-org-l1: #1d4ed8; /* Bosh Direktor          — Ko'k */
+  --ep-org-l2: #16a34a; /* Yo'nalish direktorlari — Yashil */
+  --ep-org-l3: #b45309; /* Departament            — Sariq */
+  --ep-org-l4: #dc2626; /* Bo'lim/Otdel           — Qizil */
+  --ep-org-l5: #0d9488; /* Sektsiya/Sektor        — Teal */
+  --ep-org-l6: #be185d; /* (ishlatilmagan zaxira) — Pushti */
 
   /* ─── Status soft tints ────────────────────────────────────────────────── */
   --ep-green-soft:  rgba(46, 138, 90, 0.12);

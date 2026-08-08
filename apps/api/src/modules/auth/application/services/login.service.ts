@@ -23,9 +23,10 @@ const _time = new TashkentTimeService();
 import { AppError, AppErr, Err } from '@common/result';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type { SignOptions } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
-import { IAuthRepo } from '../../domain/repositories/i-auth.repo';
+import { IAuthRepo, CardGate } from '../../domain/repositories/i-auth.repo';
 import { AUTH_REPO } from '../../auth.tokens';
 import { IPasswordHasher, PASSWORD_HASHER } from '../../domain/ports/i-password-hasher.port';
 import { AuthResult, AuthErrorCode } from '../../domain/types';
@@ -33,6 +34,7 @@ import { UserLoggedInEvent } from '../../domain/events/user-logged-in.event';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+import { MAX_FAILED_LOGIN_ATTEMPTS } from '@common/constants/security.constants';
 
 /**
  * i18n PATTERN (Backend Task Group 3 — Reference Implementation)
@@ -89,7 +91,7 @@ export class LoginService {
    *  2. Reject if locked / inactive
    *  3. Verify password (bcrypt); increment failed-attempt counter on miss
    *  4. Reset counter, update last-login timestamp
-   *  5. Sign access (8h) and refresh (30d) tokens
+   *  5. Sign access (15m default, config-driven) and refresh (7d default, config-driven) tokens
    *  6. Best-effort audit log insert (errors swallowed)
    * @param command - credentials + request metadata
    * @returns Result.ok({ accessToken, refreshToken, user }) on success
@@ -118,8 +120,27 @@ export class LoginService {
       return Err(AppErr('UNAUTHORIZED', msg));
     }
 
+    // EP-ORG-003 card-gate (env-flagged, default OFF — login buzilmasligi uchun): parol to'g'ri, lekin
+    // aktiv lavozim-kartasi yo'q → kira olmaydi. super_admin/admin/director BYPASS (admin kartasiz —
+    // regress-himoya). Gate faqat CARD_LOGIN_GATE_ENABLED='true' bo'lganda BLOKLAYDI (productionda HR
+    // binding qurgach yoqiladi). Gate har doim hisoblanadi — JWT'ga karta-claim qo'shish uchun.
+    const gate = await this.authRepo.resolveCardGate(user.getId());
+    const cardGateEnabled = this.configService.get<string>('CARD_LOGIN_GATE_ENABLED') === 'true';
+    if (cardGateEnabled && !this.isCardExemptRole(user.getRole()) && gate.activeCardCount === 0) {
+      this.logger.warn({ userId: user.getId() }, "Login bloklandi: aktiv karta yo'q (EP-ORG-003)");
+      await this.auditFailure(user.getId(), command, AuthErrorCode.NO_ACTIVE_CARD);
+      const msg = await this.resolveAuthErrorMessage(AuthErrorCode.NO_ACTIVE_CARD);
+      return Err(AppErr('UNAUTHORIZED', msg));
+    }
+
     await this.recordSuccessfulLogin(user, command);
-    return { ok: true, data: this.buildAuthResult(user) };
+    return { ok: true, data: this.buildAuthResult(user, gate) };
+  }
+
+  /** super_admin/admin/director — tizim-darajasi rollar, kartasiz ham kiradi (regress: admin id=1). */
+  private isCardExemptRole(role: string | undefined): boolean {
+    const r = String(role ?? '').toLowerCase();
+    return r === 'super_admin' || r === 'admin' || r === 'director';
   }
 
   /**
@@ -137,6 +158,8 @@ export class LoginService {
         return this.i18n.t('auth.accountLocked');
       case AuthErrorCode.ACCOUNT_INACTIVE:
         return this.i18n.t('auth.accountInactive');
+      case AuthErrorCode.NO_ACTIVE_CARD:
+        return this.i18n.t('auth.noActiveCard');
       default:
         return this.i18n.t('errors.unauthorized');
     }
@@ -162,7 +185,7 @@ export class LoginService {
     if (isPasswordValid) return null;
     await this.authRepo.incrementFailedAttempts(user.getId());
     user.incrementFailedAttempts();
-    if (user.getFailedLoginAttempts() >= 5) {
+    if (user.getFailedLoginAttempts() >= MAX_FAILED_LOGIN_ATTEMPTS) {
       this.logger.warn({ userId: user.getId() }, 'Account locked due to failed attempts');
     }
     await this.auditFailure(user.getId(), command, AuthErrorCode.INVALID_CREDENTIALS);
@@ -179,19 +202,26 @@ export class LoginService {
     this.logger.log(`User logged in: ${user.getUsername()} from ${command.ipAddress}`);
   }
 
-  private buildAuthResult(user: NonNullable<Awaited<ReturnType<IAuthRepo['findByUsername']>>>): AuthResult {
-    // SEC-3: jti (JWT ID) qo'shildi — logout blacklist JwtAuthGuard da ishlashi uchun
+  private buildAuthResult(user: NonNullable<Awaited<ReturnType<IAuthRepo['findByUsername']>>>, gate?: CardGate): AuthResult {
+    // SEC-3: jti (JWT ID). EP-ORG-023: cardId/rbacTier/positionId tokenda — guard kartadan ruxsat o'qiydi.
     const payload = {
       sub: user.getId(),
       username: user.getUsername(),
       email: user.getEmail(),
       role: user.getRole(),
+      cardId: gate?.primaryCardId ?? null,
+      rbacTier: gate?.rbacTier ?? null,
+      positionId: gate?.positionId ?? null,
       jti: randomUUID(),
     };
-    // AUTH-1: JWT TTL = cookie maxAge (24h access, 7d refresh) — no more drift
-    const accessToken  = this.jwtService.sign(payload, { expiresIn: '24h' });
+    // T10-17: access-token TTL vizyon = 15 daqiqa (qisqa umr → o'g'irlangan token tez eskiradi).
+    // Config-driven: JWT_ACCESS_TOKEN_TTL (default 15m) — login.service + auth.controller(refresh)
+    // + cookie maxAge bir manbadan o'qiydi (drift yo'q). Refresh-token uzun (7d) → seans uzilmaydi.
+    const accessTtl  = (this.configService.get<string>('JWT_ACCESS_TOKEN_TTL') ?? '15m') as SignOptions['expiresIn'];
+    const refreshTtl = (this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d') as SignOptions['expiresIn'];
+    const accessToken  = this.jwtService.sign(payload, { expiresIn: accessTtl });
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
+      expiresIn: refreshTtl,
       secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
     });
     return {

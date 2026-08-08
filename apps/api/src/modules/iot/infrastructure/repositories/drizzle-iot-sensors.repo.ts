@@ -19,12 +19,22 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
 export class DrizzleIotSensorsRepo {
   async findDashboard() {
     try {
-      const [summary, readingCounts, byType] = await Promise.all([
-        exec(sql`SELECT COUNT(*) AS total_sensors, COUNT(*) FILTER (WHERE is_active = true) AS active_sensors, COUNT(*) FILTER (WHERE is_active = false) AS inactive_sensors FROM iot_sensors`),
-        exec(sql`SELECT COUNT(*) FILTER (WHERE recorded_at >= NOW() - INTERVAL '1 hour') AS readings_last_hour, COUNT(*) FILTER (WHERE recorded_at >= NOW() - INTERVAL '24 hours') AS readings_today, AVG(value::float) FILTER (WHERE recorded_at >= NOW() - INTERVAL '1 hour') AS avg_value_last_hour, COUNT(DISTINCT sensor_id) FILTER (WHERE recorded_at >= NOW() - INTERVAL '5 minutes') AS reporting_sensors FROM iot_sensor_readings`),
-        exec(sql`SELECT s.type, COUNT(s.id) AS count, AVG(r.value::float) FILTER (WHERE r.recorded_at >= NOW() - INTERVAL '1 hour') AS avg_value FROM iot_sensors s LEFT JOIN iot_sensor_readings r ON r.sensor_id = s.id AND r.recorded_at >= NOW() - INTERVAL '1 hour' GROUP BY s.type ORDER BY count DESC`),
+      const [s, a, oeeRows] = await Promise.all([
+        exec(sql`SELECT COUNT(*) FILTER (WHERE is_active = true) AS "activeSensors", COUNT(*) FILTER (WHERE is_active = true AND type IN ('machine','production','equipment')) AS "machinesRunning" FROM iot_sensors`),
+        exec(sql`SELECT COUNT(*) FILTER (WHERE is_resolved = false) AS "totalActiveAlerts", COUNT(*) FILTER (WHERE is_resolved = false AND severity = 'critical') AS "critical", COUNT(*) FILTER (WHERE is_resolved = false AND severity = 'high') AS "high", COUNT(*) FILTER (WHERE is_resolved = false AND severity = 'medium') AS "medium" FROM iot_alerts`),
+        exec(sql`SELECT ROUND(AVG(oee)::numeric, 2) AS "avgOeeToday" FROM production_sessions WHERE deleted_at IS NULL AND (updated_at >= NOW() - INTERVAL '24 hours' OR status IN ('running', 'in_progress'))`),
       ]);
-      return Ok({ summary: { ...summary[0], ...readingCounts[0] }, by_type: byType });
+      return Ok({
+        activeSensors: Number(s[0]?.['activeSensors'] ?? 0),
+        totalActiveAlerts: Number(a[0]?.['totalActiveAlerts'] ?? 0),
+        alertsBySeverity: {
+          critical: Number(a[0]?.['critical'] ?? 0),
+          high: Number(a[0]?.['high'] ?? 0),
+          medium: Number(a[0]?.['medium'] ?? 0),
+        },
+        avgOeeToday: Number(oeeRows[0]?.['avgOeeToday'] ?? 0),
+        machinesRunning: Number(s[0]?.['machinesRunning'] ?? 0),
+      });
     } catch (e) { return Err((e as Error).message); }
   }
 

@@ -3,13 +3,14 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { assertFound, assertRequired } from '@common/assertions';
+import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
 import {
 BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -23,9 +24,12 @@ import {
   SdConvertLeadSchema, SdConvertLeadDto,
   SdAddLeadActivitySchema, SdAddLeadActivityDto,
 } from '../dto/sd.dto';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
-const SD_WRITE_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
-const SD_ADMIN_ROLES = ['sales_manager', 'super_admin', 'director'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SD_WRITE_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
+const SD_ADMIN_ROLES = ['sales_manager', 'manager', 'super_admin', 'director'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -36,11 +40,12 @@ const SD_ADMIN_ROLES = ['sales_manager', 'super_admin', 'director'];
 export class SdLeadsController {
   private readonly logger = new Logger(SdLeadsController.name);
 
-  constructor(private readonly svc: SdLeadsService) {}
+  constructor(private readonly svc: SdLeadsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
+  @Roles(...SD_WRITE_ROLES)
   async list(@Query('status') status?: string, @Query('assignedTo') assignedTo?: string,
     @Query('search') search?: string, @Query('limit') limit?: string, @Query('offset') offset?: string) {
     const _rList = await this.svc.list(status, assignedTo ? safeInt(assignedTo, 0) : null,
@@ -52,6 +57,7 @@ export class SdLeadsController {
   @ApiOperation({ summary: 'Get stats' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
+  @Roles(...SD_WRITE_ROLES)
   async getStats() {
     return unwrapOrThrow(await this.svc.getStats());
   }
@@ -89,11 +95,12 @@ export class SdLeadsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
+  @Roles(...SD_WRITE_ROLES)
   async getById(@Param('id') id: string) {
     const _rR = await this.svc.getById(safeInt(id, 0));
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'SD Lead not found');
+    assertFound(r, await this.i18n.t('errors.leadNotFound'));
     return r[0];
   }
 
@@ -104,7 +111,6 @@ export class SdLeadsController {
   @UsePipes(new ZodValidationPipe(SdCreateLeadSchema))
   @Roles(...SD_WRITE_ROLES)
   async create(@Body() body: SdCreateLeadDto) {
-    assertRequired((body as Record<string, unknown>).full_name, 'full_name required');
     return unwrapOrThrow(await this.svc.create(body));
   }
 
@@ -119,7 +125,7 @@ export class SdLeadsController {
     const _rR = await this.svc.update(safeInt(id, 0), body);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'SD Lead not found');
+    assertFound(r, await this.i18n.t('errors.leadNotFound'));
     return r[0];
   }
 
@@ -134,7 +140,7 @@ export class SdLeadsController {
     const _rR = await this.svc.updateStatus(safeInt(id, 0), body.status);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'SD Lead not found');
+    assertFound(r, await this.i18n.t('errors.leadNotFound'));
     return r[0];
   }
 
@@ -156,8 +162,8 @@ export class SdLeadsController {
   @Post(':id/convert')
   @UsePipes(new ZodValidationPipe(SdConvertLeadSchema))
   @Roles(...SD_WRITE_ROLES)
-  async convert(@Param('id') id: string, @Body() body: SdConvertLeadDto) {
-    return unwrapOrThrow(await this.svc.convert(safeInt(id, 0), body.notes));
+  async convert(@Param('id') id: string, @Body() body: SdConvertLeadDto, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.convert(safeInt(id, 0), body.notes, user.id));
   }
 
   @ApiOperation({ summary: 'Add activity' })
@@ -175,6 +181,7 @@ export class SdLeadsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/activities')
+  @Roles(...SD_WRITE_ROLES)
   async getActivities(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getActivities(safeInt(id, 0)));
   }

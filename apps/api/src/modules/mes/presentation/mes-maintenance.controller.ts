@@ -10,6 +10,7 @@ import {
 BadRequestException, Body, Controller, Get, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
@@ -38,7 +39,7 @@ const MES_FLOOR_ROLES  = ['operator', 'worker', 'shift_supervisor', 'production_
 export class MesMaintenanceController {
   private readonly logger = new Logger(MesMaintenanceController.name);
 
-  constructor(private readonly svc: MesMaintenanceService) {}
+  constructor(private readonly svc: MesMaintenanceService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List maintenance requests' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -69,7 +70,7 @@ export class MesMaintenanceController {
   async updateMaintenanceRequest(@Param('id') id: string, @Body() body: MesUpdateMaintenanceRequestDto) {
     const _rR = await this.svc.updateMaintenanceRequest(safeInt(id, 0), body.status ?? null, body.assigned_to ?? null, body.notes ?? null, body.resolved_at ?? null);
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Maintenance request not found');
+    assertFound(r, await this.i18n.t('errors.maintenanceRequestNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -90,7 +91,7 @@ export class MesMaintenanceController {
   async updateTaskProgress(@Param('id') id: string, @Body() body: MesUpdateTaskProgressDto) {
     const _rProg = await this.svc.updateTaskProgress(safeInt(id, 0), body.progress ?? 0, body.notes);
     const r = unwrapOrThrow(_rProg) as Record<string, unknown>[];
-    assertFound(r, 'Task not found');
+    assertFound(r, await this.i18n.t('errors.taskNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -113,6 +114,14 @@ export class MesMaintenanceController {
     return unwrapOrThrow(await this.svc.getSosHistory(safeInt(limit, 50)));
   }
 
+  @ApiOperation({ summary: 'Resolve sos (stops org-chain escalation)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Post('sos/:sosId/resolve')
+  @Roles(...MES_FLOOR_ROLES)
+  async resolveSos(@Param('sosId') sosId: string, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.resolveSos(safeInt(sosId, 0), user?.id ?? null));
+  }
+
   @ApiOperation({ summary: 'Get downtime reasons' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime-reasons')
@@ -123,8 +132,8 @@ export class MesMaintenanceController {
   @ApiOperation({ summary: 'List downtime events' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime-events')
-  async listDowntimeEvents(@Query('limit') limit?: string) {
-    return unwrapOrThrow(await this.svc.getDowntimeEvents(0));
+  async listDowntimeEvents(@Query('sessionId') sessionId?: string, @Query('limit') limit?: string) {
+    return unwrapOrThrow(await this.svc.getDowntimeEvents(sessionId ? safeInt(sessionId, 0) : null, safeInt(limit, 50)));
   }
 
   @ApiOperation({ summary: 'Create downtime event' })
@@ -144,6 +153,6 @@ export class MesMaintenanceController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('downtime-events/:sessionId')
   async getDowntimeEvents(@Param('sessionId') sessionId: string) {
-    return unwrapOrThrow(await this.svc.getDowntimeEvents(safeInt(sessionId, 0)));
+    return unwrapOrThrow(await this.svc.getDowntimeEvents(safeInt(sessionId, 0), 500));
   }
 }

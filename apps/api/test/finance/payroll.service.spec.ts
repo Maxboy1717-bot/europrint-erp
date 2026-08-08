@@ -9,6 +9,14 @@ import { PayrollService } from '../../src/modules/finance/payroll/payroll.servic
 import { FINANCE_PAYROLL_REPO } from '../../src/modules/finance/payroll/i-finance-payroll.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
+
+function makeI18n(): I18nService {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as I18nService;
+}
 
 interface RepoMock {
   findAll: jest.Mock;
@@ -37,6 +45,7 @@ async function buildSvc(repo: RepoMock): Promise<PayrollService> {
     providers: [
       PayrollService,
       { provide: FINANCE_PAYROLL_REPO, useValue: repo },
+      { provide: I18nService, useValue: makeI18n() },
     ],
   }).compile();
   return mod.get(PayrollService);

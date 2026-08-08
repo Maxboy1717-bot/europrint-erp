@@ -5,6 +5,13 @@
 
 import { z } from 'zod';
 
+// SB0112/SB0148 (03-lms-darslik): kurs turi tasnifi (courses.course_type, CHECK-constraint bilan
+// mos). LmsCompletionService.defaultThreshold() shu enum'ni ishlatadi (safety_tx/razryad_exam
+// tezroq o'tish chegarasi, boshqalari umumiy).
+export const COURSE_TYPES = [
+  'safety_tx', 'regulation', 'general', 'razryad_exam', 'onboarding', 'replication',
+] as const;
+
 export const CreateCourseSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
@@ -12,6 +19,11 @@ export const CreateCourseSchema = z.object({
   passingScore: z.number().int().min(0).max(100).optional(),
   isMandatory: z.boolean().optional(),
   durationHours: z.number().optional(),
+  // EP-LMS-001 (SB0120, T11-03): karta-markazli darslik biriktiruvi. cardId -> org_departments/org_functions.id.
+  // null/undefined = karta biriktirilmagan (universal kurs).
+  cardId: z.number().int().positive().nullish(),
+  // SB0112/SB0148: kurs turi (tasnif). null/undefined = tasniflanmagan.
+  courseType: z.enum(COURSE_TYPES).nullish(),
 });
 export type CreateCourseDto = z.infer<typeof CreateCourseSchema>;
 
@@ -52,3 +64,30 @@ export const VideoProgressSchema = z.object({
   completed: z.boolean().optional(),
 });
 export type VideoProgressDto = z.infer<typeof VideoProgressSchema>;
+
+// EP-ORG-116 (T10-09): KARTAga mentor biriktirish. cardId -> org_departments, mentorUserId -> users.
+export const AssignCardMentorSchema = z.object({
+  cardId: z.number().int().positive(),
+  mentorUserId: z.number().int().positive(),
+  courseId: z.number().int().positive().optional(),
+  notes: z.string().max(2000).optional(),
+});
+export type AssignCardMentorDto = z.infer<typeof AssignCardMentorSchema>;
+
+export const UpdateCardMentorSchema = z.object({
+  courseId: z.number().int().positive().optional(),
+  notes: z.string().max(2000).optional(),
+});
+export type UpdateCardMentorDto = z.infer<typeof UpdateCardMentorSchema>;
+
+// EP-ORG-116 follow-up (2026-07-07): mentor rating + qualification-verification on
+// lms_card_mentors.rating (NUMERIC(2,1) CHECK 0..5) / qualification_verified_at / _by.
+// At least one of the two fields must be present — an empty PATCH is a no-op the client
+// should not send.
+export const RateCardMentorSchema = z.object({
+  rating: z.number().min(0).max(5).optional(),
+  verifyQualification: z.boolean().optional(),
+}).refine((d) => d.rating !== undefined || d.verifyQualification !== undefined, {
+  message: "rating yoki verifyQualification kiritilishi kerak",
+});
+export type RateCardMentorDto = z.infer<typeof RateCardMentorSchema>;

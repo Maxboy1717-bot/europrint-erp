@@ -27,6 +27,7 @@ export interface IFinanceExtendedRepository {
   findOvertime(limit: number, offset: number, period?: string): Promise<Result<{ data: Row[]; count: number }>>;
   findCustoms(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;
   findInsurance(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;
+  findAssetInventorySummary(): Promise<Result<Row>>;
 }
 
 export const FINANCE_EXTENDED_REPO = 'IFinanceExtendedRepository';

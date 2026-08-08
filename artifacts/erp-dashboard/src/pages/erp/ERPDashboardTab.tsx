@@ -21,7 +21,7 @@ export function ERPDashboardTab() {
   const [dateRange, setDateRange] = useState<number>(7);
 
   const { data: workCenters = [] } = useQuery<WorkCenter[]>({
-    queryKey: ["/api/erp/work-centers"],
+    queryKey: ["/api/pp/work-centers"],
   });
 
   const { data: dashboardStats, isLoading: loadingDashboard } = useQuery<{
@@ -48,9 +48,13 @@ export function ERPDashboardTab() {
   } | null>({
     queryKey: ["/api/erp/work-centers", selectedWorkCenterId || "none", "stats", dateRange],
     queryFn: async () => {
-      if (!selectedWorkCenterId) throw new Error("No work center selected");
-      const url = `/api/erp/work-centers/${selectedWorkCenterId}/stats?dateRange=${dateRange}`;
-      return await apiRequest('GET', url);
+      if (!selectedWorkCenterId) return null;
+      try {
+        const url = `/api/erp/work-centers/${selectedWorkCenterId}/stats?dateRange=${dateRange}`;
+        return await apiRequest('GET', url);
+      } catch {
+        return null;
+      }
     },
     enabled: !!selectedWorkCenterId,
   });

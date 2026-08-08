@@ -6,9 +6,17 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { I18nService } from 'nestjs-i18n';
 import { CrmLeadsOpsService } from '../../src/modules/crm/application/crm-leads-ops.service';
 import { CrmLeadsOpsRepository } from '../../src/modules/crm/application/crm-leads-ops.repository';
 import { Ok, Err, AppErr } from '../../src/common/result';
+
+function makeI18n(): I18nService {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as I18nService;
+}
 
 type RepoMock = {
   updateLead: jest.Mock;
@@ -46,6 +54,7 @@ describe('CrmLeadsOpsService', () => {
       providers: [
         CrmLeadsOpsService,
         { provide: CrmLeadsOpsRepository, useValue: repo },
+        { provide: I18nService, useValue: makeI18n() },
       ],
     }).compile();
     svc = module.get(CrmLeadsOpsService);
@@ -54,7 +63,8 @@ describe('CrmLeadsOpsService', () => {
   it('throws NotFoundException when updateStage stage missing', async () => {
     repo.findStage.mockResolvedValue(Ok(null));
     // The service throws NotFoundException when the stage row is not found.
-    await expect(svc.updateStage(1, 99)).rejects.toThrow('Stage #99 topilmadi');
+    // The i18n mock echoes the key (not the interpolated message).
+    await expect(svc.updateStage(1, 99)).rejects.toThrow('errors.crmStageNotFoundWithId');
   });
 
   it('inserts activity note when updateStage called with notes', async () => {

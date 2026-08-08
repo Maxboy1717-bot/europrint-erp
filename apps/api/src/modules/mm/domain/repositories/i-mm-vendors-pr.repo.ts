@@ -19,11 +19,21 @@ export interface IMmVendorsPrRepo {
   listRequisitions(status: string | undefined, lim: number, off: number): Promise<Result<Row[]>>;
   getRequisitionHeader(rid: number): Promise<Result<Row | null>>;
   getRequisitionItems(rid: number): Promise<Result<unknown[]>>;
+  /**
+   * Q-46 (2026-07-02): `mm_purchase_requisitions` is an updatable VIEW over the base
+   * table `purchase_requisitions`, which has NOT NULL constraints on
+   * requisition_number/material_id/required_quantity/required_date. `material_id` +
+   * `required_quantity` (from the requisition's first real item — never fabricated)
+   * and `required_date` (needed_by, or today if not given) must be supplied so the
+   * INSERT doesn't crash with 23502. See mm-vendors-pr.repository.ts for detail.
+   */
   createRequisition(
     title: unknown,
     requested_by: number | null,
     needed_by: unknown,
     notes: unknown,
+    material_id: number,
+    required_quantity: number,
   ): Promise<Result<Row>>;
   createRequisitionItem(
     requisition_id: unknown,
@@ -33,6 +43,12 @@ export interface IMmVendorsPrRepo {
   ): Promise<Result<void>>;
   updateRequisition(rid: number, body: Row): Promise<Result<Row[]>>;
   deleteRequisition(rid: number): Promise<Result<void>>;
+  /**
+   * #11.13: link an approved requisition to the PO it was converted into.
+   * `mm_purchase_requisitions` is an updatable VIEW over `purchase_requisitions`;
+   * purchase_order_id is a nullable base column so this UPDATE rewrites cleanly.
+   */
+  setRequisitionPurchaseOrderId(rid: number, poId: number): Promise<Result<void>>;
 }
 
 export const MM_VENDORS_PR_REPO = Symbol('MM_VENDORS_PR_REPO');

@@ -6,6 +6,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventBus } from '@nestjs/cqrs';
 import {
   ConfirmAdvancePaymentHandler,
   ConfirmAdvancePaymentCommand,
@@ -45,6 +46,8 @@ async function buildHandler(repo: ISalesOrderRepository): Promise<ConfirmAdvance
     providers: [
       ConfirmAdvancePaymentHandler,
       { provide: SALES_ORDER_REPO, useValue: repo },
+      // Handler now injects EventBus to publish AdvanceApprovedEvent on advance→approved
+      { provide: EventBus, useValue: { publish: jest.fn() } },
     ],
   }).compile();
   return module.get(ConfirmAdvancePaymentHandler);

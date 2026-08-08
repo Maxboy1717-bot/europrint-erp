@@ -19,6 +19,7 @@ import {
   CoordinationUpdateRaspSchema, CoordinationUpdateRaspDto,
   CoordinationMarkDoneSchema, CoordinationMarkDoneDto,
   CoordinationCreateRaspSchema, CoordinationCreateRaspDto,
+  CoordinationUpdateCouncilSchema, CoordinationUpdateCouncilDto,
 } from './dto/director.dto';
 
 
@@ -36,14 +37,36 @@ export class CoordinationController {
   @ApiOperation({ summary: 'Get councils' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('councils')
-  getCouncils() {
-    return [
-      { id: 1, name: 'Boshqaruv Kengashi', type: 'management' },
-      { id: 2, name: 'Sifat Kengashi', type: 'quality' },
-      { id: 3, name: 'Moliya Kengashi', type: 'finance' },
-      { id: 4, name: 'HR Kengashi', type: 'hr' },
-      { id: 5, name: 'Texnik Kengash', type: 'technical' },
-    ];
+  async getCouncils() {
+    return unwrapOrInternal(await this.svc.getCouncils());
+  }
+
+  @ApiOperation({ summary: 'Update council (chairperson, description, meeting_schedule, quorum override)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @Patch('councils/:id')
+  @Roles('admin', 'director', 'ceo')
+  @UsePipes(new ZodValidationPipe(CoordinationUpdateCouncilSchema))
+  async updateCouncil(
+    @Param('id') id: string,
+    @Body() body: CoordinationUpdateCouncilDto,
+    @CurrentUser() user: { id: number; role: string },
+  ) {
+    // Owner decision 2026-07-13 (chat): quorum_numerator/quorum_denominator — per-council
+    // kvorum override (falls back to the global COUNCIL_QUORUM_NUMERATOR/DENOMINATOR when unset).
+    const { chairperson_id, description, meeting_schedule, quorum_numerator, quorum_denominator } = body;
+    return unwrapOrThrow(
+      await this.svc.updateCouncilWithAuth(
+        parseInt(id, 10),
+        user.role,
+        chairperson_id ?? null,
+        description ?? null,
+        meeting_schedule ?? null,
+        quorum_numerator ?? null,
+        quorum_denominator ?? null,
+      ),
+    );
   }
 
   @ApiOperation({ summary: 'Get baskets' })
@@ -181,5 +204,12 @@ export class CoordinationController {
   @Get('stats')
   async getStats() {
     return unwrapOrInternal(await this.svc.getStats());
+  }
+
+  @ApiOperation({ summary: 'List employees for assignee/chairperson picker (employees.id + full_name)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('users-for-select')
+  async usersForSelect() {
+    return unwrapOrInternal(await this.svc.getUsersForSelect());
   }
 }

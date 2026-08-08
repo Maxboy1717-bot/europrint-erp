@@ -17,6 +17,8 @@ import {
   DESIGN_ROUTES, MRO_ROUTES, IOT_ROUTES,
 } from "@/routes/ProductionRoutes";
 import { SALES_ROUTES, MARKETING_ROUTES } from "@/routes/CRMRoutes";
+import { DOCUMENTS_ROUTES } from "@/routes/DocumentsRoutes";
+import { KNOWLEDGE_GRAPH_ROUTES } from "@/routes/KnowledgeGraphRoutes";
 import { WAREHOUSE_ROUTES } from "@/routes/WarehouseRoutes";
 import {
   ADMIN_ROUTES, INTEGRATION_ROUTES,
@@ -36,7 +38,7 @@ import {
 } from "@/routes/roleConstants";
 
 const DirectorDashboard = lazy(() => import("@/pages/DirectorDashboard"));
-const OrderWorkflowPage = lazy(() => import("@/pages/OrderWorkflowPage"));
+const AishaPage = lazy(() => import("@/pages/AishaPage"));
 
 const ALL_MODULE_ROUTES = [
   ...ANALYTICS_ROUTES, ...HR_ROUTES, ...AI_HR_ROUTES, ...ADMIN_ROUTES, ...SELF_SERVICE_ROUTES,
@@ -47,13 +49,16 @@ const ALL_MODULE_ROUTES = [
   ...SAAS_ROUTES, ...LMS_ADMIN_ROUTES, ...LMS_LEARNER_ROUTES,
   ...KAIZEN_ROUTES, ...ORDERS_REGISTRY_ROUTES,
   ...ARCHITECTURE_GAP_ROUTES,
+  ...DOCUMENTS_ROUTES,
+  ...KNOWLEDGE_GRAPH_ROUTES,
   ...STUB_ROUTES,
 ];
 
 const REDIRECT_PATHS = [
   '/chat', '/chat/admin',
   '/orgstructure', '/org-structure/builder',
-  '/org-structure/view', '/erp-analytics', '/erp-roles',
+  '/org-structure/view', '/org-structure/cards', '/org-structure/razryad-levels',
+  '/erp-analytics', '/erp-roles',
   '/warehouse-management', '/warehouse/dashboard', '/logistics/dashboard',
   '/accounting-dashboard', '/fi-finance', '/erp-finance', '/fi/dashboard',
   '/cfo-dashboard', '/accounting/payroll', '/integration/shift-scheduling',
@@ -62,13 +67,19 @@ const REDIRECT_PATHS = [
   '/crm/deals', '/crm/contacts', '/crm/companies', '/crm/proposals',
   '/crm/invoices', '/sd/quota-dashboard', '/erp/planning', '/erp/pp/mrp',
   '/tech/dashboard', '/tech/approval', '/tech/parameters', '/tech/standards',
-  '/iot/live', '/europrint/director', '/qc/dashboard', '/qc/standards',
-  '/qc/parameters', '/qc/tests', '/succession-planning',
+  '/iot/live', '/europrint/director', '/qc/dashboard',
+  '/qc/tests', '/succession-planning',
   '/hr/succession-planning', '/hr/leave',
   '/feedback', '/logout',
-  '/order-workflow', '/sales',
+  '/sales', '/aisha',
   // Dead sidebar links → canonical redirects
   '/assets', '/hr/documents', '/cfo', '/org-chart',
+  // G6 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding C10): OrgDepartmentsPage's create
+  // action always inserted a PARENT-LESS org_departments row (no parent picker on that thinner
+  // form) — a second, unreachable-from-sidebar create path that fed the "14 roots" single-tree
+  // problem (D11.7/G9). The canonical create path is /org-structure/hierarchy (AddNodeDialog,
+  // now with a parent picker — G4).
+  '/org-departments',
 ];
 
 function pathMatches(pattern: string, loc: string): boolean {
@@ -118,6 +129,8 @@ export function AppRouter() {
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={SELF_SERVICE_ROUTES} />
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={KAIZEN_ROUTES}          />
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={ORDERS_REGISTRY_ROUTES} />
+      <ModuleGroup roles={ALL_AUTHENTICATED}  routes={DOCUMENTS_ROUTES}       />
+      <ModuleGroup roles={ALL_AUTHENTICATED}  routes={KNOWLEDGE_GRAPH_ROUTES} />
       <ModuleGroup roles={ADMIN_ROLES}        routes={ARCHITECTURE_GAP_ROUTES} />
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={STUB_ROUTES}            />
 
@@ -125,6 +138,10 @@ export function AppRouter() {
       <Route path="/orgstructure"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/org-structure/builder"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/org-structure/view"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
+      {/* Cards + Razryad folded into Org Tuzilma tabs (owner 2026-06-17) — old standalone routes redirect in. */}
+      <Route path="/org-structure/cards/:id"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
+      <Route path="/org-structure/cards"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
+      <Route path="/org-structure/razryad-levels"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/erp-analytics"><RoleRoute roles={ADMIN_ROLES}><Redirect to="/analytics" /></RoleRoute></Route>
       <Route path="/erp-roles"><RoleRoute roles={ADMIN_ROLES}><Redirect to="/settings" /></RoleRoute></Route>
       <Route path="/warehouse-management"><RoleRoute roles={WAREHOUSE_ROLES}><Redirect to="/warehouse/hub" /></RoleRoute></Route>
@@ -160,9 +177,14 @@ export function AppRouter() {
       <Route path="/iot/live"><RoleRoute roles={IOT_ROLES}><Redirect to="/iot/dashboard" /></RoleRoute></Route>
       <Route path="/europrint/director"><RoleRoute roles={DIRECTOR_ROLES}><Redirect to="/" /></RoleRoute></Route>
       <Route path="/qc/dashboard"><RoleRoute roles={QC_ROLES}><Redirect to="/qc/dashboard-home" /></RoleRoute></Route>
-      <Route path="/qc/standards"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
-      <Route path="/qc/parameters"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
       <Route path="/qc/tests"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
+      {/* /qc/standards and /qc/parameters are NOT redirected — they render their own
+          dedicated components directly via QC_ROUTES (QCModule "standards" tab and
+          QcParametersConfig respectively). Routing them through <Redirect to="/qc-module"/>
+          rewrote the URL to "/qc-module" before QCModule ever mounted, so its
+          getInitialTab(location) URL-sniffing always saw "/qc-module" and fell through
+          to the "physical" tab — making Normalar/Parametrlar render identical content
+          to Material Testlari. See QC_ROUTES in ProductionRoutes.tsx. */}
       <Route path="/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession" /></RoleRoute></Route>
       <Route path="/hr/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession" /></RoleRoute></Route>
       <Route path="/hr/leave"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/vacation-sick" /></RoleRoute></Route>
@@ -174,13 +196,7 @@ export function AppRouter() {
       <Route path="/hr/documents"><RoleRoute roles={HR_ROLES}><Redirect to="/employee-files" /></RoleRoute></Route>
       <Route path="/cfo"><RoleRoute roles={FINANCE_ROLES}><Redirect to="/cfo/dashboard" /></RoleRoute></Route>
       <Route path="/org-chart"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
-
-      {/* ── Order Workflow (Sprint 4) ── */}
-      <Route path="/order-workflow">
-        <RoleRoute roles={['SUPER_ADMIN', 'DIRECTOR', 'SALES_MANAGER', 'FINANCE', 'PRODUCTION_MANAGER']}>
-          <ErrorBoundary><Suspense fallback={<PageLoader />}><OrderWorkflowPage /></Suspense></ErrorBoundary>
-        </RoleRoute>
-      </Route>
+      <Route path="/org-departments"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
 
       {/* ── Chat ── */}
       <Route path="/chat">
@@ -191,6 +207,13 @@ export function AppRouter() {
       <Route path="/chat/admin">
         <RoleRoute roles={["admin", "director"]}>
           <ErrorBoundary><Suspense fallback={<PageLoader />}><ChatAdminPage /></Suspense></ErrorBoundary>
+        </RoleRoute>
+      </Route>
+
+      {/* ── AIsha (decoupled from Director Dashboard, #15 P1) ── */}
+      <Route path="/aisha">
+        <RoleRoute roles={DIRECTOR_ROLES}>
+          <ErrorBoundary><Suspense fallback={<PageLoader />}><AishaPage /></Suspense></ErrorBoundary>
         </RoleRoute>
       </Route>
 

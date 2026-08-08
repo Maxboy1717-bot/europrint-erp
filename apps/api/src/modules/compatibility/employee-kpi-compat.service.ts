@@ -11,6 +11,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -22,6 +23,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class EmployeeKpiCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getKpis(employeeId?: string, month?: string, limit = '50'): Promise<Result<Record<string, unknown>[]>>{
     return safeCall(async () => {
@@ -47,7 +49,7 @@ export class EmployeeKpiCompatService {
   async createKpi(body: Record<string, unknown>){
     return safeCall(async () => {
     const { employee_id, kpi_date, attendance_score, quality_score, task_completion_score, total_score, notes } = body;
-    if (!employee_id || !kpi_date) throw new BadRequestException('employee_id va kpi_date majburiy');
+    if (!employee_id || !kpi_date) throw new BadRequestException(await this.i18n.t('validation.employeeIdAndKpiDateRequired'));
     const r = await rawSql(sql`
       INSERT INTO employee_daily_kpi
         (employee_id, kpi_date, attendance_score, quality_score, task_completion_score, total_score, notes)
@@ -113,7 +115,7 @@ export class EmployeeKpiCompatService {
       WHERE dk.id = ${si(id)}
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -131,7 +133,7 @@ export class EmployeeKpiCompatService {
       WHERE id = ${si(id)} RETURNING *
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -181,7 +183,7 @@ export class EmployeeKpiCompatService {
   async recordAttendance(body: Record<string, unknown>){
     return safeCall(async () => {
     const { employee_id, kpi_date, attendance_status, work_start, work_end, hours_worked } = body;
-    if (!employee_id || !kpi_date) throw new BadRequestException('employee_id va kpi_date majburiy');
+    if (!employee_id || !kpi_date) throw new BadRequestException(await this.i18n.t('validation.employeeIdAndKpiDateRequired'));
     const r = await rawSql(sql`
       INSERT INTO employee_daily_kpi
         (employee_id, kpi_date, attendance_status, work_start, work_end, hours_worked)

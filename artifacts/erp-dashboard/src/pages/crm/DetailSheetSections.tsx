@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { uz } from "date-fns/locale";
 import { formatCurrency } from "@/lib/format";
 import type { Lead, Deal, Contact, Company, Proposal, Invoice, EntityData } from "./crm-types";
+import { LEAD_STAGES } from "./crm-types";
 import type { CrmActivity, SdOrder } from "./DetailSheetTypes";
 import { useTranslation } from '@/lib/i18n';
 import {
@@ -27,6 +28,14 @@ import {
   getEntityEmail,
 } from "./DetailSheetTypes";
 import { EPStatusPill } from "@/components/ep";
+
+// VISION-3340 #28: derive the badge color from the single source of truth (LEAD_STAGES)
+// instead of a hand-duplicated map — a duplicated map is exactly what went stale
+// (IN_PROGRESS/no-JUNK) and silently fell back to the default gray color.
+const LEAD_STATUS_COLORS: Record<string, string> = LEAD_STAGES.reduce((acc, stage) => {
+  acc[stage.stageId] = stage.color ?? "#888";
+  return acc;
+}, {} as Record<string, string>);
 
 // ---------------------------------------------------------------------------
 // Props
@@ -90,16 +99,7 @@ export function GeneralSection({entity,
                 <label className="text-xs text-muted-foreground">{t("holati")}</label>
                 <Badge
                   style={{
-                    backgroundColor:
-                      ({
-                        NEW: "#4CAF50",
-                        IN_PROGRESS: "#2196F3",
-                        ANALYSIS: "#FF9800",
-                        FINAL: "#9C27B0",
-                        CONVERTED: "#22C55E",
-                        WON: "#16A34A",
-                        LOST: "#EF4444",
-                      } as Record<string, string>)[(entity as Lead).statusId] || "#888",
+                    backgroundColor: LEAD_STATUS_COLORS[(entity as Lead).statusId] || "#888",
                     color: "white",
                   }}
                 >

@@ -1,0 +1,217 @@
+=== SUMMARY ===
+Drizzle pgTable (unique names): 957
+DB tables+views: 951
+Drizzle tables MISSING in DB: 73
+Drizzle columns MISSING in DB (on existing tables): 527
+
+=== MISSING TABLES (referenced in code, absent in DB) ===
+  admin_filters  <-  api:shared/db/schema-admin-ext.ts
+  ai_hr_interviews  <-  api:shared/db/schema-ai.ts
+  ai_material_insights  <-  db:mm-inventory.ts
+  ai_planning_plans  <-  api:shared/db/schema-ai.ts
+  ai_reservation_batches  <-  api:shared/db/schema-ai.ts
+  asset_insurance  <-  db:pp/pp-enhanced.ts
+  asset_maintenance_records  <-  db:pp/pp-enhanced.ts
+  course_modules  <-  db:lms.ts
+  crm_contact_companies  <-  db:crm-contacts.ts
+  crm_invoice_payments  <-  db:crm-proposals.ts
+  crm_invoice_products  <-  db:crm-proposals.ts
+  customer_contacts  <-  db:crm-contacts.ts
+  customer_interactions  <-  db:crm-pipelines.ts
+  customer_order_items  <-  db:ecommerce-schema.ts
+  design_library_items  <-  api:shared/db/schema-compat-4.ts
+  employee_write_off_act_lines  <-  db:pos-schema-v2.ts
+  employee_write_off_acts  <-  db:pos-schema-v2.ts
+  hitl_approvals  <-  api:shared/db/schema-compat-4.ts
+  hr_vacancy_profiles  <-  db:hr-recruiter.ts
+  hr_weekly_statistics  <-  db:hr-recruiter.ts
+  kanban_flows  <-  api:shared/db/schema-kanban.ts
+  kanban_robots  <-  api:shared/db/schema-kanban.ts
+  lms_events  <-  api:shared/db/schema-misc-app-b.ts
+  lms_sessions  <-  api:shared/db/schema-misc-app-b.ts
+  logistics_routes  <-  api:shared/db/schema-compat-4.ts
+  marketing_email_templates  <-  api:shared/db/schema-marketing-ext.ts
+  marketing_social_posts  <-  api:shared/db/schema-marketing-ext.ts
+  mro_inventory  <-  api:shared/db/schema-compat-3.ts
+  orders_registry  <-  db:orders-registry-schema.ts
+  ow_contracts  <-  db:order-workflow-schema.ts
+  ow_credit_limits  <-  db:order-workflow-schema.ts
+  ow_deliveries  <-  db:order-workflow-schema.ts
+  ow_document_workflow_instances  <-  db:order-workflow-schema.ts
+  ow_fg_transfers  <-  db:order-workflow-schema.ts
+  ow_order_lines  <-  db:order-workflow-schema.ts
+  ow_order_samples  <-  db:order-workflow-schema.ts
+  ow_order_surveys  <-  db:order-workflow-schema.ts
+  ow_packaging_records  <-  db:order-workflow-schema.ts
+  ow_pallet_recoveries  <-  db:order-workflow-schema.ts
+  ow_production_plans  <-  db:order-workflow-schema.ts
+  ow_qc_results  <-  db:order-workflow-schema.ts
+  ow_rework_events  <-  db:order-workflow-schema.ts
+  ow_shipping_requests  <-  db:order-workflow-schema.ts
+  ow_tech_cards  <-  db:order-workflow-schema.ts
+  ow_work_orders  <-  db:order-workflow-schema.ts
+  pos_movements_legacy  <-  api:shared/db/schema-ext-a-2.ts
+  pos_serial_number_items  <-  db:pos-schema-v2.ts
+  pos_stock_reservations  <-  db:pos-schema-v2.ts
+  pos_telegram_routes  <-  db:pos-schema.ts
+  product_favorites  <-  db:ecommerce-schema.ts
+  production_material_allocs  <-  db:pos-schema-v2.ts
+  public_categories  <-  db:ecommerce-schema.ts
+  role_movement_permissions  <-  db:pos-schema.ts
+  security_access  <-  api:shared/db/schema-compat-3.ts
+  security_attendance  <-  api:shared/db/schema-compat-3.ts
+  skill_requirements  <-  db:skills.ts
+  task_card_tags  <-  db:kanban/kanban-extended.ts
+  task_checklists  <-  db:kanban/kanban-extended.ts
+  task_co_executors  <-  db:kanban/kanban-extended.ts
+  task_files  <-  db:kanban/kanban-extended.ts
+  task_notifications  <-  db:kanban/kanban-extended.ts
+  task_observers  <-  db:kanban/kanban-extended.ts
+  task_result_files  <-  db:kanban/kanban-extended.ts
+  task_results  <-  db:kanban/kanban-extended.ts
+  task_tags  <-  db:kanban/kanban-extended.ts
+  task_templates  <-  db:kanban/kanban-extended.ts
+  task_time_entries  <-  db:kanban/kanban-extended.ts
+  task_time_tracks  <-  db:kanban/kanban-extended.ts
+  test_attempts  <-  db:lms.ts
+  test_questions  <-  db:lms.ts
+  token_blacklist  <-  db:strategic-ext-schema.ts
+  website_chat_logs  <-  db:ecommerce-schema.ts
+  website_reviews  <-  db:ecommerce-schema.ts
+
+=== MISSING COLUMNS (table exists, column absent in DB) ===
+  abc_analysis: employee_id, analysis_period_start, analysis_period_end, attendance_score, quality_score, task_completion_score, lms_training_score, safety_compliance_score, teamwork_collaboration_score, total_score, category, previous_category, category_change, bonus_percentage, created_at
+  ai_cv_screenings: resume_url, ai_score, match_percentage, skills_match, experience_match, education_match, ai_notes, model_version, processed_at
+  ai_insights: user_id, module, description, priority, read_at
+  ai_interview_messages: question_number, score_for_answer, feedback_for_answer, timestamp
+  ai_planning_config: auto_approval_threshold, max_shift_hours, batch_grouping_enabled, energy_optimization_weight, changeover_minutes
+  ai_reservation_requests: quantity, needed_by, optimization
+  ai_usage_logs: module, action, cost
+  aisha_conversations: tenant_id
+  aisha_tool_calls: tenant_id
+  ar_aging_buckets: customer_type, current, days_31_to_60
+  asset_disposals: disposal_type, sale_value
+  asset_items: updated_at, is_active
+  asset_transfers: from_dept_id, to_dept_id, approved_by
+  attendance: tenant_id
+  bom_headers: is_active
+  bom_items: material_id, scrap_percent
+  bonus_payments: employee_id, bonus_period_start, bonus_period_end, base_salary, bonus_percentage, bonus_amount, reason, approval_date, status, notes
+  broadcasts: recipients_count, created_at
+  business_trips: employee_id, trip_purpose, destination_city, destination_country, approval_date, report_url
+  calendar_events: all_day, event_type, location, attendees
+  candidates: tenant_id
+  cash_advances: employee_id, advance_amount, advance_date, requested_date, approval_date, repayment_start_date, repayment_months, monthly_repayment, document_url
+  certificates: name, document_url
+  contact_settings: telegram
+  courses: status, instructor_id, cover_url
+  crm_companies: tenant_id, customer_code, customer_type, first_name, customer_category, abc_score, source, payment_terms_days, company_type, phones, banking_details, assigned_by_id, parent_company_id, segment, is_blocked
+  crm_contacts: tenant_id, name, phones, post, assigned_by_id, date_create, source_id, whatsapp_number, last_contacted_at
+  crm_deals: tenant_id, name, expected_amount, assigned_to
+  crm_invoices: title, deal_id, issue_date, payment_method, bank_details, description, document_path, assigned_by_id
+  crm_lead_stages: name, is_default
+  crm_leads: tenant_id, name, source_id, source_description, phones, assigned_by_id, date_create, utm_source, budget, opportunity_amount, source_score, call_status, last_activity_at
+  crm_pipelines: is_active
+  crm_stages: probability
+  current_stock: material_card_id
+  customer_accounts: name, status, credit_limit
+  customer_orders: total_amount, currency
+  daily_attendance_summary: attendance_date, total_employees, present_count, absent_count, late_count, on_leave_count, sick_leave_count, business_trip_count, department_id
+  departments: tenant_id
+  design_orders: sales_order_id, title, files
+  discipline_appeals: appeal_date, supporting_document_url, reviewed_by, review_date, decision, decision_notes
+  discipline_records: tenant_id
+  document_sequences: document_type
+  document_signatures: signature_hash, ip_address
+  downtime_events: reason_code_id, duration_min
+  employee_360_responses: rater_id, scores
+  employee_fines: employee_id, fine_amount, fine_reason, related_discipline_id, approved_by, status, payment_date, notes
+  employee_passports: employee_id, passport_issue_date, passport_expiry_date, issue_location, is_expired, scanned_document_url, updated_at
+  employee_productivity: employee_id, productivity_date, tasks_assigned, tasks_completed, quality_defects, output_units, target_units, efficiency_percent, shift_id, notes
+  employee_strengths_weaknesses: employee_id, type, category, description, evidence_description, identified_by, identified_date, action_plan, target_date, status, updated_at
+  employee_transfer_history: employee_id, approved_by, salary_before, salary_after, order_number, document_url
+  employees: tenant_id, employment_type, date_of_birth, role, total_points, face_embedding_updated_at
+  employment_contracts: employee_id, position_title, department_name, salary_amount, probation_period_days, terms_conditions, signature_employee, signature_manager, signature_hr, document_url, status, termination_reason, updated_at
+  equipment_maintenance: work_center_id, type
+  exception_logs: error_code, message, stack_trace, user_id, entity_type, entity_id, severity, resolved_at
+  exit_interviews: interview_date, interviewed_by, reason_for_leaving, satisfaction_rating, would_recommend, would_return, feedback_management, feedback_work_environment, feedback_compensation, feedback_growth, suggestions, overall_comments, offboarding_case_id, answers, blocks_settlement
+  forecast_series: alpha
+  gl_documents: amount, metadata, created_by
+  guidelines: title, content, category, is_active, created_by
+  hr_candidate_funnels: funnel_id, metadata
+  hr_documents: current_step
+  hr_employee_onboardings: start_date, status, weekly_progress, probation_score, probation_notes, progress
+  hr_funnel_history: candidate_id
+  hr_job_descriptions: title_ru, department, reports_to, supervises, position_purpose, position_purpose_ru, key_responsibilities, kpi_metrics, requirements, ideal_tool_test_profile, compensation_structure, approved_by_id, approved_at
+  hr_motivation_plans: tone_scale_level, tone_scale_description, orientation_type, orientation_notes, motivation_factors, action_plan, next_review_date, title, targets, status
+  hr_onboarding_plans: weekly_plan, probation_days, success_criteria
+  hr_productivity_interviews: productivity_interview, reference_check, final_decision, final_notes
+  hr_tool_test_results: point_a, point_b, point_c, point_d, point_e, point_f, point_g, point_h, point_i, point_j, compulsive_points, total_score, position_match_score, position_match_notes, tested_by_id, test_date, category_result
+  hr_tz2_ai_room_analysis: pdf_url
+  inventory_barcode_assignments: passport_id
+  invoice_payments: vendor_id, bank_account, cleared_at
+  iot_sensors: device_code, status, thresholds
+  job_templates: requirements, responsibilities, skills
+  kpi_definitions: code
+  kpi_values: kpi_definition_id
+  leave_balances: leave_type, total_entitlement, pending_days, remaining_days
+  leave_requests: tenant_id
+  lms_assignments: enrollment_id, module_id, status, score
+  lms_exam_attempts: employee_id, questions, answers, evaluation, gpt_analysis, analyzed_at
+  lms_questions: text, correct_ans, points, order_index
+  lms_support_tickets: status, created_by
+  lms_tests: max_score, difficulty_level
+  machine_crews: work_center_id, employee_id, production_order_id, role, start_date, end_date, is_active
+  marketing_social_accounts: account_id, access_token
+  material_cards: barcode
+  materials: unit, unit_price
+  mes_papka_orders: order_number
+  mes_shift_evaluations: supervisor_id, production_score
+  mes_shift_handovers: incoming_supervisor, notes
+  mes_tasks: work_center_id, due_date
+  mm_deliveries: purchase_order_id, vendor_id
+  mm_goods_receipts: po_id
+  mro_pm_schedules: estimated_duration_hours
+  offboarding_cases: exit_interview_done
+  operator_daily_stats: employee_id, stats_date, work_center_id, orders_processed, items_produced, defect_count, downtime_minutes, setup_time_minutes, machine_efficiency, oee_score
+  overtime_payments: employee_id, overtime_date, overtime_hours, overtime_type, overtime_payment, notes
+  payroll_periods: tenant_id
+  payroll_rows: bonus, net_pay, status
+  performance_goals: goal_title, goal_description, due_date, completed_date, progress_percent, assigned_by, reviewed_by, review_notes, updated_at
+  portfolio_items: image_url, is_published
+  pos_pdf_templates: paper_size
+  pos_warehouse_access: created_at
+  position_required_courses: is_mandatory, deadline_days, blocks_mes_access
+  production_sessions: session_id, work_center_id
+  public_products: price, image_url
+  purchase_order_items: description
+  purchase_orders: tenant_id
+  qc_braks: production_order_id, material_id, status
+  qc_reclamations: responsible_user_id, production_order_id, type
+  quality_defects_camera: defect_location, action_taken, reviewed_by_id
+  routing_operations: run_time_min
+  saas_tenants: employee_limit
+  safety_trainings: training_title, description, department_id, is_mandatory, validity_period_days, max_participants
+  salary_bands: department_id
+  salary_history: tenant_id, amount, currency, created_by
+  sales_invoices: tenant_id, customer_name, status, gl_document_id, due_date, notes, total_amount
+  sales_orders: tenant_id, document_type, sales_org, order_date, overall_status, delivery_status, billing_status, quotation_id, module_status, master_status, pp_queued_at, fg_warehouse_entry_at, storage_days, tech_bom_approved, net_value
+  sd_contracts: papka_no
+  sd_customer_documents: document_name, is_verified
+  sd_customer_interactions: interaction_type, channel
+  sd_customers: manager_id, is_blocked, crm_company_id
+  sd_orders: created_by
+  sensor_devices: location, type, last_reading_at, thresholds
+  sensor_readings: is_anomaly, anomaly_reason
+  shift_schedules: updated_at
+  sick_leaves: employee_id, sick_leave_date, duration_days, medical_certificate_number, medical_certificate_url, clinic_name, diagnosis_code, is_approved, approved_by, notes
+  stock_transfer_lines: quantity, unit, status
+  succession_plans: development_gaps
+  survey_responses: created_at
+  system_settings: timezone, language, currency, logo_url, config
+  user_panels: layout
+  user_skills: employee_id, verified
+  vacancies: tenant_id, department, is_active
+  warehouse_bins: name
+  warehouse_stock: unit
+  warehouse_zones: type

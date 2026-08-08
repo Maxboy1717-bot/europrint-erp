@@ -4,10 +4,11 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const GetInvoicesDtoSchema = z.object({
   status: z.enum(['draft', 'sent', 'partially_paid', 'paid', 'overdue', 'cancelled']).optional(),
-  customerId: z.string().uuid().optional(),
+  customerId: IntegerIdSchema.optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   page: z.number().int().positive().default(1),
@@ -15,7 +16,7 @@ export const GetInvoicesDtoSchema = z.object({
 });
 
 export const GetPaymentsDtoSchema = z.object({
-  invoiceId: z.string().uuid().optional(),
+  invoiceId: IntegerIdSchema.optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   page: z.number().int().positive().default(1),

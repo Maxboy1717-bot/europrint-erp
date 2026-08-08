@@ -4,7 +4,8 @@
  */
 
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -12,10 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ShoppingCart, ArrowRight, Clock, MapPin, Plus } from "lucide-react";
+import { ShoppingCart, ArrowRight, Clock, MapPin, Plus, Copy } from "lucide-react";
 import {
   fmt, PAYMENT_STATUS_COLORS,
 } from "@/lib/sd-helpers";
@@ -70,6 +71,28 @@ interface OrdersListResponse {
   total: number;
 }
 
+/** 360° order header (GET /api/sd/orders/:id) — the fields the clone reuses. */
+interface SalesOrderHeader {
+  id: number;
+  orderNumber: string;
+  companyId: number;
+  totalAmount: number;
+}
+
+/** One persisted line read from GET /api/sd/orders/:id/items (VISION-3340 #53 clone). */
+interface SalesOrderItemRow {
+  id: number;
+  itemNumber: string;
+  productId: number | null;
+  materialId: number | null;
+  materialNumber: string | null;
+  description: string;
+  orderQuantity: number;
+  unit: string;
+  netPrice: number;
+  totalPrice: number;
+}
+
 interface CustomerItem {
   id: number;
   name?: string;
@@ -89,17 +112,17 @@ const NEXT_STATUS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  sales: "Sotuv",
-  design: "Dizayn",
-  tech: "Texnolog",
-  pp: "Rejalashtirish",
-  production: "Ishlab chiqarish",
-  qc: "Sifat nazorati",
-  warehouse: "Tayyor mahsulot",
-  delivery: "Yetkazib berish",
-  finance: "To'lov/Yopish",
-  closed: "Yopilgan",
-  cancelled: "Bekor qilingan"
+  sales: tLabel("sd.orders.statusSales", "Sotuv"),
+  design: tLabel("sd.orders.statusDesign", "Dizayn"),
+  tech: tLabel("sd.orders.statusTech", "Texnolog"),
+  pp: tLabel("sd.orders.statusPp", "Rejalashtirish"),
+  production: tLabel("sd.orders.statusProduction", "Ishlab chiqarish"),
+  qc: tLabel("sd.orders.statusQc", "Sifat nazorati"),
+  warehouse: tLabel("sd.orders.statusWarehouse", "Tayyor mahsulot"),
+  delivery: tLabel("sd.orders.statusDelivery", "Yetkazib berish"),
+  finance: tLabel("sd.orders.statusFinance", "To'lov/Yopish"),
+  closed: tLabel("sd.orders.statusClosed", "Yopilgan"),
+  cancelled: tLabel("sd.orders.statusCancelled", "Bekor qilingan")
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -130,13 +153,18 @@ const EMPTY_ORDER_FORM = {
 export default function SDSalesOrders() {
   const { t } = useTranslation("common");
   const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selected, setSelected] = useState<SalesOrderListItem | null>(null);
-  const [createDialog, setCreateDialog] = useState(false);
-  const [orderForm, setOrderForm] = useState({ ...EMPTY_ORDER_FORM });
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  // VISION-3340 #53 "Takrorlash": clone an existing order into a new one.
+  const [repeatSourceId, setRepeatSourceId] = useState<string | null>(null);
+  const [repeatDialog, setRepeatDialog] = useState(false);
+  const [repeatForm, setRepeatForm] = useState<typeof EMPTY_ORDER_FORM | null>(null);
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -156,6 +184,18 @@ export default function SDSalesOrders() {
     queryKey: ["/api/sd/orders", selected?.id],
     queryFn: () => apiRequest("GET", `/api/sd/orders/${selected?.id}`),
     enabled: !!selected?.id,
+  });
+
+  // Clone source: the header (companyId) + the REAL line-items of the order being repeated.
+  const { data: repeatSrc, isLoading: repeatSrcLoading } = useQuery<SalesOrderHeader>({
+    queryKey: ["/api/sd/orders", repeatSourceId, "repeat-src"],
+    queryFn: () => apiRequest("GET", `/api/sd/orders/${repeatSourceId}`),
+    enabled: repeatDialog && !!repeatSourceId,
+  });
+  const { data: repeatItems, isLoading: repeatItemsLoading } = useQuery<SalesOrderItemRow[]>({
+    queryKey: ["/api/sd/orders", repeatSourceId, "items"],
+    queryFn: () => apiRequest("GET", `/api/sd/orders/${repeatSourceId}/items`),
+    enabled: repeatDialog && !!repeatSourceId,
   });
 
   const { data: customersData } = useQuery<unknown>({
@@ -178,16 +218,21 @@ export default function SDSalesOrders() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
       if (selected?.id) qc.invalidateQueries({ queryKey: ["/api/sd/orders", selected.id] });
-      toast({ title: "Holat yangilandi" });
+      toast({ title: tLabel("sd.orders.statusUpdated", "Holat yangilandi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: tLabel("sd.orders.error", "Xatolik"), variant: "destructive" }),
   });
 
   const cancelMut = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       apiRequest("PATCH", `/api/sd/orders/${id}/cancel`, { reason }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/sd/orders"] }); toast({ title: "Bekor qilindi" }); },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
+      toast({ title: tLabel("sd.orders.cancelled", "Bekor qilindi") });
+      setCancelDialogOpen(false);
+      setCancelReason("");
+    },
+    onError: () => toast({ title: tLabel("sd.orders.error", "Xatolik"), variant: "destructive" }),
   });
 
   const createMut = useMutation({
@@ -198,6 +243,10 @@ export default function SDSalesOrders() {
       const linesSum = lines.reduce((s, it) => s + (Number(it.orderQuantity) || 0) * (Number(it.netPrice) || 0), 0);
       return apiRequest("POST", "/api/sd/orders", {
         companyId: Number(body.companyId),
+        // #03 golden-thread HOP-0: BE also accepts/writes the dedicated customer_id link
+        // (create-order.dto.ts customerId, sales_orders.customer_id is NOT NULL live).
+        // The "Mijoz (kompaniya)" dropdown already selects a real customer id — reuse it.
+        customerId: Number(body.companyId),
         totalAmount: lines.length > 0 ? linesSum : Number(body.totalAmount),
         currency: body.currency,
         designFlag: body.designFlag,
@@ -213,36 +262,64 @@ export default function SDSalesOrders() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
-      setCreateDialog(false);
-      setOrderForm({ ...EMPTY_ORDER_FORM });
-      toast({ title: "Buyurtma yaratildi" });
+      // Only the "Takrorlash"/clone flow still uses this mutation (manual create moved to
+      // /order-create — see the "Yangi buyurtma" button above).
+      setRepeatDialog(false);
+      setRepeatSourceId(null);
+      setRepeatForm(null);
+      toast({ title: tLabel("sd.orders.created", "Buyurtma yaratildi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: tLabel("sd.orders.error", "Xatolik"), variant: "destructive" }),
   });
 
   const orders = Array.isArray(data?.data) ? data.data : [];
   const totalItems = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
-  // STEP 4 — finished-goods catalog for the line-item picker. Empty until the owner adds products.
-  const { data: productsData } = useQuery<{ data?: Array<Record<string, unknown>> } | Array<Record<string, unknown>>>({
-    queryKey: ["/api/erp/products"],
-    enabled: createDialog,
-  });
-  const products: Array<Record<string, unknown>> = Array.isArray((productsData as { data?: unknown[] })?.data)
-    ? (productsData as { data: Array<Record<string, unknown>> }).data
-    : (Array.isArray(productsData) ? (productsData as Array<Record<string, unknown>>) : []);
-  const orderLines = orderForm.items;
-  const linesTotal = orderLines.reduce((s, it) => s + (Number(it.orderQuantity) || 0) * (Number(it.netPrice) || 0), 0);
+  // Clone prefill: once both the source header + its REAL items are loaded, map each
+  // sales_order_items row into the create-order form shape (product_id → productId,
+  // net_price → netPrice, ...). Only product-bound lines are kept — the create flow
+  // (and its Zod DTO) require a positive productId per line.
+  const repeatLinesTotal = (Array.isArray(repeatForm?.items) ? repeatForm!.items : [])
+    .reduce((s, it) => s + (Number(it.orderQuantity) || 0) * (Number(it.netPrice) || 0), 0);
 
-  function addLine() {
-    setOrderForm(f => ({ ...f, items: [...f.items, { productId: "", description: "", orderQuantity: "1", unit: "PC", netPrice: "0" }] }));
+  useEffect(() => {
+    if (!repeatDialog || repeatForm) return;
+    if (!repeatSrc || !Array.isArray(repeatItems)) return;
+    const lines = (Array.isArray(repeatItems) ? repeatItems : [])
+      .map(it => ({
+        productId: it.productId != null ? String(it.productId) : (it.materialId != null ? String(it.materialId) : ""),
+        description: it.description || "",
+        orderQuantity: String(it.orderQuantity ?? ""),
+        unit: it.unit || "dona",
+        netPrice: String(it.netPrice ?? ""),
+      }))
+      .filter(l => l.productId);
+    setRepeatForm({
+      companyId: repeatSrc.companyId != null ? String(repeatSrc.companyId) : "",
+      totalAmount: "",
+      currency: "UZS", // source order currency is not exposed by the 360° header — user confirms
+      designFlag: false,
+      sampleFlag: false,
+      items: lines,
+    });
+  }, [repeatDialog, repeatForm, repeatSrc, repeatItems]);
+
+  function openRepeat(id: string) {
+    setRepeatForm(null); // clear any prior prefill so the effect rebuilds for this order
+    setRepeatSourceId(id);
+    setRepeatDialog(true);
   }
-  function removeLine(idx: number) {
-    setOrderForm(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
+  function closeRepeat() {
+    setRepeatDialog(false);
+    setRepeatSourceId(null);
+    setRepeatForm(null);
   }
-  function updateLine(idx: number, patch: Partial<(typeof EMPTY_ORDER_FORM)["items"][number]>) {
-    setOrderForm(f => ({ ...f, items: f.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) }));
+  function updateRepeatLine(idx: number, patch: Partial<(typeof EMPTY_ORDER_FORM)["items"][number]>) {
+    setRepeatForm(f => (f ? { ...f, items: f.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) } : f));
+  }
+  function removeRepeatLine(idx: number) {
+    setRepeatForm(f => (f ? { ...f, items: f.items.filter((_, i) => i !== idx) } : f));
   }
 
   function handleSearchChange(val: string) {
@@ -275,16 +352,16 @@ export default function SDSalesOrders() {
               {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button onClick={() => setCreateDialog(true)} className="gap-1.5" data-testid="btn-new-order">
+          <Button onClick={() => setLocation("/order-create")} className="gap-1.5" data-testid="btn-new-order">
             <Plus className="h-4 w-4" />
             {tLabel("sd.orders.yangiBuyurtma", "Yangi buyurtma")}
           </Button>
         </div>
       </div>
 
-      <div className="flex gap-6 h-[calc(100vh-260px)]">
+      <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-260px)]">
         {/* Order list */}
-        <div className="w-80 flex flex-col gap-2 shrink-0 overflow-y-auto">
+        <div className="w-full lg:w-80 flex flex-col gap-2 shrink-0 overflow-y-auto">
           {isLoading && <div className="text-sm text-muted-foreground p-2">{t("Yuklanmoqda...")}</div>}
           {(Array.isArray(orders) ? orders : []).map((o) => (
               <div key={o.id} data-testid={`card-order-${o.id}`}
@@ -346,6 +423,17 @@ export default function SDSalesOrders() {
                   )}
                 </div>
                 <div className="flex gap-2 flex-wrap pt-4 mt-4 border-t">
+                  <Link href={`/sd/orders/${selected.id}`}>
+                    <Button size="sm" variant="outline" data-testid={`button-open-order-${selected.id}`}>
+                      <ArrowRight className="w-3 h-3 mr-1" />
+                      {tLabel("sd.orders.fullPage", "Alohida sahifada")}
+                    </Button>
+                  </Link>
+                  <Button size="sm" variant="outline" data-testid={`button-repeat-order-${selected.id}`}
+                    onClick={() => openRepeat(selected.id)}>
+                    <Copy className="w-3 h-3 mr-1" />
+                    {tLabel("sd.orders.takrorlash", "Takrorlash")}
+                  </Button>
                   {detail?.moduleStatus && NEXT_STATUS[detail.moduleStatus] && (
                     <Button size="sm" data-testid={`button-next-status-${detail.id}`}
                       onClick={() => statusMut.mutate({ id: detail.id, status: NEXT_STATUS[detail.moduleStatus] })}
@@ -358,8 +446,8 @@ export default function SDSalesOrders() {
                     <Button size="sm" variant="outline" className="text-[var(--ep-red)]"
                       data-testid={`button-cancel-order-${detail?.id}`}
                       onClick={() => {
-                        const reason = prompt("Bekor qilish sababi:");
-                        if (reason && detail) cancelMut.mutate({ id: detail.id, reason });
+                        setCancelReason("");
+                        setCancelDialogOpen(true);
                       }}>
                       {t("cancel")}
                     </Button>
@@ -398,11 +486,11 @@ export default function SDSalesOrders() {
                             "rounded-full px-2.5 py-0.5 text-xs font-semibold mr-2",
                             p.status === "paid" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
                           )}>
-                            {p.type === "advance" ? "Avans" : p.type === "balance" ? "Qoldiq" : "Qisman"}
+                            {p.type === "advance" ? tLabel("sd.orders.payAdvance", "Avans") : p.type === "balance" ? tLabel("sd.orders.payBalance", "Qoldiq") : tLabel("sd.orders.payPartial", "Qisman")}
                           </span>
-                          {p.dueDate && <span className="text-muted-foreground text-xs">Muddat: {p.dueDate}</span>}
+                          {p.dueDate && <span className="text-muted-foreground text-xs">{tLabel("sd.orders.dueLabel", "Muddat")}: {p.dueDate}</span>}
                         </div>
-                        <div className="font-semibold">{fmt(p.amount)} so'm</div>
+                        <div className="font-semibold">{fmt(p.amount)} {tLabel("sd.orders.currencySom", "so'm")}</div>
                       </div>
                     ))}
                   </div>
@@ -425,137 +513,137 @@ export default function SDSalesOrders() {
         />
       )}
 
-      {/* Create order dialog */}
-      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
-        <DialogContent>
+      <Dialog open={cancelDialogOpen} onOpenChange={(open) => { setCancelDialogOpen(open); if (!open) setCancelReason(""); }}>
+        <DialogContent data-testid="dialog-cancel-order">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">{tLabel("sd.orders.yangiBuyurtma", "Yangi buyurtma")}</DialogTitle>
+            <DialogTitle>{tLabel("sd.orders.cancelReasonPrompt", "Bekor qilish sababi")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>{tLabel("sd.orders.mijozKompaniya", "Mijoz (kompaniya)")}</Label>
-              <Select value={orderForm.companyId} onValueChange={v => setOrderForm(f => ({ ...f, companyId: v }))}>
-                <SelectTrigger className="h-9" data-testid="select-order-company">
-                  <SelectValue placeholder={tLabel("sd.orders.mijozniTanlang", "Mijozni tanlang")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Array.isArray(customers) ? customers : []).map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name || c.title || `Mijoz #${c.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>{tLabel("sd.orders.umumiySumma", "Umumiy summa")}</Label>
-              <Input
-                type="number"
-                value={orderForm.totalAmount}
-                onChange={e => setOrderForm(f => ({ ...f, totalAmount: e.target.value }))}
-                placeholder="0"
-                data-testid="input-order-amount"
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="cancel-reason">{tLabel("sd.orders.cancelReasonPrompt", "Bekor qilish sababi:")}</Label>
+              <Textarea
+                id="cancel-reason"
+                data-testid="input-cancel-reason"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={4}
               />
             </div>
-            <div>
-              <Label>{tLabel("sd.orders.valyuta", "Valyuta")}</Label>
-              <Select value={orderForm.currency} onValueChange={v => setOrderForm(f => ({ ...f, currency: v }))}>
-                <SelectTrigger className="h-9" data-testid="select-order-currency">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* STEP 4 — Buyurtma qatorlari (tayyor mahsulotlar) */}
-            <div className="space-y-2 pt-2 border-t border-border mt-1">
-              <div className="flex items-center justify-between">
-                <Label>{tLabel("sd.orders.qatorlar", "Buyurtma qatorlari (mahsulotlar)")}</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addLine}
-                  disabled={products.length === 0} data-testid="btn-add-line">
-                  + {tLabel("sd.orders.qator", "Qator")}
-                </Button>
-              </div>
-              {products.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {tLabel("sd.orders.mahsulotYoq", "Mahsulot katalogi bo'sh — avval mahsulot qo'shing.")}
-                </p>
-              )}
-              {(Array.isArray(orderLines) ? orderLines : []).map((line, idx) => {
-                const lineTotal = (Number(line.orderQuantity) || 0) * (Number(line.netPrice) || 0);
-                return (
-                  <div key={idx} className="flex items-end gap-2" data-testid={`order-line-${idx}`}>
-                    <div className="flex-1">
-                      <Select value={line.productId} onValueChange={v => {
-                        const p = products.find(pr => String(pr.id) === v);
-                        updateLine(idx, { productId: v, description: String(p?.name ?? p?.description ?? "") });
-                      }}>
-                        <SelectTrigger className="h-9"><SelectValue placeholder={tLabel("sd.orders.mahsulot", "Mahsulot")} /></SelectTrigger>
-                        <SelectContent>
-                          {products.map(p => (
-                            <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name ?? p.code ?? p.id)}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Input className="w-20" type="number" value={line.orderQuantity}
-                      onChange={e => updateLine(idx, { orderQuantity: e.target.value })} placeholder={tLabel("sd.orders.soni", "Soni")} data-testid={`line-qty-${idx}`} />
-                    <Input className="w-16" value={line.unit}
-                      onChange={e => updateLine(idx, { unit: e.target.value })} placeholder={tLabel("sd.orders.birlik", "Birlik")} />
-                    <Input className="w-24" type="number" value={line.netPrice}
-                      onChange={e => updateLine(idx, { netPrice: e.target.value })} placeholder={tLabel("sd.orders.narx", "Narx")} data-testid={`line-price-${idx}`} />
-                    <span className="w-24 text-right text-sm tabular-nums text-muted-foreground">{lineTotal.toLocaleString()}</span>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)} data-testid={`btn-remove-line-${idx}`}>✕</Button>
-                  </div>
-                );
-              })}
-              {orderLines.length > 0 && (
-                <div className="flex justify-end text-sm font-medium pt-1">
-                  {tLabel("sd.orders.qatorlarJami", "Qatorlar jami")}: {linesTotal.toLocaleString()} {orderForm.currency}
-                </div>
-              )}
-            </div>
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="design-flag"
-                  checked={orderForm.designFlag}
-                  onCheckedChange={v => setOrderForm(f => ({ ...f, designFlag: !!v }))}
-                  data-testid="check-design-flag"
-                />
-                <Label htmlFor="design-flag" className="font-normal cursor-pointer">
-                  {tLabel("sd.orders.dizaynKerak", "Dizayn kerak")}
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="sample-flag"
-                  checked={orderForm.sampleFlag}
-                  onCheckedChange={v => setOrderForm(f => ({ ...f, sampleFlag: !!v }))}
-                  data-testid="check-sample-flag"
-                />
-                <Label htmlFor="sample-flag" className="font-normal cursor-pointer">
-                  {tLabel("sd.orders.namunaKerak", "Namuna kerak")}
-                </Label>
-              </div>
-            </div>
-            <div className="flex gap-2 pt-1">
-              <Button variant="outline" className="flex-1" onClick={() => setCreateDialog(false)}>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setCancelDialogOpen(false)}>
                 {t("cancel")}
               </Button>
               <Button
+                variant="destructive"
                 className="flex-1"
-                onClick={() => createMut.mutate(orderForm)}
-                disabled={!orderForm.companyId || createMut.isPending}
-                data-testid="btn-save-order"
+                data-testid="button-confirm-cancel-order"
+                disabled={!cancelReason.trim() || cancelMut.isPending || !detail}
+                onClick={() => { if (detail && cancelReason.trim()) cancelMut.mutate({ id: detail.id, reason: cancelReason.trim() }); }}
               >
-                {createMut.isPending ? "Saqlanmoqda..." : tLabel("sd.orders.saqlash", "Saqlash")}
+                {cancelMut.isPending ? tLabel("sd.orders.saving", "Saqlanmoqda...") : tLabel("sd.orders.confirm", "Tasdiqlash")}
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Takrorlash / clone order dialog (VISION-3340 #53) */}
+      <Dialog open={repeatDialog} onOpenChange={(open) => { if (!open) closeRepeat(); else setRepeatDialog(true); }}>
+        <DialogContent data-testid="dialog-repeat-order">
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">
+              {tLabel("sd.orders.takrorlashSarlavha", "Buyurtmani takrorlash")}
+            </DialogTitle>
+          </DialogHeader>
+          {(repeatSrcLoading || repeatItemsLoading) && !repeatForm ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">
+              {tLabel("sd.orders.takrorlashYuklanmoqda", "Manba buyurtma yuklanmoqda...")}
+            </div>
+          ) : repeatForm ? (
+            <div className="space-y-3">
+              {repeatSrc?.orderNumber && (
+                <p className="text-xs text-muted-foreground">
+                  {tLabel("sd.orders.takrorlashManba", "Manba buyurtma")}:{" "}
+                  <span className="font-mono text-foreground">{repeatSrc.orderNumber}</span>
+                </p>
+              )}
+              <div>
+                <Label>{tLabel("sd.orders.mijozKompaniya", "Mijoz (kompaniya)")}</Label>
+                <Select value={repeatForm.companyId} onValueChange={v => setRepeatForm(f => (f ? { ...f, companyId: v } : f))}>
+                  <SelectTrigger className="h-9" data-testid="select-repeat-company">
+                    <SelectValue placeholder={tLabel("sd.orders.mijozniTanlang", "Mijozni tanlang")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Array.isArray(customers) ? customers : []).map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.name || c.title || `Mijoz #${c.id}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>{tLabel("sd.orders.valyuta", "Valyuta")}</Label>
+                <Select value={repeatForm.currency} onValueChange={v => setRepeatForm(f => (f ? { ...f, currency: v } : f))}>
+                  <SelectTrigger className="h-9" data-testid="select-repeat-currency"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 pt-2 border-t border-border mt-1">
+                <Label>{tLabel("sd.orders.qatorlar", "Buyurtma qatorlari (mahsulotlar)")}</Label>
+                {repeatForm.items.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {tLabel("sd.orders.takrorlashQatorYoq", "Manba buyurtmada nusxalanadigan mahsulot qatori yo'q.")}
+                  </p>
+                )}
+                {(Array.isArray(repeatForm.items) ? repeatForm.items : []).map((line, idx) => {
+                  const lineTotal = (Number(line.orderQuantity) || 0) * (Number(line.netPrice) || 0);
+                  return (
+                    <div key={idx} className="flex items-end gap-2" data-testid={`repeat-line-${idx}`}>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm truncate">{line.description || `#${line.productId}`}</div>
+                      </div>
+                      <Input className="w-20" type="number" value={line.orderQuantity}
+                        onChange={e => updateRepeatLine(idx, { orderQuantity: e.target.value })}
+                        placeholder={tLabel("sd.orders.soni", "Soni")} data-testid={`repeat-qty-${idx}`} />
+                      <Input className="w-16" value={line.unit}
+                        onChange={e => updateRepeatLine(idx, { unit: e.target.value })}
+                        placeholder={tLabel("sd.orders.birlik", "Birlik")} />
+                      <Input className="w-24" type="number" value={line.netPrice}
+                        onChange={e => updateRepeatLine(idx, { netPrice: e.target.value })}
+                        placeholder={tLabel("sd.orders.narx", "Narx")} data-testid={`repeat-price-${idx}`} />
+                      <span className="w-24 text-right text-sm tabular-nums text-muted-foreground">{lineTotal.toLocaleString()}</span>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeRepeatLine(idx)} data-testid={`repeat-remove-${idx}`}>✕</Button>
+                    </div>
+                  );
+                })}
+                {repeatForm.items.length > 0 && (
+                  <div className="flex justify-end text-sm font-medium pt-1">
+                    {tLabel("sd.orders.qatorlarJami", "Qatorlar jami")}: {repeatLinesTotal.toLocaleString()} {repeatForm.currency}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button variant="outline" className="flex-1" onClick={closeRepeat}>
+                  {t("cancel")}
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => { if (repeatForm) createMut.mutate(repeatForm); }}
+                  disabled={!repeatForm.companyId || repeatForm.items.length === 0 || createMut.isPending}
+                  data-testid="btn-save-repeat-order"
+                >
+                  {createMut.isPending ? tLabel("sd.orders.saving", "Saqlanmoqda...") : tLabel("sd.orders.takrorlashYaratish", "Nusxa yaratish")}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground py-6 text-center">
+              {tLabel("sd.orders.takrorlashYuklanmoqda", "Manba buyurtma yuklanmoqda...")}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

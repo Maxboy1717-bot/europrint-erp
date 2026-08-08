@@ -13,6 +13,7 @@ import { safeCall } from '@common/result';
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/user.types';
@@ -38,6 +39,7 @@ export class ChatAdvancedUploadsController {
   constructor(
     private readonly chatService: ChatService,
     private readonly chatGateway: ChatGateway,
+    private readonly i18n: I18nService,
   ) {}
 
   // ── THREADS ────────────────────────────────────────────────────────────────
@@ -60,7 +62,7 @@ export class ChatAdvancedUploadsController {
     @Param('id') messageId: string,
     @Body() body: ChatThreadMessageDto,
   ) {
-    assertRequired(body.content?.trim(), 'content is required');
+    assertRequired(body.content?.trim(), await this.i18n.t('validation.contentRequired'));
 
     const result = unwrapOrThrow(await this.chatService.sendThreadMessage(
       messageId,
@@ -123,7 +125,7 @@ export class ChatAdvancedUploadsController {
     const roomId = String(body.roomId);
 
     const members = await this.chatService.getRoomMembers(roomId);
-    assertRequired((Array.isArray(members) ? members : []).find((m) => m.userId === user.id), 'Not a member of this room');
+    assertRequired((Array.isArray(members) ? members : []).find((m) => m.userId === user.id), await this.i18n.t('errors.notRoomMember'));
 
     const storageResult = await safeCall(async () => {
       const { ObjectStorageService } = await import('../../lib/objectStorage');

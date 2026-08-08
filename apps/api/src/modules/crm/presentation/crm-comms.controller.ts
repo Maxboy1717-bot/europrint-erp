@@ -20,6 +20,7 @@ import {  BadRequestException,
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -32,7 +33,8 @@ import {
   SendWhatsappDtoSchema, SendWhatsappDto,
 } from './dto/crm-comms.dto';
 
-const CRM_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'crm_manager'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin', 'crm_manager'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -43,7 +45,7 @@ const CRM_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'crm_man
 export class CrmCommsController {
   private readonly logger = new Logger(CrmCommsController.name);
 
-  constructor(private readonly svc: CrmCommsService) {}
+  constructor(private readonly svc: CrmCommsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'Send email' })
   @ApiResponse({ status: 201, description: 'OK' })
@@ -51,8 +53,8 @@ export class CrmCommsController {
   @Post('email/send')
   @UsePipes(new ZodValidationPipe(SendEmailDtoSchema))
   async sendEmail(@Body() body: SendEmailDto) {
-    assertRequired(body.to, 'to and subject required');
-    assertRequired(body.subject, 'to and subject required');
+    assertRequired(body.to, await this.i18n.t('validation.toAndSubjectRequired'));
+    assertRequired(body.subject, await this.i18n.t('validation.toAndSubjectRequired'));
     return unwrapOrThrow(await this.svc.sendEmail(body.to, body.subject, body.body ?? '', body.lead_id ?? null, body.deal_id ?? null));
   }
 
@@ -62,7 +64,7 @@ export class CrmCommsController {
   @Post('meetings/schedule')
   @UsePipes(new ZodValidationPipe(ScheduleMeetingDtoSchema))
   async scheduleMeeting(@Body() body: ScheduleMeetingDto) {
-    assertRequired(body.title, 'title required');
+    assertRequired(body.title, await this.i18n.t('errors.titleRequired'));
     const _rScheduleMeeting = await this.svc.scheduleMeeting(
       body.title,
       body.lead_id ?? null,
@@ -80,8 +82,8 @@ export class CrmCommsController {
   @Post('sms/send')
   @UsePipes(new ZodValidationPipe(SendSmsDtoSchema))
   async sendSms(@Body() body: SendSmsDto) {
-    assertRequired(body.phone, 'phone and message required');
-    assertRequired(body.message, 'phone and message required');
+    assertRequired(body.phone, await this.i18n.t('validation.phoneAndMessageRequired'));
+    assertRequired(body.message, await this.i18n.t('validation.phoneAndMessageRequired'));
     return unwrapOrThrow(await this.svc.sendSms(body.phone, body.message, body.lead_id ?? null));
   }
 
@@ -91,8 +93,8 @@ export class CrmCommsController {
   @Post('whatsapp/send')
   @UsePipes(new ZodValidationPipe(SendWhatsappDtoSchema))
   async sendWhatsapp(@Body() body: SendWhatsappDto) {
-    assertRequired(body.phone, 'phone and message required');
-    assertRequired(body.message, 'phone and message required');
+    assertRequired(body.phone, await this.i18n.t('validation.phoneAndMessageRequired'));
+    assertRequired(body.message, await this.i18n.t('validation.phoneAndMessageRequired'));
     return unwrapOrThrow(await this.svc.sendWhatsapp(body.phone, body.message, body.lead_id ?? null));
   }
 }

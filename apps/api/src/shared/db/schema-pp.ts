@@ -12,7 +12,7 @@
  *       JS bindings against the same physical table.
  */
 
-import { pgTable, serial, integer, varchar, boolean, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, varchar, boolean, timestamp, index, numeric } from 'drizzle-orm/pg-core';
 
 export const ppWorkCenters = pgTable(
   'work_centers',
@@ -24,10 +24,24 @@ export const ppWorkCenters = pgTable(
     capacity:                  integer('capacity').notNull().default(8),
     certificationLmsCourseId:  integer('certification_lms_course_id'),
     departmentId:              integer('department_id'),
+    // T12-04: KARTA (org-tuzilma) bog'lanishi — ish markazi qaysi org_departments KARTA-siga
+    // tegishli (FK fk_work_centers_org_dept -> org_departments.id). Qiymat egasi-DATA (qaysi karta),
+    // bu Drizzle binding faqat YOZUV-YO'LINI ochadi (struktura; Q-40). Hozir 12 work_center'da NULL.
+    orgDepartmentId:           integer('org_department_id'),
     isActive:                  boolean('is_active').default(true),
     nameRu:                    varchar('name_ru', { length: 255 }),
     nameUz:                    varchar('name_uz', { length: 255 }),
     requiredSkillName:         varchar('required_skill_name', { length: 255 }),
+    sexCode:                   varchar('sex_code', { length: 50 }),
+    departmentKind:            varchar('department_kind', { length: 10 }),
+    costPerHour:               numeric('cost_per_hour'),
+    // Wave 4 (500K build): per-sex norma/brak/crew parametrlar (struktura; qiymatlar egasi-DATA, Q-40).
+    normaM2PerShift:           numeric('norma_m2_per_shift'),
+    normaKgPerShift:           numeric('norma_kg_per_shift'),
+    brakLimitPct:              numeric('brak_limit_pct'),
+    minCrewSize:               integer('min_crew_size'),
+    maxCrewSize:               integer('max_crew_size'),
+    unitPreference:            varchar('unit_preference', { length: 10 }).notNull().default('m2'),
     createdAt:                 timestamp('created_at').defaultNow(),
     deletedAt:                 timestamp('deleted_at'),
   },

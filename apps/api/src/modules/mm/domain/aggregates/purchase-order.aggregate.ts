@@ -41,8 +41,10 @@ export class PurchaseOrder extends AggregateRoot implements IOrderHeader {
   private _invoicedQuantity: number = 0;
   private _createdAt: Date;
   private _approvedAt: Date | null = null;
+  // MM-11 #11.25 — Incoterms/delivery-terms free-text note (optional, additive).
+  private _deliveryTerms: string | null = null;
 
-  constructor(id: number, poNumber: string, supplierId: number, createdBy: number) {
+  constructor(id: number, poNumber: string, supplierId: number, createdBy: number, deliveryTerms: string | null = null) {
     super();
     this._id = id;
     this._poNumber = poNumber;
@@ -50,6 +52,7 @@ export class PurchaseOrder extends AggregateRoot implements IOrderHeader {
     this._createdBy = createdBy;
     this._status = PoStatus.DRAFT;
     this._createdAt = _time.now();
+    this._deliveryTerms = deliveryTerms;
   }
 
   getId(): number {
@@ -70,6 +73,10 @@ export class PurchaseOrder extends AggregateRoot implements IOrderHeader {
 
   getCreatedBy(): number {
     return this._createdBy;
+  }
+
+  getDeliveryTerms(): string | null {
+    return this._deliveryTerms;
   }
 
   getTotalAmount(): number {
@@ -141,6 +148,10 @@ export class PurchaseOrder extends AggregateRoot implements IOrderHeader {
     }
     this._status = PoStatus.CLOSED;
     return { ok: true, data: undefined };
+  }
+
+  getItems(): PurchaseOrderItem[] {
+    return [...this._items];
   }
 
   // --- IOrderHeader marker (cross-context "an order" shape) ---

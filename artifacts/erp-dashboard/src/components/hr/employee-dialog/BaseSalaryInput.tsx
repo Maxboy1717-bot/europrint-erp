@@ -20,6 +20,7 @@
  */
 
 import { ChangeEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { tLabel } from "@/lib/i18n/tLabel";
+import { selectArray } from "@/lib/queryClient";
 
 interface BaseSalaryInputProps {
   /** Raw digits string. Empty string when blank. */
@@ -43,15 +45,23 @@ interface BaseSalaryInputProps {
 /**
  * Vysotskiy categories — mirrors the values in
  * `lib/db/src/schema/employees.ts` (`vysotskiy_category` column).
- * The midpoint salaries here are presets, not authoritative — they
- * pre-fill the input and let HR adjust upward from there.
+ * The midpoint salaries here are fallback defaults only — the real,
+ * owner-editable values live in business_settings (module "hr", keys
+ * hr.grade_a_salary..hr.grade_d_salary, see /admin/business-settings).
+ * These constants are used only if that fetch hasn't resolved yet.
  */
-const GRADE_PRESETS: ReadonlyArray<{ value: string; label: string; midpoint: number }> = [
-  { value: "A", label: tLabel("hr.grade.a", "A — Yuqori sinf"),    midpoint: 12_000_000 },
-  { value: "B", label: tLabel("hr.grade.b", "B — O'rta-yuqori"),   midpoint:  8_000_000 },
-  { value: "C", label: tLabel("hr.grade.c", "C — O'rta"),          midpoint:  5_000_000 },
-  { value: "D", label: tLabel("hr.grade.d", "D — Boshlang'ich"),   midpoint:  3_000_000 },
+const DEFAULT_MIDPOINTS: Record<string, number> = { A: 12_000_000, B: 8_000_000, C: 5_000_000, D: 3_000_000 };
+const GRADE_LABELS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "A", label: tLabel("hr.grade.a", "A — Yuqori sinf") },
+  { value: "B", label: tLabel("hr.grade.b", "B — O'rta-yuqori") },
+  { value: "C", label: tLabel("hr.grade.c", "C — O'rta") },
+  { value: "D", label: tLabel("hr.grade.d", "D — Boshlang'ich") },
 ];
+
+interface BusinessSettingRow {
+  setting_key: string;
+  value_num: string | null;
+}
 
 /** Strip every non-digit character. Negative / decimal salaries are out of scope. */
 export function rawDigits(input: string): string {
@@ -72,13 +82,25 @@ export function BaseSalaryInput({
 }: BaseSalaryInputProps) {
   const display = formatWithCommas(value);
 
+  const { data: settingsData } = useQuery<BusinessSettingRow[]>({
+    queryKey: ["/api/business-settings", { module: "hr" }],
+    select: selectArray<BusinessSettingRow>,
+    staleTime: 300_000,
+  });
+  const settingsRows = Array.isArray(settingsData) ? settingsData : [];
+  const gradePresets = GRADE_LABELS.map((g) => {
+    const row = settingsRows.find((r) => r.setting_key === `hr.grade_${g.value.toLowerCase()}_salary`);
+    const midpoint = row?.value_num != null ? Number(row.value_num) : DEFAULT_MIDPOINTS[g.value];
+    return { ...g, midpoint };
+  });
+
   const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = rawDigits(e.target.value);
     onChange(raw);
   };
 
   const handleGradePick = (grade: string) => {
-    const preset = GRADE_PRESETS.find((g) => g.value === grade);
+    const preset = gradePresets.find((g) => g.value === grade);
     if (!preset) return;
     onChange(String(preset.midpoint));
   };
@@ -116,7 +138,7 @@ export function BaseSalaryInput({
             <SelectValue placeholder="Darajani tanlang (ixtiyoriy)" />
           </SelectTrigger>
           <SelectContent>
-            {GRADE_PRESETS.map((g) => (
+            {gradePresets.map((g) => (
               <SelectItem
                 key={g.value}
                 value={g.value}

@@ -16,7 +16,7 @@ interface HistoryTabProps {
 export function HistoryTab({ nodeId }: HistoryTabProps) {
   const { t } = useTranslation("common");
   const { data: historyData, isLoading: histLoading } = useQuery<{
-    nodeId: number; history: HistoryEntry[];
+    items: HistoryEntry[]; total: number;
   }>({
     queryKey: [`/api/org-structure/nodes/${nodeId}/history`],
     enabled: !!nodeId,
@@ -30,7 +30,9 @@ export function HistoryTab({ nodeId }: HistoryTabProps) {
     );
   }
 
-  if (!historyData?.history || historyData.history.length === 0) {
+  const historyItems = Array.isArray(historyData?.items) ? historyData.items : [];
+
+  if (historyItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 text-muted-foreground">
         <History className="h-10 w-10 opacity-20" />
@@ -41,7 +43,7 @@ export function HistoryTab({ nodeId }: HistoryTabProps) {
 
   return (
     <div className="space-y-3">
-      {(Array.isArray(historyData.history) ? historyData.history : []).map((entry) => (
+      {historyItems.map((entry) => (
         <Card key={entry.id} className="border-l-4 border-l-primary/50">
           <CardContent className="py-3 px-4 flex justify-between gap-4">
             <div>

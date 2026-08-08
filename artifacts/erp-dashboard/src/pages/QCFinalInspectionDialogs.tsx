@@ -54,17 +54,17 @@ export function InspectDialog({open,
   const allChecked = form.visualOk && form.dimensionsOk && form.printOk && form.packagingOk;
 
   const checkItems = [
-    { id: "visual",     label: "Vizual ko'rinish yaxshi",   value: form.visualOk,     set: setters.setVisualOk },
-    { id: "dimensions", label: "O'lchamlar normaga mos",    value: form.dimensionsOk, set: setters.setDimensionsOk },
-    { id: "print",      label: "Bosma sifati yaxshi",       value: form.printOk,      set: setters.setPrintOk },
-    { id: "packaging",  label: "Qadoqlash to'g'ri",         value: form.packagingOk,  set: setters.setPackagingOk },
+    { id: "visual",     label: t("qcVizualKorinishYaxshi"),  value: form.visualOk,     set: setters.setVisualOk },
+    { id: "dimensions", label: t("qcOlchamlarNormagaMos"),   value: form.dimensionsOk, set: setters.setDimensionsOk },
+    { id: "print",      label: t("qcBosmaSifatiYaxshi"),     value: form.printOk,      set: setters.setPrintOk },
+    { id: "packaging",  label: t("qcQadoqlashTogri"),        value: form.packagingOk,  set: setters.setPackagingOk },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yakuniy tekshiruv — {selectedOrder?.papkaNo}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("qcYakuniyTekshiruv")} — {selectedOrder?.papkaNo}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -101,7 +101,7 @@ export function InspectDialog({open,
               <AlertTriangle className={`h-4 w-4 ${defectRate > 5 ? "text-[var(--ep-red)]" : "text-[var(--ep-yellow)]"}`} />
               <span className="text-sm">
                 {t("nuqsonDarajasi")}<strong>{defectRate.toFixed(1)}%</strong>{" "}
-                {defectRate > 5 ? "(5% dan yuqori — RAD ETILADI)" : "(normal)"}
+                {defectRate > 5 ? t("qcRadEtiladi5") : t("qcNormal")}
               </span>
             </div>
           )}

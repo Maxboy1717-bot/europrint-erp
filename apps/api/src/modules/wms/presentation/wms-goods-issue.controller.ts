@@ -4,11 +4,12 @@
  */
 
 import {
-  Controller, Post, Delete, Patch, Body, Param, ParseIntPipe,
+  Controller, Get, Post, Delete, Patch, Body, Param, Query, ParseIntPipe,
   UseGuards, UseInterceptors, Logger, NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { unwrapOrNotFound } from '@common/http-result';
+import { z } from 'zod';
+import { unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -27,6 +28,18 @@ enum Role {
   DIRECTOR = 'director',
 }
 
+const IssueGoodsSchema = z.object({
+  materialId: z.number().int().positive(),
+  warehouseId: z.number().int().positive(),
+  amount: z.number().positive(),
+  ppId: z.number().int().positive().nullable().optional(),
+});
+
+const ListGoodsIssueSchema = z.object({
+  limit: z.coerce.number().int().positive().max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
 @ApiThrottle()
 @ApiTags('Wms Goods Issue')
 @Controller('wms/goods-issue')
@@ -40,25 +53,42 @@ export class WmsGoodsIssueController {
     private readonly crudSvc: WmsCrudService,
   ) {}
 
+  @ApiOperation({ summary: 'List goods issues' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get()
+  @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
+  async listGoodsIssues(@Query() query: unknown) {
+    const { limit, offset } = ListGoodsIssueSchema.parse(query);
+    const r = await this.crudSvc.listGoodsIssues(limit, offset);
+    return { data: unwrapOrThrow(r) };
+  }
+
+  @ApiOperation({ summary: 'Get goods issue by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get(':id')
+  @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
+  async getGoodsIssue(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.crudSvc.getGoodsIssueById(id);
+    return { data: unwrapOrNotFound(r) };
+  }
+
   @ApiOperation({ summary: 'Issue goods' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async issueGoods(
-    @Body()
-    dto: {
-      materialId: number;
-      warehouseId: number;
-      amount: number;
-      ppId: number;
-    },
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Result<void>> {
+    const dto = IssueGoodsSchema.parse(body);
     const command = new GoodsIssueCommand(
       dto.materialId,
       dto.warehouseId,
       dto.amount,
-      dto.ppId,
+      dto.ppId ?? 0,
+      user?.id ?? null,
     );
     const result: unknown = await this.commandBus.execute(command);
     return (Array.isArray(result) ? result[0] : result) as Result<void>;

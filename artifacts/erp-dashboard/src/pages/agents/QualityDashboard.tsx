@@ -7,7 +7,7 @@ import { CheckCircle, AlertTriangle, TrendingUp, TrendingDown, Minus } from "luc
 import { apiRequest } from "@/lib/queryClient";
 
 import { useTranslation } from '@/lib/i18n';
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPPageHeader, EPErrorState } from "@/components/ep";
 interface TrendRes { pct7d: number; pct30d: number; trend: 'rising' | 'stable' | 'falling' }
 interface QuarantineItem { batchId: string; daysInQuarantine: number }
 
@@ -27,33 +27,39 @@ export default function QualityDashboard() {
 
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <header className="flex items-center gap-3">
-        <CheckCircle className="h-7 w-7 text-[var(--ep-green)]" />
-        <div>
-          <h1 className="text-2xl font-bold">{t("sifatAiVision")}</h1>
-          <p className="text-sm text-muted-foreground">{t("brakTrendKarantinAiDefekt")}</p>
-        </div>
-      </header>
+      <EPPageHeader
+        title={<span className="flex items-center gap-3"><CheckCircle className="h-7 w-7 text-[var(--ep-green)]" />{t("sifatAiVision")}</span>}
+        subtitle={t("brakTrendKarantinAiDefekt")}
+      />
 
       {/* Brak trend */}
+      {trend.isError ? (
+        <EPErrorState variant="inline" error={trend.error} url="/api/agents/quality/trend" onRetry={() => trend.refetch()} />
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4 border-2 border-blue-200 bg-blue-50/40">
           <div className="text-xs uppercase tracking-wider font-semibold text-[var(--ep-blue)]">{t("k7KunlikBrak")}</div>
-          <div className="text-3xl font-bold text-blue-800 mt-1">{(trend.data?.pct7d ?? 0).toFixed(1)}%</div>
+          <div className="text-3xl font-bold text-blue-800 mt-1">
+            {trend.isLoading ? <EPLoader size={24} /> : `${(trend.data?.pct7d ?? 0).toFixed(1)}%`}
+          </div>
         </Card>
         <Card className="p-4 border-2 border-slate-200 bg-slate-50/60">
           <div className="text-xs uppercase tracking-wider font-semibold text-slate-700">{t("k30KunlikBrak")}</div>
-          <div className="text-3xl font-bold text-slate-800 mt-1">{(trend.data?.pct30d ?? 0).toFixed(1)}%</div>
+          <div className="text-3xl font-bold text-slate-800 mt-1">
+            {trend.isLoading ? <EPLoader size={24} /> : `${(trend.data?.pct30d ?? 0).toFixed(1)}%`}
+          </div>
         </Card>
         <Card className="p-4 border-2 border-amber-200 bg-amber-50/40">
           <div className="text-xs uppercase tracking-wider font-semibold text-[var(--ep-yellow)]">{t('trend')}</div>
           <div className="flex items-center gap-2 mt-1">
-            {trend.data?.trend === 'rising' && <><TrendingUp className="h-7 w-7 text-[var(--ep-red)]" /><span className="text-2xl font-bold text-[var(--ep-red)]">{t("oshmoqda")}</span></>}
-            {trend.data?.trend === 'falling' && <><TrendingDown className="h-7 w-7 text-[var(--ep-green)]" /><span className="text-2xl font-bold text-[var(--ep-green)]">{t("pasaymoqda")}</span></>}
-            {trend.data?.trend === 'stable' && <><Minus className="h-7 w-7 text-slate-500" /><span className="text-2xl font-bold text-slate-700">{t("barqaror")}</span></>}
+            {trend.isLoading && <EPLoader size={24} />}
+            {!trend.isLoading && trend.data?.trend === 'rising' && <><TrendingUp className="h-7 w-7 text-[var(--ep-red)]" /><span className="text-2xl font-bold text-[var(--ep-red)]">{t("oshmoqda")}</span></>}
+            {!trend.isLoading && trend.data?.trend === 'falling' && <><TrendingDown className="h-7 w-7 text-[var(--ep-green)]" /><span className="text-2xl font-bold text-[var(--ep-green)]">{t("pasaymoqda")}</span></>}
+            {!trend.isLoading && trend.data?.trend === 'stable' && <><Minus className="h-7 w-7 text-slate-500" /><span className="text-2xl font-bold text-slate-700">{t("barqaror")}</span></>}
           </div>
         </Card>
       </div>
+      )}
 
       {/* Karantin */}
       <Card className="p-5">
@@ -64,7 +70,9 @@ export default function QualityDashboard() {
           </h3>
           <span className="text-xs text-muted-foreground">{quarantine.data?.length ?? 0} ta</span>
         </div>
-        {quarantine.isLoading ? <EPLoader /> :
+        {quarantine.isError ? (
+          <EPErrorState variant="inline" error={quarantine.error} url="/api/agents/quality/quarantine" onRetry={() => quarantine.refetch()} />
+        ) : quarantine.isLoading ? <EPLoader /> :
          (quarantine.data?.length ?? 0) === 0 ? (
           <div className="text-center py-8 text-sm text-muted-foreground">{t("hozirdaKarantinBosh")}</div>
         ) : (

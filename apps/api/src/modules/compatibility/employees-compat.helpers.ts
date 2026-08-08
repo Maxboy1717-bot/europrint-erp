@@ -5,6 +5,7 @@
  */
 
 import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { dbRows } from '../hr/common/db-rows';
@@ -19,7 +20,7 @@ type EmployeeAdapted = ReturnType<typeof adaptEmployeePayload>;
 
 export const si = (v: unknown, d = 0): number => parseInt(String(v ?? ''), 10) || d;
 
-export async function resolveOrCreateUserForEmployee(tx: Tx, empId: number): Promise<number> {
+export async function resolveOrCreateUserForEmployee(tx: Tx, empId: number, i18n: I18nService): Promise<number> {
   const userResult = await tx.execute(sql`
     SELECT id FROM users WHERE employee_id = ${empId} AND deleted_at IS NULL LIMIT 1
   `);
@@ -41,10 +42,10 @@ export async function resolveOrCreateUserForEmployee(tx: Tx, empId: number): Pro
     hireDate: (e['hire_date'] as string | null) ?? null,
     positionId: e['position_id'] ? Number(e['position_id']) : null,
     departmentId: e['department_id'] ? Number(e['department_id']) : null,
-  });
+  }, i18n);
 }
 
-export async function insertEmployeeRow(tx: Tx, a: EmployeeAdapted): Promise<Row> {
+export async function insertEmployeeRow(tx: Tx, a: EmployeeAdapted, i18n: I18nService): Promise<Row> {
   const empResult = await tx.execute(sql`
     INSERT INTO employees (
       first_name, last_name, email_personal, department_id, position_id,
@@ -59,11 +60,11 @@ export async function insertEmployeeRow(tx: Tx, a: EmployeeAdapted): Promise<Row
     RETURNING id::text AS id, id AS num_id, first_name, last_name, employee_code, status
   `);
   const emp = dbRows(empResult)[0] as Row | undefined;
-  if (!emp) throw new InternalServerErrorException('Employee creation failed');
+  if (!emp) throw new InternalServerErrorException(await i18n.t('errors.employeeCreationFailed'));
   return emp;
 }
 
-export async function updateEmployeeRow(tx: Tx, id: string, a: EmployeeAdapted): Promise<Row> {
+export async function updateEmployeeRow(tx: Tx, id: string, a: EmployeeAdapted, i18n: I18nService): Promise<Row> {
   const r = await tx.execute(sql`
     UPDATE employees
     SET first_name        = COALESCE(${a.firstName}, first_name),
@@ -83,7 +84,7 @@ export async function updateEmployeeRow(tx: Tx, id: string, a: EmployeeAdapted):
     RETURNING id::text AS id, first_name, last_name, employee_code, status, updated_at
   `);
   const found = dbRows(r)[0] as Row | undefined;
-  if (!found) throw new NotFoundException('Record not found');
+  if (!found) throw new NotFoundException(await i18n.t('errors.recordNotFound'));
   return found;
 }
 

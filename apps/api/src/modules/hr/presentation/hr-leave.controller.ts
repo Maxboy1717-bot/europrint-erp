@@ -8,6 +8,7 @@ import {
   UseGuards, UseInterceptors, NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { assertOk, unwrapOrDefault, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -45,6 +46,7 @@ export class HrLeaveController {
     private commandBus: CommandBus,
     private queryBus: QueryBus,
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get leaves' })
@@ -86,7 +88,7 @@ export class HrLeaveController {
   async getLeaveById(@Param('id') id: string) {
     const result = await this.hrRepo.findLeaveById(id);
     if (!result.ok || result.data == null) {
-      throw new NotFoundException(`Ta'til so'rovi topilmadi: ${id}`);
+      throw new NotFoundException(await this.i18n.t('errors.leaveRequestNotFoundWithId', { args: { id } }));
     }
     return result.data;
   }

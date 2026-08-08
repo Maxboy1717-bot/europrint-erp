@@ -88,7 +88,7 @@ export function PendingOrdersList({ orders, onInspect }: PendingOrdersProps) {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">
-                    {order.mahsulotNomi} · {order.tiraj?.toLocaleString()} dona
+                    {order.mahsulotNomi} · {order.tiraj?.toLocaleString()} {t("qcDona")}
                   </div>
                   <Button
                     size="sm"
@@ -141,7 +141,7 @@ export function RecentInspectionsList({ inspections, completeMutation }: RecentI
                 <div>
                   <p className="text-sm font-medium text-foreground">{insp.papkaOrderId}</p>
                   <p className="text-xs text-muted-foreground">
-                    Namuna: {insp.sampleQty} · Nuqson: {insp.defectQty} ({insp.defectRate?.toFixed(1)}%)
+                    {t("qcNamuna")}: {insp.sampleQty} · {t("qcNuqson")}: {insp.defectQty} ({insp.defectRate?.toFixed(1)}%)
                   </p>
                 </div>
               </div>

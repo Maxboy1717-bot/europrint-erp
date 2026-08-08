@@ -43,20 +43,31 @@ export default function VendorPerformance() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
-  const [ratingForm, setRatingForm] = useState({ vendorId: "", score: "", comment: "" });
+  const [ratingForm, setRatingForm] = useState({
+    vendorId: "",
+    quality: "",
+    delivery: "",
+    price: "",
+    document: "",
+    notes: "",
+  });
 
   const addRatingMutation = useMutation({
     mutationFn: () =>
       apiRequest("POST", "/api/mm/vendor-performance", {
-        vendorId: ratingForm.vendorId,
-        score: Number(ratingForm.score),
-        comment: ratingForm.comment,
+        vendor_id: Number(ratingForm.vendorId),
+        quality:   Number(ratingForm.quality),
+        delivery:  Number(ratingForm.delivery),
+        price:     Number(ratingForm.price),
+        document:  Number(ratingForm.document),
+        notes:     ratingForm.notes || undefined,
       }),
     onSuccess: () => {
       toast({ title: "Muvaffaqiyatli", description: "Baho muvaffaqiyatli qo'shildi." });
       queryClient.invalidateQueries({ queryKey: ["/api/integration/vendor-performance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mm/vendor-ratings"] });
       setRatingDialogOpen(false);
-      setRatingForm({ vendorId: "", score: "", comment: "" });
+      setRatingForm({ vendorId: "", quality: "", delivery: "", price: "", document: "", notes: "" });
     },
     onError: () => {
       toast({ title: "Xatolik", description: "Baho qo'shishda xatolik yuz berdi.", variant: "destructive" });
@@ -114,39 +125,87 @@ export default function VendorPerformance() {
                   <Label htmlFor="vp-vendorId">{t("taminotchiId")}</Label>
                   <Input
                     id="vp-vendorId"
-                    placeholder={t('vendorId')}
+                    type="number"
+                    min={1}
+                    placeholder="1"
                     value={ratingForm.vendorId}
                     onChange={(e) => setRatingForm((f) => ({ ...f, vendorId: e.target.value }))}
                     data-testid="input-vendor-id"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="vp-score">{t("ball0100")}</Label>
+                  <Label htmlFor="vp-quality">{t("Sifat (quality) 0–100 — og'irlik 40%")}</Label>
                   <Input
-                    id="vp-score"
+                    id="vp-quality"
                     type="number"
                     min={0}
                     max={100}
-                    placeholder="85"
-                    value={ratingForm.score}
-                    onChange={(e) => setRatingForm((f) => ({ ...f, score: e.target.value }))}
-                    data-testid="input-score"
+                    placeholder="80"
+                    value={ratingForm.quality}
+                    onChange={(e) => setRatingForm((f) => ({ ...f, quality: e.target.value }))}
+                    data-testid="input-quality"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="vp-comment">{t("Izoh")}</Label>
+                  <Label htmlFor="vp-delivery">{t("Muddat (delivery) 0–100 — og'irlik 30%")}</Label>
                   <Input
-                    id="vp-comment"
+                    id="vp-delivery"
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="75"
+                    value={ratingForm.delivery}
+                    onChange={(e) => setRatingForm((f) => ({ ...f, delivery: e.target.value }))}
+                    data-testid="input-delivery"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="vp-price">{t("Narx (price) 0–100 — og'irlik 20%")}</Label>
+                  <Input
+                    id="vp-price"
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="90"
+                    value={ratingForm.price}
+                    onChange={(e) => setRatingForm((f) => ({ ...f, price: e.target.value }))}
+                    data-testid="input-price"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="vp-document">{t("Hujjat (document) 0–100 — og'irlik 10%")}</Label>
+                  <Input
+                    id="vp-document"
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="100"
+                    value={ratingForm.document}
+                    onChange={(e) => setRatingForm((f) => ({ ...f, document: e.target.value }))}
+                    data-testid="input-document"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="vp-notes">{t("Izoh")}</Label>
+                  <Input
+                    id="vp-notes"
                     placeholder={t("izoh1")}
-                    value={ratingForm.comment}
-                    onChange={(e) => setRatingForm((f) => ({ ...f, comment: e.target.value }))}
-                    data-testid="input-comment"
+                    value={ratingForm.notes}
+                    onChange={(e) => setRatingForm((f) => ({ ...f, notes: e.target.value }))}
+                    data-testid="input-notes"
                   />
                 </div>
                 <Button
                   className="w-full"
                   onClick={() => addRatingMutation.mutate()}
-                  disabled={addRatingMutation.isPending || !ratingForm.vendorId || !ratingForm.score}
+                  disabled={
+                    addRatingMutation.isPending ||
+                    !ratingForm.vendorId ||
+                    !ratingForm.quality ||
+                    !ratingForm.delivery ||
+                    !ratingForm.price ||
+                    !ratingForm.document
+                  }
                   data-testid="button-submit-rating"
                 >
                   {addRatingMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}

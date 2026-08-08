@@ -9,7 +9,7 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, uni
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
-import { costCenters, glDocuments, profitCenters } from "./fi-schema";
+import { glDocuments } from "./fi-schema";
 import { materialBarcodes, materialCards } from "./mm-schema";
 import { excelImportRows, papkaOrders, productionFacts, products } from "./pp-schema";
 
@@ -151,39 +151,6 @@ export type ProcurementRequestItem = typeof procurementRequestItems.$inferSelect
 export type ProcurementApproval = typeof procurementApprovals.$inferSelect;
 
 
-// Warehouse Zones (ombor zonalari)
-export const warehouseZones = pgTable("warehouse_zones", {
-  id: serial("id").primaryKey(),
-  warehouseId: varchar("warehouse_id").notNull().references(() => warehouses.id, { onDelete: "cascade" }),
-  code: varchar("code", { length: 50 }).notNull(),
-  name: text("name").notNull(),
-  nameRu: text("name_ru"),
-  zoneType: varchar("zone_type", { length: 30 }).default("storage"), // storage, receiving, shipping, staging, quarantine
-  capacity: numericMoney("capacity"), // Sig'im (kv.metr yoki boshqa birlik)
-  isActive: boolean("is_active").notNull().default(true),
-  deletedAt: timestamp("deleted_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  // --- A7 superset: live-DB columns ---
-  type: varchar("type", { length: 30 }),
-}, (t) => [
-  index("idx_warehouse_zones_warehouse_id").on(t.warehouseId),
-  index("idx_warehouse_zones_zone_type").on(t.zoneType),
-  check("warehouse_zones_type_chk", sql`${t.zoneType} IS NULL OR ${t.zoneType} IN ('storage','receiving','shipping','staging','quarantine')`),
-]);
-
-
-export const insertWarehouseZoneSchema = createInsertSchema(warehouseZones, {
-  code: z.string().min(1, "Kod talab qilinadi"),
-  name: z.string().min(2, "Nom kamida 2 ta belgidan iborat bo'lishi kerak"),
-  zoneType: z.enum(["storage", "receiving", "shipping", "staging", "quarantine"]).default("storage"),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type WarehouseZone = typeof warehouseZones.$inferSelect;
-
-export type InsertWarehouseZone = z.infer<typeof insertWarehouseZoneSchema>;
-
-
 // Warehouse Bins (ombor joylar - tokcha/qator/yacheyka)
 export const warehouseBins = pgTable("warehouse_bins", {
   id: varchar("id", { length: 50 }).primaryKey().default(sql`gen_random_uuid()::varchar`),
@@ -192,9 +159,12 @@ export const warehouseBins = pgTable("warehouse_bins", {
   name: text("name"), // Bin nomi
   zoneId: varchar("zone_id"), // Zone ID (varchar, FK to warehouse_zones.id stored as string)
   binCode: varchar("bin_code", { length: 50 }), // Alias for code
-  row: varchar("row", { length: 10 }), // Qator
-  shelf: varchar("shelf", { length: 10 }), // Tokcha
+  row: varchar("row", { length: 10 }), // Qator (legacy free-text — T8-06 dan keyin rowId FK ishlatilsin)
+  shelf: varchar("shelf", { length: 10 }), // Tokcha (legacy free-text — T8-06 dan keyin shelfId FK ishlatilsin)
   level: varchar("level", { length: 10 }), // Daraja
+  // --- T8-06: manzil FK-zanjiri Zona→Qator→Javon→Yacheyka (leaf=bin). NULL-able (mavjud qatorlar buzilmaydi). ---
+  rowId: integer("row_id"),     // → warehouse_rows.id (Qator), ON DELETE SET NULL
+  shelfId: integer("shelf_id"), // → warehouse_shelves.id (Javon), ON DELETE SET NULL
   binType: varchar("bin_type", { length: 30 }).default("standard"), // standard, bulk, cold, hazardous
   maxWeight: numericMoney("max_weight"), // Max og'irlik (kg)
   maxVolume: numericMoney("max_volume"), // Max hajm (litr)
@@ -202,6 +172,8 @@ export const warehouseBins = pgTable("warehouse_bins", {
   isActive: boolean("is_active").notNull().default(true),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 }, (t) => [
   index("idx_warehouse_bins_warehouse_id").on(t.warehouseId),
   index("idx_warehouse_bins_is_active").on(t.isActive),
@@ -220,6 +192,68 @@ export const insertWarehouseBinSchema = createInsertSchema(warehouseBins, {
 export type WarehouseBin = typeof warehouseBins.$inferSelect;
 
 export type InsertWarehouseBin = z.infer<typeof insertWarehouseBinSchema>;
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// T8-06: WMS manzil FK-zanjiri — Qator (warehouse_rows) va Javon (warehouse_shelves).
+// To'liq zanjir: warehouses → warehouse_zones (Zona) → warehouse_rows (Qator) →
+//   warehouse_shelves (Javon) → warehouse_bins (Yacheyka, leaf; row_id/shelf_id FK).
+// Yangi lug'at-jadvallar (bo'sh tug'iladi → FK toza). Egasi/WMS UI to'ldiradi (fabrikatsiya yo'q).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Warehouse Rows (Qator) — Zona ichidagi qatorlar
+export const warehouseRows = pgTable("warehouse_rows", {
+  id: serial("id").primaryKey(),
+  // NOTE: FK to warehouseZones removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  zoneId: integer("zone_id").notNull(),
+  warehouseId: integer("warehouse_id"),
+  code: varchar("code", { length: 50 }).notNull(),
+  name: text("name"),
+  nameRu: text("name_ru"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  capacity: numericMoney("capacity"),
+  isActive: boolean("is_active").notNull().default(true),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  unique("uq_warehouse_rows_zone_code").on(t.zoneId, t.code),
+  index("idx_warehouse_rows_zone").on(t.zoneId),
+]);
+
+export const insertWarehouseRowSchema = createInsertSchema(warehouseRows, {
+  code: z.string().min(1, "Qator kodi talab qilinadi"),
+}).omit({ id: true, createdAt: true } as never);
+
+export type WarehouseRow = typeof warehouseRows.$inferSelect;
+export type InsertWarehouseRow = z.infer<typeof insertWarehouseRowSchema>;
+
+
+// Warehouse Shelves (Javon) — Qator ichidagi javonlar
+export const warehouseShelves = pgTable("warehouse_shelves", {
+  id: serial("id").primaryKey(),
+  rowId: integer("row_id").notNull().references(() => warehouseRows.id, { onDelete: "cascade" }),
+  zoneId: integer("zone_id"),
+  warehouseId: integer("warehouse_id"),
+  code: varchar("code", { length: 50 }).notNull(),
+  name: text("name"),
+  nameRu: text("name_ru"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  maxWeight: numericMoney("max_weight"),
+  maxVolume: numericMoney("max_volume"),
+  isActive: boolean("is_active").notNull().default(true),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  unique("uq_warehouse_shelves_row_code").on(t.rowId, t.code),
+  index("idx_warehouse_shelves_row").on(t.rowId),
+]);
+
+export const insertWarehouseShelfSchema = createInsertSchema(warehouseShelves, {
+  code: z.string().min(1, "Javon kodi talab qilinadi"),
+}).omit({ id: true, createdAt: true } as never);
+
+export type WarehouseShelf = typeof warehouseShelves.$inferSelect;
+export type InsertWarehouseShelf = z.infer<typeof insertWarehouseShelfSchema>;
 
 
 // Stock Transfers (ombor o'rtasida ko'chirish)
@@ -370,9 +404,12 @@ export const warehouseTransactions = pgTable("warehouse_transactions", {
   itemId: varchar("item_id"),
   type: varchar("type", { length: 20 }),
   referenceId: varchar("reference_id"),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 }, (t) => [
   check("warehouse_transactions_type_chk", sql`${t.transactionType} IN ('kirim','chiqim','return','adjustment')`),
   check("warehouse_transactions_qty_chk", sql`${t.quantity} > 0`),
+  index("idx_warehouse_transactions_tenant_id").on(t.tenantId),
 ]);
 
 
@@ -388,6 +425,10 @@ export type WarehouseTransaction = typeof warehouseTransactions.$inferSelect;
 export type InsertWarehouseTransaction = z.infer<typeof insertWarehouseTransactionSchema>;
 
 
+// RESTORED (2026-07-02): warehouseStock is actually re-exported live by
+// apps/api/src/shared/db/schema-ext-c-2.ts:247 (`export { warehouseStock as
+// warehouse_stock } from '@workspace/db'`) — NOT orphan, Q-29 verification
+// caught this after initial (incorrect) deletion. Do not delete again.
 export const warehouseStock = pgTable("warehouse_stock", {
   id: serial("id").primaryKey(),
   warehouseId: varchar("warehouse_id").notNull().references(() => warehouses.id, { onDelete: "cascade" }),
@@ -406,7 +447,16 @@ export const warehouseStock = pgTable("warehouse_stock", {
   itemId: varchar("item_id"),
   updatedAt: timestamp("updated_at"),
   unit: varchar("unit", { length: 20 }),
-});
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
+  // --- Vision 10-warehouse #6: IoT-signal zone at-risk flag (Q-35 approved 2026-07-11) ---
+  atRisk: boolean("at_risk").notNull().default(false),
+  atRiskReason: text("at_risk_reason"),
+  atRiskAt: timestamp("at_risk_at"),
+}, (t) => [
+  index("idx_warehouse_stock_tenant_id").on(t.tenantId),
+  index("idx_warehouse_stock_at_risk").on(t.atRisk),
+]);
 
 
 export const insertWarehouseStockSchema = createInsertSchema(warehouseStock, {
@@ -418,6 +468,56 @@ export const insertWarehouseStockSchema = createInsertSchema(warehouseStock, {
 export type WarehouseStock = typeof warehouseStock.$inferSelect;
 
 export type InsertWarehouseStock = z.infer<typeof insertWarehouseStockSchema>;
+
+
+// ============================================================================
+// Batch 3 Variant-2 split — FINISHED-GOODS stock (products.id-keyed), separate
+// from warehouse_stock (which STAYS material_cards.id-keyed = raw material).
+// Clean product_id FK (the raw table lacks a material_id FK); ONE
+// UNIQUE(warehouse_id, product_id) — NOT the raw table's duplicate pair.
+// Physical FKs (warehouse_id->warehouses, product_id->products) live in the
+// migration warehouse-stock-fg-split-2026-07-09.sql; the Drizzle def references
+// products.id (integer, type-safe) and keeps warehouse_id a plain integer to
+// avoid the warehouses.id Drizzle-varchar / live-integer drift. UoM + cost are
+// JOINed from products (products.unit / standard_cost / unit_price), NOT stored.
+// ============================================================================
+export const warehouseStockFg = pgTable("warehouse_stock_fg", {
+  id: serial("id").primaryKey(),
+  warehouseId: integer("warehouse_id").notNull(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  quantity: numericMoney("quantity").notNull().default(0),
+  reservedQuantity: numericMoney("reserved_quantity").notNull().default(0),
+  availableQuantity: numericMoney("available_quantity").notNull().default(0),
+  lastMovementAt: timestamp("last_movement_at"),
+  lastUpdatedAt: timestamp("last_updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  tenantId: integer("tenant_id").notNull().default(1),
+}, (t) => [
+  unique("warehouse_stock_fg_wh_prod_uniq").on(t.warehouseId, t.productId),
+  index("idx_warehouse_stock_fg_product_id").on(t.productId),
+]);
+
+export type WarehouseStockFg = typeof warehouseStockFg.$inferSelect;
+
+
+// FG scrap/brak REGISTER (owner decision #1): pure record-keeping — NO warehouse
+// balance semantics (no warehouse_id, no available_quantity). Logs a failed
+// finished-goods quantity with its reason + source order. Separate from any stock.
+export const fgScrapLog = pgTable("fg_scrap_log", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  quantity: numericMoney("quantity").notNull(),
+  reason: text("reason"),
+  sourceOrderId: integer("source_order_id"),
+  sourceType: varchar("source_type", { length: 30 }),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_fg_scrap_log_product_id").on(t.productId),
+  index("idx_fg_scrap_log_source_order").on(t.sourceOrderId),
+]);
+
+export type FgScrapLog = typeof fgScrapLog.$inferSelect;
 
 
 // Daily Warehouse Plans - Ombor kunlik rejasi
@@ -651,8 +751,10 @@ export const stockMovementGLPostings = pgTable("stock_movement_gl_postings", {
   glDocumentId: varchar("gl_document_id").references(() => glDocuments.id, { onDelete: "set null" }),
   glPostingStatus: varchar("gl_posting_status", { length: 20 }).notNull().default("pending"),
   errorMessage: text("error_message"),
-  costCenterId: varchar("cost_center_id").references(() => costCenters.id, { onDelete: "set null" }),
-  profitCenterId: varchar("profit_center_id").references(() => profitCenters.id, { onDelete: "set null" }),
+  // NOTE: cost_centers/profit_centers pgTables removed (orphan, lib/db-only — see
+  // chore(schema) cleanup 2026-07-02). Columns kept plain (no cross-table FK type).
+  costCenterId: varchar("cost_center_id"),
+  profitCenterId: varchar("profit_center_id"),
   postedBy: varchar("posted_by").references(() => users.id, { onDelete: "set null" }),
   postedAt: timestamp("posted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -779,6 +881,8 @@ export const warehouseRentalSettings = pgTable("warehouse_rental_settings", {
   customRates: jsonb("custom_rates").default("[]"), // [{managerId, managerName, dailyRate, freeDays}]
   updatedAt: timestamp("updated_at").defaultNow(),
   updatedBy: varchar("updated_by").references(() => users.id, { onDelete: "set null" }),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 });
 
 export const insertWarehouseRentalSettingsSchema = createInsertSchema(warehouseRentalSettings, {
@@ -789,6 +893,28 @@ export const insertWarehouseRentalSettingsSchema = createInsertSchema(warehouseR
 
 export type WarehouseRentalSettings = typeof warehouseRentalSettings.$inferSelect;
 export type InsertWarehouseRentalSettings = z.infer<typeof insertWarehouseRentalSettingsSchema>;
+
+
+// ============================================================================
+// WMS Sozlamalari (Ombor sozlama-hub) — generic key-value, marketing_settings
+// patterniga ko'ra (lib/db/src/schema/marketing-schema.ts:552).
+// APPROVED: egasi vizyon-qurish 2026-07-01, FAZA "Sozlama har bo'limda"
+// ============================================================================
+export const wmsSettings = pgTable("wms_settings", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  category: varchar("category", { length: 100 }).default("general"),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWmsSettingSchema = createInsertSchema(wmsSettings, {
+  key: z.string().min(2),
+}).omit({ id: true, updatedAt: true } as never);
+
+export type WmsSetting = typeof wmsSettings.$inferSelect;
+export type InsertWmsSetting = z.infer<typeof insertWmsSettingSchema>;
 
 
 // Ijara yozuvlari — tayyor mahsulot omborda saqlanayotgan har bir buyurtma
@@ -819,6 +945,8 @@ export const warehouseRentalRecords = pgTable("warehouse_rental_records", {
   notes: text("notes"),
   lastCalculatedAt: timestamp("last_calculated_at").defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 }, (t) => [
   check("warehouse_rental_records_status_chk", sql`${t.status} IN ('active','closed','paid')`),
   check("warehouse_rental_records_area_chk", sql`${t.areaM2} > 0`),
@@ -835,4 +963,31 @@ export const insertWarehouseRentalRecordSchema = createInsertSchema(warehouseRen
 
 export type WarehouseRentalRecord = typeof warehouseRentalRecords.$inferSelect;
 export type InsertWarehouseRentalRecord = z.infer<typeof insertWarehouseRentalRecordSchema>;
+
+// ============================================================================
+// Vision 10-warehouse #6 (Q-35 approved 2026-07-11) — QC review queue.
+// When an IoT anomaly flags a warehouse zone at-risk, one row is enqueued here
+// per newly flagged warehouse_stock row so QC can review the affected stock.
+// Pure append/resolve log — no balance/warehouse semantics of its own.
+// ============================================================================
+export const qcReviewQueue = pgTable("qc_review_queue", {
+  id: serial("id").primaryKey(),
+  stockId: integer("stock_id").notNull().references(() => warehouseStock.id, { onDelete: "cascade" }),
+  warehouseId: integer("warehouse_id"),
+  zoneId: integer("zone_id"),
+  materialId: integer("material_id"),
+  reason: text("reason"),
+  source: varchar("source", { length: 40 }).notNull().default("iot_signal"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: integer("resolved_by"),
+  tenantId: integer("tenant_id").notNull().default(1),
+}, (t) => [
+  index("idx_qc_review_queue_status").on(t.status),
+  index("idx_qc_review_queue_stock_id").on(t.stockId),
+  index("idx_qc_review_queue_zone_id").on(t.zoneId),
+]);
+
+export type QcReviewQueue = typeof qcReviewQueue.$inferSelect;
 

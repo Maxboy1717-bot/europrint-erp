@@ -48,17 +48,23 @@ export const FinanceCreateInvoiceSchema = z.object({
 export type FinanceCreateInvoiceDto = z.infer<typeof FinanceCreateInvoiceSchema>;
 
 export const FinancePostInvoiceSchema = z.object({
-  postedBy: z.number().int().positive(),
+  postedBy:  z.number().int().positive(),
+  amount:    z.number().min(0),
+  taxAmount: z.number().min(0).optional().default(0),
 });
 export type FinancePostInvoiceDto = z.infer<typeof FinancePostInvoiceSchema>;
 
 export const FinanceRecordPaymentSchema = z.object({
-  paymentId:   z.number().int().positive(),
-  invoiceId:   z.number().int().positive(),
-  customerId:  z.number().int().positive(),
-  amount:      z.number().positive(),
-  paymentDate: z.string().min(1),
-  recordedBy:  z.number().int().positive(),
+  paymentId:      z.number().int().positive(),
+  invoiceId:      z.number().int().positive(),
+  customerId:     z.number().int().positive(),
+  amount:         z.number().positive(),
+  paymentDate:    z.string().min(1),
+  recordedBy:     z.number().int().positive(),
+  /** C1: client-supplied idempotency key (e.g. crypto.randomUUID()) — a retry with the same key
+   *  returns the already-recorded payment instead of inserting a duplicate. Optional for backward
+   *  compatibility with existing callers that don't send one yet. */
+  idempotencyKey: z.string().min(1).max(100).optional(),
 });
 export type FinanceRecordPaymentDto = z.infer<typeof FinanceRecordPaymentSchema>;
 

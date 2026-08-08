@@ -27,13 +27,26 @@ import {
 } from "lucide-react";
 import type { ScanResult } from "./barcode-types";
 import { STATUS_COLORS } from "./barcode-types";
-import type { translations } from "./barcode-types";
 
-type TranslationType = typeof translations.uz;
+type TranslationFn = (key: string, params?: Record<string, string | number>) => string;
+
+const ENTITY_TYPE_KEYS: Record<string, string> = {
+  batch: "typeBatch",
+  material: "typeMaterial",
+  bin: "typeBin",
+  kit: "typeKit",
+};
+
+const STATUS_KEYS: Record<string, string> = {
+  active: "statusActive",
+  depleted: "statusDepleted",
+  blocked: "statusBlocked",
+  expired: "statusExpired",
+};
 
 interface GenerateScannerContentProps {
   lang: "uz" | "ru";
-  t: TranslationType;
+  t: TranslationFn;
   generateType: string;
   onGenerateTypeChange: (val: string) => void;
   generateEntityId: string;
@@ -84,31 +97,31 @@ export function GenerateScannerContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <QrCode className="h-5 w-5" />
-                {t.generate}
+                {t("generate")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1">
-          <Label>{t.entityType}</Label>
+          <Label>{t("entityType")}</Label>
                 <Select value={generateType} onValueChange={(v) => { onGenerateTypeChange(v); onGenerateEntityIdChange(""); }}>
                   <SelectTrigger data-testid="select-entity-type" className="h-9">
-                    <SelectValue placeholder={t.entityType} />
+                    <SelectValue placeholder={t("entityType")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="material">{t.types.material}</SelectItem>
-                    <SelectItem value="batch">{t.types.batch}</SelectItem>
-                    <SelectItem value="bin">{t.types.bin}</SelectItem>
-                    <SelectItem value="kit">{t.types.kit}</SelectItem>
+                    <SelectItem value="material">{t("typeMaterial")}</SelectItem>
+                    <SelectItem value="batch">{t("typeBatch")}</SelectItem>
+                    <SelectItem value="bin">{t("typeBin")}</SelectItem>
+                    <SelectItem value="kit">{t("typeKit")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {generateType && (
                 <div className="space-y-1">
-          <Label>{t.selectEntity}</Label>
+          <Label>{t("selectEntity")}</Label>
                   <Select value={generateEntityId} onValueChange={onGenerateEntityIdChange}>
                     <SelectTrigger data-testid="select-entity-id" className="h-9">
-                      <SelectValue placeholder={t.selectEntity} />
+                      <SelectValue placeholder={t("selectEntity")} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Array.isArray(entityOptions) ? entityOptions : []).map((opt) => (
@@ -126,14 +139,14 @@ export function GenerateScannerContent({
                 data-testid="button-generate-barcode"
               >
                 <QrCode className="h-4 w-4" />
-                {t.generate_btn}
+                {t("generateBtn")}
               </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>{t.barcodeGenerated}</CardTitle>
+              <CardTitle>{t("barcodeGenerated")}</CardTitle>
             </CardHeader>
             <CardContent>
               {generatedBarcode ? (
@@ -158,7 +171,7 @@ export function GenerateScannerContent({
                       data-testid="button-copy-barcode"
                     >
                       <Copy className="h-4 w-4 mr-2" />
-                      {t.copy}
+                      {t("copy")}
                     </Button>
                     <Button
                       variant="outline"
@@ -167,14 +180,14 @@ export function GenerateScannerContent({
                       data-testid="button-print-barcode"
                     >
                       <Printer className="h-4 w-4" />
-                      {t.print}
+                      {t("print")}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="text-center py-8 text-[13px] text-muted-foreground">
                   <QrCode className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>{lang === "uz" ? "Shtrix-kod yaratish uchun tanlang" : "Выберите для создания штрих-кода"}</p>
+                  <p>{t("selectToGenerate")}</p>
                 </div>
               )}
             </CardContent>
@@ -188,12 +201,12 @@ export function GenerateScannerContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ScanLine className="h-4 w-4" />
-                {t.scanner}
+                {t("scanner")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1">
-          <Label>{t.scanInput}</Label>
+          <Label>{t("scanInput")}</Label>
                 <Input
                   value={scanInput}
                   onChange={(e) => onScanInputChange(e.target.value)}
@@ -205,16 +218,16 @@ export function GenerateScannerContent({
               </div>
 
               <div className="space-y-1">
-          <Label>{t.actionType}</Label>
+          <Label>{t("actionType")}</Label>
                 <Select value={scanAction} onValueChange={onScanActionChange}>
                   <SelectTrigger data-testid="select-scan-action" className="h-9">
-                    <SelectValue placeholder={t.actionType} />
+                    <SelectValue placeholder={t("actionType")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="receive">{t.receive}</SelectItem>
-                    <SelectItem value="issue">{t.issue}</SelectItem>
-                    <SelectItem value="move">{t.move}</SelectItem>
-                    <SelectItem value="count">{t.count}</SelectItem>
+                    <SelectItem value="receive">{t("receive")}</SelectItem>
+                    <SelectItem value="issue">{t("issue")}</SelectItem>
+                    <SelectItem value="move">{t("move")}</SelectItem>
+                    <SelectItem value="count">{t("count")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -226,21 +239,21 @@ export function GenerateScannerContent({
                 data-testid="button-scan"
               >
                 <ScanLine className="h-4 w-4" />
-                {t.scan}
+                {t("scan")}
               </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>{t.lookupResult}</CardTitle>
+              <CardTitle>{t("lookupResult")}</CardTitle>
             </CardHeader>
             <CardContent>
               {scanResult ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-sm">
-                      {t.types[scanResult.entityType as keyof typeof t.types] || scanResult.entityType}
+                      {t(ENTITY_TYPE_KEYS[scanResult.entityType] ?? "") || scanResult.entityType}
                     </Badge>
                     <span className="font-mono text-sm">{scanResult.barcode}</span>
                   </div>
@@ -248,21 +261,21 @@ export function GenerateScannerContent({
                   {scanResult.entityType === "batch" && (
                     <div className="space-y-3 p-4 bg-muted rounded-lg">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t.batchNumber}:</span>
+                        <span className="text-muted-foreground">{t("batchNumber")}:</span>
                         <span className="font-medium">{scanResult.entityData.batchNumber as string}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t.material}:</span>
+                        <span className="text-muted-foreground">{t("material")}:</span>
                         <span>{(scanResult.entityData.materialName as string) || "-"}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t.remaining}:</span>
+                        <span className="text-muted-foreground">{t("remaining")}:</span>
                         <span>{(scanResult.entityData.remainingQuantity as number)?.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t.status}:</span>
+                        <span className="text-muted-foreground">{t("status")}:</span>
                         <Badge className={STATUS_COLORS[(scanResult.entityData.status as string) || "active"]}>
-                          {t.statuses[((scanResult.entityData.status as string)) as keyof typeof t.statuses]}
+                          {t(STATUS_KEYS[scanResult.entityData.status as string] ?? "")}
                         </Badge>
                       </div>
                     </div>
@@ -271,15 +284,15 @@ export function GenerateScannerContent({
                   {scanResult.entityType === "material" && (
                     <div className="space-y-3 p-4 bg-muted rounded-lg">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">{lang === "uz" ? "Kod" : "Код"}:</span>
+                        <span className="text-muted-foreground">{t("code")}:</span>
                         <span className="font-medium">{scanResult.entityData.kod as string}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t.material}:</span>
+                        <span className="text-muted-foreground">{t("material")}:</span>
                         <span>{scanResult.entityData.xomAshyo as string}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">{lang === "uz" ? "Qoldiq" : "Остаток"}:</span>
+                        <span className="text-muted-foreground">{t("stockRemaining")}:</span>
                         <span>{(scanResult.entityData.currentStock as number)?.toLocaleString()}</span>
                       </div>
                     </div>
@@ -307,7 +320,7 @@ export function GenerateScannerContent({
               ) : (
                 <div className="text-center py-8 text-[13px] text-muted-foreground">
                   <ScanLine className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>{lang === "uz" ? "Shtrix-kodni skanerlang" : "Отсканируйте штрих-код"}</p>
+                  <p>{t("scanBarcodePrompt")}</p>
                 </div>
               )}
             </CardContent>

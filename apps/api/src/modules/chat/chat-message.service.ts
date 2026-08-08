@@ -30,6 +30,8 @@ export class ChatMessageService {
       replyToId: msg['reply_to_id'] ? String(msg['reply_to_id']) : null, replyToMessage,
       threadCount: 0, reactions: [], createdAt: msg['created_at'],
       senderName: user?.['full_name'], senderAvatar: user?.['profile_image_url'], senderEmployeeId: user?.['employee_id'],
+      isStarred: msg['is_starred'] ?? false,
+      clientMsgId: msg['client_msg_id'] ?? null,
     };
   }
 
@@ -48,6 +50,7 @@ export class ChatMessageService {
   async sendMessage(
     roomId: string | number, senderId: number, content: string,
     fileUrl?: string, fileName?: string, fileType?: string, replyToId?: number,
+    clientMsgId?: string, mentionedUserIds?: (number | string)[],
   ): Promise<Result<Record<string, unknown>, AppError>> {
     const roomIdStr = String(roomId);
     const senderIdStr = String(senderId);
@@ -59,8 +62,10 @@ export class ChatMessageService {
     const msgResult = await this.msgRepo.insertMessage(
       roomIdStr, senderIdStr, content || null, fileUrl || null,
       fileName || null, fileType || null, messageType, replyToIdStr,
+      clientMsgId || null, (mentionedUserIds ?? []).map(String),
     );
     if (!msgResult.ok) return Err(msgResult.error.message);
+    await this.msgRepo.incrementUnreadForOthers(roomIdStr, senderIdStr);
     const msg = msgResult.data as Record<string, unknown>;
     const userResult = await this.msgRepo.findUserInfo(senderId);
     const user = (userResult.ok ? userResult.data : undefined) as Record<string, unknown> | undefined;
@@ -83,12 +88,21 @@ export class ChatMessageService {
     return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
+  async hideMessageForUser(messageId: string | number, userId: number): Promise<{ roomId: string } | null> {
+    const result = await this.msgRepo.hideMessageForUser(messageId, userId);
+    return result.ok ? result.data : null;
+  }
+
   async pinMessage(messageId: string | number, userId: number, pin: boolean): Promise<Record<string, unknown> | null> {
     const msgIdStr = String(messageId);
     const msgRowResult = await this.msgRepo.findMessageRoomId(msgIdStr);
     const msgRow = (msgRowResult.ok ? msgRowResult.data : null) as Record<string, unknown> | null;
     if (!msgRow) throw new NotFoundException(await this.i18n.t('errors.messageNotFound'));
-    const roomId = String(msgRow['room_id']);
+    // findMessageRoomId `{ roomId }` (camelCase) qaytaradi — `room_id` emas. Oldin
+    // `msgRow['room_id']` o'qib `undefined` → checkMembership 0 qator → har pin 403
+    // berardi (a'zo bo'lsa ham). Q-40: "ishlaydi ≠ to'g'ri" — endpoint bor edi lekin
+    // hech qachon pin qilmasdi.
+    const roomId = String(msgRow['roomId'] ?? msgRow['room_id']);
     const isMemberResult = await this.msgRepo.checkMembership(roomId, String(userId));
     const isMember = isMemberResult.ok && isMemberResult.data;
     if (!isMember) throw new ForbiddenException(await this.i18n.t('errors.notRoomMember'));
@@ -99,6 +113,12 @@ export class ChatMessageService {
   async getPinnedMessage(roomId: string | number): Promise<Record<string, unknown> | null> {
     const result = await this.msgRepo.findPinnedMessage(String(roomId));
     return result.ok ? (result.data as Record<string, unknown> | null) : null;
+  }
+
+  async getStarredMessages(userId: string): Promise<Result<Record<string, unknown>[], AppError>> {
+    const result = await this.msgRepo.findStarredForUser(userId);
+    if (!result.ok) return Err(result.error.message);
+    return Ok(result.data as Record<string, unknown>[]);
   }
 
   async starMessage(messageId: string, userId: string, starred: boolean): Promise<{ starred: boolean; messageId: string }> {

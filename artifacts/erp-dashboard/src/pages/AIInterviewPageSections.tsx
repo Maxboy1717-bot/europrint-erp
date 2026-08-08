@@ -34,7 +34,7 @@ export function InterviewDetailView({interview, onClose }: InterviewDetailViewPr
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("nomzodId")}</p><p className="font-medium" data-testid="text-detail-candidate">{interview.candidateId}</p></div>
             {interview.candidateName && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("nomzodIsmi")}</p><p className="font-medium">{interview.candidateName}</p></div>}
-            {interview.jobTitle && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("lavozim1")}</p><p className="font-medium">{interview.jobTitle}</p></div>}
+            {interview.positionTitle && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("lavozim1")}</p><p className="font-medium">{interview.positionTitle}</p></div>}
             <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("language")}</p><p className="font-medium">{interview.language === "uz" ? "O'zbek" : "Rus"}</p></div>
             {interview.provider && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("provider")}</p><div>{getProviderBadge(interview.provider, t)}</div></div>}
             {interview.scheduledAt && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("rejalashtirilgan")}</p><p className="font-medium">{formatDateTime(interview.scheduledAt)}</p></div>}
@@ -244,9 +244,9 @@ export function CreateInterviewForm({ form, onSubmit, isPending, onCancel }: Cre
               {form.formState.errors.candidateId && <p className="text-sm text-destructive">{form.formState.errors.candidateId.message}</p>}
             </div>
             <div className="space-y-1">
-          <Label htmlFor="jobTitle">{t("lavozim1")}</Label>
-              <Input id="jobTitle" {...form.register("jobTitle")} placeholder={t("lavozimNominiKiriting")} data-testid="input-job-title" />
-              {form.formState.errors.jobTitle && <p className="text-sm text-destructive">{form.formState.errors.jobTitle.message}</p>}
+          <Label htmlFor="positionTitle">{t("lavozim1")}</Label>
+              <Input id="positionTitle" {...form.register("positionTitle")} placeholder={t("lavozimNominiKiriting")} data-testid="input-job-title" />
+              {form.formState.errors.positionTitle && <p className="text-sm text-destructive">{form.formState.errors.positionTitle.message}</p>}
             </div>
             <div className="space-y-1">
           <Label htmlFor="language">{t("language")}</Label>

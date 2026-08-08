@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Download, TrendingDown, Zap } from "lucide-react";
-import type { TechCard, OptimizeResult, PapkaOrder } from "./TechCardsTypes";
+import { FileText, Download, TrendingDown, Zap, FlaskConical, Image as ImageIcon } from "lucide-react";
+import type { TechCard, OptimizeResult, PapkaOrder, BomRow, RouteRow, VersionRow } from "./TechCardsTypes";
 import { OperationsList, MaterialsList } from "./TechCardsLists";
+import { GatePills, VersionHistory, BomRoutesPanel } from "./TechCardsMaster";
 
 import { useTranslation } from '@/lib/i18n';
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPStatusPill } from "@/components/ep";
+import { tLabel } from "@/lib/i18n/tLabel";
 // ---------------------------------------------------------------------------
 // ViewCardDialog
 // ---------------------------------------------------------------------------
@@ -28,20 +30,39 @@ interface ViewCardDialogProps {
   isOptimizePending: boolean;
   onOptimize: (cardId: string) => void;
   onExport: (card: TechCard) => void;
+  /** Phase 1 master detail (child rows + gate handlers). */
+  bom?: BomRow[];
+  routes?: RouteRow[];
+  versions?: VersionRow[];
+  isMasterBusy?: boolean;
+  onLabApprove?: (cardId: string) => void;
+  onMaketApprove?: (cardId: string) => void;
+  onAddBom?: (cardId: string, item: { materialCode: string; quantity: number; unit: string; layer?: string }) => void;
+  onAddRoute?: (cardId: string, route: { opSeq: number; operation: string; normPerHour?: number; minRazryad?: number }) => void;
+  onRestoreVersion?: (cardId: string, versionId: number) => void;
 }
 
-/** Full-detail modal: meta grid, notes, operations list, materials list. */
+/** Full-detail modal: meta grid, gates, BOM/routes, version history, operations/materials. */
 export function ViewCardDialog({open,
   onOpenChange,
   card,
   isOptimizePending,
   onOptimize,
   onExport,
+  bom = [],
+  routes = [],
+  versions = [],
+  isMasterBusy = false,
+  onLabApprove,
+  onMaketApprove,
+  onAddBom,
+  onAddRoute,
+  onRestoreVersion,
 }: ViewCardDialogProps) {
   const { t } = useTranslation('common');
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-6">
+      <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto p-6">
         {card && (
           <>
             <DialogHeader>
@@ -50,7 +71,9 @@ export function ViewCardDialog({open,
                 data-testid="text-view-card-title"
               >
                 <FileText className="h-5 w-5" />
+                {card.code ? <span className="text-muted-foreground font-mono text-sm">{card.code}</span> : null}
                 {card.name}
+                {card.version != null && <EPStatusPill tone="info" hideDot>v{card.version}</EPStatusPill>}
                 <Badge variant={card.isActive ? "default" : "secondary"}>
                   {card.isActive ? "Faol" : "Nofaol"}
                 </Badge>
@@ -58,6 +81,22 @@ export function ViewCardDialog({open,
             </DialogHeader>
 
             <div className="space-y-4">
+              {/* 3 gate traffic-lights + approve actions */}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <GatePills card={card} hasBom={bom.length > 0} />
+                <div className="flex gap-2">
+                  {!card.maketApproved && onMaketApprove && (
+                    <Button size="sm" variant="outline" onClick={() => onMaketApprove(card.id)} disabled={isMasterBusy} data-testid="btn-maket-approve">
+                      <ImageIcon className="h-4 w-4 mr-1" />{tLabel("common.TechCardsMaster.maketTasdiqla", "Maket")}
+                    </Button>
+                  )}
+                  {!card.labApproved && onLabApprove && (
+                    <Button size="sm" variant="outline" onClick={() => onLabApprove(card.id)} disabled={isMasterBusy} data-testid="btn-lab-approve">
+                      <FlaskConical className="h-4 w-4 mr-1" />{tLabel("common.TechCardsMaster.labTasdiqla", "Lab")}
+                    </Button>
+                  )}
+                </div>
+              </div>
               {/* Meta grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg border">
@@ -84,6 +123,33 @@ export function ViewCardDialog({open,
                     {card.setupDurationMinutes || 0} min
                   </p>
                 </div>
+              </div>
+
+              {/* Phase 1 master: BOM + marshrut with add-forms */}
+              {(onAddBom || onAddRoute || bom.length > 0 || routes.length > 0) && (
+                <>
+                  <Separator />
+                  <BomRoutesPanel
+                    bom={bom}
+                    routes={routes}
+                    isBusy={isMasterBusy}
+                    onAddBom={(item) => onAddBom?.(card.id, item)}
+                    onAddRoute={(route) => onAddRoute?.(card.id, route)}
+                  />
+                </>
+              )}
+
+              {/* Version history */}
+              <Separator />
+              <div>
+                <p className="text-sm font-medium mb-2">
+                  {tLabel("common.TechCardsMaster.versiyaTarixi", "Versiya tarixi")}
+                </p>
+                <VersionHistory
+                  versions={versions}
+                  isBusy={isMasterBusy}
+                  onRestore={onRestoreVersion ? (versionId) => onRestoreVersion(card.id, versionId) : undefined}
+                />
               </div>
 
               {/* Notes */}
@@ -256,7 +322,7 @@ export function OptimizeResultPanel({ result }: OptimizeResultPanelProps) {
           </div>
           <div className="text-center">
             <p
-              className="text-2xl font-bold text-[var(--ep-green)] dark:text-green-400"
+              className="text-2xl font-bold text-[var(--ep-green)]"
               data-testid="text-opt-saving"
             >
               {(result.estimatedSaving / 1000).toFixed(0)}K
@@ -290,7 +356,7 @@ export function OptimizeResultPanel({ result }: OptimizeResultPanelProps) {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-[var(--ep-green)] dark:text-green-400">
+          <p className="text-sm text-[var(--ep-green)]">
             {t("kartaAllaqachonOptimallashtirilgan")}
           </p>
         )}

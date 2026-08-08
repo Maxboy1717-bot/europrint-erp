@@ -56,6 +56,8 @@ function makeRepo(user: FakeUser | null) {
     incrementFailedAttempts: jest.fn().mockResolvedValue(undefined),
     resetFailedAttempts: jest.fn().mockResolvedValue(undefined),
     updateLastLogin: jest.fn().mockResolvedValue(undefined),
+    // EP-ORG card-gate: flag OFF (egasi qarori) → gate hisoblanadi lekin login bloklamaydi.
+    resolveCardGate: jest.fn().mockResolvedValue({ activeCardCount: 1, primaryCardId: null, rbacTier: null, positionId: null }),
   };
 }
 
@@ -177,10 +179,10 @@ describe('LoginService', () => {
       expect(r.data.user.username).toBe('alice');
       expect(r.data.user.role).toBe('employee');
     }
-    // Access token signed with 24h expiry (updated from 8h)
+    // T10-17: access token signed with 15m expiry (vizyon — config JWT_ACCESS_TOKEN_TTL default)
     expect(jwt.sign).toHaveBeenCalledTimes(2);
     const firstCall = (jwt.sign as jest.Mock).mock.calls[0];
-    expect(firstCall[1]).toEqual({ expiresIn: '24h' });
+    expect(firstCall[1]).toEqual({ expiresIn: '15m' });
     // Refresh token signed with separate JWT_REFRESH_SECRET (updated to 7d)
     const secondCall = (jwt.sign as jest.Mock).mock.calls[1];
     expect(secondCall[1]).toEqual({ expiresIn: '7d', secret: 'test-refresh-secret' });

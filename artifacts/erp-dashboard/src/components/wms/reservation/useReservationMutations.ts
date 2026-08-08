@@ -6,17 +6,17 @@
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { OptimizationResult } from "./types";
+import { OptimizationResult, TFunc } from "./types";
 
 interface UseReservationMutationsProps {
-  lang: "uz" | "ru";
+  t: TFunc;
   setOptimizationResult: (data: OptimizationResult | null) => void;
   setIsAddBatchOpen: (open: boolean) => void;
   setBatchForm: (form: { batchNumber: string; materialName: string; materialType: string; quantity: string; availableQuantity: string; unit: string; expiryDate: string; receivedDate: string; location: string; costPerUnit: string; qualityGrade: string }) => void;
 }
 
 export function useReservationMutations({
-  lang,
+  t,
   setOptimizationResult,
   setIsAddBatchOpen,
   setBatchForm,
@@ -28,10 +28,10 @@ export function useReservationMutations({
       apiRequest<OptimizationResult>('GET', `/api/ai-reservation/optimize?materialType=${encodeURIComponent(params.materialType)}&quantity=${params.quantity}`),
     onSuccess: (data: OptimizationResult) => {
       setOptimizationResult(data);
-      toast({ title: lang === "uz" ? "Optimallashtirish tayyor" : "Оптимизация готова" });
+      toast({ title: t("Reservation.toastOptimizeReady") });
     },
     onError: () => {
-      toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" });
+      toast({ title: t("Reservation.toastError"), variant: "destructive" });
     },
   });
 
@@ -43,10 +43,10 @@ export function useReservationMutations({
       queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation/requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation/dashboard"] });
       if (data.optimization) setOptimizationResult(data.optimization);
-      toast({ title: lang === "uz" ? "So'rov yaratildi" : "Запрос создан" });
+      toast({ title: t("Reservation.toastRequestCreated") });
     },
     onError: () => {
-      toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" });
+      toast({ title: t("Reservation.toastError"), variant: "destructive" });
     },
   });
 
@@ -56,7 +56,7 @@ export function useReservationMutations({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation"] });
-      toast({ title: lang === "uz" ? "Tasdiqlandi" : "Подтверждено" });
+      toast({ title: t("Reservation.toastConfirmed") });
     },
   });
 
@@ -66,7 +66,7 @@ export function useReservationMutations({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation"] });
-      toast({ title: lang === "uz" ? "Bekor qilindi" : "Отменено" });
+      toast({ title: t("Reservation.toastCancelled") });
     },
   });
 
@@ -83,10 +83,10 @@ export function useReservationMutations({
         availableQuantity: "", unit: "kg", expiryDate: "", receivedDate: "",
         location: "", costPerUnit: "", qualityGrade: "A",
       });
-      toast({ title: lang === "uz" ? "Partiya qo'shildi" : "Партия добавлена" });
+      toast({ title: t("Reservation.toastBatchAdded") });
     },
     onError: () => {
-      toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" });
+      toast({ title: t("Reservation.toastError"), variant: "destructive" });
     },
   });
 

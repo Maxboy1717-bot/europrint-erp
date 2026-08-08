@@ -12,7 +12,7 @@ import {
   employee_issuance_log, three_way_match_results,
   mm_purchase_requisition_items, qc_inspections,
   materials_legacy, purchase_orders_legacy,
-  pos_inventory_count_lines, inventory_barcode_assignments,
+  pos_inventory_count_lines, pos_barcode_map,
   pos_movements_legacy, lessons, certificates_table, courses_table,
   cameras, hr_interview_questions, hr_applications, gl_lines,
   gamification_totals, absence_tracking, hr_brand_settings,
@@ -50,11 +50,21 @@ export async function execPosInventoryCountMarkGlPosted(lineId: number): Promise
 }
 
 export async function execPosBarcodeClearPrimary(materialCardId: number): Promise<void> {
-  await db.update(inventory_barcode_assignments)
+  // C8.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): this used to demote `isPrimary` on
+  // `inventory_barcode_assignments` filtered by `passportId = materialCardId` — but that
+  // table is keyed by a *passport* id (inventory_passports.id), an entirely different,
+  // unrelated barcode table (passport/serial-number tracking). Passing a material_card id
+  // as a passport id there is a no-op in practice, so the OLD primary row in the REAL
+  // barcode table (`pos_barcode_map`, the one findByBarcode()'s
+  // `... AND is_primary = TRUE` branch reads from) was never demoted. Result: after
+  // reassigning a material's primary barcode, the old/reissued barcode value kept
+  // `is_primary = TRUE` forever and kept resolving via findByBarcode(). Fixed to demote
+  // the correct table/column.
+  await db.update(pos_barcode_map)
     .set({ isPrimary: false })
     .where(and(
-      eq(inventory_barcode_assignments.passportId, materialCardId),
-      eq(inventory_barcode_assignments.isPrimary, true),
+      eq(pos_barcode_map.materialCardId, materialCardId),
+      eq(pos_barcode_map.isPrimary, true),
     ));
 }
 
@@ -74,10 +84,17 @@ export async function execLmsCourseDeactivate(id: number): Promise<void> {
     .where(eq(courses_table.id, id));
 }
 
-export async function execLmsCertificateStatusUpdate(certificateId: number, isActive: boolean): Promise<void> {
-  await db.update(certificates_table)
-    .set({ is_active: isActive })
-    .where(eq(certificates_table.id, certificateId));
+export async function execLmsCertificateStatusUpdate(certificateId: number, status: string): Promise<void> {
+  // The `certificates_table` Drizzle binding is a 3-col stub (id/is_active/updated_at) with
+  // NO `status` column, but the live `certificates` table HAS status (verified information_schema).
+  // Writing only is_active lost the textual status ('revoked'/'expired' collapsed to false and
+  // discarded) — so a revoked cert stayed status=NULL and the daily expiry sweep re-flagged the
+  // same rows forever. Persist the real status (+ derive is_active, bump updated_at) via raw SQL.
+  await db.execute(
+    sql`UPDATE certificates
+        SET status = ${status}, is_active = ${status === 'active'}, updated_at = NOW()
+        WHERE id = ${certificateId}`,
+  );
 }
 
 export async function execIotCameraDelete(id: number): Promise<void> {
@@ -177,7 +194,17 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
       employeeId: emp.id,
       reportDate: today,
       tasksCompleted: '',
-      status: 'absent',
+      // Bug fixed: 'absent' is NOT a valid value for `status` — the canonical schema's
+      // hr_daily_reports_status_chk CHECK constraint (lib/db/src/schema/hr-v2-schema.ts)
+      // only allows 'draft' | 'submitted' | 'approved' | 'rejected'. Writing 'absent' here
+      // would violate that constraint the moment it's applied to the live DB, aborting
+      // this INSERT (and, since this loop has no per-row try/catch, every remaining
+      // employee in the same 16:00 cron run too — "silently fails on every run").
+      // Absence is already tracked correctly via `isAutoAbsent` below; the FE never reads
+      // `status === 'absent'` (it renders the "yo'qlik" badge off `is_auto_absent`), so
+      // 'draft' (the column's own default) is both safe and semantically correct: no
+      // report was ever actually submitted.
+      status: 'draft',
       isAutoAbsent: true,
     }).onConflictDoNothing();
   }
@@ -197,24 +224,28 @@ export async function execHrEmployeeImport(emp: Record<string, unknown>): Promis
 }
 
 export async function execHrBrandSettingsUpsert(jsonData: string): Promise<void> {
-  await db.insert(hr_brand_settings).values({
-    company_id: 'default',
-    brand_data: jsonData,
-  }).onConflictDoUpdate({
-    target: hr_brand_settings.company_id,
-    set: { brand_data: jsonData, updated_at: sql`NOW()` },
-  });
+  // Single-tenant singleton row: hr_brand_settings has no genuine per-company
+  // scoping (no companies/tenants table exists anywhere in this ERP; the
+  // `company_id` column was a vestigial multi-tenant leftover always set to
+  // the literal 'default'). There is at most one row — update it in place if
+  // present, otherwise create it.
+  // NOTE: this used to be `onConflictDoUpdate({ target: company_id })`, but
+  // the live DB has no unique constraint on company_id (schema drift — the
+  // Drizzle schema declared `.unique()` yet it was never applied), so every
+  // save threw "no unique or exclusion constraint matching ON CONFLICT
+  // specification" (confirmed live via psql, 2026-07-13). A manual
+  // select-then-branch sidesteps the missing constraint instead of requiring
+  // a new migration to add one for a column we no longer want to depend on.
+  const existing = await db.select({ id: hr_brand_settings.id })
+    .from(hr_brand_settings)
+    .orderBy(hr_brand_settings.id)
+    .limit(1);
+  if (existing[0]) {
+    await db.update(hr_brand_settings)
+      .set({ brand_data: jsonData, updated_at: sql`NOW()` })
+      .where(eq(hr_brand_settings.id, existing[0].id));
+  } else {
+    await db.insert(hr_brand_settings).values({ brand_data: jsonData });
+  }
 }
 
-export async function execGlLineInsert(docId: number, lineNumber: number, line: Record<string, unknown>): Promise<void> {
-  await db.insert(gl_lines).values({
-    glDocumentId: String(docId),
-    lineNumber: lineNumber,
-    accountId: String(line.accountId || line.account_id || ''),
-    costCenterId: (line.costCenterId || line.cost_center_id || null) as string | null,
-    profitCenterId: (line.profitCenterId || line.profit_center_id || null) as string | null,
-    debitAmount: Number(line.debitAmount || line.debit_amount) || 0,
-    creditAmount: Number(line.creditAmount || line.credit_amount) || 0,
-    description: (line.description || null) as string | null,
-  });
-}

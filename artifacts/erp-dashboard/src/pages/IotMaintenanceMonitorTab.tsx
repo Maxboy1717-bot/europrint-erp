@@ -184,7 +184,7 @@ export function IotMaintenanceMonitorTab({ pmResult, pmLoading, attendanceLive, 
           </div>
 
           {attendanceLive?.summary && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {([
                 { label: t('atWorkplace'), count: attendanceLive.summary.at_workplace, color: "text-[var(--ep-green)]", bg: "bg-green-50",          icon: <CheckCircle2 className="h-4 w-4" /> },
                 { label: t('onPremises'),  count: attendanceLive.summary.on_premises,  color: "text-[var(--ep-blue)]",  bg: "bg-blue-50",           icon: <MapPin       className="h-5 w-5" /> },

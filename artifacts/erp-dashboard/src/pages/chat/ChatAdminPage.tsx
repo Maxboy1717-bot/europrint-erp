@@ -55,7 +55,7 @@ export default function ChatAdminPage() {
       return await apiRequest('PATCH', `/api/chat/admin/rooms/${roomId}/archive`, { archive });
     },
     onSuccess: () => {
-      toast({ title: "Muvaffaqiyatli", description: "Arxiv holati yangilandi" });
+      toast({ title: t("toastSuccess"), description: t("arxivHolatiYangilandi") });
       refetchRooms();
     },
   });
@@ -65,7 +65,7 @@ export default function ChatAdminPage() {
       return await apiRequest('DELETE', `/api/chat/admin/rooms/${roomId}/members/${userId}`);
     },
     onSuccess: () => {
-      toast({ title: "A'zo chiqarildi" });
+      toast({ title: t("azoChiqarildi") });
       qc.invalidateQueries({ queryKey: ["chat-admin-room-members", selectedRoom?.id] });
     },
   });
@@ -75,7 +75,7 @@ export default function ChatAdminPage() {
       return await apiRequest('PATCH', `/api/chat/admin/rooms/${roomId}/members/${userId}/role`, { role });
     },
     onSuccess: () => {
-      toast({ title: "Rol o'zgartirildi" });
+      toast({ title: t("rolOzgartirildi") });
       qc.invalidateQueries({ queryKey: ["chat-admin-room-members", selectedRoom?.id] });
     },
   });
@@ -102,18 +102,18 @@ export default function ChatAdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border/60 flex-shrink-0">
-        {(["rooms", "audit"] as Tab[]).map((t) => (
+        {(["rooms", "audit"] as Tab[]).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={cn(
               "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
-              tab === t
+              tab === tabKey
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            {t === "rooms" ? "Xonalar" : "Audit Log"}
+            {tabKey === "rooms" ? t("tabRooms") : t("tabAuditLog")}
           </button>
         ))}
       </div>

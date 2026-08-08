@@ -122,13 +122,14 @@ describe('PayrollClosureService — T7.4 domain', () => {
       }
     });
 
-    it('expense salary uses correct GL account 6710', () => {
+    it('expense salary uses the live GL account 9410 (Ish haqi)', () => {
       const r = svc.buildJournal(
         { rowCount: 1, totalBase: 100, totalBonus: 0, totalDeductions: 8, totalNet: 92 },
         '2026-05',
       );
       expect(r.ok).toBe(true);
       if (r.ok) {
+        expect(PAYROLL_GL_ACCOUNTS.EXPENSE_SALARY).toBe('9410');
         const salaryLine = r.data.find((l) => l.account === PAYROLL_GL_ACCOUNTS.EXPENSE_SALARY);
         expect(salaryLine).toBeDefined();
         expect(salaryLine?.debit).toBe(100);
@@ -142,7 +143,10 @@ describe('PayrollClosureService — T7.4 domain', () => {
       );
       expect(r.ok).toBe(true);
       if (r.ok) {
-        expect(r.data.find((l) => l.account === PAYROLL_GL_ACCOUNTS.EXPENSE_BONUS)).toBeUndefined();
+        // bonus(0) + deductions(0) omitted → only salary debit + net credit. (bonus shares 9410 with
+        // salary, so assert by line count / debit count rather than by the shared account code.)
+        expect(r.data).toHaveLength(2);
+        expect(r.data.filter((l) => l.debit > 0)).toHaveLength(1);
         expect(r.data.find((l) => l.account === PAYROLL_GL_ACCOUNTS.LIABILITY_TAXES)).toBeUndefined();
       }
     });
@@ -150,6 +154,15 @@ describe('PayrollClosureService — T7.4 domain', () => {
     it('unbalanced totals → VALIDATION', () => {
       const r = svc.buildJournal(
         { rowCount: 1, totalBase: 100, totalBonus: 0, totalDeductions: 0, totalNet: 50 },
+        '2026-05',
+      );
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.code).toBe('VALIDATION');
+    });
+
+    it('H2: a 0.2 imbalance (passed the old 0.5 tol) is now rejected at the engine 0.01 tol', () => {
+      const r = svc.buildJournal(
+        { rowCount: 1, totalBase: 100.2, totalBonus: 0, totalDeductions: 0, totalNet: 100 },
         '2026-05',
       );
       expect(r.ok).toBe(false);
@@ -186,9 +199,9 @@ describe('PayrollService.closePeriod — T7.4 orchestration', () => {
     listRowsByPeriod: jest.Mock;
     markPeriodClosed: jest.Mock;
     markRowsPosted: jest.Mock;
-    insertGlJournalLines: jest.Mock;
   };
   let repo: RepoMock;
+  let gl: { postJournal: jest.Mock };
   let svc: PayrollService;
   let emitter: EventEmitter2;
 
@@ -205,11 +218,11 @@ describe('PayrollService.closePeriod — T7.4 orchestration', () => {
       listRowsByPeriod: jest.fn(),
       markPeriodClosed: jest.fn(),
       markRowsPosted: jest.fn(),
-      insertGlJournalLines: jest.fn(),
     };
+    gl = { postJournal: jest.fn() };
     emitter = new EventEmitter2();
     jest.spyOn(emitter, 'emit');
-    svc = new PayrollService(repo as never, new PayrollClosureService(), emitter);
+    svc = new PayrollService(repo as never, new PayrollClosureService(), gl as never, emitter);
   });
 
   it('period not found → NOT_FOUND', async () => {
@@ -230,21 +243,39 @@ describe('PayrollService.closePeriod — T7.4 orchestration', () => {
     repo.listRowsByPeriod.mockResolvedValueOnce(Ok([validRow]));
     repo.markPeriodClosed.mockResolvedValueOnce(Ok({ ...validPeriod, status: 'closed' }));
     repo.markRowsPosted.mockResolvedValueOnce(Ok({ updated: 1 }));
-    repo.insertGlJournalLines.mockResolvedValueOnce(Ok({ inserted: 4 }));
+    gl.postJournal.mockResolvedValueOnce(Ok(1)); // ONE engine returns the entry id
 
     const r = await svc.closePeriod(1);
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.data.totals.totalBase).toBe(1000);
       expect(r.data.totals.totalNet).toBe(1012);
-      expect(r.data.gl.inserted).toBe(4);
+      expect(r.data.gl.inserted).toBe(4); // 4 balanced legs mapped to JournalLine[]
     }
+    // GL journal posted through GlPostingService.postJournal with the live account codes (9410/6520/6710)
+    expect(gl.postJournal).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ accountCode: '9410' })]),
+      'PR-1',
+    );
     expect(repo.markPeriodClosed).toHaveBeenCalledWith(1, expect.objectContaining({ totalBase: 1000 }));
     expect(repo.markRowsPosted).toHaveBeenCalledWith(1);
     expect(emitter.emit).toHaveBeenCalledWith(
       'payroll.period.closed',
       expect.objectContaining({ periodId: 1 }),
     );
+  });
+
+  it('H3: GL post fails → Err and period NOT marked closed (stays open, retryable)', async () => {
+    repo.findPeriodById.mockResolvedValueOnce(Ok(validPeriod));
+    repo.listRowsByPeriod.mockResolvedValueOnce(Ok([validRow]));
+    gl.postJournal.mockResolvedValueOnce(Err('GL down')); // engine fails
+
+    const r = await svc.closePeriod(1);
+    expect(r.ok).toBe(false);
+    // GL ran before the close, so the period was never closed → safe to retry (H1 makes retry idempotent)
+    expect(gl.postJournal).toHaveBeenCalled();
+    expect(repo.markPeriodClosed).not.toHaveBeenCalled();
+    expect(repo.markRowsPosted).not.toHaveBeenCalled();
   });
 
   it('period already closed → CONFLICT', async () => {

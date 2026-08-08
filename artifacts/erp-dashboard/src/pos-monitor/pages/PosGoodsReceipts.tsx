@@ -19,10 +19,10 @@ interface Grn {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  DRAFT:     { bg: "#F3F4F6", text: "#374151", label: "Qoralama" },
-  APPROVED:  { bg: "#ECFDF5", text: "#065F46", label: "Tasdiqlangan" },
-  REJECTED:  { bg: "#FEF2F2", text: "#991B1B", label: "Rad etilgan" },
-  COMPLETED: { bg: "#EFF6FF", text: "#1E40AF", label: "Yakunlangan" },
+  DRAFT:     { bg: "var(--pos-bg)", text: "var(--pos-text-muted)", label: "Qoralama" },
+  APPROVED:  { bg: "#ECFDF5", text: "var(--pos-success)", label: "Tasdiqlangan" },
+  REJECTED:  { bg: "#FEF2F2", text: "var(--pos-danger)", label: "Rad etilgan" },
+  COMPLETED: { bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", label: "Yakunlangan" },
 };
 
 function fmt(n: number): string {
@@ -67,17 +67,17 @@ export default function PosGoodsReceipts() {
   const totalAmount = filtered.reduce((s, g) => s + (g.totalAmount ?? 0), 0);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "20px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--pos-bg)", padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>QABUL AKTLARI</div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1F2937" }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>QABUL AKTLARI</div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--pos-text)" }}>
             {t("grnGoodsReceiptNotes")}
           </h1>
         </div>
         <button
           onClick={() => void load()}
-          style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB",
+          style={{ padding: "8px 16px", background: "var(--pos-bg)", border: "1px solid var(--pos-border)",
                    borderRadius: 8, cursor: "pointer", fontSize: 13 }}
         >
           {t("yangilash")}
@@ -86,23 +86,23 @@ export default function PosGoodsReceipts() {
 
       {/* Top stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 16 }}>
-        <div style={{ background: "#FFF", borderRadius: 12, padding: 12, border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 10, color: "#9CA3AF" }}>JAMI GRN</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#1F2937" }}>{filtered.length}</div>
+        <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 12, border: "1px solid var(--pos-border)" }}>
+          <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>JAMI GRN</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--pos-text)" }}>{filtered.length}</div>
         </div>
-        <div style={{ background: "#FFF", borderRadius: 12, padding: 12, border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 10, color: "#9CA3AF" }}>JAMI SUMMA</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#059669" }}>{fmt(totalAmount)} UZS</div>
+        <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 12, border: "1px solid var(--pos-border)" }}>
+          <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>JAMI SUMMA</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--pos-success)" }}>{fmt(totalAmount)} UZS</div>
         </div>
-        <div style={{ background: "#FFF", borderRadius: 12, padding: 12, border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 10, color: "#9CA3AF" }}>QORALAMA</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#374151" }}>
+        <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 12, border: "1px solid var(--pos-border)" }}>
+          <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>QORALAMA</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--pos-text-muted)" }}>
             {filtered.filter(g => g.status === "DRAFT").length}
           </div>
         </div>
-        <div style={{ background: "#FFF", borderRadius: 12, padding: 12, border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 10, color: "#9CA3AF" }}>TASDIQLANGAN</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#059669" }}>
+        <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 12, border: "1px solid var(--pos-border)" }}>
+          <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>TASDIQLANGAN</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--pos-success)" }}>
             {filtered.filter(g => g.status === "APPROVED").length}
           </div>
         </div>
@@ -114,13 +114,13 @@ export default function PosGoodsReceipts() {
           placeholder={t("qidiruvRaqamTaminotchiYukXati")}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ flex: 1, minWidth: 250, padding: "8px 12px", border: "1px solid #E5E7EB",
+          style={{ flex: 1, minWidth: 250, padding: "8px 12px", border: "1px solid var(--pos-border)",
                    borderRadius: 8, fontSize: 13 }}
         />
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          style={{ padding: "8px 12px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13 }}
+          style={{ padding: "8px 12px", border: "1px solid var(--pos-border)", borderRadius: 8, fontSize: 13 }}
         >
           <option value="all">{t("Barchasi")}</option>
           <option value="DRAFT">{t("draft")}</option>
@@ -131,17 +131,17 @@ export default function PosGoodsReceipts() {
       </div>
 
       {/* Table */}
-      <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+      <div style={{ background: "var(--pos-card)", borderRadius: 12, border: "1px solid var(--pos-border)", overflow: "hidden" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: 40 }}>{t("yuklanmoqda")}</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: 60, color: "#9CA3AF" }}>
+          <div style={{ textAlign: "center", padding: 60, color: "var(--pos-text-muted)" }}>
             <div style={{ fontSize: 48 }}>📭</div>
             <div style={{ marginTop: 8 }}>{t("qabulAktlariYoq")}</div>
           </div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead style={{ background: "#F9FAFB" }}>
+            <thead style={{ background: "var(--pos-bg)" }}>
               <tr>
                 <Th>{t("grnRaqam")}</Th>
                 <Th>{t("date")}</Th>
@@ -155,22 +155,22 @@ export default function PosGoodsReceipts() {
             </thead>
             <tbody>
               {filtered.map(g => {
-                const sc = STATUS_COLORS[g.status] ?? { bg: "#F3F4F6", text: "#374151", label: g.status };
+                const sc = STATUS_COLORS[g.status] ?? { bg: "var(--pos-bg)", text: "var(--pos-text-muted)", label: g.status };
                 return (
-                  <tr key={g.id} style={{ borderTop: "1px solid #F3F4F6" }}>
+                  <tr key={g.id} style={{ borderTop: "1px solid var(--pos-bg)" }}>
                     <Td mono><b>{g.grnNumber}</b></Td>
                     <Td>{fmtDate(g.receivedDate)}</Td>
                     <Td>
                       <div>{g.supplierName}</div>
-                      {g.supplierTin && <div style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "monospace" }}>{g.supplierTin}</div>}
+                      {g.supplierTin && <div style={{ fontSize: 10, color: "var(--pos-text-muted)", fontFamily: "monospace" }}>{g.supplierTin}</div>}
                     </Td>
                     <Td mono>
                       {g.warehouseCode ?? "—"}
-                      {g.warehouseName && <div style={{ fontSize: 10, color: "#9CA3AF" }}>{g.warehouseName}</div>}
+                      {g.warehouseName && <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{g.warehouseName}</div>}
                     </Td>
                     <Td mono>{g.waybillNumber ?? "—"}</Td>
                     <Td align="right" mono>
-                      <b>{fmt(g.totalAmount)}</b> <span style={{ color: "#9CA3AF" }}>{g.currency}</span>
+                      <b>{fmt(g.totalAmount)}</b> <span style={{ color: "var(--pos-text-muted)" }}>{g.currency}</span>
                     </Td>
                     <Td>
                       <span style={{ padding: "3px 8px", borderRadius: 6, background: sc.bg, color: sc.text,
@@ -193,7 +193,7 @@ export default function PosGoodsReceipts() {
 function Th({ children, align }: { children: React.ReactNode; align?: "left" | "right" }) {
   return (
     <th style={{ padding: "10px 14px", textAlign: align ?? "left", fontSize: 11,
-                 color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" }}>
+                 color: "var(--pos-text-muted)", fontWeight: 600, textTransform: "uppercase" }}>
       {children}
     </th>
   );

@@ -134,9 +134,9 @@ export function Sprint1Section({ ratios, cfForecast, cfScenario, setCfScenario }
     <div className="grid gap-4 lg:grid-cols-2" data-testid="section-sprint1">
       {ratios && (
         <div className={`rounded-xl p-6 text-white ${
-          ratios.altmanZ.zone === 'Safe'      ? 'bg-emerald-500' :
-          ratios.altmanZ.zone === 'Grey Zone' ? 'bg-amber-500' :
-                                               'bg-red-500'
+          ratios.altmanZ.zone === 'Safe'      ? 'bg-[var(--ep-green)]' :
+          ratios.altmanZ.zone === 'Grey Zone' ? 'bg-[var(--ep-yellow)]' :
+                                               'bg-[var(--ep-red)]'
         }`} data-testid="card-altman-z">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -207,9 +207,9 @@ export function Sprint1Section({ ratios, cfForecast, cfScenario, setCfScenario }
               <YAxis yAxisId="line" orientation="right" tick={{ fontSize: 10 }} tickFormatter={v => (v / 1_000_000).toFixed(0) + t('cfo.cashflow.mSuffix')} />
               <Tooltip formatter={(v: number) => formatCurrency(v)} />
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              <Bar yAxisId="bar" dataKey="inflow"  name={t('cfo.cashflow.inflow')}     stackId="a" fill="#10b981" />
-              <Bar yAxisId="bar" dataKey="outflow" name={t('cfo.cashflow.outflow')}    stackId="a" fill="#ef4444" />
-              <Line yAxisId="line" type="monotone" dataKey="cumulative" name={t('cfo.cashflow.cumulative')} stroke="#3b82f6" strokeWidth={2} dot={false} />
+              <Bar yAxisId="bar" dataKey="inflow"  name={t('cfo.cashflow.inflow')}     stackId="a" fill="var(--ep-green)" />
+              <Bar yAxisId="bar" dataKey="outflow" name={t('cfo.cashflow.outflow')}    stackId="a" fill="var(--ep-red)" />
+              <Line yAxisId="line" type="monotone" dataKey="cumulative" name={t('cfo.cashflow.cumulative')} stroke="var(--ep-blue)" strokeWidth={2} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2 text-center text-xs">

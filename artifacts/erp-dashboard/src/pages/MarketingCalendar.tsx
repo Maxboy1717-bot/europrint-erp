@@ -22,8 +22,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
-const statusLabels: Record<string, string> = { planned: "Rejalashtirilgan", in_progress: "Jarayonda", completed: "Tugallangan", cancelled: "Bekor qilingan" };
-const platformLabels: Record<string, string> = { telegram: "Telegram", instagram: "Instagram", facebook: "Facebook", website: "Veb-sayt" };
+// Labels match backend CHECK constraints (mkt_cal_events_status_chk / mkt_cal_events_type_chk)
+// in apps/api/src/shared/db/schema-marketing-group2.ts — keep in sync.
+const statusLabels: Record<string, string> = { planned: "Rejalashtirilgan", ongoing: "Jarayonda", completed: "Tugallangan", cancelled: "Bekor qilingan" };
+const eventTypeLabels: Record<string, string> = { campaign: "Kampaniya", meeting: "Uchrashuv", deadline: "Muddat", exhibition: "Ko'rgazma" };
 
 export default function MarketingCalendar() {
   const { t } = useTranslation("common");
@@ -34,7 +36,7 @@ export default function MarketingCalendar() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState({ title: "", content: "", platform: "telegram", type: "post", status: "planned", scheduledDate: "", assignedTo: "" });
+  const [form, setForm] = useState({ title: "", description: "", eventType: "campaign", status: "planned", startDate: "" });
 
   const { data: entries, isLoading, isError, error, refetch} = useQuery<ContentCalendar[]>({
     queryKey: ["/api/marketing/calendar", { month, year }],
@@ -57,15 +59,32 @@ export default function MarketingCalendar() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/calendar"] }); toast({ title: "Taqvim yozuvi o'chirildi" }); },
   });
 
-  const resetForm = () => { setForm({ title: "", content: "", platform: "telegram", type: "post", status: "planned", scheduledDate: "", assignedTo: "" }); setEditId(null); };
+  const resetForm = () => { setForm({ title: "", description: "", eventType: "campaign", status: "planned", startDate: "" }); setEditId(null); };
 
+  // Field names match backend CreateCalendarEventSchema (marketing-group2.controller.ts) exactly —
+  // startDate stays a plain YYYY-MM-DD string (schema enforces that regex), no Date() coercion.
   const handleSubmit = () => {
-    const payload = { ...form, scheduledDate: form.scheduledDate ? new Date(form.scheduledDate) : undefined, assignedTo: form.assignedTo || undefined, content: form.content || undefined };
     if (editId) {
+      const payload = {
+        title: form.title,
+        event_type: form.eventType,
+        start_date: form.startDate,
+        description: form.description || undefined,
+        status: form.status,
+      };
       apiRequest("PATCH", `/api/marketing/calendar/${editId}`, payload).then(() => {
         queryClient.invalidateQueries({ queryKey: ["/api/marketing/calendar"] }); setOpen(false); resetForm(); toast({ title: "Yangilandi" });
       });
-    } else createMutation.mutate(payload);
+    } else {
+      const payload = {
+        title: form.title,
+        eventType: form.eventType,
+        startDate: form.startDate,
+        description: form.description || undefined,
+        status: form.status,
+      };
+      createMutation.mutate(payload);
+    }
   };
 
   const prevMonth = () => { if (month === 1) { setMonth(12); setYear(year - 1); } else setMonth(month - 1); };
@@ -79,7 +98,7 @@ export default function MarketingCalendar() {
 
   const getEntriesForDay = (day: number) => {
     return entries?.filter((e) => {
-      const d = new Date(e.scheduledDate);
+      const d = new Date(e.startDate);
       return d.getDate() === day && d.getMonth() + 1 === month && d.getFullYear() === year;
     }) || [];
   };
@@ -108,13 +127,13 @@ export default function MarketingCalendar() {
             <DialogHeader><DialogTitle className="text-foreground font-bold">{t("yangiTaqvimYozuvi")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5"><Label className="text-muted-foreground">{t("sarlavha")}</Label><Input className="bg-background border-border" data-testid="input-calendar-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("progress.description")}</Label><Textarea className="bg-background border-border" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("progress.description")}</Label><Textarea className="bg-background border-border" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("platforma")}</Label><Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("turi")}</Label><Select value={form.eventType} onValueChange={(v) => setForm({ ...form, eventType: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(eventTypeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
                 <div className="space-y-1.5"><Label className="text-muted-foreground">{t("status28")}</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
               </div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("sana")}</Label><Input className="bg-background border-border" type="date" data-testid="input-calendar-date" value={form.scheduledDate} onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })} /></div>
-              <Button onClick={handleSubmit} disabled={!form.title || !form.scheduledDate || createMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-calendar">{t("Yaratish")}</Button>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("sana")}</Label><Input className="bg-background border-border" type="date" data-testid="input-calendar-date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
+              <Button onClick={handleSubmit} disabled={!form.title || !form.startDate || createMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-calendar">{t("Yaratish")}</Button>
             </div>
           </DialogContent>
         </Dialog>

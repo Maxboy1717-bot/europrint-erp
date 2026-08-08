@@ -8,6 +8,7 @@ import { lazy } from "react";
 // Original Coordination sahifasi saqlanadi — Kommunikatsiya Markazi shu yerda
 // "baskets" tab sifatida joylashadi (sidebar -> coordination?tab=baskets).
 const CoordinationPage = lazy(() => import("@/pages/CoordinationPage"));
+const CouncilQuorum = lazy(() => import("@/pages/CouncilQuorum"));
 const AgentsHub                  = lazy(() => import("@/pages/agents/AgentsHub"));
 const ProductionAgentDashboard   = lazy(() => import("@/pages/agents/ProductionDashboard"));
 const HRPerformanceAgentDash     = lazy(() => import("@/pages/agents/HRPerformanceDashboard"));
@@ -29,9 +30,18 @@ const ReportsHub = lazy(() => import("@/pages/ReportsHub"));
 const DirectorExtended = lazy(() => import("@/pages/DirectorExtended"));
 const IdealRasmPage = lazy(() => import("@/pages/IdealRasmPage"));
 const DirectorAiAudit = lazy(() => import("@/pages/DirectorAiAudit"));
+const WorkflowRules = lazy(() => import("@/pages/WorkflowRules"));
+const KpiThresholdConfig       = lazy(() => import("@/pages/KpiThresholdConfig"));
+const KpiScoreWeightsConfig    = lazy(() => import("@/pages/KpiScoreWeightsConfig"));
+const CompanyStateThresholdConfig = lazy(() => import("@/pages/CompanyStateThresholdConfig"));
+const MonthlyPlansPage         = lazy(() => import("@/pages/MonthlyPlansPage"));
+const DirectorDiaryPage        = lazy(() => import("@/pages/DirectorDiaryPage"));
+const StatRegulationsPage      = lazy(() => import("@/pages/StatRegulationsPage"));
 
 export const DIRECTOR_ROUTES: [string, React.ComponentType][] = [
   ['/coordination',             CoordinationPage],
+  ['/coordination/workflow-rules', WorkflowRules],
+  ['/coordination/quorum',      CouncilQuorum],
   ['/agents',                   AgentsHub],
   ['/agents/production',        ProductionAgentDashboard],
   ['/agents/hr-performance',    HRPerformanceAgentDash],
@@ -60,4 +70,10 @@ export const DIRECTOR_ROUTES: [string, React.ComponentType][] = [
   ['/director/kpis',            DirectorExtended],
   ['/ideal-rasm',               IdealRasmPage],
   ['/director/ai-audit',        DirectorAiAudit],
+  ['/director/kpi-thresholds',        KpiThresholdConfig],
+  ['/director/company-state-config',  CompanyStateThresholdConfig],
+  ['/director/kpi-weights',           KpiScoreWeightsConfig],  // config-mexanizm: STKP vazn
+  ['/director/monthly-plans',         MonthlyPlansPage],
+  ['/director/diary',                 DirectorDiaryPage],
+  ['/director/stat-regulations',      StatRegulationsPage],
 ];

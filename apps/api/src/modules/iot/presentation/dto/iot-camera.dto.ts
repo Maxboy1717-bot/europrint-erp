@@ -53,6 +53,51 @@ export const UpdateCameraSettingsBodySchema = z.object({
 }).passthrough();
 export type UpdateCameraSettingsBody = z.infer<typeof UpdateCameraSettingsBodySchema>;
 
+/** POST/PUT /api/camera-settings — global AI/alert/telegram/penalty settings (singleton, stored in `settings` key-value table). */
+export const CameraGlobalSettingsBodySchema = z.object({
+  safetyThreshold: z.coerce.number().min(0).max(100).default(80),
+  qualityThreshold: z.coerce.number().min(0).max(100).default(75),
+  productivityThreshold: z.coerce.number().min(0).max(100).default(70),
+  enableSafetyAlerts: z.boolean().default(true),
+  enableQualityAlerts: z.boolean().default(true),
+  enableMachineAlerts: z.boolean().default(true),
+  enableProductivityAlerts: z.boolean().default(false),
+  telegramEnabled: z.boolean().default(true),
+  dailyReportTime: z.string().default('18:00'),
+  alertCooldown: z.coerce.number().int().min(0).max(1440).default(5),
+  autoPenalty: z.boolean().default(true),
+  penaltyAmount: z.coerce.number().min(0).default(50000),
+});
+export type CameraGlobalSettingsBody = z.infer<typeof CameraGlobalSettingsBodySchema>;
+
+/** POST /api/cameras — Cameras Management page (cameras-management.tsx) create form. */
+export const CreateCameraManagementBodySchema = z.object({
+  code: z.string().min(1),
+  name: z.string().min(1),
+  nameRu: z.string().optional().nullable(),
+  rtspUrl: z.string().optional().nullable(),
+  ipAddress: z.string().optional().nullable(),
+  port: z.coerce.number().int().positive().optional().nullable(),
+  workCenterId: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  isActive: z.boolean().default(true),
+}).passthrough();
+export type CreateCameraManagementBody = z.infer<typeof CreateCameraManagementBodySchema>;
+
+/** PATCH /api/cameras/:id — Cameras Management page edit form (also used for isActive toggle). */
+export const UpdateCameraManagementBodySchema = z.object({
+  code: z.string().optional(),
+  name: z.string().optional(),
+  nameRu: z.string().optional().nullable(),
+  rtspUrl: z.string().optional().nullable(),
+  ipAddress: z.string().optional().nullable(),
+  port: z.coerce.number().int().positive().optional().nullable(),
+  workCenterId: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  isActive: z.boolean().optional(),
+}).passthrough();
+export type UpdateCameraManagementBody = z.infer<typeof UpdateCameraManagementBodySchema>;
+
 export const CameraListQuerySchema = z.object({
   status: z.string().optional(),
   type: z.string().optional(),
@@ -286,3 +331,19 @@ export const CreateCameraZoneBodySchema = z.object({
   zone_type: z.string().default('monitoring'),
 });
 export type CreateCameraZoneBody = z.infer<typeof CreateCameraZoneBodySchema>;
+
+/**
+ * POST /api/ai-camera/analyze-by-missions (2.11) — CameraAnalysisWorkbench.tsx
+ * "Tahlil laboratoriyasi" sends a single captured frame + the target camera;
+ * the camera's configured missions (`camera_ai_configs.detection_types`) are
+ * resolved server-side (FE does not send `missions` in the body — see
+ * `analyzeByMissions()` in `camera-ai-modern/api.ts`). `imageBase64` has no
+ * `data:` prefix (stripped client-side by `fileToBase64`).
+ */
+export const AnalyzeMissionsBodySchema = z.object({
+  cameraId: z.coerce.number().int().positive(),
+  imageBase64: z.string().min(1),
+  mediaType: z.string().default('image/jpeg'),
+  persist: z.boolean().default(false),
+});
+export type AnalyzeMissionsBody = z.infer<typeof AnalyzeMissionsBodySchema>;

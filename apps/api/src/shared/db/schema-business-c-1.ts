@@ -211,21 +211,31 @@ export const ai_report_subscriptions = pgTable('ai_report_subscriptions', {
 // ─── Assets ──────────────────────────────────────────────────────────────────
 // asset_items: queries-hr-assets.ts accesses it via asset_items_ext alias with snake_case columns
 // (serial_number, purchase_date, department_id etc.) — kept as local stub to avoid breakage.
+// asset_code/purchase_value/current_value/notes added (serial/integer PK, matches live DB —
+// see asset-management.repo.ts, which was previously wired to the uuid-PK admin-assets.ts stub).
+// NOTE: asset_items is a VIEW over asset_inventory (not a base table) — `ALTER TABLE ADD COLUMN`
+// cannot add columns to it, so `updated_at` (declared here pre-commit-9e9cbd72 but never present
+// on the view or on asset_inventory) is intentionally omitted: the DRIFT_MIGRATIONS entry for it
+// fails silently on every boot (see invariants/migrations-drift.ts) and actively querying it
+// (asset-management.repo.ts assetColumns) raised `column "updated_at" does not exist`.
 
 export const asset_items = pgTable('asset_items', {
   id:              serial('id').primaryKey(),
   name:            text('name').notNull(),
+  asset_code:      varchar('asset_code'),
   category:        text('category'),
   assigned_to:     integer('assigned_to'),
   department_id:   integer('department_id'),
   serial_number:   text('serial_number'),
   purchase_date:   date('purchase_date'),
+  purchase_value:  numeric('purchase_value', { precision: 15, scale: 2 }),
   purchase_price:  numeric('purchase_price', { precision: 15, scale: 2 }),
+  current_value:   numeric('current_value', { precision: 15, scale: 2 }),
+  notes:           text('notes'),
   status:          text('status').default('in_use'),
   location:        text('location'),
   is_active:       boolean('is_active').default(true),
   created_at:      timestamp('created_at').defaultNow(),
-  updated_at:      timestamp('updated_at').defaultNow(),
 });
 
 // ─── Questionnaires ───────────────────────────────────────────────────────────
@@ -246,6 +256,19 @@ export const mes_downtime_reasons = pgTable('mes_downtime_reasons', {
   is_planned:  boolean('is_planned').default(false),
   is_active:   boolean('is_active').default(true),
   created_at:  timestamp('created_at').defaultNow(),
+});
+
+// mes_oee_targets: OEE-target versioned settings (08-mes #36). Append-only versioning —
+// each edit inserts a new higher-version active row; station_id NULL = factory-wide.
+export const mes_oee_targets = pgTable('mes_oee_targets', {
+  id:             serial('id').primaryKey(),
+  station_id:     integer('station_id'),
+  target_percent: numeric('target_percent', { precision: 5, scale: 2 }).notNull().default('85'),
+  effective_date: date('effective_date').notNull(),
+  version:        integer('version').notNull().default(1),
+  is_active:      boolean('is_active').notNull().default(true),
+  created_by:     integer('created_by'),
+  created_at:     timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 // ─── Purchase Invoices ────────────────────────────────────────────────────────

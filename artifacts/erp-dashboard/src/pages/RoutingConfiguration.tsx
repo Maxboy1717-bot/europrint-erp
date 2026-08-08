@@ -68,31 +68,85 @@ export default function RoutingConfiguration() {
     isLoading: routingsLoading,
     isError,
     refetch,
-  } = useQuery<RoutingWithProduct[]>({
-    queryKey: ["/api/erp/routings"],
+  } = useQuery({
+    queryKey: ["/api/pp/routing"],
     enabled: !!isAuthenticated,
+    select: (raw: unknown): RoutingWithProduct[] => {
+      const r = raw as Record<string, unknown>;
+      const items: Record<string, unknown>[] = Array.isArray(r?.items)
+        ? (r.items as Record<string, unknown>[])
+        : Array.isArray(r?.data) ? (r.data as Record<string, unknown>[])
+        : Array.isArray(raw) ? (raw as Record<string, unknown>[])
+        : [];
+      return items.map((item) => ({
+        routing: {
+          id: String(item.id ?? ""),
+          routingNumber: String(item.routing_number ?? item.routingNumber ?? `RT-${item.id}`),
+          productId: String(item.product_id ?? item.productId ?? ""),
+          version: String(item.version ?? "1.0"),
+          status: String(item.status ?? "draft"),
+          effectiveFrom: (item.effective_from ?? item.effectiveFrom ?? null) as string | null,
+        },
+        product: { id: String(item.product_id ?? item.productId ?? ""), code: "", name: "" },
+      }));
+    },
   });
 
-  const { data: operations = [] } = useQuery<OperationWithWorkCenter[]>({
-    queryKey: ["/api/erp/routing-operations"],
-    enabled: !!isAuthenticated,
+  // Per-routing detail: operations loaded on demand when a routing is selected
+  const { data: selectedRoutingOps = [] } = useQuery({
+    queryKey: ["/api/pp/routing", selectedRouting?.routing.id],
+    enabled: !!selectedRouting?.routing.id,
+    select: (raw: unknown): OperationWithWorkCenter[] => {
+      const r = raw as Record<string, unknown>;
+      const ops: Record<string, unknown>[] = Array.isArray(r?.operations)
+        ? (r.operations as Record<string, unknown>[])
+        : [];
+      return ops.map((op) => ({
+        operation: {
+          id: String(op.id ?? ""),
+          routingId: String(op.routing_id ?? op.routingId ?? selectedRouting?.routing.id ?? ""),
+          operationNumber: String(op.operation_number ?? op.operationNumber ?? ""),
+          operationName: String(op.operation_description ?? op.operationName ?? op.operationDescription ?? ""),
+          workCenterId: String(op.work_center_id ?? op.workCenterId ?? ""),
+          sequence: Number(op.sequence ?? 0),
+          setupTime: 0,
+          machineTime: 0,
+          laborTime: 0,
+          description: null,
+        },
+        workCenter: {
+          id: String(op.work_center_id ?? op.workCenterId ?? ""),
+          code: "",
+          name: "",
+        },
+      }));
+    },
   });
+  const operations: OperationWithWorkCenter[] = selectedRoutingOps;
 
-  const { data: products = [] } = useQuery<Product[]>({
-    queryKey: ["/api/erp/products"],
+  const { data: products = [] } = useQuery({
+    queryKey: ["/api/material-cards"],
     enabled: !!isAuthenticated,
+    select: (raw: unknown): Product[] => {
+      const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+      return items.map((item) => ({
+        id: String(item.id ?? ""),
+        code: String(item.sku ?? item.kod ?? ""),
+        name: String(item.name ?? item.xom_ashyo ?? ""),
+      }));
+    },
   });
 
   const { data: workCenters = [] } = useQuery<WorkCenter[]>({
-    queryKey: ["/api/erp/work-centers"],
+    queryKey: ["/api/pp/work-centers"],
     enabled: !!isAuthenticated,
   });
 
   // ---- mutations ----------------------------------------------------------
   const createRoutingMutation = useMutation({
-    mutationFn: (data: RoutingFormState) => apiRequest("POST", "/api/erp/routings", data),
+    mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/pp/routing", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/routings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/routing"] });
       setShowRoutingDialog(false);
       setRoutingForm(defaultRoutingForm());
       toast({ title: t("routingCreated") });
@@ -104,9 +158,9 @@ export default function RoutingConfiguration() {
 
   const createOperationMutation = useMutation({
     mutationFn: (data: OperationFormState & { routingId: string }) =>
-      apiRequest("POST", "/api/erp/routing-operations", data),
+      apiRequest("POST", `/api/pp/routing/${data.routingId}/operations`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/routing-operations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/routing", selectedRouting?.routing.id] });
       setShowOperationDialog(false);
       setOperationForm(defaultOperationForm());
       toast({ title: t("operationAdded") });
@@ -117,9 +171,9 @@ export default function RoutingConfiguration() {
   });
 
   const deleteRoutingMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("DELETE", `/api/erp/routings/${id}`),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/pp/routing/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/routings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/routing"] });
       toast({ title: t("routingDeleted") });
     },
     onError: () => {
@@ -128,9 +182,10 @@ export default function RoutingConfiguration() {
   });
 
   const deleteOperationMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("DELETE", `/api/erp/routing-operations/${id}`),
+    mutationFn: (opId: string) =>
+      apiRequest("DELETE", `/api/pp/routing/${selectedRouting?.routing.id}/operations/${opId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/routing-operations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/routing", selectedRouting?.routing.id] });
       toast({ title: t("operationDeleted") });
     },
     onError: () => {
@@ -145,7 +200,12 @@ export default function RoutingConfiguration() {
       toast({ variant: "destructive", title: tCommon("error"), description: result.error.errors[0].message });
       return;
     }
-    createRoutingMutation.mutate(routingForm);
+    createRoutingMutation.mutate({
+      productId: Number(result.data.productId),
+      routingNumber: result.data.routingNumber,
+      operations: [],
+      reason: `Marshrut ${result.data.routingNumber} yaratildi`,
+    });
   };
 
   const handleCreateOperation = () => {
@@ -173,11 +233,34 @@ export default function RoutingConfiguration() {
 
   const labels = buildRoutingLabels(t, tCommon);
 
-  // ---- early returns ------------------------------------------------------
-  if (routingsLoading) return <RoutingLoadingState />;
-  if (isError) return <RoutingErrorState onRetry={refetch} />;
-  if (!routings || routings.length === 0) {
-    return <RoutingEmptyState noDataLabel={t("noDataYet")} hintLabel={t("addNewRecordHint")} />;
+  // ---- body content (loading/error/empty/list) ----------------------------
+  // NOTE: these must NOT be early `return`s — the header (with the create
+  // button) and the dialogs below have to render regardless of data state,
+  // otherwise the empty-state hint ("click the button above") has no button
+  // to refer to.
+  let body: React.ReactNode;
+  if (routingsLoading) {
+    body = <RoutingLoadingState />;
+  } else if (isError) {
+    body = <RoutingErrorState onRetry={refetch} />;
+  } else if (!routings || routings.length === 0) {
+    body = <RoutingEmptyState noDataLabel={t("noDataYet")} hintLabel={t("addNewRecordHint")} />;
+  } else {
+    body = (
+      <>
+        <RoutingSearchBar value={searchTerm} onChange={setSearchTerm} placeholder={t("searchRouting")} />
+        <RoutingList
+          routings={filteredRoutings}
+          operations={operations}
+          isLoading={false}
+          notFoundLabel={t("routingNotFound")}
+          cardLabels={labels.cardLabels}
+          onManage={setSelectedRouting}
+          onDelete={(id) => deleteRoutingMutation.mutate(id)}
+          deletingMutationPending={deleteRoutingMutation.isPending}
+        />
+      </>
+    );
   }
 
   // ---- render -------------------------------------------------------------
@@ -206,18 +289,7 @@ export default function RoutingConfiguration() {
         </Button>
       </div>
 
-      <RoutingSearchBar value={searchTerm} onChange={setSearchTerm} placeholder={t("searchRouting")} />
-
-      <RoutingList
-        routings={filteredRoutings}
-        operations={operations}
-        isLoading={false}
-        notFoundLabel={t("routingNotFound")}
-        cardLabels={labels.cardLabels}
-        onManage={setSelectedRouting}
-        onDelete={(id) => deleteRoutingMutation.mutate(id)}
-        deletingMutationPending={deleteRoutingMutation.isPending}
-      />
+      {body}
 
       <CreateRoutingDialog
         open={showRoutingDialog}

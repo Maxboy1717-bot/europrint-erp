@@ -3,14 +3,20 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, Logger, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, InternalServerErrorException, BadRequestException, Inject } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IFiRepository, FI_REPO } from './i-fi.repo';
 import { safeCall, Result, AppError } from '@common/result';
+import { GlPostingService, JournalLine } from '../domain/services/gl-posting.service';
 
 @Injectable()
 export class FiService {
   private readonly logger = new Logger(FiService.name);
-  constructor(@Inject(FI_REPO) private readonly repo: IFiRepository) {}
+  constructor(
+    @Inject(FI_REPO) private readonly repo: IFiRepository,
+    private readonly glPosting: GlPostingService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAccountingPeriods(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -34,7 +40,7 @@ export class FiService {
     return safeCall(async () => {
     const result = await this.repo.closeAccountingPeriod(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Hisob davri #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.accountingPeriodNotFoundWithId', { args: { id } }));
     return result.data;
   
     });}
@@ -43,7 +49,7 @@ export class FiService {
     return safeCall(async () => {
     const result = await this.repo.postGlDocument(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`GL hujjat #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.glDocumentNotFoundWithId', { args: { id } }));
     return result.data;
   
     });}
@@ -132,11 +138,69 @@ export class FiService {
     });
   }
 
+  /**
+   * Create a GL document = post a BALANCED double-entry journal to the canonical `entries` ledger
+   * (SAP#76: `entries` is the ONE money ledger; gl_lines/gl_documents are NOT the ledger of record).
+   *
+   * Honest contract (Q-40, Q-43):
+   *  - The request `lines[]` are summed; each leg carries an account code (`accountCode` or, as a
+   *    string code, `account_id`) plus `debit`/`credit`.
+   *  - If ΣDebit == ΣCredit (within 0.01) AND there is at least one debit leg and one credit leg,
+   *    we post real balanced rows via the ONE engine (GlPostingService → resolves codes → accounts.id
+   *    → INSERT into `entries`). The header is NOT written to gl_documents — entries is the truth.
+   *  - Otherwise (e.g. the current FE single-debit line with no contra) we return a CLEAR 400. We do
+   *    NOT silently persist a header, do NOT write gl_lines, and do NOT invent a contra account.
+   */
   async createGlDoc(dto: Record<string, unknown>): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-      const result = await this.repo.createGlDoc(dto);
-      if (!result.ok) throw new InternalServerErrorException(result.error);
-      return result.data;
+      const rawLines = Array.isArray(dto.lines) ? (dto.lines as Array<Record<string, unknown>>) : [];
+      if (rawLines.length === 0) {
+        throw new BadRequestException(await this.i18n.t('errors.glDocumentEmptyLines'));
+      }
+
+      // Map each document line to a JournalLine. The account is identified by code (`accountCode`);
+      // `account_id` is accepted only when it is itself a code string (no silent wrong-account post).
+      const lines: JournalLine[] = rawLines.map((l) => {
+        const accountCode = String(l.accountCode ?? l.account_id ?? l.accountId ?? '').trim();
+        const debit = Number(l.debit ?? 0) || 0;
+        const credit = Number(l.credit ?? 0) || 0;
+        const accountName = String(l.accountName ?? l.account_name ?? accountCode);
+        return { accountCode, accountName, debit, credit };
+      });
+
+      const totalDebit = lines.reduce((s, l) => s + (l.debit > 0 ? l.debit : 0), 0);
+      const totalCredit = lines.reduce((s, l) => s + (l.credit > 0 ? l.credit : 0), 0);
+      const hasDebitLeg = lines.some((l) => l.debit > 0);
+      const hasCreditLeg = lines.some((l) => l.credit > 0);
+
+      // Double-entry balance is REQUIRED. The current FE sends a single debit line with no contra —
+      // that is genuinely unbalanced and is rejected here (an honest error beats a fake-green header).
+      if (!hasDebitLeg || !hasCreditLeg || Math.abs(totalDebit - totalCredit) > 0.01) {
+        throw new BadRequestException(
+          await this.i18n.t('errors.glDocumentUnbalanced', { args: { totalDebit, totalCredit } }),
+        );
+      }
+
+      // Balanced → post to the canonical entries ledger via the ONE engine.
+      const reference = String(dto.documentNumber ?? `GLDOC-${Date.now()}`);
+      const posted = await this.glPosting.postJournal(lines, reference);
+      if (!posted.ok) {
+        // Account-not-in-chart / DB failures surface honestly (no header, no gl_lines).
+        throw new BadRequestException(
+          typeof posted.error === 'string' ? posted.error : posted.error.message,
+        );
+      }
+
+      return {
+        entryId: posted.data,
+        reference,
+        documentDate: dto.documentDate ?? dto.document_date ?? null,
+        description: dto.description ?? null,
+        totalDebit,
+        totalCredit,
+        lines,
+        ledger: 'entries',
+      };
     });
   }
 
@@ -160,7 +224,7 @@ export class FiService {
     return safeCall(async () => {
       const result = await this.repo.updateProfitCenter(id, dto);
       if (!result.ok) throw new InternalServerErrorException(result.error);
-      if (!result.data) throw new NotFoundException(`Foyda markazi #${id} topilmadi`);
+      if (!result.data) throw new NotFoundException(await this.i18n.t('errors.profitCenterNotFoundWithId', { args: { id } }));
       return result.data;
     });
   }
@@ -170,6 +234,14 @@ export class FiService {
       const result = await this.repo.deleteProfitCenter(id);
       if (!result.ok) throw new InternalServerErrorException(result.error);
       return { success: true };
+    });
+  }
+
+  async getTaxSummary(): Promise<Result<{ totalThisMonth: number; paid: number; pending: number; overdue: number }, AppError>> {
+    return safeCall(async () => {
+      const result = await this.repo.getTaxSummary();
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
     });
   }
 }

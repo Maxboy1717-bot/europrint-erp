@@ -125,4 +125,21 @@ describe('ArAgingHandler', () => {
       expect(result.data.thirtyDays.percentage).toBe(50);
     }
   });
+
+  // F4 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): this handler previously read the legacy
+  // `fi_invoices` view (over `invoices`), which understated AR by ~85M — a completely
+  // disconnected invoice source from the canonical `finance_invoices` table.
+  it('queries the canonical finance_invoices table, not the legacy fi_invoices view', async () => {
+    (runQuery as jest.Mock).mockResolvedValue({ rows: [] });
+    const handler = await buildHandler(makeCfo(defaultRates));
+
+    await handler.execute(new ArAgingQuery());
+
+    const sqlCall = (runQuery as jest.Mock).mock.calls[0][0];
+    const sqlText = (sqlCall.queryChunks ?? [])
+      .map((c: unknown) => (c && typeof c === 'object' && 'value' in c ? (c as { value: string[] }).value.join('') : ''))
+      .join('');
+    expect(sqlText).toMatch(/finance_invoices/);
+    expect(sqlText).not.toMatch(/\bfi_invoices\b/);
+  });
 });

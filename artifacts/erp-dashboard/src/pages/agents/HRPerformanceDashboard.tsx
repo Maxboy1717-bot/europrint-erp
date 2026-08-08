@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Users, AlertTriangle, TrendingDown, RefreshCw, Search } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 interface PerformanceRes { score: number; reasons: string[] }
 interface ChurnRes { risk: 'low' | 'medium' | 'high'; reasonsUz: string[] }
@@ -49,15 +49,10 @@ export default function HRPerformanceDashboard() {
 
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Users className="h-7 w-7 text-[var(--ep-red)]" />
-          <div>
-            <h1 className="text-2xl font-bold">{t("hrPerformanceAi")}</h1>
-            <p className="text-sm text-muted-foreground">{t("xodimSamaradorligiChurnXavfiBonus")}</p>
-          </div>
-        </div>
-      </header>
+      <EPPageHeader
+        title={<span className="flex items-center gap-3"><Users className="h-7 w-7 text-[var(--ep-red)]" />{t("hrPerformanceAi")}</span>}
+        subtitle={t("xodimSamaradorligiChurnXavfiBonus")}
+      />
 
       <Card className="p-4">
         <div className="flex items-end gap-2">

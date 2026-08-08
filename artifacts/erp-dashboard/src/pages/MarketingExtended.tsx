@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { selectArray } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -36,14 +37,15 @@ export default function MarketingExtended() {
 
   const meta = tabMeta[activeTab] || tabMeta["roi"];
 
-  const { data: campaigns = [], refetch } = useQuery<MarketingCampaign[]>({ queryKey: ["/api/marketing/campaigns"] });
+  const { data: campaigns = [], refetch } = useQuery<MarketingCampaign[]>({ queryKey: ["/api/marketing/campaigns"], select: selectArray<MarketingCampaign> });
 
   const { data: npsData = [], isLoading: npsLoading } = useQuery<NpsMonthly[]>({
     queryKey: ["/api/marketing/nps/monthly"]
   });
 
   const { data: abTests = [] } = useQuery<AbTest[]>({
-    queryKey: ["/api/marketing/ab-tests"]
+    queryKey: ["/api/marketing/ab-tests"],
+    select: selectArray<AbTest>,
   });
 
   const { data: competitors = [] } = useQuery<Competitor[]>({
@@ -56,8 +58,8 @@ export default function MarketingExtended() {
   });
 
   const totalBudget = (Array.isArray(campaigns) ? campaigns : []).reduce((s: number, c: MarketingCampaign) => s + (Number(c.budget) || 0), 0);
-  const totalSpent = (Array.isArray(campaigns) ? campaigns : []).reduce((s: number, c: MarketingCampaign) => s + (Number(c.spent) || 0), 0);
-  const roi = totalBudget > 0 ? ((totalBudget - totalSpent) / totalSpent) * 100 : 0;
+  const totalSpent = (Array.isArray(campaigns) ? campaigns : []).reduce((s: number, c: MarketingCampaign) => s + (Number(c.spentAmount) || 0), 0);
+  const roi = totalSpent > 0 ? ((totalBudget - totalSpent) / totalSpent) * 100 : 0;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">

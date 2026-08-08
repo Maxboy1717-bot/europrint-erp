@@ -4,9 +4,11 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import * as os from 'os';
 import { Ok, Result, safeCall } from '@common/result';
 import { SystemRepository } from './system.repository';
+import { CronStatusService } from '../../cron/cron-status.service';
 
 import { SECONDS_PER_HOUR, SECONDS_PER_DAY, MS_PER_SECOND, ONE_KB } from '@common/constants/app.constants';
 const startTime = Date.now();
@@ -25,7 +27,11 @@ function formatUptime(sec: number): string {
 export class SystemService {
   private readonly logger = new Logger(SystemService.name);
 
-  constructor(private readonly repo: SystemRepository) {}
+  constructor(
+    private readonly repo: SystemRepository,
+    private readonly cronStatus: CronStatusService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async getHealth() {
     return safeCall(async () => {
@@ -63,25 +69,9 @@ export class SystemService {
   }
 
   getCronJobs(): Result<object[]> {
-    return Ok([
-      { name: 'Papka deadline eslatma', schedule: 'Har kuni 09:00', module: 'PP', status: 'active' },
-      { name: 'Birthday greetings', schedule: 'Har kuni 00:00', module: 'HR', status: 'active' },
-      { name: 'Haftalik KPI hisobot', schedule: 'Dushanba 09:00', module: 'HR', status: 'active' },
-      { name: 'Maosh eslatma', schedule: "Har oyning 25-si", module: 'FI', status: 'active' },
-      { name: 'Debitor aging', schedule: 'Har kuni 09:00', module: 'FI', status: 'active' },
-      { name: 'Haftalik aging report', schedule: 'Dushanba 09:00', module: 'FI', status: 'active' },
-      { name: "SD muddati o'tgan", schedule: 'Har kuni 09:00', module: 'SD', status: 'active' },
-      { name: 'Direktor kunlik hisobot', schedule: 'Har kuni 07:00', module: 'DIR', status: 'active' },
-      { name: 'Shift handover', schedule: '14:00 va 22:00', module: 'PP', status: 'active' },
-      { name: 'Kunlik reja hisobot', schedule: '18:00', module: 'PP', status: 'active' },
-      { name: "Byudjet 90% alert", schedule: 'Dushanba 09:00', module: 'FI', status: 'active' },
-      { name: 'Sertifikat muddati', schedule: 'Har kuni 09:00', module: 'HR', status: 'active' },
-      { name: 'Litsenziya muddati', schedule: 'Har kuni 09:00', module: 'HR', status: 'active' },
-      { name: 'Sensor anomaly', schedule: 'Har 15 daqiqa', module: 'IoT', status: 'active' },
-      { name: 'WMS min-stock', schedule: '08:00 va 14:00', module: 'WMS', status: 'active' },
-      { name: 'LMS kurs deadline', schedule: 'Har kuni 08:00', module: 'LMS', status: 'active' },
-      { name: 'Churn monitoring', schedule: 'Dushanba 08:00', module: 'CRM', status: 'active' },
-    ]);
+    // Real registry from CronStatusService — reflects actual @Cron() decorators
+    // including lastRanAt, nextRunAt, successCount, failureCount, lastResult.
+    return Ok(this.cronStatus.getAllStatuses());
   }
 
   getIntegrations(): Result<object[]> {
@@ -101,7 +91,7 @@ export class SystemService {
   async getSettings() {
     return safeCall(async () => {
       const found = await this.repo.getSettings();
-      if (!found) throw new NotFoundException('Record not found');
+      if (!found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
       return found;
     });
   }

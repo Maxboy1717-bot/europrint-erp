@@ -8,7 +8,8 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -47,16 +48,27 @@ export class PosMovementStatusService {
     private readonly eventEmitter:     EventEmitter2,
     private readonly repo:             PosMovementStatusRepository,
     private readonly glRepo:           GlPostingLogRepository,
+    private readonly i18n:             I18nService,
   ) {}
 
   async updateStatus(movementId: number, dto: UpdateMovementStatusDto, updatedById: number, ipAddress?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const movementR = await this.repo.findMovement(movementId);
-      if (!movementR.ok) throw new NotFoundException(`Harakat topilmadi: ${movementId}`);
+      if (!movementR.ok) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id: movementId } }));
       const movement = movementR.data as Record<string, unknown>;
       const movStatus = String(movement.status ?? '');
       if (!isTransitionAllowed(movStatus, dto.status)) {
-        throw new BadRequestException(`${movStatus} → ${dto.status} o'tish ruxsat etilmagan`);
+        throw new BadRequestException(await this.i18n.t('errors.movementStatusTransitionNotAllowed', { args: { from: movStatus, to: dto.status } }));
+      }
+      // Completion-guard (2.2-qc-bypass-blok): quarantine_required=true bo'lsa, qc_status
+      // to'ldirilmaguncha 'completed'ga o'tish TAQIQ. pending→approved→completed yo'li
+      // (VALID_TRANSITIONS) avval qc_status'ni tekshirmasdan o'tkazib yuborardi — bu QC
+      // bosqichini butunlay chetlab o'tishga imkon berardi (jonli: 3/4 EXTERNAL_IN
+      // quarantine_required=true, qc_status=NULL, status='completed').
+      if (dto.status === 'completed' && movement.quarantineRequired === true && !movement.qcStatus) {
+        throw new BadRequestException(
+          await this.i18n.t('errors.movementQuarantinePendingQc', { args: { id: movementId } }),
+        );
       }
       const oldStatus = movStatus;
       const updated = await this.repo.updateMovementStatus(movementId, {
@@ -71,11 +83,25 @@ export class PosMovementStatusService {
 
       const step = statusToConfirmStep(dto.status);
       if (step) {
+        // POS-19 #131: OMBOR bosqichida (status='approved') agar receivedQty
+        // kiritilgan bo'lsa, harakat qatorlari yig'indisi (topshirilgan
+        // miqdor) bilan solishtiramiz — farq bo'lsa recordConfirmation
+        // decision='DISPUTED' ga o'tkazadi (nizo holati).
+        let handedOverQty: number | undefined;
+        let receivedQty: number | undefined;
+        if (step === 'OMBOR' && dto.receivedQty != null) {
+          const linesR = await this.repo.getMovementLines(movementId);
+          const lines = linesR.ok && Array.isArray(linesR.data) ? linesR.data as Record<string, unknown>[] : [];
+          handedOverQty = lines.reduce((s, l) => s + Number(l.quantity ?? 0), 0);
+          receivedQty = dto.receivedQty;
+        }
         await this.stockLedger.recordConfirmation(
           movementId, step, updatedById,
           statusToConfirmDecision(dto.status),
           dto.reason,
           ipAddress,
+          handedOverQty,
+          receivedQty,
         );
       }
 
@@ -114,9 +140,9 @@ export class PosMovementStatusService {
 
   async recordQcDecision(dto: QcDecisionDto, qcInspectorId: number, ipAddress?: string) {
     const movementR = await this.repo.findMovement(dto.movementId);
-    if (!movementR.ok) throw new NotFoundException(`Harakat topilmadi: ${dto.movementId}`);
+    if (!movementR.ok) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id: dto.movementId } }));
     const movement = movementR.data as Record<string, unknown>;
-    if (movement.status !== 'qc_pending') throw new BadRequestException('QC faqat qc_pending holatida amalga oshiriladi');
+    if (movement.status !== 'qc_pending') throw new BadRequestException(await this.i18n.t('errors.qcOnlyAllowedWhenPending'));
 
     const newStatus = QC_STATUS_MAP[dto.decision];
 
@@ -167,11 +193,36 @@ export class PosMovementStatusService {
         await this.repo.upsertStockIn(matId, toWh, qty);
         await this.stockLedger.recordEntry(matId, toWh, qty, movId, `in:${movType.code}`);
       } else if (movType?.direction === 'out') {
-        await this.repo.decrementStock(matId, fromWh, qty);
+        // VISION-3340 #57: decrementStock() now guards against overdraw at the DB level
+        // (available_quantity >= qty) and reports Err(INSUFFICIENT_STOCK) when the guard
+        // fails. Previously the Result was discarded here, so an overdrawn line silently
+        // floored to 0 and the movement completed as if nothing had gone wrong. Abort the
+        // whole completion instead of recording a ledger entry / GL posting for stock that
+        // was never actually moved.
+        const decR = await this.repo.decrementStock(matId, fromWh, qty);
+        if (!decR.ok) {
+          throw new BadRequestException(await this.i18n.t('errors.insufficientStockOrMaterialNotInWarehouse'));
+        }
         await this.stockLedger.recordEntry(matId, fromWh, -qty, movId, `out:${movType.code}`);
       } else if (movType?.direction === 'transfer') {
-        await this.repo.decrementStock(matId, fromWh, qty);
-        await this.repo.upsertStockIn(matId, toWh, qty);
+        // Audit 2026-08-08: `toWh` used to be silently allowed empty — the FE never sent
+        // `toWarehouseId` for INTERNAL_TRANSFER (docs/audit/POS-KIRIM-CHIQIM-VA-MES-JADVAL-
+        // TAHLILI-2026-08-08.md §A.3), and `upsertStockIn`'s Result was never checked, so a
+        // failed destination-credit went unnoticed while the (checked) source-debit still
+        // completed — material decremented from the source, never reliably credited anywhere.
+        // Fail fast before touching stock at all when there is no real destination, and check
+        // BOTH halves of the transfer the same way `decrementStock` already was.
+        if (!toWh) {
+          throw new BadRequestException(await this.i18n.t('errors.transferDestinationWarehouseRequired'));
+        }
+        const decR = await this.repo.decrementStock(matId, fromWh, qty);
+        if (!decR.ok) {
+          throw new BadRequestException(await this.i18n.t('errors.insufficientStockOrMaterialNotInWarehouse'));
+        }
+        const incR = await this.repo.upsertStockIn(matId, toWh, qty);
+        if (!incR.ok) {
+          throw new InternalServerErrorException(await this.i18n.t('errors.transferDestinationCreditFailed'));
+        }
         await this.stockLedger.recordEntry(matId, fromWh, -qty, movId, `transfer_out:${movType.code}`);
         await this.stockLedger.recordEntry(matId, toWh, qty, movId, `transfer_in:${movType.code}`);
       }

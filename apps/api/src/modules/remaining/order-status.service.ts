@@ -4,6 +4,7 @@
  */
 
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Ok, Result, safeCall } from '@common/result';
 import { OrderStatusRepository } from './order-status.repository';
 
@@ -34,7 +35,10 @@ export const STATUS_TRANSITIONS: Record<string, string[]> = {
 
 @Injectable()
 export class OrderStatusService {
-  constructor(private readonly repo: OrderStatusRepository) {}
+  constructor(
+    private readonly repo: OrderStatusRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   getStatusChain(): Result<{ chain: string[]; transitions: Record<string, string[]> }> {
     return Ok({ chain: Object.keys(STATUS_TRANSITIONS), transitions: STATUS_TRANSITIONS });
@@ -47,7 +51,7 @@ export class OrderStatusService {
   async transition(orderId: string, body: Record<string, unknown>, userId: number) {
     return safeCall(async () => {
       const newStatus = String(body['status'] ?? '');
-      if (!newStatus) throw new BadRequestException('status talab qilinadi');
+      if (!newStatus) throw new BadRequestException(await this.i18n.t('validation.statusRequired'));
       const log = await this.repo.insertTransitionLog(orderId, newStatus, userId, body['notes']);
       await this.repo.updateOrderStatus(orderId, newStatus);
       return { success: true, log };

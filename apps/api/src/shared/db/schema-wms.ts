@@ -5,6 +5,8 @@
 
 import {
   pgTable,
+  serial,
+  varchar,
   uuid,
   text,
   boolean,
@@ -168,6 +170,12 @@ export const qc_inspections = pgTable(
     items_failed: integer('items_failed').notNull(),
     notes: text('notes'),
     attachments: text('attachments').default('[]'),
+    // T21-A2 — sifat-saralash navi (first|second|third|scrap); NULL = saralanmagan.
+    // Narx-koeffitsienti qc_sort_price_config / qc_grade_price_coefficients dan keladi.
+    sort_grade: text('sort_grade'),
+    // 09-qc #34 — QC gate stage classifier for per-stage FTQ weakest-link auto-flag.
+    // text+CHECK in live DB (matches status varchar convention); NULL = unclassified.
+    stage: text('stage', { enum: ['incoming', 'in_process', 'final', 'dispatch'] }),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -175,5 +183,34 @@ export const qc_inspections = pgTable(
     index('qc_inspections_reference_id_idx').on(table.reference_id),
     index('qc_inspections_inspector_id_idx').on(table.inspector_id),
     index('qc_inspections_status_idx').on(table.status),
+    index('qc_inspections_stage_idx').on(table.stage),
+  ],
+);
+
+// ============================================================================
+// 09-qc #62 — First-article (birinchi namuna) approval GATE
+// A production run (tiraj) is HALTED until its first article is inspected and
+// APPROVED. Exactly one gate row per production_order (unique). status defaults
+// 'pending' => run blocked by default; only 'approved' releases it. Matches
+// migrations/qc-first-article-approval-gate.sql (APPROVED owner Q-35 2026-07-11).
+// ============================================================================
+export const qc_first_article_approvals = pgTable(
+  'qc_first_article_approvals',
+  {
+    id: serial('id').primaryKey(),
+    production_order_id: integer('production_order_id').notNull(),
+    inspection_id: integer('inspection_id'),
+    status: varchar('status', { length: 20 }).notNull().default('pending'),
+    sample_size: integer('sample_size').notNull().default(1),
+    defect_count: integer('defect_count').notNull().default(0),
+    decided_by: integer('decided_by'),
+    decided_at: timestamp('decided_at', { withTimezone: true }),
+    notes: text('notes'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('qc_first_article_approvals_po_uniq').on(table.production_order_id),
+    index('qc_first_article_approvals_status_idx').on(table.status),
   ],
 );

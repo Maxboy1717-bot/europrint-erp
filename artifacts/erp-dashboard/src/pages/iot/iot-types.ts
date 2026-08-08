@@ -37,7 +37,11 @@ export interface ProductionSession {
   lastSignalAt?: string;
   setupStartedAt?: string;
   setupEndedAt?: string;
-  oee?: number;
+  /** OEE factor breakdown (real columns on production_sessions). */
+  availability?: number | string | null;
+  performance?: number | string | null;
+  quality?: number | string | null;
+  oee?: number | string | null;
   orderNumber?: string;
   productName?: string;
   productNameRu?: string;
@@ -125,4 +129,7 @@ export interface CompletionReportData {
   };
 }
 
-export type IotLang = "uz" | "ru";
+// i18n F2 (2026-07-05): widened from "uz" | "ru" to the canonical 3-language
+// type -- the old 2-value type is exactly why uz-cyr tablet users always saw
+// Russian (the type itself made a 3rd branch impossible to represent).
+export type { Language as IotLang } from "@/lib/i18n";

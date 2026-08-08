@@ -10,6 +10,7 @@ import { ChatRoomService } from './chat-room.service';
 import { ChatMessageService } from './chat-message.service';
 import { ChatMessageExtService } from './chat-message-ext.service';
 import { ChatRoomRepository } from './repositories/chat-room.repository';
+import { ChatPresenceRepository } from './repositories/chat-presence.repository';
 
 @Injectable()
 export class ChatService {
@@ -22,6 +23,7 @@ export class ChatService {
     private readonly msgExtSvc: ChatMessageExtService,
     private readonly roomRepo: ChatRoomRepository,
     private readonly i18n: I18nService,
+    private readonly presenceRepo: ChatPresenceRepository,
   ) {}
 
   async ensureTables(): Promise<Result<void, AppError>> {
@@ -57,6 +59,11 @@ export class ChatService {
       `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS last_message_id TEXT`,
       `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`,
       `CREATE TABLE IF NOT EXISTS chat_message_tasks (id SERIAL PRIMARY KEY, message_id INTEGER NOT NULL, title TEXT NOT NULL, assigned_to INTEGER, due_date DATE, priority TEXT DEFAULT 'medium', status TEXT DEFAULT 'open', created_at TIMESTAMPTZ DEFAULT NOW())`,
+      `ALTER TABLE chat_message_tasks ADD COLUMN IF NOT EXISTS room_id INTEGER`,
+      `ALTER TABLE chat_message_tasks ADD COLUMN IF NOT EXISTS created_by INTEGER`,
+      // Owner 2026-07-13: "Xabardan Task Yaratish" endi haqiqiy Kanban karta yaratadi;
+      // bu ustun o'sha kartaga bog'lam (traceability: qaysi xabar → qaysi karta).
+      `ALTER TABLE chat_message_tasks ADD COLUMN IF NOT EXISTS kanban_card_id INTEGER`,
       `DELETE FROM chat_members cm USING admins a JOIN users u ON u.username = a.username WHERE cm.user_id = a.id::text AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.room_id = cm.room_id AND cm2.user_id = u.id::text)`,
       `UPDATE chat_members cm SET user_id = u.id::text FROM admins a JOIN users u ON u.username = a.username WHERE cm.user_id = a.id::text AND NOT EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.room_id = cm.room_id AND cm2.user_id = u.id::text)`,
     ];
@@ -104,19 +111,27 @@ export class ChatService {
     const isMember = await this.roomSvc.isRoomMember(roomId, userId);
     if (!isMember) throw new ForbiddenException(await this.i18n.t('auth.permissionsDenied'));
   }
+
+  async assertRoomAdmin(roomId: string | number, userId: number): Promise<void> {
+    const isAdmin = await this.roomSvc.isRoomAdmin(roomId, userId);
+    if (!isAdmin) throw new ForbiddenException(await this.i18n.t('auth.permissionsDenied'));
+  }
   getTotalUnreadCount(userId: number) { return this.roomSvc.getTotalUnreadCount(userId); }
+  getBulkUnreadCounts(userIds: number[]) { return this.roomSvc.getBulkUnreadCounts(userIds); }
   getAllEmployees(search?: string) { return this.roomSvc.getAllEmployees(search); }
   getTodayBirthdays() { return this.roomSvc.getTodayBirthdays(); }
   toggleMemberMute(roomId: string, userId: string, muted: boolean) { return this.roomSvc.toggleMemberMute(roomId, userId, muted); }
   getOrCreateDepartmentRooms(userId: number) { return this.roomSvc.getOrCreateDepartmentRooms(userId); }
+  getSharedFiles(roomId: string | number, type?: string) { return this.roomSvc.getSharedFiles(roomId, type); }
 
   getMessages(roomId: string | number, userId: number, limit?: number, before?: string) { return this.msgSvc.getMessages(roomId, userId, limit, before); }
   sendMessage(roomId: string | number, senderId: number, content: string, opts?: Record<string, unknown>) {
     const replyToId = opts?.replyToId != null ? Number(opts.replyToId) : undefined;
-    return this.msgSvc.sendMessage(roomId, senderId, content, opts?.fileUrl as string | undefined, opts?.fileName as string | undefined, opts?.fileType as string | undefined, replyToId);
+    return this.msgSvc.sendMessage(roomId, senderId, content, opts?.fileUrl as string | undefined, opts?.fileName as string | undefined, opts?.fileType as string | undefined, replyToId, opts?.clientMsgId as string | undefined, opts?.mentionedUserIds as (number | string)[] | undefined);
   }
   editMessage(messageId: string | number, userId: number, content: string) { return this.msgSvc.editMessage(messageId, userId, content); }
   deleteMessage(messageId: string | number, userId: number) { return this.msgSvc.deleteMessage(messageId, userId); }
+  hideMessageForUser(messageId: string | number, userId: number) { return this.msgSvc.hideMessageForUser(messageId, userId); }
   pinMessage(messageId: string | number, userId: number, pin: boolean) { return this.msgSvc.pinMessage(messageId, userId, pin); }
   getPinnedMessage(roomId: string | number) { return this.msgSvc.getPinnedMessage(roomId); }
 
@@ -129,4 +144,15 @@ export class ChatService {
   getReactions(messageId: string | number) { return this.msgExtSvc.getReactions(messageId); }
   createPoll(roomId: string | number, senderId: number, question: string, options: string[], isMultiple: boolean, isAnonymous: boolean) { return this.msgExtSvc.createPoll(roomId, senderId, question, options, isMultiple, isAnonymous); }
   votePoll(pollId: string | number, userId: number, optionIndices: number[]) { return this.msgExtSvc.votePoll(pollId, userId, optionIndices); }
+
+  /** Returns users with status=ONLINE from DB (survives server restart). */
+  getOnlineUsers() { return this.presenceRepo.findOnlineUsers(); }
+  getUserPresence(userId: string) { return this.presenceRepo.findPresence(userId); }
+  getRelatedTasks(userId: number) { return this.roomRepo.findRelatedTasks(userId); }
+  listRoomNotes(roomId: number) { return this.roomRepo.listRoomNotes(roomId); }
+  addRoomNote(roomId: number, authorUserId: number, body: string) { return this.roomRepo.addRoomNote(roomId, authorUserId, body); }
+  deleteRoomNote(roomId: number, noteId: number) { return this.roomRepo.deleteRoomNote(roomId, noteId); }
+  listRoomTags(roomId: number) { return this.roomRepo.listRoomTags(roomId); }
+  addRoomTag(roomId: number, tag: string, createdBy: number) { return this.roomRepo.addRoomTag(roomId, tag, createdBy); }
+  removeRoomTag(roomId: number, tag: string) { return this.roomRepo.removeRoomTag(roomId, tag); }
 }

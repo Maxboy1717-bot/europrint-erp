@@ -15,7 +15,8 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FinanceExtendedService } from '../finance-extended/finance-extended.service';
 import { CreateIncomeExpenseSchema, UpdateIncomeExpenseSchema } from './dto/finance-dtos';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
+import { Err } from '@common/result';
 import { FINANCE_ROLES, CreateInventoryCountSchema, CreateAssetSchema } from './finance-extended-dtos';
 
 @ApiThrottle()
@@ -106,8 +107,8 @@ export class FinanceExtendedIncomeController {
   @ApiOperation({ summary: 'Get asset inventory summary' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('asset-inventory/summary')
-  getAssetInventorySummary() {
-    return { total: 0, active: 0, depreciated: 0, totalValue: 0 };
+  async getAssetInventorySummary() {
+    return unwrapOrInternal(await this.svc.findAssetInventorySummary());
   }
 
   @ApiOperation({ summary: 'Get asset by id' })
@@ -153,10 +154,16 @@ export class FinanceExtendedIncomeController {
     return unwrapOrInternal(await this.svc.findInsurance(query));
   }
 
-  @ApiOperation({ summary: 'Get ai finance insights' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiOperation({ summary: 'Get AI finance insights — requires AI provider (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no AI provider configured' })
   @Get('ai-finance-insights')
   getAiFinanceInsights() {
-    return { insights: [], generatedAt: _time.now().toISOString() };
+    // Q-40 honesty policy: AI-generated finance insights require an external
+    // AI/ML provider that is NOT configured. Returning a hardcoded empty
+    // `{ insights: [] }` would be a fake-success echo (Q-10). Return an
+    // honest 501 instead — mirrors modules/crm/application/crm-ai-extended.service.ts NOT_IMPL().
+    return unwrapOrThrow(
+      Err<never>({ code: 'NOT_IMPLEMENTED', message: 'ai-finance-insights: no AI provider configured' }),
+    );
   }
 }

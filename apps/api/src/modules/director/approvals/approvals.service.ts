@@ -5,6 +5,7 @@
 
 import { Injectable, NotFoundException, BadRequestException, Logger, Optional } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
+import { I18nService } from 'nestjs-i18n';
 import { approvalRequests } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
 import { ApprovalsRepository } from './approvals.repository';
@@ -35,6 +36,7 @@ export class ApprovalsService {
   private readonly logger = new Logger(ApprovalsService.name);
   constructor(
     private readonly repo: ApprovalsRepository,
+    private readonly i18n: I18nService,
     @Optional() private readonly eventBus?: EventBus,
   ) {}
 
@@ -69,8 +71,8 @@ export class ApprovalsService {
     return safeCall(async () => {
       this.logger.log(`Tasdiqlash so'rovi qabul qilinmoqda id=${id}`);
       const row = await this.repo.findById(id);
-      if (!row) throw new NotFoundException(`Tasdiqlash #${id} topilmadi`);
-      if ((row as Record<string, unknown>)['status'] === 'approved') throw new BadRequestException(`Tasdiqlash #${id} allaqachon approved`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.approvalRequestNotFoundWithId', { args: { id } }));
+      if ((row as Record<string, unknown>)['status'] === 'approved') throw new BadRequestException(await this.i18n.t('errors.approvalAlreadyApproved', { args: { id } }));
 
       const result = await this.repo.approve(id, approvedBy, notes);
 
@@ -86,8 +88,8 @@ export class ApprovalsService {
     return safeCall(async () => {
       this.logger.log(`Tasdiqlash so'rovi rad etilmoqda id=${id}`);
       const row = await this.repo.findById(id);
-      if (!row) throw new NotFoundException(`Tasdiqlash #${id} topilmadi`);
-      if ((row as Record<string, unknown>)['status'] === 'rejected') throw new BadRequestException(`Tasdiqlash #${id} allaqachon rejected`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.approvalRequestNotFoundWithId', { args: { id } }));
+      if ((row as Record<string, unknown>)['status'] === 'rejected') throw new BadRequestException(await this.i18n.t('errors.approvalAlreadyRejected', { args: { id } }));
 
       const result = await this.repo.reject(id, reason);
 

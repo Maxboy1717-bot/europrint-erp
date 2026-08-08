@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { DEFAULT_PAGE_SIZE } from '@common/constants/app.constants';
 import { Database } from '@/infrastructure/database/database';
 import { IUserRepo, UserFilters, PaginatedResult } from '../../domain/repositories/i-user.repo';
@@ -35,7 +36,10 @@ function rowToDomain(row: UserRow): UserAggregate {
 @Injectable()
 export class DrizzleUserRepo implements IUserRepo {
   private readonly logger = new Logger(DrizzleUserRepo.name);
-  constructor(private readonly db: Database) {}
+  constructor(
+    private readonly db: Database,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findById(id: number): Promise<UserAggregate | null> {
     try {
@@ -136,7 +140,7 @@ export class DrizzleUserRepo implements IUserRepo {
         } as typeof users.$inferInsert)
         .returning();
 
-      if (result.length === 0) throw new InternalServerErrorException('Failed to create user');
+      if (result.length === 0) throw new InternalServerErrorException(await this.i18n.t('errors.createFailed'));
       return rowToDomain(result[0]);
     } catch (error: unknown) {
       this.logger.error('Error creating user');
@@ -161,7 +165,7 @@ export class DrizzleUserRepo implements IUserRepo {
         .where(eq(users.id, data.id))
         .returning();
 
-      if (result.length === 0) throw new InternalServerErrorException('User not found');
+      if (result.length === 0) throw new InternalServerErrorException(await this.i18n.t('errors.userNotFound'));
       return rowToDomain(result[0]);
     } catch (error: unknown) {
       this.logger.error('Error updating user');
@@ -169,15 +173,16 @@ export class DrizzleUserRepo implements IUserRepo {
     }
   }
 
-  async softDelete(id: number): Promise<void> {
-    try {
-      await this.db.db
-        .update(users)
-        .set({ isActive: false, updatedAt: _time.now() })
-        .where(eq(users.id, id));
-    } catch (error: unknown) {
-      this.logger.error('Error soft deleting user');
-    }
+  async softDelete(id: number): Promise<boolean> {
+    // audit 2026-08-06 T3: was fire-and-forget (swallowed errors, ignored affected
+    // rows) — endpoint returned 200 even for nonexistent ids. Now returns whether
+    // a row was actually deactivated; DB errors propagate to the controller.
+    const result = await this.db.db
+      .update(users)
+      .set({ isActive: false, updatedAt: _time.now() })
+      .where(eq(users.id, id))
+      .returning({ id: users.id });
+    return result.length > 0;
   }
 
   async restore(id: number): Promise<void> {

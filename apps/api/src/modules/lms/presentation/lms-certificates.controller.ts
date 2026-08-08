@@ -11,9 +11,11 @@ Body,
   Logger,
   Param,
   Post,
+  Req,
   UseGuards,
   UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
@@ -58,8 +60,13 @@ export class LmsCertificatesController {
   async issueCertificate(
     @Body() body: LmsIssueCertificateDto,
     @CurrentUser() user: AuthenticatedUser,
+    @Req() req: FastifyRequest,
   ) {
     this.logger.log(`Issuing certificate - Employee: ${body.employeeId}, Course: ${body.courseId}`);
+    // LMS-12 #30 (legal-minimal cert fields, vision docs/audit/vision-1000-answers/12-lms.md
+    // #30): capture the issuing IP at issuance time — same pattern as
+    // auth-account.controller.ts resendOtp().
+    const issuedIp = (req.ip as string) || 'unknown';
     const result = await this.commandBus.execute(
       new IssueCertificateCommand(
         body.employeeId,
@@ -67,6 +74,7 @@ export class LmsCertificatesController {
         body.courseName ?? String(body.courseId),
         body.validityMonths ?? 12,
         user?.employeeId ?? user?.sub ?? 0,
+        issuedIp,
       ),
     );
     assertOk(result);

@@ -5,7 +5,7 @@
  *   warehouse-catalog module endpoints (see docs/B5-compat-endpoints.md). Existing routes
  *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
-import { Controller, UseGuards, Get, Post, Patch, Body, Query, Param, HttpCode, HttpException, HttpStatus , UseInterceptors} from '@nestjs/common';
+import { Controller, UseGuards, Get, Post, Put, Patch, Body, Query, Param, HttpCode, HttpException, HttpStatus , UseInterceptors} from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -20,15 +20,17 @@ import { CompatBodyDto } from './dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
-import {
-  WarehouseMaterialAclTranslator,
-  type LegacyWarehouseMaterialRow,
-  type WarehouseMaterialDto,
-} from './acl/warehouse-material-acl';
 
 const CreateWarehouseMaterialSchema = z.object({
   materialCode: z.string().trim().min(1).max(100),
   name: z.string().trim().min(1).max(500),
+  unit: z.string().trim().min(1).max(50).optional(),
+  category: z.string().trim().max(100).optional(),
+  minStock: z.number().nonnegative().optional(),
+});
+
+const UpdateWarehouseMaterialSchema = z.object({
+  name: z.string().trim().min(1).max(500).optional(),
   unit: z.string().trim().min(1).max(50).optional(),
   category: z.string().trim().max(100).optional(),
   minStock: z.number().nonnegative().optional(),
@@ -42,29 +44,11 @@ const CreateWarehouseMaterialSchema = z.object({
 @UseGuards(JwtAuthGuard)
 @Controller('warehouse')
 export class WarehouseCatalogController {
-  /** PA2-14 ACL translator. Stateless - direct instantiation is fine. */
-  private readonly materialAcl = new WarehouseMaterialAclTranslator();
-
   constructor(private readonly svc: WarehouseCatalogService) {}
 
   @Get('materials')
   async getMaterials(@Query('search') search?: string) {
     return unwrapOrInternal(await this.svc.getMaterials(search));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant of materials. New BC-5 (Warehouse)
-   * consumers should target this route; `/materials` stays for
-   * backwards-compat.
-   */
-  @Get('materials/v2')
-  async getMaterialsV2(@Query('search') search?: string): Promise<WarehouseMaterialDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getMaterials(search)) as unknown as LegacyWarehouseMaterialRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.materialAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: WarehouseMaterialDto } => r.ok)
-      .map((r) => r.data);
   }
 
   /**
@@ -76,6 +60,16 @@ export class WarehouseCatalogController {
   async createMaterial(@Body() body: unknown) {
     const dto = CreateWarehouseMaterialSchema.parse(body);
     return unwrapOrInternal(await this.svc.createMaterial(dto));
+  }
+
+  /**
+   * PUT /api/warehouse/materials/:id — SB0756/SB0757: edit path for the routed
+   * MaterialCardsPage (create-only until now). Real UPDATE into material_cards.
+   */
+  @Put('materials/:id')
+  async updateMaterial(@Param('id') id: string, @Body() body: unknown) {
+    const dto = UpdateWarehouseMaterialSchema.parse(body);
+    return unwrapOrInternal(await this.svc.updateMaterial(id, dto));
   }
 
   // C1 retire (2026-06-05): GET /api/warehouse/movements was a 501 alias for the canonical

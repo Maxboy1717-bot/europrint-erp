@@ -94,7 +94,7 @@ export function ERPProductsTab() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>{t('products')}</CardTitle>
+              <CardTitle>{t('rawMaterials')}</CardTitle>
               <CardDescription>{t('productsDesc')}</CardDescription>
             </div>
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>

@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { and, eq, desc } from 'drizzle-orm';
+import { and, eq, desc, sql } from 'drizzle-orm';
 import { Result, Err , Ok } from '@common/types/result.type';
 import { INotificationRepo } from '../../domain/repositories/i-notification.repo';
 import { Notification } from '../../domain/aggregates/notification.aggregate';
@@ -46,6 +46,18 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     const limit = filters.limit || 10;
     const offset = (page - 1) * limit;
 
+    // Priority rank: urgent/high surface first, created_at DESC is the secondary sort.
+    // Labels match the existing PriorityEnum that already writes this column
+    // (notification-schedules.controller.ts: 'low' | 'normal' | 'high' | 'urgent').
+    // NULL/unknown priority sorts last, after 'low'.
+    const priorityRank = sql`CASE ${notifications.priority}
+          WHEN 'urgent' THEN 0
+          WHEN 'high' THEN 1
+          WHEN 'normal' THEN 2
+          WHEN 'low' THEN 3
+          ELSE 4
+        END`;
+
     return Promise.all([
       db
         .select()
@@ -54,7 +66,7 @@ export class DrizzleNotificationRepository implements INotificationRepo {
           and(
             eq(notifications.userId, filters.userId),
             filters.isRead !== undefined ? eq(notifications.isRead, filters.isRead) : undefined))
-        .orderBy(desc(notifications.createdAt))
+        .orderBy(priorityRank, desc(notifications.createdAt))
         .limit(limit)
         .offset(offset)
         .execute()
@@ -101,12 +113,17 @@ export class DrizzleNotificationRepository implements INotificationRepo {
       .values({
         userId: String(notification.userId),
         title: notification.title,
+        body: notification.body,    // live NOT NULL — must be set (was omitted -> 23502)
         message: notification.body,
         type: notification.type,
         isRead: notification.isRead,
         entityType: notification.referenceType || null,
         entityId: notification.referenceId || null,
         createdAt: notification.createdAt,
+        senderId: notification.senderId ? Number(notification.senderId) : null,   // 18-notif #88
+        moduleCode: notification.moduleCode || null,   // owner 2026-07-13
+        channel: notification.channel || null,          // owner 2026-07-13
+        categoryCode: notification.categoryCode || null, // owner 2026-07-13 (notification_category taxonomy)
       } as typeof notifications.$inferInsert)
       .returning()
       .execute()
@@ -146,9 +163,10 @@ export class DrizzleNotificationRepository implements INotificationRepo {
       .update(notifications)
       .set({ isRead: true })
       .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)))
+      .returning({ id: notifications.id })
       .execute()
-      .then(() => {
-        return Ok(0); // Return number updated if available from DB
+      .then((rows) => {
+        return Ok(rows.length);
       })
       .catch((error) => {
         this.logger.error('Error marking all notifications as read');
@@ -160,7 +178,10 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     const notification = new Notification(
       String(row.userId ?? ''),
       String(row.title ?? ''),
-      String(row.message ?? ''),
+      // Read `body` first: external writers (pos/cron) populate body (6765/6765) but leave the
+      // drifted-nullable `message` NULL, so reading message alone returned empty for every real
+      // row. body ?? message keeps repo-created rows (which set both) working too.
+      String(row.body ?? row.message ?? ''),
       String(row.type ?? 'info'),
     );
 
@@ -168,6 +189,10 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     notification.isRead = Boolean(row.isRead);
     notification.referenceId = String(row.entityId ?? '');
     notification.referenceType = String(row.entityType ?? '');
+    notification.senderId = row.senderId != null ? String(row.senderId) : null;   // 18-notif #88
+    notification.moduleCode = row.moduleCode != null ? String(row.moduleCode) : null;   // owner 2026-07-13
+    notification.channel = row.channel != null ? String(row.channel) : null;             // owner 2026-07-13
+    notification.categoryCode = row.categoryCode != null ? String(row.categoryCode) : null; // owner 2026-07-13
     notification.createdAt = row.createdAt ? new Date(String(row.createdAt)) : _time.now();
     notification.updatedAt = _time.now();
 

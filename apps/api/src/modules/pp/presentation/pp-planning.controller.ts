@@ -26,6 +26,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { PpPlanningService } from '../application/pp-planning.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { PpCreateScheduleEntrySchema, PpCreateScheduleEntryDto, PpUpdateOperationSchema, PpUpdateOperationDto } from '../dto/pp.dto';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
 const PLAN_ROLES = ['super_admin', 'director', 'production_manager', 'technologist', 'planner'];
@@ -58,8 +60,8 @@ export class PpPlanningController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('schedule')
   @UsePipes(new ZodValidationPipe(PpCreateScheduleEntrySchema))
-  async createScheduleEntry(@Body() body: PpCreateScheduleEntryDto) {
-    return unwrapOrThrow(await this.svc.createScheduleEntry(body));
+  async createScheduleEntry(@Body() body: PpCreateScheduleEntryDto, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.createScheduleEntry(body, user.id));
   }
 
   @ApiOperation({ summary: 'Update operation' })
@@ -70,7 +72,8 @@ export class PpPlanningController {
   async updateOperation(
     @Param('id') id: string,
     @Body() body: PpUpdateOperationDto,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return unwrapOrThrow(await this.svc.updateOperation(safeInt(id, 0), body));
+    return unwrapOrThrow(await this.svc.updateOperation(safeInt(id, 0), body, user.id));
   }
 }

@@ -30,13 +30,13 @@ export class ReportBotDataService {
 
   isDeadlinePassed(): boolean {
     const hour = _time.now().getHours();
-    return hour >= 20;
+    return hour >= 16;
   }
 
   async saveReport(employeeId: number, reportDate: string, tasksCompleted: string, tomorrowPlan: string, metrics: string) {
     try {
       const hour = _time.now().getHours();
-      const isOnTime = hour < 20;
+      const isOnTime = hour < 16;
 
       const inserted = await this.repo.insertDailyReport(employeeId, reportDate, tasksCompleted, tomorrowPlan, metrics);
 

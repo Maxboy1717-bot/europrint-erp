@@ -12,6 +12,8 @@ import { UpdateDesignStatusCommand } from './update-design-status.command';
 import { DesignOrder } from '../../domain/aggregates/design-order.aggregate';
 import { IDesignRepo, DESIGN_REPO } from '../../domain/repositories/i-design.repo';
 import { isTransitionAllowed, DESIGN_TRANSITIONS } from '@common/constants/status-machines.constants';
+import { DesignStatus } from '../../domain/enums/design-status.enum';
+import { DesignApprovedEvent } from '../../domain/events';
 
 @Injectable()
 @CommandHandler(UpdateDesignStatusCommand)
@@ -35,7 +37,15 @@ export class UpdateDesignStatusHandler implements ICommandHandler<UpdateDesignSt
       return Err(`Cannot transition from ${designOrder.status} to ${command.status}`);
     }
     this.applyStatusChanges(designOrder, command);
-    return this.persistUpdate(command, designOrder);
+    const result = await this.persistUpdate(command, designOrder);
+    // Trigger 5: design approved → publish the typed DesignApprovedEvent so the PP
+    // DesignApprovedTrigger5Listener fires (design+lab join → sales_orders.master_status=
+    // 'pending_technology' once design is approved and the order needs no lab sample).
+    // Was never published, so Trigger 5 (design side) was a dead listener.
+    if (result.ok && command.status === DesignStatus.APPROVED) {
+      this.eventBus.publish(new DesignApprovedEvent(designOrder.id, designOrder.salesOrderId));
+    }
+    return result;
   }
 
   private applyStatusChanges(designOrder: DesignOrder, command: UpdateDesignStatusCommand): void {
@@ -44,7 +54,10 @@ export class UpdateDesignStatusHandler implements ICommandHandler<UpdateDesignSt
     if (command.files && command.files.length > 0) {
       designOrder.aiGeneratedDesign = command.files.join(',');
     }
-    if (command.status === 'completed') {
+    // A8 fix (2026-07-05): was checking the OLD status vocabulary's terminal state
+    // ('completed'), which no longer exists in DesignStatus/DESIGN_TRANSITIONS
+    // (terminal state is now 'approved') -- approvedAt was silently never stamped.
+    if (command.status === DesignStatus.APPROVED) {
       designOrder.approvedAt = _time.now();
     }
   }

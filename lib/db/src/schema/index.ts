@@ -39,6 +39,7 @@ export * from "./mm-material-cards";
 export * from "./marketing-schema";
 export * from "./mm-schema";
 export * from "./pp-schema";
+export * from "./pp/pp-gofra-formula";
 export * from "./qc-schema";
 export * from "./saas-schema";
 export * from "./sd-europrint-schema";
@@ -46,6 +47,7 @@ export * from "./sd-schema";
 export * from "./security-ops-schema";
 export * from "./strategic-ext-schema";
 export * from "./wms-schema";
+export * from "./wms-rulon-cards";
 export * from "./ai-providers-schema";
 export * from "./numeric-money";
 export * from "./master-config";
@@ -62,7 +64,6 @@ export {
   // (aiCvScreenings, jobTemplates, questionnaireQuestions, questionnaireTemplates
   //  are defined elsewhere — they're the authoritative copies).
 } from "./hr-architecture-additions";
-export * from "./pos-retail";
 export {
   // Re-export ONLY symbols unique to admin-assets; AssetDisposal/AssetTransfer
   // etc. are the authoritative copies in pp/pp-enhanced.
@@ -70,6 +71,7 @@ export {
 } from "./admin-assets";
 export type { AssetItem, InsertAssetItem, AssetMaintenance } from "./admin-assets";
 export * from "./fi-financial-reports";
+export * from "./fi-cashier-hub";
 export * from "./communication-center";
 export * from "./sd-customer-relations";
 export * from "./aisha-schema";

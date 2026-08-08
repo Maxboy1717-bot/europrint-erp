@@ -6,9 +6,17 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { I18nService } from 'nestjs-i18n';
 import { CrmBitrixCompatService } from '../../src/modules/crm/application/crm-bitrix-compat.service';
 import { CRM_BITRIX_COMPAT_REPO } from '../../src/modules/crm/domain/repositories/i-crm-bitrix-compat.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
+
+function makeI18n(): I18nService {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as I18nService;
+}
 
 type RepoMock = {
   listProposals: jest.Mock;
@@ -48,6 +56,7 @@ describe('CrmBitrixCompatService', () => {
       providers: [
         CrmBitrixCompatService,
         { provide: CRM_BITRIX_COMPAT_REPO, useValue: repo },
+        { provide: I18nService, useValue: makeI18n() },
       ],
     }).compile();
     svc = module.get(CrmBitrixCompatService);
@@ -62,7 +71,8 @@ describe('CrmBitrixCompatService', () => {
   it('throws NotFoundException when getRobot row missing', async () => {
     repo.getRobot.mockResolvedValue(Ok(null));
     // The service throws NotFoundException when the robot row is not found.
-    await expect(svc.getRobot(99)).rejects.toThrow('Robot #99 topilmadi');
+    // The i18n mock echoes the key (not the interpolated message).
+    await expect(svc.getRobot(99)).rejects.toThrow('errors.crmRobotNotFoundWithId');
   });
 
   it('returns Err when getRobot repo errors', async () => {

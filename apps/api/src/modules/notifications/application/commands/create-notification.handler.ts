@@ -6,12 +6,15 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/types/result.type';
+import { sql } from 'drizzle-orm';
+import { runQuery } from '@shared/db';
 import { CreateNotificationCommand } from './create-notification.command';
 import { Notification } from '../../domain/aggregates/notification.aggregate';
 import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
 import { ISmsSender, SMS_SENDER } from '../../domain/ports/i-sms-sender.port';
 import { IEmailSender, EMAIL_SENDER } from '../../domain/ports/i-email-sender.port';
 import { ITelegramSender, TELEGRAM_SENDER } from '../../domain/ports/i-telegram-sender.port';
+import { NotificationPreferencesService } from '../notification-preferences.service';
 
 export interface ExtendedCreateNotificationCommand extends CreateNotificationCommand {
   recipientEmail?: string;
@@ -30,7 +33,47 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     @Inject(TELEGRAM_SENDER) private readonly telegramService: ITelegramSender,
     @Inject(EMAIL_SENDER) private readonly emailService: IEmailSender,
     @Inject(SMS_SENDER) private readonly smsService: ISmsSender,
+    private readonly prefsService: NotificationPreferencesService,
       ) {}
+
+  /**
+   * Audit 2026-08-06 (Notifications): NotificationSettings.tsx saved channel toggles through
+   * a real CRUD path, but nothing on the send side ever read them — every notification went
+   * out on the caller's default channels regardless. The settings screen looked functional
+   * and changed nothing.
+   *
+   * Fails OPEN on purpose: if the preference lookup errors we keep the requested channels
+   * rather than silently muting someone. A duplicate notification is recoverable; a missed
+   * QC or security alert is not. 'in_app' is never filtered — it is the stored row itself.
+   */
+  private async applyUserPreferences(
+    rawUserId: string,
+    channels: Array<'telegram' | 'email' | 'sms' | 'in_app'>,
+  ): Promise<Array<'telegram' | 'email' | 'sms' | 'in_app'>> {
+    // CreateNotificationCommand.userId is a string; the prefs table keys on the numeric
+    // users.id. A non-numeric id means we cannot look preferences up — fail open.
+    const userId = Number.parseInt(String(rawUserId), 10);
+    if (!Number.isInteger(userId)) return channels;
+
+    const prefs = await this.prefsService.getPreferences(userId);
+    if (!prefs.ok) {
+      this.logger.warn(`Bildirishnoma sozlamalari o'qilmadi (user ${userId}) — so'ralgan kanallar saqlanadi`);
+      return channels;
+    }
+    const p = prefs.data;
+    const allowed = channels.filter((c) => {
+      if (c === 'in_app') return true;
+      if (c === 'email') return p.emailEnabled;
+      if (c === 'telegram') return p.telegramEnabled;
+      if (c === 'sms') return p.pushEnabled;
+      return true;
+    });
+    const muted = channels.filter((c) => !allowed.includes(c));
+    if (muted.length > 0) {
+      this.logger.log(`Foydalanuvchi ${userId} sozlamasi bo'yicha o'chirilgan kanallar: ${muted.join(', ')}`);
+    }
+    return allowed;
+  }
 
   async execute(command: CreateNotificationCommand): Promise<Result<Notification>> {
     const notification = Notification.createForUser(command.userId, command.title, command.body, command.type);
@@ -41,6 +84,26 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     if (command.referenceType) {
       notification.referenceType = command.referenceType;
     }
+    if (command.senderId) {
+      notification.senderId = command.senderId;
+    }
+    // Owner decision 2026-07-13 (chat) — module_code column: caller-supplied ERP module
+    // vocabulary (no reliable inference from referenceType exists across current callers).
+    if (command.moduleCode) {
+      notification.moduleCode = command.moduleCode;
+    }
+    // Owner decision 2026-07-13 (chat) — category_code column: caller-supplied
+    // notification-category taxonomy code (taxonomy_entries.code, category='notification_category').
+    if (command.categoryCode) {
+      notification.categoryCode = command.categoryCode;
+    }
+
+    const ext = command as ExtendedCreateNotificationCommand;
+    const requestedChannels = ext.channels ?? ['telegram', 'in_app'];
+    const channels = await this.applyUserPreferences(command.userId, requestedChannels);
+    // channel column: primary channel attempted for this notification — first entry of the
+    // resolved channels list, i.e. the same list the per-channel delivery loop below iterates.
+    notification.channel = channels[0] ?? 'in_app';
 
     const saveResult = await this.notificationRepo.save(notification);
 
@@ -49,43 +112,103 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
       return saveResult;
     }
 
-    const ext = command as ExtendedCreateNotificationCommand;
-    const channels = ext.channels ?? ['telegram', 'in_app'];
-
     const deliveries: Promise<void>[] = [];
+    // Collects "<channel>: <reason>" for every outbound channel that did not deliver, so the
+    // stored status reflects what actually happened instead of assuming success.
+    const failed: string[] = [];
 
+    // 18-notif — KRITIK BUG (2026-07-11 topildi): bu yergacha command.userId
+    // (ichki users.id) TO'G'RIDAN-TO'G'RI Telegram chat_id sifatida yuborilardi
+    // — Telegram API buni HAR DOIM rad etardi (haqiqiy chat_id emas), xato esa
+    // .catch() ichida jimgina yutilardi. Bir keyingi tuzatish `users.telegram_chat_id`
+    // ustunini qidira boshladi, lekin bu ustun HECH QACHON to'ldirilmaydi — real
+    // manba `employees.telegram_chat_id` (Telegram HR-bot /start bog'lash oqimi;
+    // bir xil naqsh telegram-auth.guard.ts:85-91, hr-bot-helpers.ts:41 da ishlatiladi
+    // — `employees e JOIN users u ON u.id = e.user_id WHERE e.telegram_chat_id = ...`).
+    // 2026-08-03: qidiruv shu haqiqiy ustunga to'g'irlandi (COALESCE bilan
+    // users.telegram_chat_id ham zaxira sifatida tekshiriladi, agar kelajakda
+    // to'g'ridan-to'g'ri to'ldirilsa); topilmasa — urinilmaydi (soxta muvaffaqiyat
+    // emas, Q-40).
     if (channels.includes('telegram')) {
       deliveries.push(
-        this.telegramService
-          .sendMessage(command.userId, `${command.title}\n${command.body}`)
-          .then((): void => { /* void */ })
-          .catch((): void => {
-            this.logger.warn('Telegram notification yuborilmadi');
-          }),
+        (async (): Promise<void> => {
+          const row = await runQuery<{ telegram_chat_id: string | null }>(sql`
+            SELECT COALESCE(e.telegram_chat_id, u.telegram_chat_id::text) AS telegram_chat_id
+            FROM users u
+            LEFT JOIN employees e ON e.user_id = u.id
+            WHERE u.id = ${command.userId}
+            LIMIT 1
+          `);
+          const chatId = row.rows[0]?.telegram_chat_id;
+          if (!chatId) {
+            this.logger.log(`Telegram yuborilmadi — user ${command.userId} chat_id bog'lamagan`);
+            return;
+          }
+          const sent = await this.telegramService.sendMessage(
+            String(chatId),
+            `${command.title}\n${command.body}`,
+          );
+          if (!sent.ok) {
+            failed.push(`telegram: ${sent.error.message}`);
+            this.logger.warn(`Telegram notification yuborilmadi — ${sent.error.message}`);
+          }
+        })().catch((err: unknown): void => {
+          this.logger.warn(`Telegram chat_id qidiruvi muvaffaqiyatsiz: ${String(err)}`);
+        }),
       );
     }
 
     if (channels.includes('email') && ext.recipientEmail) {
       deliveries.push(
-        this.emailService
-          .sendNotification(ext.recipientEmail, command.title, command.body, ext.link)
-          .then((): void => { /* void */ })
-          .catch((): void => {
-            this.logger.warn('Email notification yuborilmadi');
-          }),
+        (async (): Promise<void> => {
+          const sent = await this.emailService.sendNotification(
+            ext.recipientEmail as string, command.title, command.body, ext.link,
+          );
+          if (!sent.ok) {
+            failed.push(`email: ${sent.error.message}`);
+            this.logger.warn(`Email notification yuborilmadi — ${sent.error.message}`);
+          }
+        })(),
       );
     }
 
     if (channels.includes('sms') && ext.recipientPhone) {
       const smsText = `${command.title}: ${command.body}`.slice(0, 160);
       deliveries.push(
-        this.smsService.send({ to: ext.recipientPhone, text: smsText }).then((): void => { /* void */ }).catch((): void => {
-          this.logger.warn('SMS notification yuborilmadi');
-        }),
+        (async (): Promise<void> => {
+          const sent = await this.smsService.send({ to: ext.recipientPhone as string, text: smsText });
+          if (!sent.ok) {
+            failed.push(`sms: ${sent.error.message}`);
+            this.logger.warn(`SMS notification yuborilmadi — ${sent.error.message}`);
+          }
+        })(),
       );
     }
 
     await Promise.allSettled(deliveries);
+
+    // Audit 2026-08-06 (Notifications): every delivery used .then(()=>{}).catch(...), but the
+    // adapters return Result and never throw — so .catch() was unreachable and the Result's
+    // .ok was discarded. A dead SMTP host or a rejected Telegram send looked identical to a
+    // successful one, and notifications.status (added 2026-07-13 for exactly this) stayed
+    // 'pending' forever. Outcomes are now inspected and written back.
+    const outboundUsed = channels.some((c) => c !== 'in_app');
+    if (outboundUsed) {
+      const status = failed.length === 0 ? 'sent' : 'failed';
+      try {
+        await runQuery(sql`
+          UPDATE notifications SET status = ${status} WHERE id = ${saveResult.data.id}
+        `);
+      } catch (e) {
+        this.logger.warn(`notifications.status yangilanmadi (id=${saveResult.data.id}): ${String(e)}`);
+      }
+      if (failed.length > 0) {
+        this.logger.warn(
+          { notificationId: saveResult.data.id, failed },
+          'Notification yaratildi, lekin ba\'zi kanallar yetkazmadi',
+        );
+      }
+    }
 
     this.logger.log(
       { notificationId: saveResult.data.id, userId: command.userId, channels },

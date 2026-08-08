@@ -47,7 +47,7 @@ export class SdLeadsService {
     return this.repo.delete(lid);
   }
 
-  async convert(lid: number, notesVal: unknown): Promise<Result<{ lead_id: number; order: unknown }, AppError>> {
+  async convert(lid: number, notesVal: unknown, convertedBy?: number): Promise<Result<{ lead_id: number; order: unknown }, AppError>> {
     const leadNotFoundMsg = await this.i18n.t('errors.leadNotFound');
     const leadResult = await this.repo.getLeadForConvert(lid);
     if (!leadResult.ok) return Err(leadResult.error);
@@ -60,6 +60,7 @@ export class SdLeadsService {
       (lead as Record<string, unknown>).expected_amount,
       lid,
       notesVal,
+      convertedBy,
     );
     if (!orderResult.ok) return Err(orderResult.error);
     return Ok({ lead_id: lid, order: orderResult.data });

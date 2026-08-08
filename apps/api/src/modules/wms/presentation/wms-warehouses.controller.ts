@@ -6,7 +6,7 @@
 import { assertRequired } from '@common/assertions';
 import {
   Controller, Get, Post, Patch, Delete, Body, Param,
-  UseGuards, UseInterceptors, Query, Logger, BadRequestException, NotFoundException,
+  UseGuards, UseInterceptors, Query, Logger, BadRequestException, NotFoundException, ConflictException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, throwFromError, unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
@@ -18,6 +18,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
+import { I18nService } from 'nestjs-i18n';
 import { CreateWarehouseCommand } from '../application/commands/create-warehouse.command';
 import { GetWarehousesQuery } from '../application/queries/get-warehouses.query';
 import { CreateWarehouseDtoSchema, CreateWarehouseDto } from './dto/wms-extended.dto';
@@ -43,6 +44,7 @@ export class WmsWarehousesController {
     private commandBus: CommandBus,
     private queryBus: QueryBus,
     private readonly crudSvc: WmsCrudService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get all' })
@@ -67,7 +69,7 @@ export class WmsWarehousesController {
     assertOk(result);
     const items = Array.isArray(result.data?.items) ? result.data.items : [];
     const warehouse = (Array.isArray(items) ? items : []).find((w: Record<string, unknown>) => w.id === id);
-    assertRequired(warehouse, 'Omborni topilmadi');
+    assertRequired(warehouse, await this.i18n.t('errors.warehouseNotFound'));
     return warehouse;
   }
 
@@ -86,6 +88,17 @@ export class WmsWarehousesController {
       const warehouseType = String(dto.type ?? dto.warehouse_type ?? 'main');
       const nameRu = dto.name_ru ? String(dto.name_ru) : null;
       const location = (dto.location ?? dto.address) ? String(dto.location ?? dto.address) : null;
+
+      // Ombor tozalash (WMS-POS-FULL-AUDIT-2026-07-05, item 2): warehouses.code has a
+      // DB-level UNIQUE constraint, but name does not -- two warehouses with the same
+      // name and different auto-generated codes could both be created silently.
+      const dup = await rawSql(sql`
+        SELECT id FROM warehouses WHERE is_active = true AND lower(trim(name)) = lower(trim(${name})) LIMIT 1
+      `);
+      if ((dup as { rows?: Record<string, unknown>[] }).rows?.length) {
+        throw new ConflictException(await this.i18n.t('errors.warehouseNameAlreadyExists', { args: { name } }));
+      }
+
       const r = await rawSql(sql`
         INSERT INTO warehouses (code, name, name_ru, type, location, is_active, manager_id)
         VALUES (${code}, ${name}, ${nameRu}, ${warehouseType}, ${location}, true, ${user?.id ?? null})
@@ -94,7 +107,8 @@ export class WmsWarehousesController {
       const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
       return row ?? {};
     } catch (e) {
-      throw new BadRequestException(`Ombor yaratishda xatolik: ${String(e).substring(0, 200)}`);
+      if (e instanceof ConflictException) throw e;
+      throw new BadRequestException(await this.i18n.t('errors.warehouseCreationFailed', { args: { message: String(e).substring(0, 200) } }));
     }
   }
 
@@ -113,7 +127,7 @@ export class WmsWarehousesController {
         RETURNING id, code, name, type, is_active
       `);
       const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
-      if (!row) throw new NotFoundException(`Ombor #${id} topilmadi`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id } }));
       return row;
     } catch (e) {
       if (e instanceof NotFoundException) throw e;

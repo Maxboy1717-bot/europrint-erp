@@ -10,6 +10,8 @@ export interface IPpRoutingsRepository {
   findById(id: number): Promise<Result<any | null>>;
   findOperationsByRoutingId(routingId: string): Promise<Result<object[]>>;
   create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
+  addOperation(routingId: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
+  removeOperation(operationId: number): Promise<Result<void>>;
   update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   softDelete(id: number): Promise<Result<void>>;
 }

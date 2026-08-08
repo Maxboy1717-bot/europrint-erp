@@ -16,19 +16,24 @@ import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard} from '../../auth/guards/roles.guard';
 import { Roles} from '../../auth/decorators/roles.decorator';
-import { Role} from '../../auth/enums/role.enum';
+import { Role} from '@common/constants/roles.constants';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@auth/types';
 import { AuditInterceptor} from '../../shared/interceptors/audit.interceptor';
 import { CreateOrderCommand} from '../application/commands/create-order.handler';
 import { UpdateOrderStatusCommand} from '../application/commands/update-order-status.handler';
+import { SignalPendingMaterialCommand} from '../application/commands/signal-pending-material.handler';
 import { ApproveAdvanceBypassCommand} from '../application/commands/approve-advance-bypass.handler';
 import { ApproveTechCheckpointCommand} from '../application/commands/approve-tech-checkpoint.handler';
 import { ListOrdersQuery} from '../application/queries/list-orders.handler';
 import { GetOrderByIdQuery} from '../application/queries/get-order-by-id.handler';
+import { GetOrderItemsQuery} from '../application/queries/get-order-items.handler';
 import { PendingAdvanceOrdersQuery} from '../application/queries/pending-advance-orders.handler';
 import { CreateOrderDtoSchema} from './dto/create-order.dto';
+import { AtpCheckDtoSchema } from './dto/atp-check.dto';
+import { AtpCheckQuery } from '../application/queries/atp-check.handler';
 import { UpdateStatusDtoSchema} from './dto/update-status.dto';
+import { MaterialSignalDtoSchema} from './dto/material-signal.dto';
 import { AdvanceBypassDtoSchema} from './dto/advance-bypass.dto';
 import { TechCheckpointDtoSchema} from './dto/tech-checkpoint.dto';
 import { ConfirmAdvancePaymentCommand } from '../application/commands/confirm-advance-payment.handler';
@@ -49,7 +54,7 @@ export class SdOrdersController {
  @ApiOperation({ summary: 'Export orders as CSV' })
  @ApiResponse({ status: 200, description: 'CSV file' })
  @Get('export')
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE_MANAGER)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE_MANAGER)
  async exportOrders(
   @Query('status') status?: string,
   @Res({ passthrough: true }) res?: FastifyReply,
@@ -77,7 +82,7 @@ export class SdOrdersController {
  @ApiOperation({ summary: 'List orders' })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get()
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
  async listOrders(
   @Query('companyId') companyId?: number,
   @Query('status') status?: string,
@@ -108,10 +113,23 @@ export class SdOrdersController {
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
- async getOrder(@Param('id', ParseIntPipe) id: number) {
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ async getOrder(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
   this.logger.log('Fetching order');
-  const query = new GetOrderByIdQuery(id);
+  // audit 2026-08-06 T6 (IDOR item 3): pass the caller for ownership scoping.
+  const query = new GetOrderByIdQuery(id, { id: user?.id, role: user?.role });
+  const res = await this.queryBus.execute(query);
+  return unwrapOrThrow(res);
+}
+
+ @ApiOperation({ summary: "Get an order's line-items (Takrorlash/clone enabler)" })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get(':id/items')
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ async getOrderItems(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
+  this.logger.log('Fetching order line-items');
+  // audit 2026-08-06 T6 (IDOR item 3): pass the caller for ownership scoping.
+  const query = new GetOrderItemsQuery(id, { id: user?.id, role: user?.role });
   const res = await this.queryBus.execute(query);
   return unwrapOrThrow(res);
 }
@@ -120,7 +138,7 @@ export class SdOrdersController {
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN)
  async createOrder(@Body() dto: unknown, @CurrentUser() user: AuthenticatedUser) {
   const validated = CreateOrderDtoSchema.parse(dto);
   this.logger.log('Creating order');
@@ -133,20 +151,35 @@ export class SdOrdersController {
    validated.sampleFlag,
    user.id,
    undefined, // dealId
-   undefined, // customerId
+   validated.customerId, // #03 HOP-0: customer link (was hardcoded undefined → customer_id NULL)
    validated.items,
+   validated.crmLeadId, // 2.6 golden-thread: originating CRM lead, when the form carries one
   );
 
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'ATP check — material availability + estimated ready date at order entry (EP-PP-066)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Order has no material-bound lines' })
+ @Post('atp-check')
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
+ async atpCheck(@Body() dto: unknown) {
+  const validated = AtpCheckDtoSchema.parse(dto);
+  this.logger.log('Running ATP availability check');
+  const query = new AtpCheckQuery(validated.orderId ?? null, validated.items ?? null);
+  const res = await this.queryBus.execute(query);
+  return unwrapOrThrow(res);
+ }
+
  @ApiOperation({ summary: 'Update status' })
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/status')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = UpdateStatusDtoSchema.parse(dto);
   this.logger.log('Updating order status');
@@ -155,6 +188,8 @@ export class SdOrdersController {
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }
+ // NOTE: order-cancel is already handled by SdQuotationsController (svc.cancelOrder); the re-audit's
+ // "404" was wrong. No cancel handler added here to avoid a duplicate route. FE contract already satisfied.
 
  @ApiOperation({ summary: 'Bypass advance' })
  @ApiResponse({ status: 201, description: 'OK' })
@@ -204,10 +239,24 @@ export class SdOrdersController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Put(':id/status')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async putOrderStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = UpdateStatusDtoSchema.parse(dto);
   const command = new UpdateOrderStatusCommand(id, validated.newStatus);
+  const res = await this.commandBus.execute(command);
+  return unwrapOrThrow(res);
+ }
+
+ @ApiOperation({ summary: "Signal Ta'minot: order awaiting raw material (Ожд.Сырьё)" })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ @ApiResponse({ status: 409, description: 'Order not in a signalable state' })
+ @Post(':id/material-signal')
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ async signalMaterial(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
+  const validated = MaterialSignalDtoSchema.parse(dto);
+  this.logger.log('Signalling order awaiting raw material');
+  const command = new SignalPendingMaterialCommand(id, validated.reason ?? null);
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
  }

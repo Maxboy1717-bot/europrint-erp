@@ -14,6 +14,7 @@ import { WmsAiService } from './wms-ai.service';
 import { AiAutomationRepository } from './ai-automation.repository';
 
 import { MAX_NAME_LENGTH, SYSTEM_USER_ID } from '@common/constants/app.constants';
+import { getConfigNumber } from '@common/config/business-config.helper';
 
 @Injectable()
 export class AiAutomationService {
@@ -81,7 +82,10 @@ export class AiAutomationService {
         initialScreeningNotes: `[AI] ${result.recommendation}: ${result.aiNotes.substring(0, MAX_NAME_LENGTH)}`,
         productivityCategory:  result.productivityCategory,
       });
-      if (result.score < 30 && result.recommendation === 'REJECT') {
+      // M6 (2026-07-05): threshold now reads settings.'ai_auto_reject_score' first
+      // (HR-tunable without a deploy), falling back to 30 when unset.
+      const autoRejectScore = await getConfigNumber('ai_auto_reject_score', 30);
+      if (result.score < autoRejectScore && result.recommendation === 'REJECT') {
         await this.repo.rejectCandidateFunnel(
           item.funnelId,
           `[AI Avtomatik] Ball: ${result.score}/100. ${result.weaknesses.join('; ')}`,

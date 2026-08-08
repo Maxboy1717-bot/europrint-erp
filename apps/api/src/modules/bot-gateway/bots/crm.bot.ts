@@ -27,8 +27,10 @@ export class CrmBotService {
 
   private async getFunnel(): Promise<BotReply> {
     const rows = await execSql<{ status: string; cnt: string }>(sql`
+      -- Audit 2026-08-07: crm_opportunities jadvali BAZADA YO'Q; kanonik bitim manbai
+      -- crm_deals (VIEW; yozish uchun deals bazaviy jadvali — bu yerda faqat o'qish).
       SELECT status, COUNT(*) AS cnt
-      FROM crm_opportunities
+      FROM crm_deals
       GROUP BY status
       ORDER BY cnt DESC
       LIMIT 10

@@ -49,3 +49,18 @@ export function rowsOf<T>(r: unknown): T[] {
   }
   return [];
 }
+
+/**
+ * Role-gate for AIsha tools that touch sensitive data (PII, financials).
+ * Mirrors the REST-layer `RolesGuard` normalisation (case-insensitive) and
+ * the `canViewCompensation`-style allow-list precedent in
+ * org-structure.service.ts — 'admin'/'super_admin'/'director' are recognised
+ * system-wide bypass roles (see roles.guard.ts / tenant-filter.guard.ts),
+ * on top of whatever domain-specific roles the caller passes in.
+ */
+export function hasAishaRole(role: string | null | undefined, allowed: readonly string[]): boolean {
+  const r = role?.toLowerCase() ?? null;
+  if (r === null) return false;
+  if (r === 'admin' || r === 'super_admin' || r === 'director') return true;
+  return allowed.some((a) => a.toLowerCase() === r);
+}

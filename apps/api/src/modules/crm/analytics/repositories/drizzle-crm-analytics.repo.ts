@@ -12,6 +12,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { db, rawSql, runQuery } from '@shared/db';
+import { Ok, Err, Result } from '@common/result';
 import type {
   ChurnMaxVersionRow,
   ChurnModelRow,
@@ -20,6 +21,7 @@ import type {
   FunnelStageRow,
   FunnelVelocityRow,
   ICrmAnalyticsRepo,
+  LossReasonRollupRow,
   RfmClusterRow,
 } from './i-crm-analytics.repo';
 
@@ -191,6 +193,36 @@ export class DrizzleCrmAnalyticsRepository implements ICrmAnalyticsRepo {
     } catch (e: unknown) {
       this.logger.error(`getFunnelVelocityData xatosi: ${(e as Error).message}`);
       throw e;
+    }
+  }
+
+  // ----- Loss reasons (VISION-3340 #31) -----
+
+  // Rollup of lost deals grouped by loss reason. Batch 5 Item 1: now uses the structured taxonomy
+  // (base deals.lost_reason_id -> crm_loss_reasons, added by item1 migration) with a graceful
+  // free-text fallback — when a lost deal has no lost_reason_id, its free-text `lost_reason` is
+  // still surfaced as code/label_uz (contract preserved: lost_reason_id/label_ru NULL for those).
+  // Reads the BASE `deals` table directly (crm_deals is a view that does not expose lost_reason_id
+  // and is being recreated by the ownership session). Lost deals = free-form `stage_id` = 'lost'.
+  async getLossReasonRollup(): Promise<Result<LossReasonRollupRow[]>> {
+    try {
+      const rows = await runQuery<LossReasonRollupRow>(sql`
+        SELECT
+          lr.id                              AS lost_reason_id,
+          COALESCE(lr.code, d.lost_reason)   AS code,
+          COALESCE(lr.label_uz, d.lost_reason) AS label_uz,
+          lr.label_ru                        AS label_ru,
+          COUNT(*)::int                      AS deal_count
+        FROM deals d
+        LEFT JOIN crm_loss_reasons lr ON lr.id = d.lost_reason_id
+        WHERE d.stage_id = 'lost' AND d.deleted_at IS NULL
+        GROUP BY lr.id, lr.code, lr.label_uz, lr.label_ru, d.lost_reason
+        ORDER BY deal_count DESC
+      `);
+      return Ok(Array.isArray(rows) ? rows : []);
+    } catch (e: unknown) {
+      this.logger.error(`getLossReasonRollup xatosi: ${(e as Error).message}`);
+      return Err(`getLossReasonRollup: ${(e as Error).message}`);
     }
   }
 

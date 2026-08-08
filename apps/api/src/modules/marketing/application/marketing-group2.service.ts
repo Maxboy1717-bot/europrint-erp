@@ -15,6 +15,12 @@ export class MarketingGroup2Service {
 
   constructor(private readonly repo: DrizzleMarketingGroup2Repository) {}
 
+  // ── Papka repeat lookup (Item 14-75) ──────────────────────────────────────
+
+  resolvePapkaOrder(papkaNo: string): Promise<Result<unknown>> {
+    return this.repo.resolvePapkaOrder(papkaNo);
+  }
+
   // ── Blog ──────────────────────────────────────────────────────────────────
 
   getBlogPosts(opts: { limit?: number; offset?: number; status?: string }): Promise<Result<{ data: unknown[]; total: number }>> {
@@ -77,6 +83,12 @@ export class MarketingGroup2Service {
 
   getCompetitors(): Promise<Result<unknown[]>> {
     return this.repo.getCompetitors();
+  }
+
+  // ── Design workload (kanban yuki) ───────────────────────────────────────────
+
+  getDesignWorkload(): Promise<Result<unknown[]>> {
+    return this.repo.getDesignWorkload();
   }
 
   // ── Lead Contacts ─────────────────────────────────────────────────────────

@@ -12,6 +12,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IEmployeesRepository, EMPLOYEES_REPO } from './i-employees.repo';
 import { safeCall, Result, Ok, Err, AppErr, AppError } from '@common/result';
@@ -29,6 +30,7 @@ export class EmployeesService {
   constructor(
     @Inject(EMPLOYEES_REPO) private readonly employeesRepo: IEmployeesRepository,
     private readonly events: EventEmitter2,
+    private readonly i18n: I18nService,
   ) {}
 
   /**
@@ -144,7 +146,7 @@ export class EmployeesService {
   async findOne(id: number) {
     const result = await this.employeesRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Xodim #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
     return result.data;
   }
 

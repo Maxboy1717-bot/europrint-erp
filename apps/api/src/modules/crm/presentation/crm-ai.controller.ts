@@ -11,6 +11,7 @@ import {
   Param, Post, Query, UseGuards,
   UseInterceptors, InternalServerErrorException, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -23,7 +24,8 @@ import {
   CrmAiSuggestActionDtoSchema, CrmAiSuggestActionDto,
 } from './dto/crm-ai.dto';
 
-const CRM_AI_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_AI_ROLES = ['sales_manager', 'manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -35,7 +37,7 @@ const CRM_AI_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'supe
 export class CrmAiController {
   private readonly logger = new Logger(CrmAiController.name);
 
-  constructor(private readonly svc: CrmAiService) {}
+  constructor(private readonly svc: CrmAiService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'Analyze lead ai' })
   @ApiResponse({ status: 201, description: 'OK' })
@@ -47,7 +49,7 @@ export class CrmAiController {
     const _rAnalyzeLeadAi = await this.svc.analyzeLeadAi(safeInt(id, 0));
     assertOk(_rAnalyzeLeadAi);
     const r = _rAnalyzeLeadAi.data as Record<string, unknown>;
-    assertFound(r, 'Lead not found');
+    assertFound(r, await this.i18n.t('errors.leadNotFound'));
     return r;
   }
 
@@ -61,7 +63,7 @@ export class CrmAiController {
     const _rScoreLeadV2 = await this.svc.scoreLeadV2(safeInt(id, 0));
     assertOk(_rScoreLeadV2);
     const r = _rScoreLeadV2.data as Record<string, unknown>;
-    assertFound(r, 'Lead not found');
+    assertFound(r, await this.i18n.t('errors.leadNotFound'));
     return r;
   }
 
@@ -75,7 +77,7 @@ export class CrmAiController {
     const _rForecastDeal = await this.svc.forecastDeal(safeInt(id, 0));
     assertOk(_rForecastDeal);
     const r = _rForecastDeal.data as Record<string, unknown>;
-    assertFound(r, 'Deal not found');
+    assertFound(r, await this.i18n.t('errors.dealNotFound'));
     return r;
   }
 
@@ -104,7 +106,7 @@ export class CrmAiController {
   async suggestAction(@Body() body: CrmAiSuggestActionDto) {
     const lid = body.lead_id ? safeInt(body.lead_id, 0) : null;
     const did = body.deal_id ? safeInt(body.deal_id, 0) : null;
-    assertAnyRequired([lid, did], 'lead_id or deal_id required');
+    assertAnyRequired([lid, did], await this.i18n.t('validation.leadIdOrDealIdRequired'));
     return unwrapOrThrow(await this.svc.suggestAction(lid, did));
   }
 }

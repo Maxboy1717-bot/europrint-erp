@@ -1,29 +1,58 @@
 /**
  * @module zvs.service
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ *
+ * 2.15-summa-tasdiq-darvoza (MASTER-REJA-VIZYON-2026-07-02): summa-chegaralar (avval
+ * 500k/5M HARDCODE edi) endi `approval_matrix_config` (document_type='zvs') dan o'qiladi —
+ * egasi screen orqali sozlashi mumkin, qayta deploy shart emas. DB hali seed qilinmagan/erishib
+ * bo'lmagan holatda (masalan test/boot-race) HARDCODE_FALLBACK_MATRIX ishlatiladi — bu ilgarigi
+ * qattiq-kodlangan qiymatlarning aynan o'zi, shuning uchun konfiguratsiya yo'qligi hech qachon
+ * "tasdiqsiz o'tish" tug'dirmaydi (fail-closed emas, fail-SAME-AS-BEFORE).
+ *
+ * Eng yuqori (top) daraja uchun — masalan >5M — ROLGA QO'SHIMCHA org-zanjir tekshiruvi ham bor:
+ * so'rov beruvchining org-sxema bo'yicha haqiqiy rahbarlar zanjiri (employee_org_departments →
+ * org_departments.parent_id → head_user_id, ProcurementApprovalChainService bilan bir xil naqsh)
+ * aniqlansa, top-darajani rolga ega BO'LGAN LEKIN zanjirda YO'Q kishi (admin/super_admin/ceo
+ * bundan mustasno — korxona darajasidagi vakolat) tasdiqlay olmaydi. Zanjir aniqlanmasa
+ * (head_user_id NULL — EGASI-DATA) — eski rol-asosli xulq-atvor davom etadi (regressiya yo'q).
  */
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
-import { Inject, Injectable } from '@nestjs/common';
-import { safeCall, Result, AppError, Err } from '@common/result';
-import { ZVS_REPO, type IZvsRepo } from '../domain/repositories/i-zvs.repo';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { safeCall, Result, AppError, Err, Ok } from '@common/result';
+import { ZVS_REPO, type IZvsRepo, type ZvsMatrixRow } from '../domain/repositories/i-zvs.repo';
 
-const LEVEL1_ROLES = ['admin', 'super_admin', 'director', 'ceo', 'cfo', 'finance_manager', 'department_head', 'manager'];
-const LEVEL2_ROLES = ['admin', 'super_admin', 'director', 'ceo', 'cfo', 'finance_manager'];
-const LEVEL3_ROLES = ['admin', 'super_admin', 'director', 'ceo'];
+/** Korxona-darajasidagi vakolat — org-zanjirda bo'lmasa ham top-darajani tasdiqlay oladi. */
+const APEX_ROLES = ['admin', 'super_admin', 'ceo'];
 
-function computeLevel(amount: number): number {
-  if (amount <= 500_000) return 1;
-  if (amount <= 5_000_000) return 2;
-  return 3;
+/** DB'da approval_matrix_config hali seed qilinmagan/erishib bo'lmagan holat uchun — eski
+ *  hardcode qiymatlarning aynan o'zi (fail-SAME-AS-BEFORE, fail-closed emas). */
+const HARDCODE_FALLBACK_MATRIX: ZvsMatrixRow[] = [
+  { minAmount: 0,       maxAmount: 500_000,   approvalLevel: 1, approverRole: 'admin,super_admin,director,ceo,cfo,finance_manager,department_head,manager' },
+  { minAmount: 500_000, maxAmount: 5_000_000, approvalLevel: 2, approverRole: 'admin,super_admin,director,ceo,cfo,finance_manager' },
+  { minAmount: 5_000_000, maxAmount: null,    approvalLevel: 3, approverRole: 'admin,super_admin,director,ceo' },
+];
+
+function computeLevelFromMatrix(amount: number, matrix: ZvsMatrixRow[]): number {
+  for (const row of matrix) {
+    const aboveMin = amount > row.minAmount || (row.minAmount === 0 && amount >= 0);
+    const withinMax = row.maxAmount == null || amount <= row.maxAmount;
+    if (aboveMin && withinMax) return row.approvalLevel;
+  }
+  // Chegaradan tashqarida qolsa (masalan matrix bo'sh oraliq) — eng yuqori darajaga tushadi.
+  return matrix.length > 0 ? Math.max(...matrix.map((r) => r.approvalLevel)) : 3;
 }
 
-function canApproveLevel(role: string, level: number): boolean {
-  if (level === 1) return LEVEL1_ROLES.includes(role);
-  if (level === 2) return LEVEL2_ROLES.includes(role);
-  return LEVEL3_ROLES.includes(role);
+function rolesForLevel(level: number, matrix: ZvsMatrixRow[]): string[] {
+  const row = matrix.find((r) => r.approvalLevel === level);
+  if (!row) return [];
+  return row.approverRole.split(',').map((r) => r.trim()).filter(Boolean);
+}
+
+function canApproveLevel(role: string, level: number, matrix: ZvsMatrixRow[]): boolean {
+  return rolesForLevel(level, matrix).includes(role);
 }
 
 function getWeekStart(date?: string): string {
@@ -37,7 +66,24 @@ function getWeekStart(date?: string): string {
 
 @Injectable()
 export class ZvsService {
+  private readonly logger = new Logger(ZvsService.name);
+
   constructor(@Inject(ZVS_REPO) private readonly repo: IZvsRepo) {}
+
+  /** Sozlanadigan matritsa — DB'dan; bo'sh/xato bo'lsa eski hardcode qiymatlarga tushadi (regressiya yo'q). */
+  private async getMatrix(): Promise<ZvsMatrixRow[]> {
+    const res = await this.repo.getZvsApprovalMatrix();
+    if (!res.ok || !Array.isArray(res.data) || res.data.length === 0) {
+      if (!res.ok) this.logger.warn(`[ZVS 2.15] approval_matrix_config o'qilmadi — fallback: ${res.error.message}`);
+      return HARDCODE_FALLBACK_MATRIX;
+    }
+    return res.data;
+  }
+
+  /** Eng yuqori (top) approval_level qiymati — shu daraja uchun org-zanjir qo'shimcha tekshiruvi qo'llanadi. */
+  private topLevel(matrix: ZvsMatrixRow[]): number {
+    return matrix.length > 0 ? Math.max(...matrix.map((r) => r.approvalLevel)) : 3;
+  }
 
   async createZvsWithValidation(
     body: Record<string, unknown>,
@@ -49,7 +95,8 @@ export class ZvsService {
     const amt = safeNum(amount);
     if (isNaN(amt) || amt <= 0)
       return Err({ code: 'BAD_REQUEST', message: "amount musbat son bo'lishi kerak" });
-    const level = computeLevel(amt);
+    const matrix = await this.getMatrix();
+    const level = computeLevelFromMatrix(amt, matrix);
     const weekDate = getWeekStart(week_date as string | undefined);
     return safeCall(() =>
       this.repo.createZvs(
@@ -83,15 +130,57 @@ export class ZvsService {
     const level = Number(zvs.level);
     if (String(zvs.submitted_by) === String(userId))
       return Err({ code: 'FORBIDDEN', message: "SoD ihlol: ZVS yaratuvchi uni tasdiqlay olmaydi (code: ZVS_SOD_001)" });
-    if (!canApproveLevel(userRole, level)) {
-      const levelNames: Record<number, string> = {
-        1: "Bo'lim boshlig'i yoki yuqori",
-        2: "Direktsiya yoki moliya rahbariyati (≤5M)",
-        3: "Direktor yoki CEO (>5M)",
-      };
-      return Err({ code: 'FORBIDDEN', message: `ZVS darajasi ${level}: ${levelNames[level] ?? 'yuqori vakolat'} talab qilinadi. Sizning rolingiz: ${userRole}` });
+
+    const matrix = await this.getMatrix();
+    if (!canApproveLevel(userRole, level, matrix)) {
+      return Err({
+        code: 'FORBIDDEN',
+        message: `ZVS darajasi ${level}: ruxsat etilgan rollar — ${rolesForLevel(level, matrix).join(', ') || "belgilanmagan"}. Sizning rolingiz: ${userRole}`,
+      });
     }
+
+    // Katta chiqim (eng yuqori sozlangan daraja) — rolga qo'shimcha org-zanjir tekshiruvi.
+    // Zanjir aniqlanmasa (EGASI-DATA: head_user_id NULL) rol-asosli tasdiq yetarli (regressiya yo'q).
+    if (level >= this.topLevel(matrix) && !APEX_ROLES.includes(userRole)) {
+      const chainCheck = await this.verifyOrgChainApprover(Number(zvs.submitted_by), userId);
+      if (!chainCheck.ok) return chainCheck as Result<never, AppError>;
+    }
+
     return this.repo.approveZvs(id, userId, comment);
+  }
+
+  /**
+   * Katta-summa (top-daraja) tasdig'i uchun: so'rov beruvchining haqiqiy org-zanjiridagi
+   * rahbarlardan biri ekanini tekshiradi. Zanjir aniqlanmasa (bo'lim/head yo'q — EGASI-DATA)
+   * — Ok() qaytariladi (gate qo'llanmaydi, rol-tekshiruv yetarli, mavjud oqim buzilmaydi).
+   */
+  private async verifyOrgChainApprover(submittedByUserId: number, approverUserId: number): Promise<Result<true, AppError>> {
+    const deptRes = await this.repo.findOrgDepartmentForSubmitter(submittedByUserId);
+    if (!deptRes.ok) {
+      this.logger.warn(`[ZVS 2.15] org-bo'lim aniqlanmadi (submitted_by=${submittedByUserId}) — org-zanjir gate o'tkazildi: ${deptRes.error.message}`);
+      return Ok(true);
+    }
+    const orgDepartmentId = deptRes.data;
+    if (orgDepartmentId == null) return Ok(true);
+
+    const chainRes = await this.repo.resolveOrgChainForDepartment(orgDepartmentId, submittedByUserId);
+    if (!chainRes.ok) {
+      this.logger.warn(`[ZVS 2.15] org-zanjir hisoblanmadi (dept=${orgDepartmentId}) — gate o'tkazildi: ${chainRes.error.message}`);
+      return Ok(true);
+    }
+    const chain = chainRes.data;
+    if (chain.length === 0) return Ok(true); // head_user_id yo'q — EGASI-DATA, gate o'tkazildi.
+
+    const inChain = chain.some((step) => step.approverUserId === approverUserId);
+    if (!inChain) {
+      return Err({
+        code: 'FORBIDDEN',
+        message:
+          `ZVS katta-summa tasdig'i: siz so'rov beruvchining org-zanjiridagi rahbar emassiz ` +
+          `(zanjir: ${chain.map((c) => `#${c.approverUserId}`).join(' → ')}). Faqat shu zanjirdagi rahbar yoki admin/super_admin/ceo tasdiqlay oladi.`,
+      });
+    }
+    return Ok(true);
   }
 
   async rejectZvsWithAuth(
@@ -108,7 +197,8 @@ export class ZvsService {
     const level = Number(zvs.level);
     if (String(zvs.submitted_by) === String(userId))
       return Err({ code: 'FORBIDDEN', message: "SoD ihlol: ZVS yaratuvchi uni rad eta olmaydi (code: ZVS_SOD_001)" });
-    if (!canApproveLevel(userRole, level))
+    const matrix = await this.getMatrix();
+    if (!canApproveLevel(userRole, level, matrix))
       return Err({ code: 'FORBIDDEN', message: `Sizning rolingiz (${userRole}) ushbu darajani rad etish uchun ruxsatga ega emas` });
     return this.repo.rejectZvs(id, userId, comment);
   }

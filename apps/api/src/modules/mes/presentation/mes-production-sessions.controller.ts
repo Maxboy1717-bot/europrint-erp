@@ -13,7 +13,7 @@ Controller,
   UseGuards,
   UseInterceptors,
   Logger,
-  InternalServerErrorException, UsePipes,
+  InternalServerErrorException, NotFoundException, Patch, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -27,6 +27,8 @@ import { safeInt } from '../../hr/common/db-rows';
 import {
   MesCreateProductionSessionSchema, MesCreateProductionSessionDto,
   MesRecordDowntimeSchema, MesRecordDowntimeDto,
+  MesSetPaperFormatSchema, MesSetPaperFormatDto,
+  MesSetSessionTrainingSchema, MesSetSessionTrainingDto,
 } from '../dto/mes.dto';
 
 const MES_ROLES = ['super_admin', 'director', 'production_manager', 'operator', 'technologist'];
@@ -71,6 +73,29 @@ export class MesProductionSessionsController {
     return unwrapOrThrow(await this.svc.getSession(safeInt(sessionId, 0)));
   }
 
+  @ApiOperation({ summary: 'Set paper format (A×B) + gramm + kg on session (#116 EP-MES-066)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':sessionId/paper-format')
+  @UsePipes(new ZodValidationPipe(MesSetPaperFormatSchema))
+  async setPaperFormat(
+    @Param('sessionId') sessionId: string,
+    @Body() body: MesSetPaperFormatDto,
+  ) {
+    const data = unwrapOrThrow(await this.svc.setPaperFormat(safeInt(sessionId, 0), body));
+    if (!data) throw new NotFoundException('Ishlab chiqarish sessiyasi topilmadi');
+    return data;
+  }
+
+  @ApiOperation({ summary: 'Advance GSD stage (setup→main→teardown→done)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post(':sessionId/advance-stage')
+  async advanceStage(@Param('sessionId') sessionId: string) {
+    return unwrapOrThrow(await this.svc.advanceSessionStage(safeInt(sessionId, 0)));
+  }
+
   @ApiOperation({ summary: 'Record downtime' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -83,11 +108,30 @@ export class MesProductionSessionsController {
     return unwrapOrThrow(await this.svc.recordDowntimeForSession(safeInt(sessionId, 0), body));
   }
 
+  @ApiOperation({ summary: 'Stage-based OEE availability (main / setup+main+teardown)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':sessionId/stage-availability')
+  async stageAvailability(@Param('sessionId') sessionId: string) {
+    return unwrapOrThrow(await this.svc.getStageBasedAvailability(safeInt(sessionId, 0)));
+  }
+
   @ApiOperation({ summary: 'List downtime events' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':sessionId/downtime-events')
   async listDowntimeEvents(@Param('sessionId') sessionId: string) {
     return unwrapOrThrow(await this.svc.listDowntimeEvents(safeInt(sessionId, 0)));
+  }
+
+  @ApiOperation({ summary: 'Flag session as academy/training (LMS-synced) — excluded from OEE' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post(':sessionId/training')
+  @UsePipes(new ZodValidationPipe(MesSetSessionTrainingSchema))
+  async setTraining(
+    @Param('sessionId') sessionId: string,
+    @Body() body: MesSetSessionTrainingDto,
+  ) {
+    return unwrapOrThrow(await this.svc.setSessionTraining(safeInt(sessionId, 0), body));
   }
 }

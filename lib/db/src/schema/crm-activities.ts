@@ -56,40 +56,10 @@ export const insertCrmActivityTypeSchema = createInsertSchema(crmActivityTypes, 
 export type CrmActivityType = typeof crmActivityTypes.$inferSelect;
 
 export type InsertCrmActivityType = z.infer<typeof insertCrmActivityTypeSchema>;
-// CRM Comments (Izohlar)
-export const crmComments = pgTable("crm_comments", {
-  id: serial("id").primaryKey(),
-  
-  entityType: varchar("entity_type", { length: 20 }).notNull(),
-  entityId: integer("entity_id").notNull(),
-  
-  content: text("content").notNull(),
-  
-  // Attachments
-  attachments: jsonb("attachments"), // [{filename, path, size, mimeType}]
-  
-  // Mentions
-  mentionedUserIds: jsonb("mentioned_user_ids").$type<string[]>().default(sql`'[]'::jsonb`),
-  
-  authorId: varchar("author_id").references(() => users.id, { onDelete: 'restrict' }).notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}, (t) => [
-  check("crm_comments_entity_type_chk", sql`${t.entityType} IN ('deal','lead','contact','company','proposal','invoice')`),
-]);
 
-
-export const insertCrmCommentSchema = createInsertSchema(crmComments, {
-  entityType: z.enum(["deal", "lead", "contact", "company", "proposal", "invoice"]),
-  entityId: z.number().int().positive(),
-  content: z.string().min(1, "Izoh matni kerak"),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-
-export type CrmComment = typeof crmComments.$inferSelect;
-
-export type InsertCrmComment = z.infer<typeof insertCrmCommentSchema>;
-
+// ORFAN CLEANUP (2026-07-02): crm_comments pgTable declaration removed from
+// here (dead lib/db duplicate — live CRM app code uses apps/api/src/shared/db
+// via @europrint/schemas / @shared/db, never @workspace/db). Q-29 verified.
 
 // CRM Entity History (Tarix)
 export const crmEntityHistory = pgTable("crm_entity_history", {

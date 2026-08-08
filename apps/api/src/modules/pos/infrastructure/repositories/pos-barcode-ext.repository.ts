@@ -6,7 +6,7 @@
 
 import { Injectable } from '@nestjs/common';
 import type { SQL, SQLWrapper } from 'drizzle-orm';
-import { materialCardSuggestions, materialCards, posBarcodePrintQueue, db, sql, eq, and } from '@workspace/db';
+import { materialCardSuggestions, materialCards, posBarcodePrintQueue, db, sql, eq, and, desc } from '@workspace/db';
 import { safeCall, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
@@ -48,6 +48,15 @@ export class PosBarcodeExtRepository {
     return safeCall(async () => {
       const [printJob] = await db.insert(posBarcodePrintQueue).values(data).returning();
       return printJob;
+      }, 'DB_ERROR');
+  }
+
+  async findPendingSuggestions(): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      return db.select().from(materialCardSuggestions)
+        .where(eq(materialCardSuggestions.status, 'PENDING'))
+        .orderBy(desc(materialCardSuggestions.createdAt))
+        .limit(100);
       }, 'DB_ERROR');
   }
 

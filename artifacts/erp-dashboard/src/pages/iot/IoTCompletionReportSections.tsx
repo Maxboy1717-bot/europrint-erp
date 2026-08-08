@@ -8,16 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { User, AlertTriangle, ChevronRight, Star } from "lucide-react";
-import { IotLang, CompletionReportData } from "./iot-types";
+import { CompletionReportData } from "./iot-types";
 import { CompletionStep, StarRatingProps } from "./IoTCompletionReportTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 // ─── Star Rating ──────────────────────────────────────────────────────────────
-export function StarRating({ value, onChange, label, lang }: StarRatingProps) {
-  const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
-  const labels: Record<number, [string, string]> = {
-    1: ["Yomon", "Плохо"], 2: ["Qoniqarsiz", "Неудовл."], 3: ["O'rta", "Средне"],
-    4: ["Yaxshi", "Хорошо"], 5: ["A'lo", "Отлично"],
+export function StarRating({ value, onChange, label }: StarRatingProps) {
+  const { t } = useTranslation("iot");
+  const labelKeys: Record<number, string> = {
+    1: "crRatingPoor", 2: "crRatingUnsatisfactory", 3: "crRatingAverage",
+    4: "crRatingGood", 5: "crRatingExcellent",
   };
   return (
     <div className="space-y-2">
@@ -36,7 +37,7 @@ export function StarRating({ value, onChange, label, lang }: StarRatingProps) {
         ))}
         {value > 0 && (
           <EPStatusPill tone="neutral" className="ml-2 text-sm">
-            {t(labels[value][0], labels[value][1])}
+            {t(labelKeys[value])}
           </EPStatusPill>
         )}
       </div>
@@ -50,7 +51,7 @@ export function StepProgressBar({
   stepLabels,
 }: {
   step: CompletionStep;
-  stepLabels: { id: CompletionStep; uz: string; ru: string }[];
+  stepLabels: { id: CompletionStep; label: string }[];
 }) {
   return (
     <div className="flex items-center gap-1">
@@ -61,7 +62,7 @@ export function StepProgressBar({
             (step === "done" || (Array.isArray(stepLabels) ? stepLabels : []).findIndex(x => x.id === step) > i) ? "bg-green-100 text-[var(--ep-green)] border-green-300 dark:bg-green-900/30 dark:text-green-400" :
             "bg-muted text-muted-foreground border-transparent"
           }`}>
-            {s.uz}
+            {s.label}
           </div>
           {i < stepLabels.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
         </div>
@@ -72,15 +73,13 @@ export function StepProgressBar({
 
 // ─── Results Step ─────────────────────────────────────────────────────────────
 export function ResultsStep({
-  lang,
   completionReport,
   onNext,
 }: {
-  lang: IotLang;
   completionReport: CompletionReportData;
   onNext: () => void;
 }) {
-  const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
+  const { t } = useTranslation("iot");
   return (
     <>
       <Card className="bg-blue-50 dark:bg-blue-950/30">
@@ -89,7 +88,7 @@ export function ResultsStep({
             <User className="h-8 w-8 text-[var(--ep-blue)]" />
             <div>
               <p className="font-bold text-lg">{completionReport.worker?.name}</p>
-              <p className="text-sm text-muted-foreground">{t("Tabel", "Табель")}: {completionReport.worker?.tabelNumber}</p>
+              <p className="text-sm text-muted-foreground">{t("crTabel")}: {completionReport.worker?.tabelNumber}</p>
             </div>
           </div>
         </CardContent>
@@ -97,24 +96,24 @@ export function ResultsStep({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">{t("Ishlab chiqarish natijasi", "Результат производства")}</CardTitle>
+          <CardTitle className="text-base">{t("crProductionResult")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="text-center p-3 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground">{t("Kutilgan", "Ожидалось")}</p>
+              <p className="text-xs text-muted-foreground">{t("crExpected")}</p>
               <p className="text-2xl font-bold text-[var(--ep-blue)]">{completionReport.production?.targetQuantity}</p>
             </div>
             <div className="text-center p-3 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground">{t("Haqiqiy", "Фактически")}</p>
+              <p className="text-xs text-muted-foreground">{t("crActual")}</p>
               <p className="text-2xl font-bold text-[var(--ep-green)]">{completionReport.production?.actualQuantity}</p>
             </div>
             <div className="text-center p-3 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground">{t("Yaxshi", "Годных")}</p>
+              <p className="text-xs text-muted-foreground">{t("crQtyGood")}</p>
               <p className="text-2xl font-bold">{completionReport.production?.goodQuantity}</p>
             </div>
             <div className="text-center p-3 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground">{t("Brak", "Брак")}</p>
+              <p className="text-xs text-muted-foreground">{t("crDefect")}</p>
               <p className={`text-2xl font-bold ${(completionReport.production?.defectQuantity || 0) > 0 ? "text-[var(--ep-red)]" : ""}`}>
                 {completionReport.production?.defectQuantity}
               </p>
@@ -122,7 +121,7 @@ export function ResultsStep({
           </div>
           <div className="mt-3">
             <div className="flex justify-between text-sm mb-1">
-              <span>{t("Bajarildi", "Выполнено")}</span>
+              <span>{t("crCompleted")}</span>
               <span className="font-bold">{Math.round(completionReport.production?.completionPercent || 0)}%</span>
             </div>
             <Progress value={completionReport.production?.completionPercent || 0} className="h-2" />
@@ -132,20 +131,20 @@ export function ResultsStep({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">OEE {t("ko'rsatkichlari", "показатели")}</CardTitle>
+          <CardTitle className="text-base">OEE {t("crOeeIndicators")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center">
             <div>
-              <p className="text-xs text-muted-foreground">{t("Mavjudlik", "Доступн.")}</p>
+              <p className="text-xs text-muted-foreground">{t("crAvailability")}</p>
               <p className="font-bold">{completionReport.metrics?.availability || 0}%</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">{t("Unumdorlik", "Произв.")}</p>
+              <p className="text-xs text-muted-foreground">{t("crOeePerformance")}</p>
               <p className="font-bold">{completionReport.metrics?.performance || 0}%</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">{t("Sifat", "Качество")}</p>
+              <p className="text-xs text-muted-foreground">{t("crQuality")}</p>
               <p className="font-bold">{completionReport.metrics?.quality || 0}%</p>
             </div>
             <div className="bg-primary/10 rounded p-1">
@@ -159,12 +158,12 @@ export function ResultsStep({
       <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-3 flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] flex-shrink-0 mt-0.5" />
         <p className="text-sm text-[var(--ep-yellow)] dark:text-amber-300">
-          {t("Keyingi qadamda majburiy baholash va material qaytarish kerak", "Следующий шаг — обязательная оценка и возврат материала")}
+          {t("crNextStepWarning")}
         </p>
       </div>
 
       <Button className="w-full h-14 text-lg font-bold" onClick={onNext} data-testid="button-goto-evaluation">
-        {t("Baholashga o'tish", "Перейти к оценке")}
+        {t("crGoToEvaluation")}
         <ChevronRight className="ml-2 h-4 w-4" />
       </Button>
     </>

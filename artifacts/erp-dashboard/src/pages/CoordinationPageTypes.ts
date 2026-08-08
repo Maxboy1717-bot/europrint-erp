@@ -49,6 +49,23 @@ export const COUNCIL_LEVELS = [
 ] as const;
 
 // ─── Types ────────────────────────────────────────────────────────────────
+export interface Council {
+  id: number;
+  name: string;
+  council_type: string;
+  description: string | null;
+  is_active: boolean;
+  chairperson_id?: number | null;
+  chairperson_name?: string | null;
+  meeting_schedule?: string | null;
+}
+
+export type CouncilFormState = {
+  chairperson_id: string;
+  description: string;
+  meeting_schedule: string;
+};
+
 export type DoklaStatus   = "sent" | "read" | "resolved";
 export type RaspoStatus   = "assigned" | "in_progress" | "done" | "overdue";
 export type BasketType    = "incoming" | "pending" | "outgoing";
@@ -68,11 +85,15 @@ export interface Dokla {
 export interface Raspo {
   id: string;
   to_user: string;
+  to_name?: string | null;
   task: string;
   deadline?: string;
   status: RaspoStatus;
   priority: string;
   from_name?: string;
+  // Batch 5 Item 11 — dokladan avto-yaratilgan ko'rsatma belgisi + manba-dokla.
+  auto_generated?: boolean;
+  source_dokla_id?: number | null;
 }
 
 export interface BasketDoc {
@@ -105,8 +126,57 @@ export type RaspoFormState = {
   priority: string;
 };
 
-export const VALID_TABS = ["overview", "dokla", "raspo", "baskets", "councils"] as const;
+export const VALID_TABS = ["overview", "dokla", "raspo", "prikaz", "protocols", "baskets", "councils"] as const;
 export type CoordinationTab = typeof VALID_TABS[number];
+
+// ─── Prikaz (director order registry) — modul 04 ───────────────────────────
+// Mirrors PrikazRow (apps/api/.../prikaz.repository.ts). status: draft|signed|cancelled.
+export interface Prikaz {
+  id: number;
+  prikaz_number: number | null;
+  title: string;
+  content: string | null;
+  issued_by: number | null;
+  status: string;
+  signed_at: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+  supersedes_id: number | null;
+  created_at: string;
+}
+
+export type PrikazFormState = {
+  title: string;
+  content: string;
+  supersedesId: string;
+};
+
+// ─── Protocol (council minutes) — modul 04 ─────────────────────────────────
+// Mirrors ProtocolRow (apps/api/.../protocol.repository.ts). status: draft|signed|amended.
+export interface Protocol {
+  id: number;
+  council_id: number | null;
+  title: string;
+  agenda: string | null;
+  decisions: string | null;
+  chairperson_id: number | null;
+  secretary_id: number | null;
+  dissenting_opinion: unknown;
+  status: string;
+  signed_at: string | null;
+  parent_protocol_id: number | null;
+  created_at: string;
+}
+
+export type ProtocolFormState = {
+  councilId: string;
+  title: string;
+  agenda: string;
+  decisions: string;
+  chairpersonId: string;
+  secretaryId: string;
+  dissentingOpinion: string;
+};
 
 // ─── Pure utility functions ───────────────────────────────────────────────
 export function shortDate(dt?: string): string {

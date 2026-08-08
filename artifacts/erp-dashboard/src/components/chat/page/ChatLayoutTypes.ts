@@ -78,6 +78,7 @@ export interface ChatLayoutMessagesProps {
   videoHeight: number;
   videoMinimized: boolean;
   onVideoCall: () => void;
+  onAudioCall: () => void;
   onVideoClose: () => void;
   onVideoToggleMinimize: () => void;
   onVideoToggleHeight: () => void;

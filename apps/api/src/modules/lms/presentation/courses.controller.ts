@@ -64,13 +64,24 @@ export class CoursesController {
   async listCourses(
     @Query() query: { category?: string; isMandatory?: string; page?: string; limit?: string },
   ) {
+    const pg = parseInt(query.page ?? '1', 10);
+    const lim = parseInt(query.limit ?? '20', 10);
     const result = await this.svc.listCourses({
       category: query.category,
       isMandatory: query.isMandatory !== undefined ? query.isMandatory === 'true' : undefined,
-      page: parseInt(query.page ?? '1', 10),
-      limit: parseInt(query.limit ?? '20', 10)
-});
-    return unwrapOrInternal(result);
+      page: pg,
+      limit: lim,
+    });
+    const inner = unwrapOrInternal(result) as { items: unknown[]; total: number };
+    return {
+      data: Array.isArray(inner.items) ? inner.items : [],
+      pagination: {
+        page: pg,
+        limit: lim,
+        total: inner.total ?? 0,
+        totalPages: Math.ceil((inner.total ?? 0) / lim),
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Create course' })

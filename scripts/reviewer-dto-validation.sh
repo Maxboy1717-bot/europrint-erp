@@ -94,6 +94,28 @@ else
       continue
     fi
 
+    # 1.7) Controller = transport-only (Qoida 6), validatsiya import qilingan
+    # *.service.ts fayl(lar)ida — service o'zida .parse()/.safeParse() bormi?
+    svc_has_parse=0
+    while IFS= read -r import_path; do
+      if [[ "$import_path" == ./* ]] || [[ "$import_path" == ../* ]]; then
+        svc_candidate="$ctrl_dir/${import_path}.ts"
+        if [ -f "$svc_candidate" ]; then
+          n=$(grep -cE "$ZOD_CTRL_PATTERN" "$svc_candidate" 2>/dev/null) || true
+          n="${n//[^0-9]/}"; n="${n:-0}"
+          svc_has_parse=$((svc_has_parse + n))
+        fi
+      fi
+    done < <(grep -E "^import .+ from ['\"]" "$ctrl_file" 2>/dev/null \
+      | grep -oE "from ['\"][^'\"]+['\"]" \
+      | sed "s/from ['\"]//;s/['\"]$//" \
+      | grep -iE "\.service$")
+
+    if [ "$svc_has_parse" -gt 0 ]; then
+      ok "$ctrl_basename — controller transport-only, Zod validatsiya import qilingan service ichida"
+      continue
+    fi
+
     # 2) Import qilingan DTO fayllarini topish
     imported_dtos=()
     while IFS= read -r import_path; do

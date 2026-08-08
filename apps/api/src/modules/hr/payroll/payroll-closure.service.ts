@@ -45,13 +45,20 @@ export interface GlJournalLine {
   memo:     string;
 }
 
-/** Account codes for HR payroll GL postings (EuroPrint chart of accounts). */
+/**
+ * Account codes for HR payroll GL postings — LIVE Uzbek BHMS chart (`accounts`). The old codes
+ * (6710 as expense, 6720/6760/6730) were wrong/absent: 6710 is a LIABILITY (Xodimlarga ish haqi) and
+ * 6720/6730/6760 don't exist. No distinct bonus EXPENSE account exists, so bonus folds into salary (9410).
+ */
 export const PAYROLL_GL_ACCOUNTS = {
-  EXPENSE_SALARY:  '6710', // Maosh xarajati
-  EXPENSE_BONUS:   '6720', // Bonus xarajati
-  LIABILITY_NET:   '6760', // Xodimlarga to'lash kerak
-  LIABILITY_TAXES: '6730', // Soliq to'lovi
+  EXPENSE_SALARY:  '9410', // Ish haqi (asosiy) — EXPENSE
+  EXPENSE_BONUS:   '9410', // folded into salary expense (no distinct bonus account in the chart)
+  LIABILITY_NET:   '6710', // Xodimlarga ish haqi (net payable) — LIABILITY
+  LIABILITY_TAXES: '6520', // INPS, JSHD (deductions) — LIABILITY
 } as const;
+
+/** Max allowed debit/credit imbalance — matches GlPostingService.createJournalEntry (engine). */
+const GL_BALANCE_TOLERANCE = 0.01;
 
 @Injectable()
 export class PayrollClosureService {
@@ -134,7 +141,9 @@ export class PayrollClosureService {
     const sumDebit  = lines.reduce((s, l) => s + l.debit, 0);
     const sumCredit = lines.reduce((s, l) => s + l.credit, 0);
     const diff = Math.abs(sumDebit - sumCredit);
-    if (diff > 0.5) {
+    // H2: tolerance aligned to the engine (GlPostingService rejects diff > 0.01). A 0.01–0.5 rounding
+    // imbalance used to pass here but fail the engine AFTER the period was closed; now caught up front.
+    if (diff > GL_BALANCE_TOLERANCE) {
       return Err(AppErr('VALIDATION', `GL jurnal balansda emas: debit ${sumDebit} != credit ${sumCredit}`));
     }
     return Ok(lines);

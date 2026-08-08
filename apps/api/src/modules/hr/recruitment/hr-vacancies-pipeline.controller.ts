@@ -10,7 +10,8 @@ import {
   Controller, Get, Post, Patch, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, Logger, UsePipes, HttpCode, HttpStatus, HttpException,
 } from '@nestjs/common';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrBadRequest } from '@common/http-result';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -33,6 +34,7 @@ import { z } from 'zod';
 const PipelineStageSchema = z.object({
   funnel_stage: z.string().optional(),
   stage: z.string().optional(),
+  notes: z.string().max(2000).optional(),
 }).passthrough();
 
 const ChecklistSchema = z.object({
@@ -64,7 +66,10 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'hr_
 export class HrVacanciesPipelineController {
   private readonly logger = new Logger(HrVacanciesPipelineController.name);
 
-  constructor(private readonly svc: HrVacanciesService) {}
+  constructor(
+    private readonly svc: HrVacanciesService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get pipeline' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -97,9 +102,11 @@ export class HrVacanciesPipelineController {
     const dto = PipelineStageSchema.parse(body);
     const stage = String(dto.funnel_stage ?? dto.stage ?? '');
     if (!stage) return { data: {}, error: 'stage majburiy' };
-    const r = await this.svc.updatePipelineStage(id, stage, user.id);
-    const row = r.ok ? (r.data ?? {}) : {};
-    return { data: row };
+    // Rule 10: a blocked/failed transition (e.g. reopening a closed funnel)
+    // must not look like a fake 200/201 success — surface the real error so
+    // the FE's onError rollback + toast actually fires.
+    const row = unwrapOrBadRequest(await this.svc.updatePipelineStage(id, stage, user.id, dto.notes));
+    return { data: row ?? {} };
   }
 
   @ApiOperation({ summary: 'Update pipeline stage' })
@@ -114,9 +121,8 @@ export class HrVacanciesPipelineController {
     const dto = PipelineStageSchema.parse(body);
     const stage = String(dto.funnel_stage ?? dto.stage ?? '');
     if (!stage) return { data: {}, error: 'stage majburiy' };
-    const r = await this.svc.updatePipelineStage(id, stage, user.id);
-    const row = r.ok ? (r.data ?? {}) : {};
-    return { data: row };
+    const row = unwrapOrBadRequest(await this.svc.updatePipelineStage(id, stage, user.id, dto.notes));
+    return { data: row ?? {} };
   }
 
   @ApiOperation({ summary: 'Get pipeline roadmap' })
@@ -220,7 +226,7 @@ export class HrVacanciesPipelineController {
       WHERE id = ${id}
     `);
     const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return { data: row };
   }
 

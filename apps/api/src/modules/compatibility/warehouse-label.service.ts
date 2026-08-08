@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { db,
   rawSql} from '@shared/db';
@@ -23,7 +24,10 @@ export interface LabelPrintResult {
 
 @Injectable()
 export class WarehouseLabelCompatService {
-  constructor(private readonly labelSvc: LabelService) {}
+  constructor(
+    private readonly labelSvc: LabelService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async printLabel(body: PrintLabelDto): Promise<LabelPrintResult & { format?: string; copies?: number }> {
     const format = ((body.format ?? 'ZPL').toUpperCase()) as LabelFormat;
@@ -71,7 +75,7 @@ export class WarehouseLabelCompatService {
                TO_CHAR(wb.expiry_date, 'YYYY-MM-DD') AS expiry_date,
                wb.quantity, w.name AS warehouse_name
         FROM warehouse_batches wb
-        JOIN material_cards mc ON mc.id = wb.material_card_id
+        JOIN material_cards mc ON mc.id = wb.item_id
         LEFT JOIN warehouses w ON w.id = wb.warehouse_id
         WHERE wb.id = ${batchId}
       `);
@@ -88,7 +92,7 @@ export class WarehouseLabelCompatService {
              mc.xom_ashyo AS material_name, mc.barcode,
              w.name AS warehouse_name
       FROM warehouse_batches wb
-      JOIN material_cards mc ON mc.id = wb.material_card_id
+      JOIN material_cards mc ON mc.id = wb.item_id
       LEFT JOIN warehouses w ON w.id = wb.warehouse_id
       WHERE true ${warehouseFilter} ${statusFilter}
       ORDER BY wb.created_at DESC LIMIT 100
@@ -105,7 +109,7 @@ export class WarehouseLabelCompatService {
              mc.xom_ashyo AS material_name, wb.batch_number
       FROM pos_barcode_print_queue q
       LEFT JOIN warehouse_batches wb ON wb.id = q.batch_id
-      LEFT JOIN material_cards mc ON mc.id = wb.material_card_id
+      LEFT JOIN material_cards mc ON mc.id = wb.item_id
       WHERE true ${warehouseFilter}
       ORDER BY q.created_at DESC LIMIT ${limit}
     `);
@@ -119,7 +123,7 @@ export class WarehouseLabelCompatService {
       WHERE id = ${id} RETURNING id, batch_number, status, updated_at
     `);
     const found = dbRows(result)[0];
-    if (!found) throw new NotFoundException(`Batch ${id} not found`);
+    if (!found) throw new NotFoundException(await this.i18n.t('errors.batchNotFoundWithId', { args: { id } }));
     return found;
   }
 

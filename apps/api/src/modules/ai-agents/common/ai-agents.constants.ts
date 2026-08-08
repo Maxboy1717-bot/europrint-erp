@@ -61,4 +61,9 @@ export const AGENT_CODES = {
   MES_MONITOR:        'mes_monitor',
   VISION_QC:          'vision_qc',
   ROUTER:             'router',
+  AISHA:              'aisha',
 } as const;
+
+// A78 — Aisha tool-call loop skeleton: max LLM↔tool round-trips before the
+// orchestrator bails out (prevents an infinite tool loop on a confused model).
+export const AISHA_MAX_TOOL_ITERATIONS = 8;

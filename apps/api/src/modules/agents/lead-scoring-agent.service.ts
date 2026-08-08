@@ -9,6 +9,7 @@ import { runQuery } from '@shared/db';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AgentEventBusService } from './shared/agent-event-bus.service';
 import { AiRouterCallService } from '../ai/application/services/ai-router-call.service';
+import type { AiRequest } from '../ai/domain/types/ai.types';
 import { CHURN_HIGH_DAYS, CHURN_MED_DAYS } from '@common/constants/business.constants';
 import { isOk } from '@common/result';
 
@@ -62,13 +63,16 @@ export class LeadScoringAgentService {
       const lead = r.rows[0];
       if (!lead) throw new NotFoundException(await this.i18n.t('errors.leadNotFound'));
 
-      const ai = await this.ai.callClaude({
+      const proposalReq: AiRequest = {
         taskType: 'crm.email_template',
         systemPrompt: 'Sen Europrint kompaniyasi savdo bo\'limi yordamchisisan. O\'zbek tilida professional tijorat taklifi HTML yoz.',
         prompt: `Mijoz: ${lead.name ?? 'Hurmatli mijoz'}\n\nEuroprint karton va qadoqlash mahsulotlari uchun tijorat taklifi yarating.`,
         maxTokens: 1500,
-      });
+      };
+      const ai = await this.ai.callClaude(proposalReq);
       const html = isOk(ai) ? ai.data.text : '<p>Taklif tayyorlanmadi</p>';
+      // 20-agent audit 2026-08-06: logUsage() must be called explicitly.
+      if (isOk(ai)) await this.ai.logUsage('claude', proposalReq, ai.data);
       return { html };
     });
   }

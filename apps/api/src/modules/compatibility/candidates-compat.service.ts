@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -15,6 +16,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class CandidatesCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getCandidates(vacancyId?: string, status?: string, limit = '50'): Promise<Result<Record<string, unknown>[]>>{
     return safeCall(async () => {
@@ -43,7 +45,7 @@ export class CandidatesCompatService {
   async createCandidate(body: Record<string, unknown>){
     return safeCall(async () => {
       const fields = this.parseCandidateFields(body);
-      if (!fields.first_name) throw new BadRequestException('Ism (fullName yoki first_name) majburiy');
+      if (!fields.first_name) throw new BadRequestException(await this.i18n.t('validation.candidateFirstNameRequired'));
       return await this.insertCandidateWithFallback(fields);
     });
   }
@@ -150,7 +152,7 @@ export class CandidatesCompatService {
       WHERE c.id = ${si(id)} AND c.deleted_at IS NULL
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -169,7 +171,7 @@ export class CandidatesCompatService {
       RETURNING id, status, rating, updated_at
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}

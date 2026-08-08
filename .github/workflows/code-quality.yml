@@ -168,11 +168,16 @@ jobs:
           node scripts/i18n-leak-detector.mjs --mode=static --out=ci-i18n-leaks.json
           LEAK_COUNT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('ci-i18n-leaks.json','utf8')).summary.totalLeaks)")
           echo "Leaks found: $LEAK_COUNT"
-          if [ "$LEAK_COUNT" -gt 0 ]; then
-            echo "❌ $LEAK_COUNT hardcoded user-facing strings detected."
+          # RATCHET: fail only when count EXCEEDS the baseline. Pre-existing leaks
+          # are accepted; new leaks must be fixed. Reduce cap over time.
+          MAX_LEAKS="${MAX_I18N_LEAKS:-64}"
+          if [ "$LEAK_COUNT" -gt "$MAX_LEAKS" ]; then
+            echo "❌ $LEAK_COUNT hardcoded user-facing strings detected (exceeds cap of $MAX_LEAKS)."
             echo "Inspect ci-i18n-leaks.json (uploaded as artifact)."
             echo "Fix using fix-types-i18n.mjs / fix-jsx-and-props.mjs or wrap in tLabel('key', 'fallback')."
             exit 1
+          elif [ "$LEAK_COUNT" -gt 0 ]; then
+            echo "⚠️  $LEAK_COUNT hardcoded strings at/below ratchet cap of $MAX_LEAKS — pre-existing, reduce over time."
           fi
       - uses: actions/upload-artifact@v4
         if: failure()

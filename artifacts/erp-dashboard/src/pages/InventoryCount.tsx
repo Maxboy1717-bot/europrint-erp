@@ -36,7 +36,8 @@ import { DiscrepancyReport } from "@/components/wms/inventory/DiscrepancyReport"
 import { CreateUpdateCountDialog } from "@/components/wms/inventory/CreateUpdateCountDialog";
 import { InventoryStats } from "@/components/wms/inventory/InventoryStats";
 import { CountDetailHeader } from "@/components/wms/inventory/CountDetailHeader";
-import { EPErrorState } from "@/components/ep";
+import { BlindCountPanel } from "@/components/wms/inventory/BlindCountPanel";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 export default function InventoryCount() {
   const { toast } = useToast();
@@ -195,13 +196,16 @@ export default function InventoryCount() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="ep-h1 text-foreground">{t.title}</h1><p className="text-muted-foreground">{t.subtitle}</p></div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setLanguage(language === "uz" ? "ru" : "uz")}>{language === "uz" ? "RU" : "UZ"}</Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />{t.actions.create}</Button>
-        </div>
-      </div>
+      <EPPageHeader
+        title={t.title}
+        subtitle={t.subtitle}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setLanguage(language === "uz" ? "ru" : "uz")}>{language === "uz" ? "RU" : "UZ"}</Button>
+            <Button onClick={() => setIsCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />{t.actions.create}</Button>
+          </>
+        }
+      />
       <InventoryStats stats={stats} isLoading={statsLoading} />
       <Card>
         <CardHeader>
@@ -223,6 +227,7 @@ export default function InventoryCount() {
           {countsLoading ? <div className="space-y-4">{([...Array(5)]).map((_, i) => (<Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />))}</div> : countsError ? <EPErrorState description={(countsError as Error)?.message} onRetry={() => refetch()} /> :<CountSessionTable counts={filteredCounts} onEdit={(c) => { setEditingCount(c); setFormData({ countDate: c.countDate, warehouseId: c.warehouseId || "", countType: c.countType, assignedTo: c.assignedTo ? String(c.assignedTo) : "", notes: c.notes || "" }); }} onView={handleViewDetail} />}
         </CardContent>
       </Card>
+      <BlindCountPanel counts={filteredCounts} warehouses={warehouses} />
       <CreateUpdateCountDialog isOpen={isCreateDialogOpen || !!editingCount} onOpenChange={(open) => { if (!open) { setIsCreateDialogOpen(false); setEditingCount(null); resetForm(); } else setIsCreateDialogOpen(true); }} isEditing={!!editingCount} formData={formData} onFormChange={(data) => setFormData((prev) => ({ ...prev, ...data }))} onSubmit={handleFormSubmit} isPending={createMutation.isPending || updateMutation.isPending} warehouses={warehouses} users={users} />
     </div>
   );

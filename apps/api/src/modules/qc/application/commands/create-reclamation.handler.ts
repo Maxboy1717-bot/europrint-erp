@@ -8,6 +8,7 @@ const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result, Ok } from '@common/result';
+import { QC_RECLAMATION_DEFAULT_SLA_DAYS } from '@common/constants/business.constants';
 import { CreateReclamationCommand } from './create-reclamation.command';
 import { Reclamation, ReclamationStatus } from '../../domain/aggregates/reclamation.aggregate';
 import { IQcDefectRepository, QC_DEFECT_REPO } from '../../infrastructure/repositories/drizzle-defect.repo';
@@ -22,20 +23,28 @@ export class CreateReclamationHandler implements ICommandHandler<CreateReclamati
       ) {}
 
   async execute(command: CreateReclamationCommand): Promise<Result<Reclamation>> {
+      // id=0 is a placeholder — the repository assigns the real serial id
+      // (qc_reclamations_id_seq) and returns the persisted entity below.
+      const reportedDate = _time.now();
+      const deadlineDays = QC_RECLAMATION_DEFAULT_SLA_DAYS;
+      const slaDueAt = Reclamation.computeSlaDueAt(reportedDate, deadlineDays);
       const reclamation = new Reclamation(
-        this.generateId(),
+        0,
         command.customerName,
         command.customerId,
         command.orderId,
         command.description,
         command.severity,
-        ReclamationStatus.OPEN,
-        _time.now(),
+        ReclamationStatus.NEW,
+        reportedDate,
+        deadlineDays,
+        slaDueAt,
         null,
         null,
         null,
-        _time.now(),
-        _time.now(),
+        reportedDate,
+        reportedDate,
+        command.createdBy,
       );
 
       const saveResult = await this.qcRepository.saveReclamation(reclamation);
@@ -46,10 +55,6 @@ export class CreateReclamationHandler implements ICommandHandler<CreateReclamati
       }
 
       this.logger.log('Reclamation created');
-      return Ok(reclamation);
-  }
-
-  private generateId(): string {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      return Ok(saveResult.data);
   }
 }

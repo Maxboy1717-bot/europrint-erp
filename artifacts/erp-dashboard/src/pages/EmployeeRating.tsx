@@ -1,9 +1,20 @@
-// @deprecated 2026-05-27
-// This component is a duplicate. Do NOT add new features here.
-// See: docs/modules/hr-employees.md for canonical location.
 /**
  * @module EmployeeRating
  * @description React page component. Route-level UI.
+ *
+ * CANONICAL "Xodim Baholash" page — sidebar constants.ts routes here
+ * (url: "integration/employee-rating"). The `@deprecated` marker previously
+ * on this file (2026-05-27, pointing at docs/modules/hr-employees.md) was
+ * stale: PerformanceTab.tsx (inside EmployeeProfile) shows ABC/MES/WMS/course
+ * metrics for ONE employee and does not read employee_ratings at all — it is
+ * not a replacement for this org-wide, year/month-filterable ratings + goals
+ * dashboard. The backend module `feedback-360` (`@Controller('360')`,
+ * employee_360_assessments/employee_360_responses) is also not a replacement:
+ * grep across artifacts/erp-dashboard/src found zero FE callers of /api/360/*
+ * — it is an orphaned, unrouted module. Verified 2026-07-13: the real bug
+ * keeping this page's stat cards at 0 was a DB column-drift in
+ * integration-extended-hr.repo.ts (getEmployeeRatingStats referenced a
+ * nonexistent `overall_score` column) — fixed there, marker removed here.
  */
 
 import { useState } from "react";

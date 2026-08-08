@@ -73,9 +73,10 @@ export function StatsRow({ totalCount, activeCount, completedCount, lang }: Stat
 
 export function StatusBadge({ status, lang }: { status: string; lang: Lang }) {
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.new;
+  const label = lang === "ru" ? config.labelRu : lang === "uz-cyr" ? config.labelCyr : config.labelUz;
   return (
     <Badge className={`${config.className} rounded-full border-none px-2.5 py-0.5 text-xs font-semibold`}>
-      {lang === "uz" ? config.label : config.labelRu}
+      {label}
     </Badge>
   );
 }

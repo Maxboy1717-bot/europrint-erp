@@ -29,6 +29,8 @@ export interface MessageTask {
   priority: string;
   status: string;
   createdAt: string;
+  createdBy: string | null;
+  kanbanCardId?: string | null;
 }
 
 @Injectable()
@@ -76,6 +78,7 @@ export class ChatNotificationsService {
   async createMessageTask(
     callerId: number, roomId: string | number, messageId: string | number, title: string,
     assignedTo: string | number | null, dueDate: string | null, priority: string,
+    kanbanCardId: string | number | null = null,
   ): Promise<Result<MessageTask>> {
     const roomIdStr = String(roomId);
     const messageIdStr = String(messageId);
@@ -85,7 +88,10 @@ export class ChatNotificationsService {
     const msgCheck = await this.repo.messageInRoom(messageIdStr, roomIdStr);
     if (isErr(msgCheck)) return Err(msgCheck.error);
     if (!msgCheck.data) return Err(AppErr('NOT_FOUND', 'Xabar topilmadi yoki boshqa xonaga tegishli'));
-    const result = await this.repo.insertTask(messageIdStr, title, assignedTo !== null ? String(assignedTo) : null, dueDate, priority);
+    const result = await this.repo.insertTask(
+      messageIdStr, title, assignedTo !== null ? String(assignedTo) : null, dueDate, priority,
+      roomIdStr, String(callerId), kanbanCardId !== null ? String(kanbanCardId) : null,
+    );
     if (isErr(result)) return Err(result.error);
     const r = result.data;
     return Ok<MessageTask>({
@@ -93,6 +99,8 @@ export class ChatNotificationsService {
       title: String(r['title']), assignedTo: r['assigned_to'] ? String(r['assigned_to']) : null,
       dueDate: r['due_date'] ? String(r['due_date']) : null,
       priority: String(r['priority']), status: String(r['status']), createdAt: String(r['created_at']),
+      createdBy: r['created_by'] ? String(r['created_by']) : null,
+      kanbanCardId: r['kanban_card_id'] ? String(r['kanban_card_id']) : null,
     });
   }
 

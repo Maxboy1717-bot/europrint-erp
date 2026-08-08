@@ -145,7 +145,7 @@ export function HardBlockTab({ hardBlocks, hardBlockByAgent, isLoading, t }: Har
                     <span className="text-sm font-mono">{b.guardType}</span>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
-                    <EPStatusPill tone="neutral">{b.blockedCount} ta</EPStatusPill>
+                    <EPStatusPill tone="neutral">{b.blockedCount} {t('unitTa')}</EPStatusPill>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="w-3 h-3" /><span>{formatAgeSec(b.avgBlockedAgeSec)}</span>
                     </div>

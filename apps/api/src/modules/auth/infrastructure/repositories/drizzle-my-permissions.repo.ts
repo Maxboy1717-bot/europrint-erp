@@ -22,6 +22,7 @@ export interface UserPositionRow extends DbRow {
   username: string;
   role: string | null;
   positionId: number | null;
+  orgFunctionId: number | null;
   positionCode: string | null;
   positionNameUz: string | null;
   positionNameRu: string | null;
@@ -48,21 +49,29 @@ export class DrizzleMyPermissionsRepository {
    */
   async findUserWithPosition(userId: number): Promise<Result<UserPositionRow | null>> {
     try {
+      // EP-ORG-003 card-gate: RBAC tier resolves CARD-FIRST. Same canonical path as
+      // drizzle-auth.repo.resolveCardGate: users.card_id → org_departments (FAZA-00 kanonik
+      // karta jadvali). Priority: primary card (od.rbac_tier) → org_functions (ofn.rbac_tier)
+      // → positions (p.rbac_tier) for card-less users (e.g. the admin account).
+      // COALESCE → card-first, fallback eski; never breaks (post-login path, degrades gracefully).
       const rows = await rawSql(sql`
         SELECT
-          u.id              AS "userId",
-          u.username        AS username,
-          u.role            AS role,
-          p.id              AS "positionId",
-          p.code            AS "positionCode",
-          p.name_uz         AS "positionNameUz",
-          p.name_ru         AS "positionNameRu",
-          p.rbac_tier       AS "rbacTier",
-          d.code            AS "departmentCode",
-          d.name_uz         AS "departmentNameUz"
+          u.id                                          AS "userId",
+          u.username                                    AS username,
+          u.role                                        AS role,
+          p.id                                          AS "positionId",
+          u.org_function_id                             AS "orgFunctionId",
+          p.code                                        AS "positionCode",
+          p.name_uz                                     AS "positionNameUz",
+          p.name_ru                                     AS "positionNameRu",
+          COALESCE(od.rbac_tier, ofn.rbac_tier, p.rbac_tier) AS "rbacTier",
+          d.code                                        AS "departmentCode",
+          d.name_uz                                     AS "departmentNameUz"
         FROM users u
-        LEFT JOIN positions p   ON p.id = u.position_id
-        LEFT JOIN departments d ON d.id = u.department_id
+        LEFT JOIN positions p       ON p.id = u.position_id
+        LEFT JOIN org_functions ofn ON ofn.id = u.org_function_id AND ofn.deleted_at IS NULL
+        LEFT JOIN org_departments od ON od.id = u.card_id
+        LEFT JOIN departments d     ON d.id = u.department_id
         WHERE u.id = ${userId}
         LIMIT 1
       `);
@@ -75,10 +84,32 @@ export class DrizzleMyPermissionsRepository {
   }
 
   /**
-   * position_permissions — module + level juftliklari.
+   * position_permissions — module + level juftliklari. KARTA-BIRINCHI.
+   *
+   * EP-ORG card-first RBAC: ruxsat avval KARTA (org_function — kanonik lavozim KARTA,
+   * STANDARTLAR §1.3) bo'yicha olinadi (`org_function_id`), KARTA yo'q/bo'sh bo'lsa eski
+   * `position_id` ga fallback (regress yo'q). `position_permissions` ikkala kalit bilan
+   * to'ldirilgan (1380/1380), shuning uchun KARTA-li foydalanuvchi uchun natija bir xil.
+   * Karta-yo'q (org_function_id NULL) foydalanuvchi — eski position yo'li ishlaydi.
    */
-  async findModulePermissions(positionId: number): Promise<Result<ReadonlyArray<ModulePermRow>>> {
+  async findModulePermissions(
+    positionId: number | null,
+    orgFunctionId: number | null,
+  ): Promise<Result<ReadonlyArray<ModulePermRow>>> {
     try {
+      // Karta-birinchi: org_function_id bor bo'lsa avval shuni urinib ko'r.
+      if (orgFunctionId !== null) {
+        const cardRows = await rawSql(sql`
+          SELECT module_code AS module, access_level AS level
+          FROM position_permissions
+          WHERE org_function_id = ${orgFunctionId}
+        `);
+        const cardData = dbRows<ModulePermRow>(cardRows);
+        const cardSafe = Array.isArray(cardData) ? cardData : [];
+        if (cardSafe.length > 0) return Ok(cardSafe);
+      }
+      // Fallback: eski position-keyed (karta-yo'q yoki karta bo'yicha grant topilmadi).
+      if (positionId === null) return Ok([]);
       const rows = await rawSql(sql`
         SELECT module_code AS module, access_level AS level
         FROM position_permissions
@@ -92,19 +123,38 @@ export class DrizzleMyPermissionsRepository {
   }
 
   /**
-   * position_feature_flags — faqat is_allowed=true bo'lgan kalitlar.
+   * position_feature_flags — faqat is_allowed=true bo'lgan kalitlar. KARTA-BIRINCHI.
+   * Mantiq findModulePermissions bilan bir xil: org_function_id avval, position_id fallback.
    */
-  async findFeatureFlags(positionId: number): Promise<Result<ReadonlyArray<string>>> {
+  async findFeatureFlags(
+    positionId: number | null,
+    orgFunctionId: number | null,
+  ): Promise<Result<ReadonlyArray<string>>> {
     try {
+      const pickAllowed = (data: unknown): string[] => {
+        const safe = Array.isArray(data) ? (data as FeatureFlagRow[]) : [];
+        return safe.filter((r) => r.isAllowed === true).map((r) => r.featureKey);
+      };
+
+      if (orgFunctionId !== null) {
+        const cardRows = await rawSql(sql`
+          SELECT feature_key AS "featureKey", is_allowed AS "isAllowed"
+          FROM position_feature_flags
+          WHERE org_function_id = ${orgFunctionId}
+        `);
+        const cardData = dbRows<FeatureFlagRow>(cardRows);
+        const cardSafe = Array.isArray(cardData) ? cardData : [];
+        if (cardSafe.length > 0) return Ok(pickAllowed(cardData));
+      }
+
+      if (positionId === null) return Ok([]);
       const rows = await rawSql(sql`
         SELECT feature_key AS "featureKey", is_allowed AS "isAllowed"
         FROM position_feature_flags
         WHERE position_id = ${positionId}
       `);
       const data = dbRows<FeatureFlagRow>(rows);
-      const safe = Array.isArray(data) ? data : [];
-      const allowed = safe.filter((r) => r.isAllowed === true).map((r) => r.featureKey);
-      return Ok(allowed);
+      return Ok(pickAllowed(data));
     } catch (e: unknown) {
       return Err(`findFeatureFlags: ${String(e)}`);
     }

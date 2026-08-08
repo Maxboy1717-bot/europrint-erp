@@ -16,7 +16,8 @@ import { ISalesOrderRepository, SALES_ORDER_REPO, SalesOrderLineInput } from '..
 import { OrderCreatedEvent } from '../../domain/events/order-created.event';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 import { OutboxRepository } from '../../../shared/outbox/outbox.repository';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 export class CreateOrderCommand {
   constructor(public readonly companyId: number,
@@ -27,7 +28,9 @@ export class CreateOrderCommand {
     public readonly createdBy: number = 1,
     public readonly dealId?: number,
     public readonly customerId?: number,
-    public readonly items: SalesOrderLineInput[] = []) {}
+    public readonly items: SalesOrderLineInput[] = [],
+    /** 2.6 golden-thread: originating CRM lead (crm_leads.id), when the deal/order came from a lead. */
+    public readonly crmLeadId?: number) {}
 }
 
 type OutboxRow = {
@@ -91,7 +94,7 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
     let txOutcome: TxResult;
     try {
       txOutcome = await db.transaction(async (tx): Promise<TxResult> => {
-        const saveResult = await this.orderRepo.save(order, tx);
+        const saveResult = await this.orderRepo.save(order, tx, command.crmLeadId ?? null);
         if (!saveResult.ok) {
           // Throw to roll back the transaction. The outer try/catch converts
           // this into a domain Result<Err>; no half-state can leak.
@@ -167,10 +170,20 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
 
   // ── Private helpers ────────────────────────────────────────────────────
 
+  /**
+   * C1.7 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): previously read count()+1 — a read-max race
+   * under concurrent order creation (caught by sales_orders.order_number's live UNIQUE
+   * constraint, so a collision failed loudly rather than corrupting data, but caused a spurious
+   * create failure under load). Now uses a dedicated Postgres SEQUENCE (nextval), the same
+   * proven atomic pattern as invoice_number_seq (C4) and doc-sequences.helper.ts. The
+   * Date.now()-based catch-block fallback is unchanged (matches nextDocNumber()'s own
+   * established "don't block order creation if the numbering mechanism itself errors" design)
+   * — still backed by the same UNIQUE constraint as a last-resort safety net.
+   */
   private async _generateOrderNumber(): Promise<string> {
     try {
-      const seqRow = await this.orderRepo.count?.();
-      const seqNum = seqRow?.ok ? (seqRow.data ?? 0) + 1 : Date.now();
+      const seqRow = await runQuery<{ seq: string }>(sql`SELECT nextval('sales_order_number_seq') AS seq`);
+      const seqNum = Number(seqRow.rows[0]?.seq ?? Date.now());
       const year   = new Date().getFullYear();
       const padded = String(seqNum).padStart(6, '0');
       return `SO-${year}-${padded}`;

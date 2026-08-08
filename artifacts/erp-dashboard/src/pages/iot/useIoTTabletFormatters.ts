@@ -21,10 +21,10 @@ export function formatTime(seconds: number): string {
  */
 export function formatEstimatedTime(
   seconds: number,
-  t: (uz: string, ru: string) => string,
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): string {
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) return `~${hours}${t("s", "ч")} ${mins}${t("d", "м")}`;
-  return `~${mins} ${t("daqiqa", "мин")}`;
+  if (hours > 0) return `~${hours}${t("ttHourAbbrev")} ${mins}${t("ttMinAbbrevShort")}`;
+  return `~${mins} ${t("ttMinutes")}`;
 }

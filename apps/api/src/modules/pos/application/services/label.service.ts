@@ -18,9 +18,13 @@ import { DEFAULT_BARCODE } from '@common/constants/app.constants';
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { LabelExtService } from './label-ext.service';
 import { LabelRepository } from '../../infrastructure/repositories/label.repository';
+import { LABEL_DIMENSIONS, type LabelDimensions } from './pos-stock-issuable.service';
+import { generateQrMatrix, qrMatrixToBitmap, buildQrPayload } from './label-qr.util';
+import { THERMAL_PRINTER_DPI, MM_PER_INCH, QR_ZPL_MAGNIFICATION } from '@common/constants/app.constants';
 
 export type LabelFormat = 'ZPL' | 'EPL' | 'PDF';
 
@@ -36,6 +40,11 @@ export interface LabelData {
   expiryDate?: string;
   warehouseName?: string;
   date: string;
+  /** Ombor-turi etiket shabloni (warehouse_types.label_template: standard/finished/roll). */
+  labelTemplate?: string;
+  /** pos_label_config override (admin CRUD) — mavjud bo'lsa labelTemplate o'lchamidan ustun. */
+  labelWidthMm?: number;
+  labelHeightMm?: number;
 }
 
 export interface PrinterConfig {
@@ -60,6 +69,7 @@ export class LabelService {
   constructor(
     private readonly extSvc: LabelExtService,
     private readonly labelRepo: LabelRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   async getPrinterConfig() { return this.extSvc.getPrinterConfig(); }
@@ -72,7 +82,7 @@ export class LabelService {
       const mat = await this.labelRepo.getMaterialCard(materialCardId);
 
       if (!mat) {
-        throw new NotFoundException(`Material topilmadi: ${materialCardId}`);
+        throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: materialCardId } }));
       }
 
       let batchNumber: string | undefined;
@@ -80,6 +90,9 @@ export class LabelService {
       let productionDate: string | undefined;
       let expiryDate: string | undefined;
       let warehouseName: string | undefined;
+      let labelTemplate: string | undefined;
+      let labelWidthMm: number | undefined;
+      let labelHeightMm: number | undefined;
 
       if (batchId) {
         const b = await this.labelRepo.getBatch(batchId);
@@ -90,10 +103,14 @@ export class LabelService {
           productionDate = bd['production_date'] ? String(bd['production_date']).substring(0, 10) : undefined;
           expiryDate     = bd['expiry_date'] ? String(bd['expiry_date']).substring(0, 10) : undefined;
           warehouseName  = bd['warehouse_name'] as string;
+          labelTemplate  = (bd['label_template'] as string) ?? undefined;
+          labelWidthMm   = bd['label_width_mm'] != null ? Number(bd['label_width_mm']) : undefined;
+          labelHeightMm  = bd['label_height_mm'] != null ? Number(bd['label_height_mm']) : undefined;
         }
       }
 
       const md = (mat.data ?? {}) as Record<string, unknown>;
+
       return {
         materialCardId: Number(md['material_card_id']),
         materialName:   (md['material_name'] as string) ?? 'N/A',
@@ -101,6 +118,7 @@ export class LabelService {
         barcode:        (md['barcode'] as string) ?? '',
         unitOfMeasure:  (md['unit_of_measure'] as string) ?? 'dona',
         batchNumber, quantity, productionDate, expiryDate, warehouseName,
+        labelTemplate, labelWidthMm, labelHeightMm,
         date: _time.now().toLocaleDateString('uz-UZ'),
       };
     });
@@ -119,8 +137,36 @@ export class LabelService {
       productionDate: row['production_date'] as string | undefined,
       expiryDate:     row['expiry_date'] as string | undefined,
       warehouseName:  row['warehouse_name'] as string | undefined,
+      labelTemplate:  row['label_template'] as string | undefined,
+      labelWidthMm:   row['label_width_mm'] != null ? Number(row['label_width_mm']) : undefined,
+      labelHeightMm:  row['label_height_mm'] != null ? Number(row['label_height_mm']) : undefined,
       date:           _time.now().toLocaleDateString('uz-UZ'),
     }));
+  }
+
+  /**
+   * Ombor-turi-maxsus etiket o'lchamini dot'ga o'giradi (203dpi). `labelWidthMm`/
+   * `labelHeightMm` (pos_label_config override) > `labelTemplate` (warehouse_types,
+   * LABEL_DIMENSIONS xaritasi) > `null` (chaqiruvchi eski qattiq-kodlangan o'lchamni
+   * ishlatadi — Q-39 regressiyasiz orqaga-moslik).
+   */
+  private _resolveDimensions(data: LabelData): { widthDots: number; heightDots: number } | null {
+    if (!data.labelTemplate && !(data.labelWidthMm && data.labelHeightMm)) return null;
+    let widthMm: number;
+    let heightMm: number;
+    if (data.labelWidthMm && data.labelHeightMm) {
+      widthMm = data.labelWidthMm;
+      heightMm = data.labelHeightMm;
+    } else {
+      const dims: LabelDimensions = LABEL_DIMENSIONS[data.labelTemplate ?? ''] ?? LABEL_DIMENSIONS['standard'];
+      widthMm = dims.widthMm;
+      heightMm = dims.heightMm;
+    }
+    const dotsPerMm = THERMAL_PRINTER_DPI / MM_PER_INCH;
+    return {
+      widthDots: Math.round(widthMm * dotsPerMm),
+      heightDots: Math.round(heightMm * dotsPerMm),
+    };
   }
 
   // ─── ZPL Generatsiya (Zebra ZPL II) ──────────────────────────────────────
@@ -137,12 +183,18 @@ export class LabelService {
       ? `^FO10,40^BEN,60,Y,N^FD${barcode}^FS`   // EAN-13
       : `^FO10,40^BCN,60,Y,N^FD${barcode}^FS`;  // Code-128
 
+    // Ombor-turi-maxsus o'lcham (pos_label_config/warehouse_types) — bo'lmasa eski
+    // qattiq-kodlangan 400x200 (Q-39: mavjud chaqiruvchilar uchun regressiyasiz).
+    const dims = this._resolveDimensions(data);
+    const widthDots  = dims?.widthDots ?? 400;
+    const heightDots = dims?.heightDots ?? 200;
+
     const lines: string[] = [
       '^XA',
       '^CI28',
       '^LH0,0',
-      '^PW400',
-      '^LL200',
+      `^PW${widthDots}`,
+      `^LL${heightDots}`,
       `^FO10,10^A0N,20,20^FD${name}^FS`,
       barcodeCmd,
     ];
@@ -151,6 +203,15 @@ export class LabelService {
     if (qty)    lines.push(`^FO200,115^A0N,14,14^FD${qty}^FS`);
     if (expiry) lines.push(`^FO10,135^A0N,14,14^FD${expiry}^FS`);
     lines.push(`^FO10,155^A0N,12,12^FDEuroPrint | ${date}^FS`);
+
+    // QR-kod — har material/lot uchun avtomatik (spec: EAN-13+Code-128+QR).
+    // ZPL native ^BQ buyrug'i — printer o'zi real QR simvolini chizadi.
+    const qrPayload = buildQrPayload({ barcode, materialCode: data.materialCode, batchNumber: data.batchNumber });
+    if (qrPayload) {
+      const qrX = Math.max(10, widthDots - 110);
+      lines.push(`^FO${qrX},10^BQN,2,${QR_ZPL_MAGNIFICATION}^FDQA,${this._escapeZpl(qrPayload)}^FS`);
+    }
+
     lines.push('^XZ');
 
     return lines.join('\n');
@@ -170,9 +231,12 @@ export class LabelService {
       ? `B10,40,0,E,2,2,60,B,"${barcode}"`
       : `B10,40,0,1,2,2,60,B,"${barcode}"`;
 
+    const dims = this._resolveDimensions(data);
+    const widthDots = dims?.widthDots ?? 400;
+
     const lines: string[] = [
       'N',
-      'q400',
+      `q${widthDots}`,
       `A10,10,0,3,1,1,N,"${name}"`,
       barcodeCmd,
     ];
@@ -181,6 +245,18 @@ export class LabelService {
     if (qty)    lines.push(`A200,115,0,2,1,1,N,"${qty}"`);
     if (expiry) lines.push(`A10,135,0,2,1,1,N,"${expiry}"`);
     lines.push(`A10,155,0,2,1,1,N,"EuroPrint | ${date}"`);
+
+    // QR-kod — EPL2'da vendor-mustaqil 2D barkod buyrug'i yo'q; shu sabab `GW`
+    // (grafik-yozish) buyrug'i — BARCHA EPL printerlar qo'llab-quvvatlaydigan
+    // standart monoxrom-bitmap buyrug'i — orqali haqiqiy QR-matritsa chop etiladi.
+    const qrPayload = buildQrPayload({ barcode, materialCode: data.materialCode, batchNumber: data.batchNumber });
+    if (qrPayload) {
+      const matrix = generateQrMatrix(qrPayload);
+      const bmp = qrMatrixToBitmap(matrix, !dims);
+      const qrX = Math.max(10, widthDots - bmp.widthPx - 10);
+      lines.push(`GW${qrX},10,${bmp.widthBytes},${bmp.heightPx},${bmp.bytes.toString('latin1')}`);
+    }
+
     lines.push(`P${copies}`);
 
     return lines.join('\n');

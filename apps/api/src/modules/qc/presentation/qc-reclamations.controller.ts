@@ -19,13 +19,17 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { safeInt } from '../../hr/common/db-rows';
 import { CreateReclamationCommand } from '../application/commands/create-reclamation.command';
 import { GetReclamationsQuery } from '../application/queries/get-reclamations.query';
+import { GetReclamationByIdQuery } from '../application/queries/get-reclamation-by-id.query';
 import { CreateReclamationDtoSchema, GetReclamationsDtoSchema } from './dto/defect.dto';
 import { ReclamationStatus } from '../domain/aggregates/reclamation.aggregate';
 import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 enum Role {
   QC_MANAGER = 'qc_manager',
@@ -65,12 +69,13 @@ export class QcReclamationsController {
     const result = await runQuery(sql`
       SELECT
         COUNT(*) FILTER (WHERE status = 'new') AS new_count,
-        COUNT(*) FILTER (WHERE status = 'in_progress') AS in_progress_count,
+        COUNT(*) FILTER (WHERE status = 'investigating') AS in_progress_count,
         COUNT(*) FILTER (WHERE status = 'resolved') AS resolved_count,
-        COUNT(*) FILTER (WHERE status = 'closed') AS closed_count,
+        COUNT(*) FILTER (WHERE status = 'rejected') AS closed_count,
         COUNT(*) AS total,
         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') AS last_30_days,
-        ROUND(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/86400) FILTER (WHERE resolved_at IS NOT NULL), 1) AS avg_resolution_days
+        ROUND(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/86400) FILTER (WHERE resolved_at IS NOT NULL), 1) AS avg_resolution_days,
+        COUNT(*) FILTER (WHERE status NOT IN ('resolved', 'rejected') AND sla_due_at IS NOT NULL AND sla_due_at < NOW()) AS overdue_count
       FROM qc_reclamations
     `);
     return result.rows[0] ?? {};
@@ -82,9 +87,9 @@ export class QcReclamationsController {
   @Get('reclamations/:id')
   async getReclamationById(@Param('id') id: string) {
 
-      const result = await this.commandBus.execute({ type: 'GetReclamationByIdQuery', id });
+      const result = await this.queryBus.execute(new GetReclamationByIdQuery(safeInt(id, 0)));
       return unwrapOrNotFoundDefined(result, 'Reclamation not found');
-    
+
   }
 
   @ApiOperation({ summary: 'Create reclamation' })
@@ -92,10 +97,10 @@ export class QcReclamationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('reclamations')
   @Roles(Role.SALES_MANAGER, Role.QC_MANAGER, Role.SUPER_ADMIN)
-  async createReclamation(@Body() body: unknown) {
+  async createReclamation(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
       const parsed = CreateReclamationDtoSchema.parse(body);
-      const cmd = new CreateReclamationCommand(parsed.customerName ?? '', parsed.customerId ?? null, parsed.orderId ?? null, parsed.description ?? '', parsed.severity as DefectSeverity);
+      const cmd = new CreateReclamationCommand(parsed.customerName ?? '', parsed.customerId ?? null, parsed.orderId ?? null, parsed.description ?? '', parsed.severity as DefectSeverity, user.id);
       const result = await this.commandBus.execute(cmd);
       assertOk(result);
       this.logger.log('Reclamation created');

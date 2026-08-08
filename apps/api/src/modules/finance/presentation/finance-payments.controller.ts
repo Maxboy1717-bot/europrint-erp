@@ -4,6 +4,7 @@
  */
 
 import { Controller, HttpCode, HttpStatus, Patch, Post, Get, Body, Param, Query, UseGuards, UseInterceptors, Logger, InternalServerErrorException, UsePipes, NotImplementedException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { z } from 'zod';
 import { assertOk, assertOkLog, throwFromError, unwrapOrThrow } from '@common/http-result';
@@ -23,6 +24,8 @@ import {
   FinanceRecordPaymentSchema, FinanceRecordPaymentDto,
   FinanceVerifyPaymentSchema, FinanceVerifyPaymentDto,
 } from './dto/finance.dto';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 enum Role {
   FINANCE_OFFICER = 'FINANCE_OFFICER',
@@ -53,6 +56,7 @@ export class FinancePaymentsController {
     private queryBus: QueryBus,
     private recordPaymentHandler: RecordPaymentHandler,
     private readonly actionsSvc: FinanceActionsService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List payments' })
@@ -75,9 +79,7 @@ export class FinancePaymentsController {
     // 501: to'lov GL/buxgalteriyaga bog'liq — real yo'l POST /finance/payments/record
     // (RecordPaymentHandler: invoice topish + double-entry GL provodka). Root POST'ga
     // oddiy insert orphan to'lov yaratardi (buxgalteriyani buzardi), shuning uchun 501.
-    throw new NotImplementedException(
-      "To'lov yozish uchun POST /finance/payments/record ishlating (invoice + GL bilan).",
-    );
+    throw new NotImplementedException(await this.i18n.t('errors.usePaymentRecordEndpoint'));
   }
 
   @ApiOperation({ summary: 'Patch approve payment' })
@@ -105,7 +107,8 @@ export class FinancePaymentsController {
       this.logger.log(`Recording payment - Invoice: ${body.invoiceId}, Amount: ${body.amount}`);
       const command = new RecordPaymentCommand(
         body.paymentId, body.invoiceId, body.customerId,
-        body.amount, new Date(body.paymentDate), body.recordedBy
+        body.amount, new Date(body.paymentDate), body.recordedBy,
+        body.idempotencyKey ?? null,
       );
       const result = await this.recordPaymentHandler.execute(command);
       assertOk(result);
@@ -120,10 +123,10 @@ export class FinancePaymentsController {
   @Post(':paymentId/verify')
   @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceVerifyPaymentSchema))
-  async verifyPayment(@Param('paymentId') paymentId: number, @Body() body: FinanceVerifyPaymentDto) {
-
-      return { message: 'Payment verified', paymentId };
-    
+  async verifyPayment(@Param('paymentId') paymentId: string, @Body() body: FinanceVerifyPaymentDto) {
+    const r = await this.actionsSvc.verifyPayment(Number(paymentId), body.verifiedBy);
+    assertOkLog(r, (e) => this.logger.error(`verifyPayment: DB update failed for id=${paymentId}: ${e?.message ?? String(e)}`));
+    return { message: 'Payment verified', paymentId: Number(paymentId), data: r.data };
   }
 
   @ApiOperation({ summary: 'Get outstanding payment' })
@@ -131,10 +134,22 @@ export class FinancePaymentsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':invoiceId/outstanding')
   @Roles(Role.FINANCE_OFFICER, Role.DIRECTOR, Role.SUPER_ADMIN)
-  async getOutstandingPayment(@Param('invoiceId') invoiceId: number) {
-
-      return { data: { invoiceId, outstanding: 0 } };
-    
+  async getOutstandingPayment(@Param('invoiceId') invoiceId: string) {
+    try {
+      const r = await rawSql(sql`
+        SELECT id::text AS id,
+               COALESCE(total_amount, 0)::numeric   AS "totalAmount",
+               COALESCE(paid_amount,  0)::numeric   AS "paidAmount",
+               GREATEST(0, COALESCE(total_amount, 0) - COALESCE(paid_amount, 0))::numeric AS outstanding
+        FROM invoices WHERE id = ${invoiceId}
+      `);
+      const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+      if (!row) return { data: { invoiceId, outstanding: 0, found: false } };
+      return { data: { invoiceId: row['id'], outstanding: Number(row['outstanding']), totalAmount: Number(row['totalAmount']), paidAmount: Number(row['paidAmount']), found: true } };
+    } catch (e) {
+      this.logger.error(`getOutstandingPayment: query failed for invoiceId=${invoiceId}: ${e instanceof Error ? e.message : String(e)}`);
+      throw new InternalServerErrorException(await this.i18n.t('errors.outstandingPaymentFetchFailed'));
+    }
   }
 
   @ApiOperation({ summary: 'Approve payment' })

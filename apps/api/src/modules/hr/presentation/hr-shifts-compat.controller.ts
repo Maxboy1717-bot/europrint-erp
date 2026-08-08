@@ -4,7 +4,10 @@
  */
 
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { assertOk, throwFromError, unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -32,7 +35,10 @@ const SHIFT_TIMES: Record<string, { start: string; end: string }> = {
 @Roles('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_SPECIALIST', 'MANAGER', 'DIRECTOR')
 @Controller('hr')
 export class HrShiftsCompatController {
-  constructor(private readonly shiftService: ShiftService) {}
+  constructor(
+    private readonly shiftService: ShiftService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get('shifts/schedule')
   async getSchedule(
@@ -64,7 +70,7 @@ export class HrShiftsCompatController {
     const empId = body.employee_id
       ? Number(body.employee_id)
       : userLookup?.ok && userLookup.data ? (userLookup.data as number) : null;
-    if (!empId) throw new BadRequestException('employee_id yoki user_id kerak — xodim topilmadi');
+    if (!empId) throw new BadRequestException(await this.i18n.t('errors.employeeIdOrUserIdRequiredNotFound'));
     const _rAssignShift = await this.shiftService.assignShift({
       employeeId: empId,
       shiftDate:  body.shift_date,
@@ -111,5 +117,98 @@ export class HrShiftsCompatController {
   @Delete('shifts/:id')
   async deleteShift(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.shiftService.deleteShift(id));
+  }
+
+  // ─── Shift-types config (master-data, owner-editable) ──────────────────────
+
+  @Get('shifts/types')
+  async getShiftTypes() {
+    const rows = await rawSql(sql`
+      SELECT id, code, name_uz, name_ru, start_time, end_time, duration_hours,
+             is_overnight, overtime_multiplier, is_active, sort_order
+      FROM shift_types
+      ORDER BY sort_order NULLS LAST, id
+    `);
+    return rows.rows;
+  }
+
+  private static readonly UpdateShiftTypeSchema = z.object({
+    start_time:           z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    end_time:             z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    name_uz:              z.string().min(1).max(100).optional(),
+    overtime_multiplier:  z.number().min(1).max(5).optional(),
+    is_active:            z.boolean().optional(),
+  });
+
+  // 2026-07-11: owner feedback — ShiftTypesConfig.tsx could only EDIT the 3 seeded rows,
+  // no way to add a new shift type or remove one ("sozlanishi kerak" — needs to be
+  // configurable). GET+PATCH already existed; this closes the gap with CREATE+DELETE.
+  private static readonly CreateShiftTypeSchema = z.object({
+    code:                 z.string().min(1).max(30).regex(/^[A-Z0-9_]+$/, "Kod faqat A-Z, 0-9, _ (masalan: DAY_SHIFT_2)"),
+    name_uz:              z.string().min(1).max(100),
+    name_ru:              z.string().max(100).optional(),
+    start_time:           z.string().regex(/^\d{2}:\d{2}$/),
+    end_time:             z.string().regex(/^\d{2}:\d{2}$/),
+    overtime_multiplier:  z.number().min(1).max(5).optional(),
+  });
+
+  @Post('shifts/types')
+  async createShiftType(@Body() body: unknown) {
+    const dto = HrShiftsCompatController.CreateShiftTypeSchema.parse(body);
+    const [sh, sm] = dto.start_time.split(':').map(Number);
+    const [eh, em] = dto.end_time.split(':').map(Number);
+    const startMin = sh * 60 + sm;
+    const endMin = eh * 60 + em;
+    const isOvernight = endMin <= startMin;
+    const durationHours = ((isOvernight ? endMin + 24 * 60 : endMin) - startMin) / 60;
+    try {
+      const rows = await rawSql(sql`
+        INSERT INTO shift_types (code, name_uz, name_ru, start_time, end_time, duration_hours, is_overnight, overtime_multiplier, is_active, sort_order)
+        VALUES (
+          ${dto.code}, ${dto.name_uz}, ${dto.name_ru ?? null}, ${dto.start_time}, ${dto.end_time},
+          ${durationHours}, ${isOvernight}, ${dto.overtime_multiplier ?? 1.5}, true,
+          (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM shift_types)
+        )
+        RETURNING id, code, name_uz, start_time, end_time, duration_hours, is_overnight, overtime_multiplier, is_active, sort_order
+      `);
+      return rows.rows[0];
+    } catch (e) {
+      if (e instanceof Error && /duplicate key|unique constraint/i.test(e.message)) {
+        throw new BadRequestException(`Kod "${dto.code}" allaqachon mavjud`);
+      }
+      throw e;
+    }
+  }
+
+  @Delete('shifts/types/:id')
+  async deleteShiftType(@Param('id', ParseIntPipe) id: number) {
+    // Soft-guard: agar biror karta shu smenani ishlatayotgan bo'lsa (org_departments.work_schedule
+    // erkin matn bo'lgani uchun to'g'ridan-to'g'ri FK yo'q) — o'chirish shunchaki yozuvni o'chiradi,
+    // matn sifatida saqlangan qadimgi qiymatlarga ta'sir qilmaydi (Q-46: mavjud ma'lumot buzilmaydi).
+    const rows = await rawSql(sql`DELETE FROM shift_types WHERE id = ${id} RETURNING id`);
+    if (rows.rows.length === 0) throw new BadRequestException('Smena turi topilmadi');
+    return { deleted: true, id };
+  }
+
+  @Patch('shifts/types/:id')
+  async updateShiftType(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ) {
+    const dto = HrShiftsCompatController.UpdateShiftTypeSchema.parse(body);
+    // COALESCE pattern: NULL param → keep existing value (safe parameterized update)
+    const rows = await rawSql(sql`
+      UPDATE shift_types SET
+        start_time          = COALESCE(${dto.start_time          ?? null}, start_time),
+        end_time            = COALESCE(${dto.end_time            ?? null}, end_time),
+        name_uz             = COALESCE(${dto.name_uz             ?? null}, name_uz),
+        overtime_multiplier = COALESCE(${dto.overtime_multiplier ?? null}::numeric, overtime_multiplier),
+        is_active           = COALESCE(${dto.is_active           ?? null}, is_active)
+      WHERE id = ${id}
+      RETURNING id, code, name_uz, start_time, end_time, overtime_multiplier, is_active
+    `);
+    const result = rows.rows[0] ?? undefined;
+    if (!result) throw new BadRequestException(await this.i18n.t('errors.shiftTypeNotFoundWithId', { args: { id } }));
+    return result;
   }
 }

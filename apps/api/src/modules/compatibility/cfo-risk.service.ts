@@ -17,6 +17,30 @@ import { safeDiv, clamp } from '@common/math';
 type Row = Record<string, unknown>;
 type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
+/**
+ * Canonical GL source = `entries` table (ADR-003), NOT the dead/empty `gl_journal_entries`.
+ * `entries` is double-entry (one row debits `debit_account_id` and credits
+ * `credit_account_id` by `amount`); this CTE unfolds each row into two single-sided legs
+ * (account_code + debit_amount/credit_amount) so the risk aggregations below run unchanged.
+ * account_code is resolved via the `accounts` FK because the text `debit_account`/
+ * `credit_account` columns are nullable.
+ */
+const GL_LEGS_CTE = sql`
+  SELECT a.account_code AS account_code,
+         e.amount       AS debit_amount,
+         0::numeric     AS credit_amount,
+         e.created_at   AS created_at
+  FROM entries e
+  JOIN accounts a ON a.id = e.debit_account_id
+  UNION ALL
+  SELECT a.account_code AS account_code,
+         0::numeric     AS debit_amount,
+         e.amount       AS credit_amount,
+         e.created_at   AS created_at
+  FROM entries e
+  JOIN accounts a ON a.id = e.credit_account_id
+`;
+
 interface RiskSummary {
   totalAR: number;
   overdueAR: number;
@@ -143,18 +167,20 @@ export class CfoRiskService {
 
   private fetchCashBalance() {
     return safeCall(() => rawSql(sql`
+      WITH gl_legs AS (${GL_LEGS_CTE})
       SELECT COALESCE(SUM(debit_amount - credit_amount), 0) AS cash_balance
-      FROM gl_journal_entries WHERE account_code LIKE '11%'
+      FROM gl_legs WHERE account_code LIKE '11%'
     `));
   }
 
   private fetchMarginRows() {
     return safeCall(() => rawSql(sql`
+      WITH gl_legs AS (${GL_LEGS_CTE})
       SELECT
         TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') AS month,
         COALESCE(SUM(CASE WHEN account_code LIKE '4%' THEN credit_amount - debit_amount ELSE 0 END), 0) AS revenue,
         COALESCE(SUM(CASE WHEN account_code LIKE '5%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS cogs
-      FROM gl_journal_entries
+      FROM gl_legs
       WHERE created_at >= NOW() - INTERVAL '3 months'
       GROUP BY DATE_TRUNC('month', created_at)
       ORDER BY DATE_TRUNC('month', created_at) DESC

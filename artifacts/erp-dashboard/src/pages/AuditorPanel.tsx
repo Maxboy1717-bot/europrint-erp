@@ -4,8 +4,8 @@
  */
 
 import { cn } from "@/lib/utils";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,20 +64,6 @@ interface StatusChangeHistory {
 export default function AuditorPanel() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
-
-  const restoreMutation = useMutation({
-    mutationFn: async (recordId: string) => {
-      await apiRequest("POST", `/api/europrint-control/deleted-records/${recordId}/restore`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/europrint-control/deleted-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/europrint-control/auditor-dashboard"] });
-      toast({ title: "Tiklandi", description: tLabel('common.yozuvMuvaffaqiyatliTiklandi', "Yozuv muvaffaqiyatli tiklandi") });
-    },
-    onError: () => {
-      toast({ title: "Xatolik", description: tLabel('common.yozuvniTiklashdaXatolikYuzBerdi', "Yozuvni tiklashda xatolik yuz berdi"), variant: "destructive" });
-    },
-  });
 
   const { data: roleMenus } = useQuery<unknown[]>({
     queryKey: ["/api/europrint-control/menus/admin"],
@@ -244,10 +230,6 @@ export default function AuditorPanel() {
                         <Clock className="h-3 w-3" />
                         {new Date(record.deletedAt).toLocaleString("uz-UZ")}
                       </div>
-                      <Button variant="outline" size="sm" className="mt-3 bg-muted/60 text-foreground rounded-lg px-3 py-1 text-xs border-none hover:bg-muted" onClick={() => restoreMutation.mutate(record.id)} disabled={restoreMutation.isPending} data-testid={`button-restore-${record.id}`}>
-                        <RotateCcw className="h-3 w-3 mr-1" />
-                        {t("restore")}
-                      </Button>
                     </div>
                   </div>
                 ))}

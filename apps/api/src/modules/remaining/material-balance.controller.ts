@@ -15,38 +15,17 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
-import { notImplemented } from '@common/exceptions/not-implemented';
-import {
-  MaterialBalanceOverviewAclTranslator,
-  type LegacyMaterialBalanceOverviewRow,
-  type MaterialBalanceOverviewDto,
-} from './acl/material-balance-overview-acl';
 
 @ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
 @Controller('material-balance')
 export class MaterialBalanceController {
-  /** PA2-14 ACL demonstrator. Stateless - direct instantiation is fine. */
-  private readonly overviewAcl = new MaterialBalanceOverviewAclTranslator();
-
   constructor(private readonly svc: MaterialBalanceService) {}
 
   @Get('overview')
   async getOverview() {
     return unwrapOrInternal(await this.svc.getOverview());
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-5 (Warehouse / WMS) consumers
-   * should target this endpoint; the legacy `/overview` route stays for
-   * backwards-compat.
-   */
-  @Get('overview/v2')
-  async getOverviewV2(): Promise<MaterialBalanceOverviewDto | null> {
-    const raw = unwrapOrInternal(await this.svc.getOverview()) as unknown as LegacyMaterialBalanceOverviewRow;
-    const r = this.overviewAcl.toDomain(raw);
-    return r.ok ? r.data : null;
   }
 
   @Get('alerts')
@@ -79,7 +58,9 @@ export class MaterialBalanceController {
 
   @Get('production')
   async getProduction(@Query() _q: Record<string, string>) {
-    return unwrapOrInternal(await this.svc.getProduction());
+    // FE (MaterialBalance "production" tab) reads response.data — wrap as { success, data }.
+    const data = unwrapOrInternal(await this.svc.getProduction());
+    return { success: true, data: Array.isArray(data) ? data : [] };
   }
 
   @Post('production/take')
@@ -115,11 +96,7 @@ export class MaterialBalanceController {
 
   /**
    * MaterialBalance page calls GET /api/material-balance/movements as a
-   * cross-material movement feed. Real implementation will join material
-   * movements across all materials.
-   *
-   * P3-26: returns 501 until the aggregator is wired; clients can fall back to
-   * /api/material-balance/:materialId/history per-material.
+   * cross-material movement feed — queries material_movements directly.
    */
   @Get('movements')
   async getMovements(@Query('limit') limit?: string) {
@@ -135,21 +112,49 @@ export class MaterialBalanceController {
   @HttpCode(HttpStatus.CREATED)
   async createMovement(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = (body ?? {}) as Record<string, unknown>;
+
+    // FE sends { material: "<kod or name>", quantity, type }
+    // Resolve material_id + material_name via lookup in material_cards.
+    const materialRaw = String(
+      dto['material'] ?? dto['material_name'] ?? dto['materialName'] ?? '',
+    ).trim();
+
+    let resolvedMaterialId: number | null =
+      typeof dto['material_id'] === 'number'
+        ? dto['material_id']
+        : typeof dto['materialId'] === 'number'
+          ? dto['materialId']
+          : null;
+    let resolvedMaterialName = materialRaw;
+
+    if (materialRaw) {
+      const lookupR = await db.execute(sql`
+        SELECT id, xom_ashyo FROM material_cards
+        WHERE kod = ${materialRaw} OR xom_ashyo ILIKE ${materialRaw}
+        LIMIT 1
+      `);
+      const found = ((lookupR as { rows?: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+      if (found) {
+        resolvedMaterialId = Number(found['id']);
+        resolvedMaterialName = String(found['xom_ashyo'] ?? materialRaw);
+      }
+    }
+
     const r = await db.execute(sql`
       INSERT INTO material_movements
         (session_id, order_id, material_id, material_name, movement_type, quantity, unit, performed_by, scanned_at)
       VALUES (
         ${dto['session_id'] ?? dto['sessionId'] ?? null}::int,
         ${dto['order_id']   ?? dto['orderId']   ?? null}::int,
-        ${dto['material_id'] ?? dto['materialId'] ?? null}::int,
-        ${String(dto['material_name'] ?? dto['materialName'] ?? '')}::text,
+        ${resolvedMaterialId}::int,
+        ${resolvedMaterialName}::text,
         ${String(dto['movement_type'] ?? dto['type'] ?? 'in')}::text,
         ${Number(dto['quantity'] ?? 1)}::numeric,
         ${String(dto['unit'] ?? 'шт')}::text,
         ${user?.id ?? 0}::int,
         NOW()
       )
-      RETURNING id
+      RETURNING id, material_id, material_name
     `);
     const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
     return { message: 'Harakat qayd etildi', data: row };

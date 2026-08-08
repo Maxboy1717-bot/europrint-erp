@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db } from '@shared/db';
 import {
   hrJobDescriptions,
@@ -18,6 +19,9 @@ import { safeCall, Result, AppError } from '@common/result';
 @Injectable()
 export class OnboardingJobService {
   private readonly logger = new Logger(OnboardingJobService.name);
+
+  constructor(private readonly i18n: I18nService) {}
+
   // ──────────────────── JOB DESCRIPTIONS ──────────────────────────────────
 
   async createJobDescription(dto: CreateJobDescriptionDto, createdById: number): Promise<Result<object, AppError>> {
@@ -72,7 +76,7 @@ export class OnboardingJobService {
       .set({ updatedAt: _time.now() })
       .where(eq(hrJobDescriptions.id, id))
       .returning();
-    if (!updated) throw new NotFoundException(`Job Description #${id} topilmadi`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.jobDescriptionNotFound', { args: { id } }));
     return updated;
   
     });}

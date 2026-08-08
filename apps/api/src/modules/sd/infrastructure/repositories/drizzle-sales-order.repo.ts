@@ -24,7 +24,7 @@ import { execSdSalesOrderInsert, execSdSalesOrderUpdate, execSdSalesOrderDelete 
 import { Err } from '@common/result';
 import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
 import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
-import { ISalesOrderRepository, DrizzleTxExecutor, SalesOrderLineInput } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, DrizzleTxExecutor, SalesOrderLineInput, SalesOrderItemView } from '../../domain/repositories/i-sales-order.repo';
 import { SoStatus } from '../../domain/value-objects/so-status.vo';
 import { Money } from '@common/money/money.vo';
 
@@ -32,7 +32,7 @@ type Row = Record<string, unknown>;
 
 @Injectable()
 export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
-  async save(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<SalesOrder>> {
+  async save(order: SalesOrder, tx?: DrizzleTxExecutor, crmLeadId?: number | null): Promise<Result<SalesOrder>> {
     try {
       // PA0-6: pass the optional Drizzle `tx` executor through to the helper
       // so the INSERT participates in the same transaction as the outbox write.
@@ -40,6 +40,9 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         order.getOrderNumber(), order.getStatus(), order.getCompanyId(),
         order.getTotalAmount(), (castTo<Row>(order))['createdBy'],
         tx,
+        order.getCustomerId() ?? null, // #03 HOP-0: carry the customer link into sales_orders
+        crmLeadId ?? null, // 2.6: carry the originating CRM lead link into sales_orders
+        order.getDesignFlag(), order.getSampleFlag(), order.getCurrency(),
       );
       // Carry the DB-generated serial id back onto the aggregate so the command
       // handler (and the outbox entries it builds) reference the real order id
@@ -63,14 +66,55 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         const total = qty * price;
         // Raw SQL targets the LIVE columns (the drizzle salesOrderItems stub drifts material_id/sales_order_id
         // to varchar; live is integer). product_id binds to products (finished goods, owner 2026-06-05).
+        // B13/Decision 3 (2026-07-06): default fallback was the free-text 'PC' -- now the
+        // canonical unit_of_measures.code for "piece" ('dona').
+        // Owner decision 2026-07-13 (chat) — "Mahsulot vs Buyurtma zanjiri": when it.productId is
+        // absent, this is a bespoke print job (no catalog SKU) — product_id stays NULL and the
+        // custom-spec columns (mirroring sd_quotation_items) carry the job description instead.
+        // Same convention as approveQuotation()/convertQuotationToOrder()'s item-copy INSERTs.
         await exec.execute(sql`
           INSERT INTO sales_order_items
-            (sales_order_id, item_number, product_id, description, order_quantity, open_quantity, unit, net_price, total_price, created_at)
+            (sales_order_id, item_number, product_id, description, order_quantity, open_quantity, unit,
+             net_price, total_price, product_type, paper_type, thickness_mm, length_mm, width_mm, height_mm,
+             print_colors, lamination, perforation, special_coating, is_new_die, printing_method,
+             machine_format, created_at)
           VALUES
-            (${orderId}, ${itemNumber}, ${it.productId}, ${it.description}, ${qty}, ${qty}, ${it.unit ?? 'PC'}, ${price}, ${total}, NOW())`);
+            (${orderId}, ${itemNumber}, ${it.productId ?? null}, ${it.description}, ${qty}, ${qty}, ${it.unit ?? 'dona'},
+             ${price}, ${total}, ${it.productType ?? null}, ${it.paperType ?? null}, ${it.thicknessMm ?? null},
+             ${it.lengthMm ?? null}, ${it.widthMm ?? null}, ${it.heightMm ?? null}, ${it.printColors ?? null},
+             ${it.lamination ?? null}, ${it.perforation ?? null}, ${it.specialCoating ?? null}, ${it.isNewDie ?? null},
+             ${it.printingMethod ?? null}, ${it.machineFormat ?? null}, NOW())`);
         saved++;
       }
       return { ok: true as const, data: saved };
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
+  }
+
+  async findItemsByOrderId(orderId: number): Promise<Result<SalesOrderItemView[]>> {
+    try {
+      // Read the order's persisted lines. product_id is the canonical finished-good
+      // binding the create flow writes (FK → products); material_id is a legacy/unused
+      // column (drizzle-sd-atp.repo) — surfaced too so a clone of an older row is not lost.
+      const r = await runQuery<Row>(sql`
+        SELECT id, item_number, product_id, material_id, material_number,
+               description, order_quantity, unit, net_price, total_price
+          FROM sales_order_items
+         WHERE sales_order_id = ${orderId}
+         ORDER BY item_number ASC`);
+      const rows = Array.isArray(r.rows) ? r.rows : [];
+      const items: SalesOrderItemView[] = rows.map((row) => ({
+        id: Number(row.id ?? 0),
+        itemNumber: String(row.item_number ?? ''),
+        productId: row.product_id != null ? Number(row.product_id) : null,
+        materialId: row.material_id != null ? Number(row.material_id) : null,
+        materialNumber: row.material_number != null ? String(row.material_number) : null,
+        description: String(row.description ?? ''),
+        orderQuantity: Number(row.order_quantity ?? 0),
+        unit: String(row.unit ?? ''),
+        netPrice: Number(row.net_price ?? 0),
+        totalPrice: Number(row.total_price ?? 0),
+      }));
+      return { ok: true as const, data: items };
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
@@ -118,9 +162,23 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
-  async update(order: SalesOrder): Promise<Result<void>> {
+  async update(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<void>> {
     try {
-      await execSdSalesOrderUpdate(order.getStatus(), order.getAdvanceStatus(), order.getId());
+      // tx (when present) keeps the status write atomic with the sibling outbox
+      // insert so the golden-thread OrderStatusChanged event can never be lost.
+      // Tech 3-checkpoint flags (bom/routing/card) are passed through too —
+      // previously dropped here, so ApproveTechCheckpointHandler's approvals
+      // never survived past the in-memory aggregate (golden-thread SD→PP never
+      // opened; see queries-sd.ts execSdSalesOrderUpdate for the persistence side).
+      await execSdSalesOrderUpdate(
+        order.getStatus(),
+        order.getAdvanceStatus(),
+        order.getId(),
+        tx,
+        order.getTechBomApproved(),
+        order.getTechRoutingApproved(),
+        order.getTechCardApproved(),
+      );
       return { ok: true as const, data: undefined };
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
@@ -203,6 +261,27 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     } catch (err) {
       return Err({ code: 'DB_ERROR', message: String(err) });
     }
+  }
+
+  async markPendingMaterial(orderId: number, reason: string | null, tx?: DrizzleTxExecutor): Promise<Result<{ signaledAt: string }>> {
+    try {
+      // 06-sd #100 — write the "Ожд.Сырьё" signal on the canonical BASE table
+      // sales_orders (sd_sales_orders is a read VIEW that does not carry these
+      // columns). Raw SQL (no Drizzle table object) keeps this off the stale-dist
+      // rebuild path. tx (when present) makes the flip atomic with the outbox row.
+      const conn = (tx ?? db) as { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: Row[] }> };
+      const r = await conn.execute(sql`
+        UPDATE sales_orders
+           SET status                  = 'pending_material',
+               pending_material_since  = NOW(),
+               pending_material_reason = ${reason},
+               updated_at              = NOW()
+         WHERE id = ${orderId} AND deleted_at IS NULL
+        RETURNING pending_material_since`);
+      const rows = Array.isArray(r.rows) ? r.rows : [];
+      if (rows.length === 0) return Err({ code: 'NOT_FOUND', message: 'Buyurtma topilmadi' });
+      return { ok: true as const, data: { signaledAt: String((rows[0] as Row).pending_material_since) } };
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async delete(id: number): Promise<Result<void>> {

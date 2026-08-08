@@ -4,9 +4,10 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const ReportDefectDtoSchema = z.object({
-  inspectionId: z.string().uuid().nullable().optional(),
+  inspectionId: IntegerIdSchema.nullable().optional(),
   productionOrderId: z.string().uuid().nullable().optional(),
   workCenterId: z.string().uuid().nullable().optional(),
   defectCode: z.string().min(2, 'Defect code must be at least 2 characters'),
@@ -26,7 +27,7 @@ export type ResolveDefectDto = z.infer<typeof ResolveDefectDtoSchema>;
 
 export const CreateReclamationDtoSchema = z.object({
   customerName: z.string().min(2, 'Customer name must be at least 2 characters'),
-  customerId: z.string().uuid().nullable().optional(),
+  customerId: z.number().int().positive().nullable().optional(),
   orderId: z.string().uuid().nullable().optional(),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   severity: z.enum(['minor', 'major', 'critical']),
@@ -47,7 +48,7 @@ export const GetDefectsDtoSchema = z.object({
 export type GetDefectsDto = z.infer<typeof GetDefectsDtoSchema>;
 
 export const GetReclamationsDtoSchema = z.object({
-  status: z.enum(['open', 'investigating', 'resolved', 'closed']).optional(),
+  status: z.enum(['new', 'investigating', 'resolved', 'rejected']).optional(),
   severity: z.enum(['minor', 'major', 'critical']).optional(),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),

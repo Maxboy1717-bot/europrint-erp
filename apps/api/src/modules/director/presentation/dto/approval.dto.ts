@@ -5,10 +5,11 @@
 
 import { MAX_NOTES_LENGTH, MAX_SHORT_TEXT } from '@common/constants/app.constants';
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 import { HitlDocumentType } from '../../domain/enums/hitl-document-type.enum';
 export const CreateApprovalRequestDtoSchema = z.object({
   documentType: z.enum(Object.values(HitlDocumentType) as [string, ...string[]]),
-  documentId: z.string().uuid(),
+  documentId: IntegerIdSchema,
   documentNumber: z.string().nullable().optional(),
   amount: z.number().positive('Summa musbat son bo\'lishi kerak'),
   currency: z.string().default('UZS'),
@@ -36,8 +37,8 @@ export const GetPendingDtoSchema = z.object({
   documentType: z
     .enum(Object.values(HitlDocumentType) as [string, ...string[]])
     .optional(),
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export type GetPendingDto = z.infer<typeof GetPendingDtoSchema>;

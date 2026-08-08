@@ -29,11 +29,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { sql } from 'drizzle-orm';
-import { runQuery, db } from '@shared/db';
+import { runQuery } from '@shared/db';
 import { isOk } from '@common/result';
 import { CcWorkflowService } from '../application/cc-workflow.service';
 import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documents.repo';
 import { CcDocumentNumberService } from '../application/cc-document-number.service';
+import { CcKanbanBridgeService } from '../application/cc-kanban-bridge.service';
 import { CcSpawnRequestedEvent } from '../domain/events/cc-spawn-requested.event';
 import type { Priority } from '../domain/types';
 
@@ -46,6 +47,7 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
     private readonly wf:      CcWorkflowService,
     private readonly docs:    CcDocumentsRepository,
     private readonly numbers: CcDocumentNumberService,
+    private readonly kanban:  CcKanbanBridgeService,
   ) {}
 
   /** Universal hujjat yaratish event'i — CqrsEventBus orqali */
@@ -83,6 +85,7 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
         senderComment:   null,
         priority:        payload.priority ?? (tmpl.default_priority as Priority),
         language:        payload.language ?? 'uz',
+        parentDocumentId: null,
         documentNumber,
       });
       if (!isOk(draftR)) {
@@ -93,48 +96,16 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
       this.logger.log(`cc.spawn: draft ${draftR.data.documentNumber} yaratildi (${payload.templateCode})`);
 
       // 4) CC→Kanban ko'prik: har CC draft uchun kanban karta yaratamiz.
-      //    Board va column ID'lari runtime'da nom bo'yicha qidiriladi (qattiq ID emas).
-      //    Xato bo'lsa ignore — kanban qo'shimcha funksiya (task management).
-      try {
-        // Runtime lookup — fragile hardcoded ID'lar o'rniga nom bo'yicha
-        const boardR = await runQuery<{ id: number }>(sql`
-          SELECT id FROM kanban_boards WHERE name = 'EUROPRINT' LIMIT 1
-        `);
-        const board = boardR.rows[0];
-        if (!board) {
-          this.logger.warn(`cc.spawn: kanban board "EUROPRINT" topilmadi — karta yaratilmadi`);
-        } else {
-          const colR = await runQuery<{ id: number }>(sql`
-            SELECT id FROM kanban_columns
-            WHERE board_id = ${board.id}
-            ORDER BY position ASC
-            LIMIT 1
-          `);
-          const col = colR.rows[0];
-          if (!col) {
-            this.logger.warn(`cc.spawn: board ${board.id} uchun ustun topilmadi — karta yaratilmadi`);
-          } else {
-            await db.execute(sql`
-              INSERT INTO kanban_cards
-                (board_id, column_id, title, description, related_type, related_id,
-                 owner_user_id, priority, created_at, updated_at)
-              VALUES (
-                ${board.id}, ${col.id},
-                ${payload.subject},
-                ${payload.body ?? ''},
-                'cc_document',
-                ${String(draftR.data.id)},
-                ${payload.senderUserId},
-                ${payload.priority ?? 'normal'},
-                NOW(), NOW()
-              )
-            `);
-            this.logger.log(`cc.spawn: kanban karta yaratildi (board=${board.id}, col=${col.id}, draft=${draftR.data.id})`);
-          }
-        }
-      } catch (kanbanErr) {
-        this.logger.warn(`cc.spawn: kanban karta yaratilmadi (ignore): ${String(kanbanErr)}`);
-      }
+      //    VAZIFA (2.9-cc-kanban-e2e): mantiq CcKanbanBridgeService'ga chiqarildi —
+      //    CcAiInterviewService (asosiy foydalanuvchi UI oqimi) ham shu xizmatdan
+      //    foydalanadi, duplikat SQL yo'q.
+      await this.kanban.createCardForDocument({
+        documentId:   draftR.data.id,
+        subject:      payload.subject,
+        body:         payload.body,
+        senderUserId: payload.senderUserId,
+        priority:     payload.priority,
+      });
 
       // 3) autoSend bo'lsa — workflow ishga tushadi (PIN talab qilinmasligi uchun
       //    "tizim PIN'i" mexanizmi keyingi versiyada qo'shiladi; hozir draft holatda qoladi)

@@ -27,6 +27,7 @@ import {
 import { SafetyTrendsChart } from "@/components/camera-ai/SafetyTrendsChart";
 import { QualityDefectsChart } from "@/components/camera-ai/QualityDefectsChart";
 import { MachineUtilizationChart } from "@/components/camera-ai/MachineUtilizationChart";
+import { WarehouseExitGuard } from "@/components/camera-ai/WarehouseExitGuard";
 import { EPErrorState } from "@/components/ep";
 
 export default function CameraAIAnalytics() {
@@ -274,6 +275,9 @@ export default function CameraAIAnalytics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* FAZA Q — Ombor AI-kamera nazorati (noqonuniy olib chiqish / ruxsatsiz kirish) */}
+      <WarehouseExitGuard />
     </div>
   );
 }

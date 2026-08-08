@@ -22,9 +22,22 @@ import {
 import { STATUS_COLORS, QC_STATUS_COLORS } from "./barcode/barcode-types";
 import type { BatchesTabProps } from "./BarcodeSystemTypes";
 
+const QC_STATUS_KEYS: Record<string, string> = {
+  pending: "qcStatusPending",
+  approved: "qcStatusApproved",
+  rejected: "qcStatusRejected",
+};
+
+const STATUS_KEYS: Record<string, string> = {
+  active: "statusActive",
+  depleted: "statusDepleted",
+  blocked: "statusBlocked",
+  expired: "statusExpired",
+};
+
 // ── BatchesTabContent ─────────────────────────────────────────────────────────
 export function BatchesTabContent({
-  lang, t,
+  t,
   batches, batchesLoading,
   materials, warehousesList,
   searchQuery, onSearchChange,
@@ -35,22 +48,20 @@ export function BatchesTabContent({
   onCreateBatch, onEditBatch, onViewBatch, onPrintBatch, onLabelPrint,
   onBulkGenerate, bulkGeneratePending,
 }: BatchesTabProps) {
-  const tAny = t as Record<string, string & Record<string, string>>;
-
   return (
     <TabsContent value="batches" className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <CardTitle className="text-[14px] font-semibold">{tAny.batches}</CardTitle>
+            <CardTitle className="text-[14px] font-semibold">{t("batches")}</CardTitle>
             <div className="flex items-center gap-2">
               {selectedBatchesForBulk.length > 0 && (
                 <Button onClick={onBulkGenerate} size="sm" variant="outline" disabled={bulkGeneratePending} data-testid="button-bulk-generate">
-                  <QrCode className="h-4 w-4 mr-2" />{tAny.bulkGenerate} ({selectedBatchesForBulk.length})
+                  <QrCode className="h-4 w-4 mr-2" />{t("bulkGenerate")} ({selectedBatchesForBulk.length})
                 </Button>
               )}
               <Button onClick={onCreateBatch} size="sm" data-testid="button-create-batch">
-                <Plus className="h-4 w-4 mr-2" />{tAny.add}
+                <Plus className="h-4 w-4 mr-2" />{t("add")}
               </Button>
             </div>
           </div>
@@ -58,7 +69,7 @@ export function BatchesTabContent({
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={tAny.search}
+                placeholder={t("search")}
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 className="pl-9"
@@ -67,10 +78,10 @@ export function BatchesTabContent({
             </div>
             <Select value={materialFilter || "__all__"} onValueChange={(v) => onMaterialFilterChange(v === "__all__" ? "" : v)}>
               <SelectTrigger className="w-full sm:w-[180px] h-9" data-testid="select-material-filter">
-                <SelectValue placeholder={tAny.allMaterials} />
+                <SelectValue placeholder={t("allMaterials")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">{tAny.allMaterials}</SelectItem>
+                <SelectItem value="__all__">{t("allMaterials")}</SelectItem>
                 {(Array.isArray(materials) ? materials : []).map((m) => (
                   <SelectItem key={m.id} value={m.id}>{m.xomAshyo}</SelectItem>
                 ))}
@@ -78,10 +89,10 @@ export function BatchesTabContent({
             </Select>
             <Select value={warehouseFilter || "__all__"} onValueChange={(v) => onWarehouseFilterChange(v === "__all__" ? "" : v)}>
               <SelectTrigger className="w-full sm:w-[180px] h-9" data-testid="select-warehouse-filter">
-                <SelectValue placeholder={tAny.allWarehouses} />
+                <SelectValue placeholder={t("allWarehouses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">{tAny.allWarehouses}</SelectItem>
+                <SelectItem value="__all__">{t("allWarehouses")}</SelectItem>
                 {(Array.isArray(warehousesList) ? warehousesList : []).map((w) => (
                   <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
                 ))}
@@ -89,14 +100,14 @@ export function BatchesTabContent({
             </Select>
             <Select value={statusFilter || "__all__"} onValueChange={(v) => onStatusFilterChange(v === "__all__" ? "" : v)}>
               <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="select-status-filter">
-                <SelectValue placeholder={tAny.allStatuses} />
+                <SelectValue placeholder={t("allStatuses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">{tAny.allStatuses}</SelectItem>
-                <SelectItem value="active">{(tAny.statuses as unknown as Record<string,string>)?.active}</SelectItem>
-                <SelectItem value="depleted">{(tAny.statuses as unknown as Record<string,string>)?.depleted}</SelectItem>
-                <SelectItem value="blocked">{(tAny.statuses as unknown as Record<string,string>)?.blocked}</SelectItem>
-                <SelectItem value="expired">{(tAny.statuses as unknown as Record<string,string>)?.expired}</SelectItem>
+                <SelectItem value="__all__">{t("allStatuses")}</SelectItem>
+                <SelectItem value="active">{t("statusActive")}</SelectItem>
+                <SelectItem value="depleted">{t("statusDepleted")}</SelectItem>
+                <SelectItem value="blocked">{t("statusBlocked")}</SelectItem>
+                <SelectItem value="expired">{t("statusExpired")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -118,16 +129,16 @@ export function BatchesTabContent({
                         data-testid="checkbox-select-all"
                       />
                     </TableHead>
-                    <TableHead>{tAny.batchNumber}</TableHead>
-                    <TableHead>{tAny.material}</TableHead>
-                    <TableHead>{tAny.warehouse}</TableHead>
-                    <TableHead className="text-right">{tAny.quantity}</TableHead>
-                    <TableHead className="text-right">{tAny.remaining}</TableHead>
-                    <TableHead>{tAny.productionDate}</TableHead>
-                    <TableHead>{tAny.expiryDate}</TableHead>
-                    <TableHead>{tAny.qcStatus}</TableHead>
-                    <TableHead>{tAny.status}</TableHead>
-                    <TableHead className="text-right">{tAny.actions}</TableHead>
+                    <TableHead>{t("batchNumber")}</TableHead>
+                    <TableHead>{t("material")}</TableHead>
+                    <TableHead>{t("warehouse")}</TableHead>
+                    <TableHead className="text-right">{t("quantity")}</TableHead>
+                    <TableHead className="text-right">{t("remaining")}</TableHead>
+                    <TableHead>{t("productionDate")}</TableHead>
+                    <TableHead>{t("expiryDate")}</TableHead>
+                    <TableHead>{t("qcStatus")}</TableHead>
+                    <TableHead>{t("status")}</TableHead>
+                    <TableHead className="text-right">{t("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -156,12 +167,12 @@ export function BatchesTabContent({
                       <TableCell>{batch.expiryDate || "-"}</TableCell>
                       <TableCell>
                         <Badge className={QC_STATUS_COLORS[batch.qcStatus || "pending"]}>
-                          {(tAny.qcStatuses as unknown as Record<string,string>)?.[batch.qcStatus ?? "pending"] || batch.qcStatus}
+                          {t(QC_STATUS_KEYS[batch.qcStatus ?? "pending"] ?? "qcStatusPending") || batch.qcStatus}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={STATUS_COLORS[batch.status || "active"]}>
-                          {(tAny.statuses as unknown as Record<string,string>)?.[batch.status ?? "active"] || batch.status}
+                          {t(STATUS_KEYS[batch.status ?? "active"] ?? "statusActive") || batch.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -172,7 +183,7 @@ export function BatchesTabContent({
                           <Button
                             variant="ghost"
                             size="icon"
-                            title={tAny.labelPrint}
+                            title={t("labelPrint")}
                             onClick={() => onLabelPrint(batch)}
                             data-testid={`button-label-print-${batch.id}`}
                             className="text-primary hover:text-primary/80"
@@ -190,7 +201,7 @@ export function BatchesTabContent({
                   {batches.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={11} className="text-center py-8 text-[13px] text-muted-foreground">
-                        {lang === "uz" ? "Partiyalar topilmadi" : "Партии не найдены"}
+                        {t("batchesNotFound")}
                       </TableCell>
                     </TableRow>
                   )}

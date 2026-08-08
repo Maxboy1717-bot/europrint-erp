@@ -131,7 +131,8 @@ export class IntegrationMroController {
   @Patch(':id/approve')
   async approveMro(@Param('id') id: string, @Body() body: unknown) {
     ApproveMroSchema.parse(body ?? {});
-    return { id, approved: true };
+    const r = await this.svc.approveRequest(id, 'approve');
+    return r.ok ? r.data : { id, approved: false, error: String(r.error) };
   }
 }
 

@@ -20,6 +20,7 @@ import {
   Injectable, Logger, UnauthorizedException, BadRequestException,
   OnModuleInit, OnModuleDestroy,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ConfigService } from '@nestjs/config';
 import { safeCall, Ok, Result, AppError } from '@common/result';
 import { PosTelegramExtService } from './pos-telegram-ext.service';
@@ -49,6 +50,7 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
     private readonly config:  ConfigService,
     private readonly extSvc:  PosTelegramExtService,
     private readonly telegramRepo: PosTelegramRepository,
+    private readonly i18n: I18nService,
   ) {
     this.botToken = this.config.get<string>('TELEGRAM_BOT_TOKEN') ?? '';
     if (!this.botToken) {
@@ -93,12 +95,12 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
 
   // ─── Telegram initData Tekshirish ─────────────────────────────────────────
 
-  validateInitData(initData: string): Record<string, string> {
-    if (!this.botToken) throw new UnauthorizedException('Telegram bot sozlanmagan');
+  async validateInitData(initData: string): Promise<Record<string, string>> {
+    if (!this.botToken) throw new UnauthorizedException(await this.i18n.t('errors.telegramBotNotConfigured'));
 
     const params = new URLSearchParams(initData);
     const hash   = params.get('hash');
-    if (!hash) throw new UnauthorizedException('initData da hash yo\'q');
+    if (!hash) throw new UnauthorizedException(await this.i18n.t('errors.telegramInitDataMissingHash'));
 
     params.delete('hash');
 
@@ -120,7 +122,7 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
       .digest('hex');
 
     if (expectedHash !== hash) {
-      throw new UnauthorizedException('Telegram initData tekshiruvi muvaffaqiyatsiz');
+      throw new UnauthorizedException(await this.i18n.t('errors.telegramInitDataValidationFailed'));
     }
 
     // Ma'lumotlarni parse qilish
@@ -137,14 +139,14 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
     initData: string;
   }): Promise<{ token: string; userId: number; expiresAt: Date }> {
     // initData tekshirish
-    const tgData = this.validateInitData(input.initData);
+    const tgData = await this.validateInitData(input.initData);
 
     // Foydalanuvchini ERP da topish (telegram_id orqali)
     const user = await this.telegramRepo.getUserByTelegramId(input.telegramUserId);
 
     if (!user || !user.ok || user.data === null) {
       throw new UnauthorizedException(
-        'Bu Telegram akkaunt ERP tizimiga bog\'liq emas. Admin bilan bog\'laning.',
+        await this.i18n.t('errors.telegramAccountNotLinked'),
       );
     }
 
@@ -189,7 +191,7 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
 
     // DB tekshirish
     const session = await this.telegramRepo.findActiveSessionByToken(token);
-    if (!session) throw new UnauthorizedException('Telegram sessiya yaroqsiz yoki muddati o\'tgan');
+    if (!session) throw new UnauthorizedException(await this.i18n.t('errors.telegramSessionInvalidOrExpired'));
 
     // Cache yangilash
     await this.telegramRepo.touchSession(token);

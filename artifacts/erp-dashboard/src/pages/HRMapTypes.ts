@@ -30,27 +30,29 @@ export interface Employee {
   profileImageUrl?: string;
 }
 
+/**
+ * Audit 2026-08-08: `distanceKm` — real haversine hisob (backend, HR_MAP_FACTORY_LAT/LNG
+ * asosida). `travelMinutes`/`direction` avval mavjud edi, lekin backend hech qachon
+ * hisoblamagan (soxta/undefined) — real transport-jadval (avtobus soni/sig'imi/jo'nash
+ * vaqti) egasi-qarori talab qiladi (Q-34), shuning uchun olib tashlandi (Q-40).
+ */
 export interface TransportEmployee {
   id: string;
   fullName: string;
   lat: number;
   lng: number;
-  address: string;
-  department: string;
+  address: string | null;
   distanceKm: number;
-  direction: string;
-  travelMinutes: number;
 }
 
+/**
+ * `departureTime`/`route`/`driverNote` — xuddi shu sabab bilan olib tashlandi (backend hech
+ * qachon hisoblamagan, real transport-jadval biznes-qoidasi kerak). `color` endi FE'da
+ * indeks bo'yicha tayinlanadi (GROUP_COLORS) — backend bermaydi.
+ */
 export interface TransportGroup {
   id: string;
   name: string;
-  color: string;
-  departureTime: string;
-  totalMinutes: number;
-  employeeIds: string[];
-  route: string;
-  driverNote: string;
   employees: TransportEmployee[];
 }
 
@@ -64,11 +66,9 @@ export interface TransportResult {
 
 export interface MapStats {
   total: { employees: number };
+  activeEmployees?: number;
+  totalDepartments?: number;
   byDepartment: Array<{ orgDepartmentName: string; count: number }>;
-  byShift: Array<{ shift: string; count: number }>;
-  byDistrict: Array<{ district: string; count: number }>;
-  factoryLat?: number;
-  factoryLng?: number;
 }
 
 export type ViewMode = "markers" | "heatmap" | "routes";

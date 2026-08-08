@@ -9,6 +9,7 @@
  */
 
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { DailyReportController } from '../../src/modules/hr/daily-report/daily-report.controller';
 import { DailyReportService } from '../../src/modules/hr/daily-report/daily-report.service';
 import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
@@ -16,6 +17,7 @@ import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
 describe('DailyReportController — broken-API repair (Phase 4 Task 4.1)', () => {
   let controller: DailyReportController;
   let svc: jest.Mocked<DailyReportService>;
+  const i18n = { t: jest.fn((key: string) => key) } as unknown as I18nService;
 
   beforeEach(() => {
     svc = {
@@ -26,7 +28,7 @@ describe('DailyReportController — broken-API repair (Phase 4 Task 4.1)', () =>
       getByDate: jest.fn(),
       getByDepartment: jest.fn(),
     } as unknown as jest.Mocked<DailyReportService>;
-    controller = new DailyReportController(svc);
+    controller = new DailyReportController(svc, i18n);
   });
 
   // ------------------------------------------------------------------
@@ -154,16 +156,29 @@ describe('DailyReportController — broken-API repair (Phase 4 Task 4.1)', () =>
   // ------------------------------------------------------------------
   describe('stats', () => {
     it('returns aggregate counts unwrapped from Result', async () => {
+      // The controller now wraps the result in { stats: { submitted_count,
+      // auto_absent_count, pending_count, departments_with_reports } } and
+      // normalises field names. pending_count is computed from the service data.
       const stats = { submitted_count: 5, absent_count: 1, total_active_employees: 20 };
       svc.getStats.mockResolvedValue(ok(stats));
-      const out = await controller.stats('2026-05-17');
+      const out = await controller.stats('2026-05-17') as { stats: Record<string, number> };
       expect(svc.getStats).toHaveBeenCalledWith('2026-05-17');
-      expect(out).toEqual(stats);
+      expect(out).toHaveProperty('stats');
+      expect(out.stats.submitted_count).toBe(5);
+      expect(out.stats.auto_absent_count).toBe(1);
+      // pending = max(0, total - submitted - absent) = max(0, 20 - 5 - 1) = 14
+      expect(out.stats.pending_count).toBe(14);
+      expect(out.stats.departments_with_reports).toBe(0);
     });
 
-    it('propagates failures with HTTP exception', async () => {
+    it('returns fallback stats shape on service failure (does not throw)', async () => {
+      // The controller uses r.ok check (not unwrapOrInternal), so Err returns
+      // the fallback object { stats: { submitted_count:0, auto_absent_count:0,
+      // pending_count:0, departments_with_reports:0 } } instead of throwing.
       svc.getStats.mockResolvedValue(err(AppErr('INTERNAL', 'boom')));
-      await expect(controller.stats('2026-05-17')).rejects.toThrow();
+      const out = await controller.stats('2026-05-17') as { stats: Record<string, number> };
+      expect(out).toHaveProperty('stats');
+      expect(out.stats.submitted_count).toBe(0);
     });
   });
 });

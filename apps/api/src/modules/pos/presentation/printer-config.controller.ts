@@ -10,6 +10,7 @@ import { PRINTER_DEFAULT_PORT } from '@common/constants/app.constants';
  * POS — Printer Config Controller
  */
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, HttpCode, HttpStatus, ParseIntPipe, Logger, UseInterceptors, NotFoundException , UsePipes,} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { PosCreatePrinterConfigSchema, PosCreatePrinterConfigDto, PosUpdatePrinterConfigSchema, PosUpdatePrinterConfigDto } from '../dto/pos-printer.dto';
@@ -33,6 +34,7 @@ export class PrinterConfigController {
   constructor(
     private readonly labelService: LabelService,
     private readonly svc: PosPrinterConfigService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Get()
@@ -74,7 +76,7 @@ export class PrinterConfigController {
       const _rRow = await this.svc.getForTest(id);
       assertOk(_rRow);
       const row = _rRow.data;
-      assertFound(row, 'Config topilmadi');
+      assertFound(row, await this.i18n.t('errors.printerConfigNotFoundById'));
       const port = (row.printer_port as number) ?? PRINTER_DEFAULT_PORT;
       const ip = row.printer_ip as string;
       const connected = await this.labelService.sendToPrinter('', ip, port);

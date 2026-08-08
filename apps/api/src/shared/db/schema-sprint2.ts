@@ -45,6 +45,8 @@ export const inventory_policy = pgTable(
     safety_stock: numeric('safety_stock', { precision: 12, scale: 2 }).notNull().default('0'),
     reorder_point: numeric('reorder_point', { precision: 12, scale: 2 }).notNull().default('0'),
     lead_time_days: integer('lead_time_days').default(1),
+    // 10-wms #39: event-driven reorder recompute audit timestamp (NULL until first lead-time-change recompute)
+    reorder_recomputed_at: timestamp('reorder_recomputed_at', { withTimezone: true }),
     review_period_days: integer('review_period_days').default(7),
     abc_class: text('abc_class').default('C'),
     service_level: numeric('service_level', { precision: 5, scale: 4 }).default('0.95'),
@@ -149,6 +151,8 @@ export const pp_routing_operations = pgTable(
     run_time_per_unit_min: numeric('run_time_per_unit_min', { precision: 8, scale: 4 }).notNull(),
     is_active: boolean('is_active').notNull().default(true),
     created_at: timestamp('created_at').defaultNow(),
+    // 07-pp#24: view now surfaces the base-table alternative_work_center_id column.
+    alternative_work_center_id: integer('alternative_work_center_id'),
   },
   (t) => [
     index('pp_routing_op_product_idx').on(t.product_id),

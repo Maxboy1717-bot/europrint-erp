@@ -139,7 +139,7 @@ export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSection
         <CardTitle className="text-base flex items-center gap-2">
           <Radio className="w-4 h-4 text-primary" /> {t("jalbQilishKanallariBoyichaSamaradorlik")}
           <span className="ml-auto text-xs font-normal text-muted-foreground">
-            Maqsad: ≥{CONVERSION_TARGET}% konversiya
+            {t("maqsadPrefix")}≥{CONVERSION_TARGET}%{t("konversiyaSuffix")}
           </span>
         </CardTitle>
       </CardHeader>
@@ -152,9 +152,9 @@ export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSection
             </p>
             <div className="flex items-center gap-3">
               {([
-                { label: "Arizalar",       pct: 100, target: "10x" },
-                { label: "Telefon suhbat", pct: 50,  target: "5x"  },
-                { label: "Suhbat",         pct: 10,  target: "1x"  },
+                { label: t("arizalarLabel"), pct: 100, target: "10x" },
+                { label: t("telefonSuhbat"), pct: 50,  target: "5x"  },
+                { label: t("suhbatStage"),   pct: 10,  target: "1x"  },
               ]).map((step, i) => (
                 <div key={step.label} className="flex items-center gap-2">
                   <div className="flex flex-col items-center">
@@ -168,7 +168,7 @@ export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSection
                 </div>
               ))}
               <div className="ml-4 text-xs text-muted-foreground">
-                {t("maqsad1")}<span className="font-bold text-primary">{CONVERSION_TARGET}%</span> konversiya
+                {t("maqsad1")}<span className="font-bold text-primary">{CONVERSION_TARGET}%</span>{t("konversiyaSuffix")}
               </div>
             </div>
           </div>
@@ -211,7 +211,7 @@ export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSection
                       : "bg-red-500/10 text-red-400 border-red-500/30";
 
                   const statusLabel =
-                    apps === 0 ? "Ma'lumot yo'q" : isGood ? "Yaxshi" : isMedium ? "O'rta" : "Past";
+                    apps === 0 ? t("malumotYoq") : isGood ? t("yaxshiLabel") : isMedium ? t("ortaLabel") : t("pastLabel");
 
                   return (
                     <tr key={row.ch_key} className="border-b border-border/50">

@@ -6,10 +6,14 @@
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { MesMaintenanceRepository } from '../infrastructure/repositories/mes-maintenance.repo';
+import { MesSosEscalationService } from './mes-sos-escalation.service';
 
 @Injectable()
 export class MesMaintenanceService {
-  constructor(private readonly repo: MesMaintenanceRepository) {}
+  constructor(
+    private readonly repo: MesMaintenanceRepository,
+    private readonly escalation: MesSosEscalationService,
+  ) {}
 
   async listMaintenanceRequests(status: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
     return safeCall(async () => this.repo.listMaintenanceRequests(status, lim, off));
@@ -35,12 +39,30 @@ export class MesMaintenanceService {
     });
   }
 
+  /**
+   * SOS yaratadi VA darhol org-zanjir eskalatsiyani biriktiradi (#11):
+   * work_center → KARTA (org_departments) javobgar + deadline + bildirishnoma.
+   * Eskalatsiya biriktirish muvaffaqiyatsiz bo'lsa ham SOS qatori saqlanadi (best-effort).
+   */
   async createSos(session_id: number | null, reason: string, work_center_id: number | null, userId: number | null) {
-    return safeCall(async () => this.repo.createSos(session_id, reason, work_center_id, userId));
+    return safeCall(async () => {
+      const rows = await this.repo.createSos(session_id, reason, work_center_id, userId);
+      const created = Array.isArray(rows) ? rows[0] : null;
+      const sosId = created && created.id != null ? Number(created.id) : null;
+      if (sosId) {
+        await this.escalation.assignOnRaise(sosId, work_center_id, reason);
+      }
+      return rows;
+    });
   }
 
   async getSosHistory(lim: number) {
     return safeCall(async () => this.repo.getSosHistory(lim));
+  }
+
+  /** SOS hal qilindi → eskalatsiya to'xtaydi (#11). */
+  async resolveSos(sosId: number, resolvedBy: number | null) {
+    return this.escalation.resolve(sosId, resolvedBy);
   }
 
   async getDowntimeReasons() {
@@ -51,7 +73,7 @@ export class MesMaintenanceService {
     return safeCall(async () => this.repo.createDowntimeEvent(session_id, reason_id, notes));
   }
 
-  async getDowntimeEvents(sid: number) {
-    return safeCall(async () => this.repo.getDowntimeEvents(sid));
+  async getDowntimeEvents(sid: number | null, lim: number) {
+    return safeCall(async () => this.repo.getDowntimeEvents(sid, lim));
   }
 }

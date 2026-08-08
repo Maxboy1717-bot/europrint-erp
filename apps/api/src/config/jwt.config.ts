@@ -14,7 +14,8 @@ export default registerAs('jwt', () => {
   }
   return {
     secret: process.env.JWT_SECRET,
-    expiresIn: process.env.JWT_EXPIRES_IN || '8h',
+    // T10-17: access-token TTL vizyon = 15 daqiqa (kanonik kalit: JWT_ACCESS_TOKEN_TTL)
+    expiresIn: process.env.JWT_ACCESS_TOKEN_TTL || process.env.JWT_EXPIRES_IN || '15m',
     refreshSecret: process.env.JWT_REFRESH_SECRET,
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     algorithm: 'HS256',

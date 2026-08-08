@@ -52,40 +52,72 @@ export class WmsCatalogStockTurnoverService {
     }
   }
 
-  async getTurnover() {
+  async getTurnover(dateFrom?: string, dateTo?: string) {
     try {
+      // Use explicit date bounds; fall back to a wide window when not provided
+      const fromTs = dateFrom ? `${dateFrom}T00:00:00` : '1970-01-01T00:00:00';
+      const toTs = dateTo ? `${dateTo}T23:59:59` : new Date().toISOString();
+
       const r = await rawSql(sql`
-        SELECT mc.id::text AS id, COALESCE(mc.xom_ashyo, mc.kod) AS material_name,
-               mc.unit_of_measure,
-               COALESCE(SUM(ws.quantity), 0)::numeric AS current_stock,
-               COALESCE(mc.unit_price, 0)::numeric AS unit_price,
-               COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS stock_value
+        SELECT
+          mc.id::text AS id,
+          COALESCE(mc.xom_ashyo, mc.kod) AS material_name,
+          mc.unit_of_measure,
+          COALESCE(mc.unit_price, 0)::numeric AS unit_price,
+          COALESCE(SUM(ws.quantity), 0)::numeric AS closing_stock,
+          COALESCE(SUM(
+            CASE WHEN pmt.is_receipt = true THEN pml.quantity ELSE 0 END
+          ), 0)::numeric AS total_in,
+          COALESCE(SUM(
+            CASE WHEN pmt.is_issue = true THEN pml.quantity ELSE 0 END
+          ), 0)::numeric AS total_out
         FROM material_cards mc
-        LEFT JOIN warehouse_stock ws ON ws.material_id = mc.id
+        LEFT JOIN warehouse_stock ws
+          ON ws.material_id = mc.id
+        LEFT JOIN pos_movement_lines pml
+          ON pml.material_id = mc.id
+        LEFT JOIN pos_movements pm
+          ON pm.id = pml.movement_id
+         AND pm.deleted_at IS NULL
+         AND pm.created_at >= ${fromTs}::timestamptz
+         AND pm.created_at <= ${toTs}::timestamptz
+        LEFT JOIN pos_movement_types pmt
+          ON pmt.id = pm.movement_type_id
         WHERE mc.is_active IS NOT FALSE
         GROUP BY mc.id, mc.xom_ashyo, mc.kod, mc.unit_of_measure, mc.unit_price
-        ORDER BY stock_value DESC LIMIT 100
+        ORDER BY closing_stock DESC
+        LIMIT 100
       `);
+
       const rawRows = (r as { rows?: Record<string, unknown>[] }).rows ?? [];
       const data = rawRows.map(row => {
-        const closingStock = Number(row.current_stock ?? 0);
-        const stockValue = Number(row.stock_value ?? 0);
-        const unitPrice = Number(row.unit_price ?? 1) || 1;
-        const turnoverRate = closingStock > 0
-          ? Math.round((stockValue / (closingStock * unitPrice)) * 10) / 10
+        const closingStock = Number(row.closing_stock ?? 0);
+        const totalIn = Number(row.total_in ?? 0);
+        const totalOut = Number(row.total_out ?? 0);
+        // Opening = closing - in + out (derived; no separate snapshot table)
+        const openingStock = Math.max(0, closingStock - totalIn + totalOut);
+        const avgStock = (openingStock + closingStock) / 2;
+        // turnoverRate = totalOut / avgStock (standard inventory turnover formula)
+        const turnoverRate = avgStock > 0
+          ? Math.round((totalOut / avgStock) * 100) / 100
           : 0;
         return {
-          materialId: String(row.id), name: String(row.material_name ?? ''),
-          openingStock: closingStock, totalIn: 0, totalOut: 0,
-          closingStock, turnoverRate,
+          materialId: String(row.id),
+          name: String(row.material_name ?? ''),
           unitOfMeasure: String(row.unit_of_measure ?? ''),
+          openingStock,
+          totalIn,
+          totalOut,
+          closingStock,
+          turnoverRate,
         };
       });
+
       const avgTurnover = data.length > 0
-        ? Math.round(data.reduce((s, d) => s + d.turnoverRate, 0) / data.length * 10) / 10
+        ? Math.round(data.reduce((s, d) => s + d.turnoverRate, 0) / data.length * 100) / 100
         : 0;
       const fastMovers = data.filter(d => d.turnoverRate >= 1).length;
-      const slowMovers = data.filter(d => d.turnoverRate < 1).length;
+      const slowMovers = data.filter(d => d.turnoverRate > 0 && d.turnoverRate < 1).length;
       return { data, summary: { averageTurnover: avgTurnover, fastMovers, slowMovers } };
     } catch (e) {
       this.logger.warn(`getTurnover failed: ${(e as Error).message}`);

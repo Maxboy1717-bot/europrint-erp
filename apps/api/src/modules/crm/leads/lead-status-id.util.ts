@@ -15,8 +15,13 @@ export function toBitrixStatusId(lifecycle: string | null | undefined): BitrixLe
     case 'new':         return 'NEW';
     case 'converted':
     case 'won':         return 'CONVERTED';
-    case 'lost':        return 'JUNK';
+    case 'lost':
+    case 'junk':        return 'JUNK';
     // Board kanban fine stages (LEAD_STAGES) + legacy lifecycle codes → coarse IN_PROCESS.
+    // VISION-3340 #28: LEAD_STAGES.stageId was renamed IN_PROGRESS -> IN_PROCESS (its real
+    // Bitrix CHECK spelling); 'in_progress' is kept as a back-compat alias for any row that
+    // still carries the old spelling in status_description.
+    case 'in_process':
     case 'in_progress':
     case 'analysis':
     case 'final':

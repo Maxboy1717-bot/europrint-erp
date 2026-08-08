@@ -19,7 +19,7 @@ const sentryEnvironment =
 const sentryRelease = import.meta.env.VITE_SENTRY_RELEASE as string | undefined;
 const isProduction = import.meta.env.PROD === true;
 
-if (sentryDsn && sentryDsn.length > 0) {
+if (sentryDsn && sentryDsn.length > 0 && isProduction) {
   Sentry.init({
     dsn: sentryDsn,
     environment: sentryEnvironment,
@@ -70,14 +70,14 @@ function SentryFallback({ error, resetError }: { error: unknown; resetError: () 
       <h1 style={{ fontSize: "24px", marginBottom: "12px" }}>
         Kutilmagan xatolik yuz berdi
       </h1>
-      <p style={{ color: "#666", marginBottom: "20px" }}>{message}</p>
+      <p style={{ color: "var(--ep-muted)", marginBottom: "20px" }}>{message}</p>
       <button
         type="button"
         onClick={resetError}
         style={{
           padding: "10px 20px",
-          background: "#2563eb",
-          color: "#fff",
+          background: "var(--ep-blue)",
+          color: "white",
           border: "none",
           borderRadius: "6px",
           cursor: "pointer",
@@ -87,6 +87,20 @@ function SentryFallback({ error, resetError }: { error: unknown; resetError: () 
       </button>
     </div>
   );
+}
+
+// Dev self-heal: a service worker left over from an earlier PRODUCTION build can keep serving a
+// stale/broken app shell in dev and intercept /api calls — so the app "won't load" even after a
+// hard refresh (Ctrl+Shift+R does not bypass a controlling SW). In DEV, proactively unregister any
+// existing SW and drop its caches on startup, then reload once so the fresh Vite build takes over.
+if (import.meta.env.DEV && typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    if (regs.length === 0) return;
+    Promise.all(regs.map((r) => r.unregister()))
+      .then(() => (typeof caches !== "undefined" ? caches.keys().then((ks) => Promise.all(ks.map((k) => caches.delete(k)))) : undefined))
+      .then(() => window.location.reload())
+      .catch(() => {});
+  }).catch(() => {});
 }
 
 createRoot(document.getElementById("root")!).render(

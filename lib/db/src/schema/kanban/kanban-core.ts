@@ -11,68 +11,16 @@ import { z } from "zod";
 import { users } from "../core-schema";
 
 // ========== KANBAN DOSKA MODULI - CORE TABLES ==========
-
-// Kanban Boards (Kanban doskalari)
-export const kanbanBoards = pgTable("kanban_boards", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(), // "Savdo pipeline", "Ichki vazifalar", "Ishlab chiqarish tasklari"
-  type: varchar("type", { length: 20 }).notNull().default("custom"), // crm_deals, tasks, custom
-  description: text("description"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-}, (t) => [
-  check("kanban_boards_type_chk", sql`${t.type} IN ('crm_deals','tasks','custom')`),
-  index("idx_kanban_boards_type").on(t.type),
-  index("idx_kanban_boards_deleted_at").on(t.deletedAt),
-]);
-
-
-export const insertKanbanBoardSchema = createInsertSchema(kanbanBoards, {
-  name: z.string().min(3, "Board nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
-  type: z.enum(["crm_deals", "tasks", "custom"]),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type KanbanBoard = typeof kanbanBoards.$inferSelect;
-
-export type InsertKanbanBoard = z.infer<typeof insertKanbanBoardSchema>;
-
-
-// Kanban Columns (Ustunlar)
-export const kanbanColumns = pgTable("kanban_columns", {
-  id: serial("id").primaryKey(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "cascade" }).notNull(),
-  name: text("name").notNull(), // To Do, In Progress, Done
-  sortOrder: integer("sort_order").notNull().default(0),
-  color: varchar("color", { length: 20 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-}, (t) => [
-  index("idx_kanban_columns_board_id").on(t.boardId),
-  index("idx_kanban_columns_deleted_at").on(t.deletedAt),
-]);
-
-
-export const insertKanbanColumnSchema = createInsertSchema(kanbanColumns, {
-  name: z.string().min(2, "Ustun nomi kamida 2 ta belgidan iborat bo'lishi kerak"),
-  sortOrder: z.number().int().nonnegative(),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type KanbanColumn = typeof kanbanColumns.$inferSelect;
-
-export type InsertKanbanColumn = z.infer<typeof insertKanbanColumnSchema>;
-
+// NOTE: `kanbanBoards` (kanban_boards) and `kanbanColumns` (kanban_columns) pgTables
+// removed 2026-07-02 — orphan in lib/db (no consumer via @workspace/db or
+// @europrint/schemas). Dependent tables below keep their board_id/column_id columns
+// but no longer hold a Drizzle-level FK to the deleted tables.
 
 // Kanban Cards (Kartalar)
 export const kanbanCards = pgTable("kanban_cards", {
   id: serial("id").primaryKey(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "cascade" }).notNull(),
-  columnId: varchar("column_id").references(() => kanbanColumns.id, { onDelete: "cascade" }).notNull(),
+  boardId: varchar("board_id").notNull(),
+  columnId: varchar("column_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
   relatedType: varchar("related_type", { length: 20 }), // deal, order, task, none

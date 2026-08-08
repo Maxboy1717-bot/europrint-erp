@@ -13,6 +13,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { Roles } from '@common/decorators/roles.decorator';
 import { WhisperService } from '../../application/voice/whisper.service';
 import { ElevenLabsService } from '../../application/voice/elevenlabs.service';
 
@@ -25,6 +26,9 @@ const SynthesizeSchema = z.object({
 @ApiBearerAuth()
 @Controller('aisha/voice')
 @UseGuards(JwtAuthGuard)
+// SECURITY (audit 2026-08-06 T9): mirror FE DIRECTOR_ROLES — without this any
+// authenticated employee could call Aisha (incl. self-approving HITL requests).
+@Roles('director', 'admin', 'super_admin', 'manager')
 export class VoiceController {
   constructor(
     private readonly whisper: WhisperService,

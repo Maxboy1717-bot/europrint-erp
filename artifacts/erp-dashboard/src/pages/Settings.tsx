@@ -91,8 +91,25 @@ export default function Settings() {
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const uploadMutation = useMutation({
+    // Item #119: mutationFn discarded the FormData arg entirely (POST with no body) —
+    // real upload is 2-step, same PUT /storage/upload -> POST {meta} pattern as
+    // EmployeeDialog.tsx/DocumentToolbar.tsx.
     mutationFn: async (data: FormData) => {
-      return await apiRequest('POST', "/api/guidelines");
+      const file = data.get("file") as File;
+      const positionId = data.get("positionId") as string;
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+      const key = `guidelines/${positionId}/${Date.now()}-${safeName}`;
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+      await apiRequest('PUT', `/api/storage/upload?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(file.type || "application/octet-stream")}`, fd);
+      return await apiRequest('POST', "/api/guidelines", {
+        orgFunctionId: Number(positionId),
+        filePath: `/api/storage/${key}`,
+        version: "1.0",
+        title: file.name,
+        category: "position_instruction",
+        isActive: true,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/guidelines"] });

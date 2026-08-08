@@ -18,8 +18,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CameraDashboardService } from '../application/camera-dashboard.service';
 import { LimitQuerySchema, ReportGenerateBodySchema } from './dto/iot-camera.dto';
 
-const CAM_READ = ['super_admin', 'director', 'security_manager', 'production_manager', 'ERP_MANAGER', 'admin'];
-const CAM_WRITE = ['super_admin', 'director', 'security_manager', 'ERP_MANAGER', 'admin'];
+const CAM_READ = ['super_admin', 'director', 'security_manager', 'production_manager'];
+const CAM_WRITE = ['super_admin', 'director', 'security_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -95,16 +95,4 @@ export class CameraReportsController {
     const dto = ReportGenerateBodySchema.parse(body);
     return unwrapOrThrow(await this.svc.generateReport('excel', dto.date_from, dto.date_to));
   }
-
-  @ApiOperation({ summary: 'Download pdf' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('generate-pdf')
-  @Roles(...CAM_READ)
-  async downloadPdf(@Query('period') period?: string) { return { url: null, period }; }
-
-  @ApiOperation({ summary: 'Download excel' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('generate-excel')
-  @Roles(...CAM_READ)
-  async downloadExcel(@Query('period') period?: string) { return { url: null, period }; }
 }

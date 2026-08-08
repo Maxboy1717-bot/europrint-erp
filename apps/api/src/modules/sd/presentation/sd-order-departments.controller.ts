@@ -12,10 +12,10 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { Role } from '../../auth/enums/role.enum';
+import { Role } from '@common/constants/roles.constants';
 import { AuditInterceptor } from '../../shared/interceptors/audit.interceptor';
 import { SdOrderDepartmentsService } from '../application/sd-order-departments.service';
-import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto, UpdateMaterialStatusSchema, UpdateMaterialStatusDto } from './dto/sd-order-departments.dto';
+import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto, UpdateMaterialStatusSchema, UpdateMaterialStatusDto, SetDieCodeSchema, SetDieCodeDto, SetCodePrefixSchema, SetCodePrefixDto } from './dto/sd-order-departments.dto';
 
 @ApiTags('SD Order Departments')
 @ApiBearerAuth()
@@ -28,7 +28,7 @@ export class SdOrderDepartmentsController {
   @ApiOperation({ summary: 'List the order\'s selected departments' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get(':id/departments')
-  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async list(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.listForOrder(id));
   }
@@ -37,7 +37,7 @@ export class SdOrderDepartmentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/departments')
-  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(SetOrderDepartmentsSchema))
   async set(@Param('id', ParseIntPipe) id: number, @Body() dto: SetOrderDepartmentsDto) {
     return unwrapOrThrow(await this.svc.setForOrder(id, dto.departments));
@@ -47,7 +47,7 @@ export class SdOrderDepartmentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/saga')
-  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async saga(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.getSaga(id));
   }
@@ -86,7 +86,7 @@ export class SdOrderDepartmentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/shipping/status')
-  @Roles(Role.WAREHOUSE, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.WAREHOUSE_KEEPER, Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(UpdateShippingStatusSchema))
   async setShippingStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateShippingStatusDto) {
     return unwrapOrThrow(await this.svc.setShippingStatus(id, dto.status));
@@ -96,9 +96,38 @@ export class SdOrderDepartmentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/materials/:reqId/status')
-  @Roles(Role.WAREHOUSE, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.WAREHOUSE_KEEPER, Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(UpdateMaterialStatusSchema))
   async setMaterialStatus(@Param('id', ParseIntPipe) id: number, @Param('reqId') reqId: string, @Body() dto: UpdateMaterialStatusDto) {
     return unwrapOrThrow(await this.svc.setMaterialStatus(id, reqId, dto.status));
+  }
+
+  @ApiOperation({ summary: 'Shared forma auto-detect: physical dies (die_code) referenced by >1 order (vision 06-sd#18)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('molds/shared-dies')
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.PRODUCTION_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  async sharedDies() {
+    return unwrapOrThrow(await this.svc.getSharedDieWarnings());
+  }
+
+  @ApiOperation({ summary: 'Tag a mold with its physical die identity + shared-forma warning (vision 06-sd#18)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/molds/:moldId/die-code')
+  @Roles(Role.PRODUCTION_MANAGER, Role.TECHNOLOGIST, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @UsePipes(new ZodValidationPipe(SetDieCodeSchema))
+  async setDieCode(@Param('id', ParseIntPipe) id: number, @Param('moldId') moldId: string, @Body() dto: SetDieCodeDto) {
+    return unwrapOrThrow(await this.svc.setDieCode(id, moldId, dto.dieCode));
+  }
+
+  @ApiOperation({ summary: 'Classify a mold/die against a taxonomy code_prefix (KT/PT/E/GL, SD #18-followup)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Invalid code_prefix (not in live taxonomy_entries)' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/molds/:moldId/code-prefix')
+  @Roles(Role.PRODUCTION_MANAGER, Role.TECHNOLOGIST, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @UsePipes(new ZodValidationPipe(SetCodePrefixSchema))
+  async setCodePrefix(@Param('id', ParseIntPipe) id: number, @Param('moldId') moldId: string, @Body() dto: SetCodePrefixDto) {
+    return unwrapOrThrow(await this.svc.setCodePrefix(id, moldId, dto.codePrefix));
   }
 }

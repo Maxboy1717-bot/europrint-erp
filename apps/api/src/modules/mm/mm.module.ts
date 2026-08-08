@@ -14,6 +14,9 @@ import { MmGoodsController }    from './presentation/mm-goods.controller';
 import { MmRawMaterialsController } from './presentation/mm-raw-materials.controller';
 import { MmMaterialCardsController } from './presentation/mm-material-cards.controller';
 import { MmDashboardController } from './presentation/mm-dashboard.controller';
+import { HitlApprovalsController } from './presentation/hitl-approvals.controller';
+import { HitlApprovalsRepository } from './infrastructure/repositories/hitl-approvals.repository';
+import { HITL_APPROVALS_REPO } from './domain/repositories/i-hitl-approvals.repo';
 import { MmMaterialsExtrasService } from './application/mm-materials-extras.service';
 import { LayerFormulaService } from './application/layer-formula.service';
 import { MmMaterialsExtrasRepository } from './infrastructure/repositories/mm-materials-extras.repository';
@@ -21,6 +24,9 @@ import { MM_MATERIALS_EXTRAS_REPO } from './domain/repositories/i-mm-materials-e
 import { MmDashboardService } from './application/mm-dashboard.service';
 import { MmDashboardRepository } from './infrastructure/repositories/mm-dashboard.repository';
 import { MM_DASHBOARD_REPO } from './domain/repositories/i-mm-dashboard.repo';
+import { MmVendorInvoiceService } from './application/mm-vendor-invoice.service';
+import { MmVendorInvoiceRepository } from './infrastructure/repositories/mm-vendor-invoice.repository';
+import { MM_VENDOR_INVOICE_REPO } from './domain/repositories/i-mm-vendor-invoice.repo';
 import { CreatePurchaseOrderHandler } from './application/commands/create-purchase-order.handler';
 import { ApprovePurchaseOrderHandler } from './application/commands/approve-purchase-order.handler';
 import { GoodsReceiptHandler } from './application/commands/goods-receipt.handler';
@@ -33,20 +39,25 @@ import { DrizzleMmRepository } from './infrastructure/repositories/drizzle-mm.re
 import { DrizzleMaterialRepository } from './infrastructure/repositories/drizzle-material.repo';
 import { MM_REPO, MM_MATERIAL_REPO } from './domain/repositories/mm.repository';
 import { PpReleasedListener } from './infrastructure/event-handlers/pp-released.listener';
-import { SupplierQualityFailListener } from './infrastructure/event-handlers/supplier-quality-fail.listener';
 import { PoRequiresDirectorApprovalListener } from './infrastructure/event-handlers/po-requires-director-approval.listener';
 import { ThreeWayMatchFailedListener } from './infrastructure/event-handlers/three-way-match-failed.listener';
+import { OrderMaterialWaitingListener } from './infrastructure/event-handlers/order-material-waiting.listener';
 import { PurchaseService } from './purchase/purchase.service';
 import { DrizzlePurchaseSvcRepository } from './purchase/drizzle-purchase-svc.repo';
 import { PURCHASE_SVC_REPO } from './purchase/i-purchase-svc.repo';
-import { MaterialsService } from './materials/materials.service';
 import { MmGoodsService } from './application/mm-goods.service';
 import { DrizzleMmGoodsRepository } from './infrastructure/repositories/drizzle-mm-goods.repo';
 import { MmVendorsPrService } from './application/mm-vendors-pr.service';
 import { MmVendorsPrRepository } from './infrastructure/repositories/mm-vendors-pr.repository';
 import { MM_VENDORS_PR_REPO } from './domain/repositories/i-mm-vendors-pr.repo';
-import { DrizzleMaterialsSvcRepository } from './materials/drizzle-materials-svc.repo';
-import { MATERIALS_SVC_REPO } from './materials/i-materials-svc.repo';
+import { MmVendorRatingService } from './application/mm-vendor-rating.service';
+import { MmPriceVarianceService } from './application/mm-price-variance.service';
+import { MmReconciliationController } from './presentation/mm-reconciliation.controller';
+import { MmReconciliationService } from './application/mm-reconciliation.service';
+import { MmReconciliationPdfService } from './application/mm-reconciliation-pdf.service';
+import { MmReconciliationRepository } from './infrastructure/repositories/mm-reconciliation.repository';
+import { MM_RECONCILIATION_REPO } from './domain/repositories/i-mm-reconciliation.repo';
+import { MmReconciliationDigestCron } from './infrastructure/cron/mm-reconciliation-digest.cron';
 
 const commandHandlers = [
   CreatePurchaseOrderHandler,
@@ -58,19 +69,19 @@ const commandHandlers = [
 
 const queryHandlers = [GetPurchaseOrdersHandler, GetVendorsHandler, GetMaterialsHandler];
 
-const listeners = [PpReleasedListener, SupplierQualityFailListener, PoRequiresDirectorApprovalListener, ThreeWayMatchFailedListener];
+const listeners = [PpReleasedListener, PoRequiresDirectorApprovalListener, ThreeWayMatchFailedListener, OrderMaterialWaitingListener];
 
 const repositories = [
   { provide: MM_REPO, useClass: DrizzleMmRepository },
   { provide: MM_MATERIAL_REPO, useClass: DrizzleMaterialRepository },
   { provide: PURCHASE_SVC_REPO, useClass: DrizzlePurchaseSvcRepository },
-  { provide: MATERIALS_SVC_REPO, useClass: DrizzleMaterialsSvcRepository },
+  { provide: HITL_APPROVALS_REPO, useClass: HitlApprovalsRepository },
 ];
 
 @Module({
   imports: [AuthModule, CqrsModule, EventEmitterModule.forRoot()],
-  controllers: [MmMaterialsController, MmPurchaseOrdersController, MmVendorsPrController, MmGoodsController, MmRawMaterialsController, MmMaterialCardsController, MmDashboardController],
-  providers: [...commandHandlers, ...queryHandlers, ...listeners, ...repositories, PurchaseService, MaterialsService, DrizzleMmGoodsRepository, MmGoodsService,
+  controllers: [MmMaterialsController, MmPurchaseOrdersController, MmVendorsPrController, MmGoodsController, MmRawMaterialsController, MmMaterialCardsController, MmDashboardController, HitlApprovalsController, MmReconciliationController],
+  providers: [...commandHandlers, ...queryHandlers, ...listeners, ...repositories, PurchaseService, DrizzleMmGoodsRepository, MmGoodsService,
     MmVendorsPrRepository,
     { provide: MM_VENDORS_PR_REPO, useClass: MmVendorsPrRepository },
     MmVendorsPrService,
@@ -80,7 +91,17 @@ const repositories = [
     MmDashboardRepository,
     { provide: MM_DASHBOARD_REPO, useClass: MmDashboardRepository },
     MmDashboardService,
+    MmVendorInvoiceRepository,
+    { provide: MM_VENDOR_INVOICE_REPO, useClass: MmVendorInvoiceRepository },
+    MmVendorInvoiceService,
+    MmVendorRatingService,
+    MmPriceVarianceService,
+    MmReconciliationRepository,
+    { provide: MM_RECONCILIATION_REPO, useClass: MmReconciliationRepository },
+    MmReconciliationService,
+    MmReconciliationPdfService,
+    MmReconciliationDigestCron,
     LayerFormulaService],
-  exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, MATERIALS_SVC_REPO, PurchaseService, MaterialsService, LayerFormulaService],
+  exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, PurchaseService, LayerFormulaService],
 })
 export class MmModule {}

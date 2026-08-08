@@ -59,65 +59,9 @@ const vectorType = customType<{
 export const vector = (name: string, config?: { dimensions?: number }) =>
   vectorType(name, { dimensions: config?.dimensions ?? 512 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. hr_tz2_territory_logs — Employee territory/room entry-exit events
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const hrTz2TerritoryLogs = pgTable(
-  "hr_tz2_territory_logs",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    employeeId: integer("employee_id")
-      .notNull()
-      .references(() => employees.id, { onDelete: "cascade" }),
-    eventType: varchar("event_type", { length: 30 }).notNull(),
-    cameraId: uuid("camera_id"),
-    ts: timestamp("ts").notNull(),
-    faceConfidence: numeric("face_confidence", { precision: 5, scale: 2 }),
-    roomCode: varchar("room_code", { length: 50 }),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (t) => [
-    index("hrtz2_territory_emp_ts_idx").on(t.employeeId, t.ts),
-    index("hrtz2_territory_event_idx").on(t.eventType),
-    check("hrtz2_territory_event_chk", sql`${t.eventType} IN ('entry','exit')`),
-  ],
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. hr_tz2_attendance_photos — AI camera photo every 2 hours
-// ─────────────────────────────────────────────────────────────────────────────
-
-type AttendancePhotoAnalysis = {
-  emotion: string;
-  fatigue_score: number;
-  posture_score: number;
-  anomaly: boolean;
-  anomaly_reason?: string;
-};
-
-export const hrTz2AttendancePhotos = pgTable(
-  "hr_tz2_attendance_photos",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    employeeId: integer("employee_id")
-      .notNull()
-      .references(() => employees.id, { onDelete: "cascade" }),
-    photoUrl: text("photo_url").notNull(),
-    takenAt: timestamp("taken_at").notNull(),
-    roomCode: varchar("room_code", { length: 50 }),
-    analysisResult: jsonb("analysis_result")
-      .$type<AttendancePhotoAnalysis>(),
-    processed: boolean("processed").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (t) => [
-    index("hrtz2_photos_emp_taken_idx").on(t.employeeId, t.takenAt),
-    index("hrtz2_photos_processed_idx").on(t.processed),
-  ],
-);
+// ORFAN CLEANUP (2026-07-02): hrTz2TerritoryLogs/hrTz2AttendancePhotos pgTables
+// (and their relations) removed — dead lib/db duplicates, Q-29 verified: never
+// imported via @workspace/db anywhere in apps/.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. hr_tz2_ai_question_banks — AI interview question bank by position
@@ -157,65 +101,9 @@ export const hrTz2AiQuestionBanks = pgTable(
   ],
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. hr_tz2_room_reference_photos — Ideal room state photos for inspection
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const hrTz2RoomReferencePhotos = pgTable(
-  "hr_tz2_room_reference_photos",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    roomCode: varchar("room_code", { length: 50 }).notNull().unique(),
-    roomName: varchar("room_name", { length: 200 }).notNull(),
-    departmentCode: varchar("department_code", { length: 50 }),
-    photoUrl: text("photo_url").notNull(),
-    description: text("description"),
-    lastUpdatedAt: timestamp("last_updated_at"),
-    updatedBy: text("updated_by"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (t) => [index("hrtz2_room_ref_code_idx").on(t.roomCode)],
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. hr_tz2_ai_room_analysis — AI room comparison results (every 2 hours)
-// ─────────────────────────────────────────────────────────────────────────────
-
-type RoomAnomaly = {
-  type: string;
-  description: string;
-  severity: string;
-};
-
-export const hrTz2AiRoomAnalysis = pgTable(
-  "hr_tz2_ai_room_analysis",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    roomCode: varchar("room_code", { length: 50 }).notNull(),
-    referencePhotoId: uuid("reference_photo_id").references(
-      () => hrTz2RoomReferencePhotos.id,
-      { onDelete: "set null" },
-    ),
-    currentPhotoUrl: text("current_photo_url").notNull(),
-    analyzedAt: timestamp("analyzed_at").notNull(),
-    cleanlinessScore: numeric("cleanliness_score", {
-      precision: 5,
-      scale: 2,
-    }),
-    orderScore: numeric("order_score", { precision: 5, scale: 2 }),
-    equipmentOk: boolean("equipment_ok"),
-    issues: jsonb("issues").$type<string[]>(),
-    anomalies: jsonb("anomalies").$type<RoomAnomaly[]>(),
-    notifiedHr: boolean("notified_hr").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (t) => [
-    index("hrtz2_room_analysis_code_idx").on(t.roomCode),
-    index("hrtz2_room_analysis_at_idx").on(t.analyzedAt),
-  ],
-);
+// ORFAN CLEANUP (2026-07-02): hrTz2RoomReferencePhotos/hrTz2AiRoomAnalysis
+// pgTables (and their relations) removed — dead lib/db duplicates, Q-29
+// verified: never imported via @workspace/db anywhere in apps/.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 6. hr_tz2_internal_job_postings — Internal vacancy announcements
@@ -476,25 +364,8 @@ export const hrTz2MonthlyEmployeeCards = pgTable(
 // RELATIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const hrTz2TerritoryLogsRelations = relations(
-  hrTz2TerritoryLogs,
-  ({ one }) => ({
-    employee: one(employees, {
-      fields: [hrTz2TerritoryLogs.employeeId],
-      references: [employees.id],
-    }),
-  }),
-);
-
-export const hrTz2AttendancePhotosRelations = relations(
-  hrTz2AttendancePhotos,
-  ({ one }) => ({
-    employee: one(employees, {
-      fields: [hrTz2AttendancePhotos.employeeId],
-      references: [employees.id],
-    }),
-  }),
-);
+// ORFAN CLEANUP (2026-07-02): hrTz2TerritoryLogsRelations/
+// hrTz2AttendancePhotosRelations removed — underlying pgTables deleted above.
 
 export const hrTz2AiQuestionBanksRelations = relations(
   hrTz2AiQuestionBanks,
@@ -506,22 +377,8 @@ export const hrTz2AiQuestionBanksRelations = relations(
   }),
 );
 
-export const hrTz2RoomReferencePhotosRelations = relations(
-  hrTz2RoomReferencePhotos,
-  ({ many }) => ({
-    analyses: many(hrTz2AiRoomAnalysis),
-  }),
-);
-
-export const hrTz2AiRoomAnalysisRelations = relations(
-  hrTz2AiRoomAnalysis,
-  ({ one }) => ({
-    referencePhoto: one(hrTz2RoomReferencePhotos, {
-      fields: [hrTz2AiRoomAnalysis.referencePhotoId],
-      references: [hrTz2RoomReferencePhotos.id],
-    }),
-  }),
-);
+// ORFAN CLEANUP (2026-07-02): hrTz2RoomReferencePhotosRelations/
+// hrTz2AiRoomAnalysisRelations removed — underlying pgTables deleted above.
 
 export const hrTz2InternalJobPostingsRelations = relations(
   hrTz2InternalJobPostings,

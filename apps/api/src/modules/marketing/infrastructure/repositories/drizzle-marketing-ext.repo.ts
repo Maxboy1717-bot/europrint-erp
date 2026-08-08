@@ -6,8 +6,10 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { and, eq, desc, isNull, sql, notInArray, lt } from 'drizzle-orm';
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { safeCall, Result, Err } from '@common/result';
 import {
   marketingContentPosts, marketingSocialAccounts,
@@ -17,28 +19,139 @@ import {
 import {
   npsResponses, socialConversations, sdCustomers,
   marketingLeads as marketingLeadsCanonical,
+  marketingAds,
 } from '@workspace/db';
 
 @Injectable()
 export class DrizzleMarketingExtRepository {
   private readonly logger = new Logger(DrizzleMarketingExtRepository.name);
 
-  async getCampaignStats(id: number): Promise<Result<Record<string, unknown>>> {
+  constructor(private readonly i18n: I18nService) {}
+
+  /**
+   * Attributed revenue per campaign (EP-MKT-051 — profit-based ROI input).
+   *
+   * Revenue chain: marketing_campaigns → its `converted` marketing_leads →
+   * the CRM deal each lead became (marketing_leads.crm_lead_id → crm_deals.lead_id)
+   * → sum of WON crm_deals.amount.
+   *
+   * All join keys are ::text-cast because the live linkage columns are of mixed,
+   * currently-mismatched types (campaigns.id varchar, leads.campaign_id integer,
+   * leads.crm_lead_id integer, crm_deals.lead_id uuid) and most are NULL. The casts
+   * keep the query crash-safe; when no real linkage exists it honestly returns 0 —
+   * NEVER a fabricated number. Returns a map of campaignId → won-deal revenue.
+   *
+   * KNOWN GAP: the campaign→lead→deal linkage is not yet populated in the live DB
+   * (leads.campaign_id / leads.crm_lead_id / crm_deals.lead_id are all NULL), and the
+   * profit-margin source for true profit-based ROI is still owner-pending (EP-MKT-051
+   * sub-question). Until that wiring lands, attributed revenue computes as 0 and ROI
+   * reflects spend-with-no-attributed-return rather than budget utilization.
+   */
+  private async getAttributedRevenueByCampaign(): Promise<Record<string, number>> {
+    type RevRow = { campaign_id: string; revenue: string };
+    const rows = await typedExecute<RevRow>(sql`
+      SELECT mc.id::text AS campaign_id,
+             COALESCE(SUM(d.amount), 0)::numeric AS revenue
+      FROM marketing_campaigns mc
+      JOIN marketing_leads l
+        ON l.campaign_id::text = mc.id::text
+       AND l.status = 'converted'
+       AND l.deleted_at IS NULL
+      JOIN crm_deals d
+        ON d.lead_id::text = l.crm_lead_id::text
+       AND d.status = 'won'
+       AND d.deleted_at IS NULL
+      WHERE mc.deleted_at IS NULL
+      GROUP BY mc.id
+    `);
+    const map: Record<string, number> = {};
+    for (const r of Array.isArray(rows) ? rows : []) {
+      map[String(r.campaign_id)] = Number(r.revenue ?? 0);
+    }
+    return map;
+  }
+
+  async getCampaignStats(id: string): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const [row] = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id)).limit(1);
-      return row ? { ...row, impressions: 0, clicks: 0, conversions: 0, roi: 0 } : { id, impressions: 0, clicks: 0, conversions: 0, roi: 0 };
+      // campaign ids are varchar slugs -- the caller previously did Number(id), so both the
+      // campaign lookup (varchar id vs number) and the ads query 500'd. Take the raw string id.
+      // The @europrint/schemas barrel drifted marketing_campaigns.id to PgInteger while live +
+      // the canonical def are varchar(36); compare via sql`` so the string param binds to the
+      // real varchar column instead of failing the eq() number-column overload.
+      const [row] = await db.select().from(marketingCampaigns)
+        .where(sql`${marketingCampaigns.id} = ${id}`).limit(1);
+      // marketing_ads.campaign_id is INTEGER in the live DB (the Drizzle def drifted to varchar)
+      // while campaign ids are varchar slugs -- the two cannot truly join. Aggregate ads only when
+      // the id is numeric-shaped; otherwise return zero ad stats (honest) instead of 500ing on the
+      // int cast. The int-vs-varchar ad->campaign join is a separate owner data-model decision.
+      const [adStats] = /^\d+$/.test(id)
+        ? await db.select({
+            impressions: sql<number>`coalesce(sum(${marketingAds.impressions}), 0)::int`,
+            clicks:      sql<number>`coalesce(sum(${marketingAds.clicks}), 0)::int`,
+            conversions: sql<number>`coalesce(sum(${marketingAds.conversions}), 0)::int`,
+            totalSpent:  sql<number>`coalesce(sum(${marketingAds.spentAmount}), 0)::numeric`,
+            totalBudget: sql<number>`coalesce(sum(${marketingAds.budget}), 0)::numeric`,
+          }).from(marketingAds).where(eq(marketingAds.campaignId, id))
+        : [undefined];
+
+      const spent   = Number(adStats?.totalSpent  ?? 0);
+      // EP-MKT-051: ROI = (attributed sales revenue − marketing spend) / spend.
+      // Profit-based per owner answer (NOT the old budget-utilization formula).
+      const revenueMap = await this.getAttributedRevenueByCampaign();
+      const revenue = revenueMap[id] ?? 0;
+      const roi     = spent > 0 ? Math.round(((revenue - spent) / spent) * 100 * 100) / 100 : 0;
+
+      const base = row ?? { id };
+      return {
+        ...base,
+        impressions:        Number(adStats?.impressions ?? 0),
+        clicks:             Number(adStats?.clicks      ?? 0),
+        conversions:        Number(adStats?.conversions ?? 0),
+        attributedRevenue:  revenue,
+        roi,
+      };
     });
   }
 
   async getDashboardStats(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const campaigns = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt));
-      const leads     = await db.select().from(marketingLeads).where(isNull(marketingLeads.deletedAt));
+      const leads     = await db.select({ status: marketingLeads.status, createdAt: marketingLeads.createdAt })
+        .from(marketingLeads).where(isNull(marketingLeads.deletedAt));
+      const totalLeads     = leads.length;
+      const convertedLeads = (Array.isArray(leads) ? leads : []).filter(l => l.status === 'converted').length;
+      const conversionRate = totalLeads > 0
+        ? Math.round((convertedLeads / totalLeads) * 100 * 10) / 10
+        : 0;
+
+      // totalBudget: sum of marketing_campaigns.budget (numeric column, existing)
+      const [budgetRow] = await db.select({
+        totalBudget: sql<number>`coalesce(sum(${marketingCampaigns.budget}::numeric), 0)`,
+      }).from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt));
+
+      // Item #206: totalSpent was never computed here — "Sarflangan" always read
+      // undefined->0 and "Qoldiq" always equalled the full budget. Same aggregate
+      // pattern already used by getCampaignStats()/getCampaignAnalytics() below.
+      const [spentRow] = await db.select({
+        totalSpent: sql<number>`coalesce(sum(${marketingAds.spentAmount}), 0)::numeric`,
+      }).from(marketingAds).where(isNull(marketingAds.deletedAt));
+
+      // recentLeads: leads created in last 30 days (created_at column, existing)
+      const cutoff30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const recentLeads = (Array.isArray(leads) ? leads : []).filter(l => {
+        if (!l.createdAt) return false;
+        return new Date(l.createdAt) >= cutoff30;
+      }).length;
+
       return {
-        totalCampaigns: campaigns.length,
+        totalCampaigns:  campaigns.length,
         activeCampaigns: (Array.isArray(campaigns) ? campaigns : []).filter((c) => c.status === 'active').length,
-        totalLeads: leads.length,
-        conversionRate: 0,
+        totalLeads,
+        convertedLeads,
+        conversionRate,
+        totalBudget:  Number(budgetRow?.totalBudget ?? 0),
+        totalSpent:   Number(spentRow?.totalSpent ?? 0),
+        recentLeads,
       };
     });
   }
@@ -55,7 +168,7 @@ export class DrizzleMarketingExtRepository {
 
   async getContentPostById(id: string): Promise<Result<Record<string, unknown> | null>> {
     return safeCall(async () => {
-      const [row] = await db.select().from(marketingContentPosts).where(eq(marketingContentPosts.id, id)).limit(1);
+      const [row] = await db.select().from(marketingContentPosts).where(eq(marketingContentPosts.id, Number(id))).limit(1);
       return row ?? null;
     });
   }
@@ -64,7 +177,8 @@ export class DrizzleMarketingExtRepository {
     return safeCall(async () => {
       const [row] = await db.insert(marketingContentPosts).values({
         title:    String(data.title ?? ''),
-        content:  data.content as string,
+        content:  String(data.body ?? ''),
+        platform: String(data.platform ?? ''),
         postType: String(data.postType ?? 'blog'),
         authorId: data.authorId ? Number(data.authorId) : null,
       }).returning();
@@ -77,23 +191,23 @@ export class DrizzleMarketingExtRepository {
     return safeCall(async () => {
       const [row] = await db.update(marketingContentPosts)
         .set({ title: data.title as string, content: data.content as string, updatedAt: _time.now() })
-        .where(eq(marketingContentPosts.id, id))
+        .where(eq(marketingContentPosts.id, Number(id)))
         .returning();
       return row ?? { id };
     });
   }
 
   async deleteContentPost(id: string): Promise<Result<void>> {
-    return safeCall(async () => { await db.delete(marketingContentPosts).where(eq(marketingContentPosts.id, id)); });
+    return safeCall(async () => { await db.delete(marketingContentPosts).where(eq(marketingContentPosts.id, Number(id))); });
   }
 
   async publishContentPost(id: string): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [row] = await db.update(marketingContentPosts)
         .set({ status: 'published', publishedAt: _time.now(), updatedAt: _time.now() })
-        .where(eq(marketingContentPosts.id, id))
+        .where(eq(marketingContentPosts.id, Number(id)))
         .returning();
-      if (!row) throw new NotFoundException(`Post topilmadi: ${id}`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.marketingPostNotFoundWithId', { args: { id } }));
       return row;
     });
   }
@@ -198,42 +312,135 @@ export class DrizzleMarketingExtRepository {
   async getAnalyticsOverview(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const campaigns = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt));
-      const leads     = await db.select().from(marketingLeads).where(isNull(marketingLeads.deletedAt));
-      return { period: 'monthly', campaigns: campaigns.length, totalLeads: leads.length, reach: 0, engagement: 0, conversions: 0 };
+      const leads     = await db.select({ status: marketingLeads.status })
+        .from(marketingLeads).where(isNull(marketingLeads.deletedAt));
+      const [adTotals] = await db.select({
+        reach:       sql<number>`coalesce(sum(${marketingAds.impressions}), 0)::int`,
+        engagement:  sql<number>`coalesce(sum(${marketingAds.clicks}), 0)::int`,
+        conversions: sql<number>`coalesce(sum(${marketingAds.conversions}), 0)::int`,
+      }).from(marketingAds).where(isNull(marketingAds.deletedAt));
+      return {
+        period:      'monthly',
+        campaigns:   campaigns.length,
+        totalLeads:  leads.length,
+        reach:       Number(adTotals?.reach       ?? 0),
+        engagement:  Number(adTotals?.engagement  ?? 0),
+        conversions: Number(adTotals?.conversions ?? 0),
+      };
     });
   }
 
   async getCampaignAnalytics(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
-      const rows = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt)).limit(20);
-      return (Array.isArray(rows) ? rows : []).map((c) => ({ id: c.id, name: c.name, impressions: 0, clicks: 0, roi: 0 }));
+      const campaigns = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt)).limit(20);
+      // Aggregate ads metrics per campaign in one query
+      const adStats = await db.select({
+        campaignId:  marketingAds.campaignId,
+        impressions: sql<number>`coalesce(sum(${marketingAds.impressions}), 0)::int`,
+        clicks:      sql<number>`coalesce(sum(${marketingAds.clicks}), 0)::int`,
+        conversions: sql<number>`coalesce(sum(${marketingAds.conversions}), 0)::int`,
+        totalSpent:  sql<number>`coalesce(sum(${marketingAds.spentAmount}), 0)::numeric`,
+        totalBudget: sql<number>`coalesce(sum(${marketingAds.budget}), 0)::numeric`,
+      }).from(marketingAds)
+        .groupBy(marketingAds.campaignId);
+
+      const statsMap = Object.fromEntries(
+        (Array.isArray(adStats) ? adStats : []).map(s => [s.campaignId, s]),
+      );
+
+      // EP-MKT-051: profit-based ROI — attributed sales revenue per campaign.
+      const revenueMap = await this.getAttributedRevenueByCampaign();
+
+      return (Array.isArray(campaigns) ? campaigns : []).map((c) => {
+        const s     = statsMap[c.id];
+        const spent   = Number(s?.totalSpent  ?? 0);
+        // ROI = (attributed sales revenue − marketing spend) / spend (profit-based,
+        // per owner answer) — replaces the prior budget-utilization formula.
+        const revenue = revenueMap[String(c.id)] ?? 0;
+        const roi     = spent > 0 ? Math.round(((revenue - spent) / spent) * 100 * 100) / 100 : 0;
+        return {
+          id:                c.id,
+          name:              c.name,
+          status:            c.status,
+          impressions:       Number(s?.impressions ?? 0),
+          clicks:            Number(s?.clicks      ?? 0),
+          conversions:       Number(s?.conversions ?? 0),
+          attributedRevenue: revenue,
+          roi,
+        };
+      });
     });
   }
 
   async getLeadsBySource(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
-      const rows = await db.select({
-        source: marketingLeads.status,
-        count: sql<number>`count(*)::int`,
-      })
-        .from(marketingLeads)
-        .where(isNull(marketingLeads.deletedAt))
-        .groupBy(marketingLeads.status);
+      // Raw SQL on the real `source` column: the @europrint/schemas compiled type for
+      // marketingLeads omits `source` (stale dist), though it exists in the live DB and
+      // lib/db source schema. db.execute avoids the missing-Drizzle-field type error.
+      const result = await db.execute(sql`
+        SELECT COALESCE(source, 'unknown') AS source, COUNT(*)::int AS count
+        FROM marketing_leads
+        WHERE deleted_at IS NULL
+        GROUP BY source
+      `);
+      const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? []) as Record<string, unknown>[];
       return rows;
     });
   }
 
   async getMarketingFunnel(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const total = await db.select({ count: sql<number>`count(*)::int` }).from(marketingLeads).where(isNull(marketingLeads.deletedAt));
-      const converted = await db.select({ count: sql<number>`count(*)::int` }).from(marketingLeads)
-        .where(and(eq(marketingLeads.status, 'converted'), isNull(marketingLeads.deletedAt)));
-      return {
-        stages: [
-          { name: 'Leads',     count: Number(total[0]?.count ?? 0) },
-          { name: 'Converted', count: Number(converted[0]?.count ?? 0) },
-        ],
-      };
+      // Pull per-status counts in one query — all 5 live statuses: new/warm/hot/converted/lost
+      const byStatus = await db
+        .select({
+          status: marketingLeads.status,
+          cnt: sql<number>`count(*)::int`,
+        })
+        .from(marketingLeads)
+        .where(isNull(marketingLeads.deletedAt))
+        .groupBy(marketingLeads.status);
+
+      const map: Record<string, number> = {};
+      for (const r of Array.isArray(byStatus) ? byStatus : []) {
+        map[String(r.status ?? 'unknown')] = Number(r.cnt ?? 0);
+      }
+
+      const total = Object.values(map).reduce((s, n) => s + n, 0);
+      const converted = map['converted'] ?? 0;
+      const convRate = total > 0 ? Math.round((converted / total) * 100 * 10) / 10 : 0;
+
+      // Canonical funnel order: new → warm → hot → converted → lost
+      const FUNNEL_ORDER = ['new', 'warm', 'hot', 'converted', 'lost'] as const;
+      type FunnelStage = { name: string; label: string; count: number; conversionRate: number; dropOff: number };
+      const stages: FunnelStage[] = FUNNEL_ORDER.map((s, i) => {
+        const count = map[s] ?? 0;
+        const prevCount = i > 0 ? (map[FUNNEL_ORDER[i - 1]] ?? 0) : 0;
+        return {
+          name: s as string,
+          label: s === 'new' ? 'Yangi' : s === 'warm' ? 'Iliq' : s === 'hot' ? 'Issiq' : s === 'converted' ? 'Konvertatsiya' : 'Yo\'qotilgan',
+          count,
+          // % of total leads that reached this stage — drives the FunnelDialog progress bar width.
+          conversionRate: total > 0 ? Math.round((count / total) * 100 * 10) / 10 : 0,
+          // % decline vs the previous canonical stage — drives the FunnelDialog "-X% oldingi bosqichdan" note.
+          dropOff: i > 0 && prevCount > 0 ? Math.max(0, Math.round(((prevCount - count) / prevCount) * 100 * 10) / 10) : 0,
+        };
+      });
+
+      // Include any unknown statuses not in the canonical list
+      const known = new Set(FUNNEL_ORDER as readonly string[]);
+      for (const [status, cnt] of Object.entries(map)) {
+        if (!known.has(status)) {
+          stages.push({
+            name: status,
+            label: status,
+            count: cnt,
+            conversionRate: total > 0 ? Math.round((cnt / total) * 100 * 10) / 10 : 0,
+            dropOff: 0,
+          });
+        }
+      }
+
+      return { stages, total, conversionRate: convRate };
     });
   }
 
@@ -257,7 +464,7 @@ export class DrizzleMarketingExtRepository {
     promoters: number;
     passives: number;
     detractors: number;
-    monthlyTrend: { month: string; score: number }[];
+    monthlyTrend: { month: string; score: number; responses: number; promoters: number; passives: number; detractors: number }[];
   }>> {
     return safeCall(async () => {
       const all = await db.select({ score: npsResponses.score, createdAt: npsResponses.createdAt })
@@ -273,7 +480,7 @@ export class DrizzleMarketingExtRepository {
 
       // Monthly trend — last 6 months
       const now = new Date();
-      const monthlyTrend: { month: string; score: number }[] = [];
+      const monthlyTrend: { month: string; score: number; responses: number; promoters: number; passives: number; detractors: number }[] = [];
       for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -284,10 +491,15 @@ export class DrizzleMarketingExtRepository {
         });
         const mTotal = monthRows.length;
         const mPro   = monthRows.filter(r => Number(r.score) >= 9).length;
+        const mPas   = monthRows.filter(r => Number(r.score) >= 7 && Number(r.score) < 9).length;
         const mDet   = monthRows.filter(r => Number(r.score) < 7).length;
         monthlyTrend.push({
           month: label,
           score: mTotal > 0 ? Math.round(((mPro - mDet) / mTotal) * 100) : 0,
+          responses: mTotal,
+          promoters: mPro,
+          passives: mPas,
+          detractors: mDet,
         });
       }
       return { npsScore, promoters, passives, detractors, monthlyTrend };
@@ -329,7 +541,11 @@ export class DrizzleMarketingExtRepository {
     });
   }
 
-  async getLeadsSourcesSummary(): Promise<Result<{ source: string; count: number; totalValue: number; conversionRate: number }[]>> {
+  async getLeadsSourcesSummary(): Promise<Result<{
+    total: number;
+    channels: { key: string; label: string; count: number; converted: number; percent: number; conversionRate: number }[];
+    topChannel: string;
+  }>> {
     return safeCall(async () => {
       const grouped = await db.select({
         source:     marketingLeadsCanonical.source,
@@ -338,15 +554,111 @@ export class DrizzleMarketingExtRepository {
       })
         .from(marketingLeadsCanonical)
         .where(isNull(marketingLeadsCanonical.deletedAt))
-        .groupBy(marketingLeadsCanonical.source);
+        .groupBy(marketingLeadsCanonical.source)
+        .orderBy(sql`count(*) desc`);
 
-      return (Array.isArray(grouped) ? grouped : []).map(r => ({
-        source:         r.source ?? 'unknown',
-        count:          Number(r.totalCount ?? 0),
-        totalValue:     0,
-        conversionRate: Number(r.totalCount) > 0
-          ? Math.round((Number(r.wonCount) / Number(r.totalCount)) * 100 * 10) / 10
-          : 0,
+      const rows = Array.isArray(grouped) ? grouped : [];
+      const total = rows.reduce((s, r) => s + Number(r.totalCount ?? 0), 0);
+
+      const channels = rows.map(r => {
+        const count     = Number(r.totalCount ?? 0);
+        const converted = Number(r.wonCount ?? 0);
+        const key       = r.source ?? 'unknown';
+        const label     = key.charAt(0).toUpperCase() + key.slice(1);
+        const percent   = total > 0 ? Math.round((count / total) * 100 * 10) / 10 : 0;
+        const conversionRate = count > 0 ? Math.round((converted / count) * 100 * 10) / 10 : 0;
+        return { key, label, count, converted, percent, conversionRate };
+      });
+
+      return {
+        total,
+        channels,
+        topChannel: channels[0]?.key ?? '',
+      };
+    });
+  }
+
+  /**
+   * Per raw-channel rollup for the channel-ROI breakdown (EP-MKT-002 / EP-MKT-031).
+   *
+   * Combines three real, independent live sources by raw channel key:
+   *   - SPEND + ad-conversions: marketing_ads.platform → SUM(spent_amount) / SUM(conversions)
+   *   - LEADS + converted-leads: marketing_leads.source → COUNT(*) / COUNT(status='converted')
+   *   - attributed REVENUE: leads.source → won crm_deals via leads.crm_lead_id → crm_deals.lead_id
+   *
+   * The three aggregates are FULL-OUTER-JOINed on the lower-cased channel key so a
+   * channel that has spend but no leads (or vice-versa) still appears. Channel-key
+   * normalization to the canonical EP-MKT-031 list happens in the service layer
+   * (normalizeChannel) — the repo returns the raw lower-cased keys verbatim.
+   *
+   * KNOWN GAP (honest 0): marketing_leads.crm_lead_id and .campaign_id are NULL in the
+   * live DB, so attributed revenue currently computes as 0 for every channel — the
+   * query returns a truthful 0, never a fabricated figure. When the lead→deal linkage
+   * is populated, revenue (and thus per-channel ROI) flows through automatically.
+   */
+  async getChannelRollup(): Promise<Result<{
+    channel: string;
+    spend: number;
+    adConversions: number;
+    leads: number;
+    convertedLeads: number;
+    revenue: number;
+  }[]>> {
+    return safeCall(async () => {
+      type Row = {
+        channel: string;
+        spend: string | null;
+        ad_conversions: number | null;
+        leads: number | null;
+        converted_leads: number | null;
+        revenue: string | null;
+      };
+      const rows = await typedExecute<Row>(sql`
+        WITH ads AS (
+          SELECT lower(COALESCE(NULLIF(TRIM(platform), ''), 'boshqa')) AS channel,
+                 COALESCE(SUM(spent_amount), 0)::numeric AS spend,
+                 COALESCE(SUM(conversions), 0)::int      AS ad_conversions
+          FROM marketing_ads
+          WHERE deleted_at IS NULL
+          GROUP BY 1
+        ),
+        leads AS (
+          SELECT lower(COALESCE(NULLIF(TRIM(source), ''), 'boshqa')) AS channel,
+                 COUNT(*)::int AS leads,
+                 COUNT(*) FILTER (WHERE status = 'converted')::int AS converted_leads
+          FROM marketing_leads
+          WHERE deleted_at IS NULL
+          GROUP BY 1
+        ),
+        rev AS (
+          SELECT lower(COALESCE(NULLIF(TRIM(l.source), ''), 'boshqa')) AS channel,
+                 COALESCE(SUM(d.amount), 0)::numeric AS revenue
+          FROM marketing_leads l
+          JOIN crm_deals d
+            ON d.lead_id::text = l.crm_lead_id::text
+           AND d.status = 'won'
+           AND d.deleted_at IS NULL
+          WHERE l.deleted_at IS NULL
+          GROUP BY 1
+        )
+        SELECT COALESCE(a.channel, le.channel, r.channel) AS channel,
+               COALESCE(a.spend, 0)::numeric              AS spend,
+               COALESCE(a.ad_conversions, 0)::int         AS ad_conversions,
+               COALESCE(le.leads, 0)::int                 AS leads,
+               COALESCE(le.converted_leads, 0)::int       AS converted_leads,
+               COALESCE(r.revenue, 0)::numeric            AS revenue
+        FROM ads a
+        FULL OUTER JOIN leads le ON le.channel = a.channel
+        FULL OUTER JOIN rev   r  ON r.channel  = COALESCE(a.channel, le.channel)
+        ORDER BY spend DESC, leads DESC
+      `);
+      return (Array.isArray(rows) ? rows : []).map((r) => ({
+        channel: String(r.channel ?? 'boshqa'),
+        spend: Number(r.spend ?? 0),
+        adConversions: Number(r.ad_conversions ?? 0),
+        leads: Number(r.leads ?? 0),
+        convertedLeads: Number(r.converted_leads ?? 0),
+        revenue: Number(r.revenue ?? 0),
       }));
     });
   }
@@ -425,6 +737,102 @@ export class DrizzleMarketingExtRepository {
         .slice(0, 20);
 
       return result;
+    });
+  }
+
+  /**
+   * Per-customer order money-value trend — vision 14-marketing #12 "kichiklashgan
+   * buyurtma" signal (dup #55/#63). Splits each customer's orders chronologically
+   * (order_date, falling back to created_at since order_date is largely NULL in the
+   * live data) into a RECENT window (last `recentWindow` orders) and the prior
+   * HISTORICAL orders, and returns ONLY customers whose recent average total_amount
+   * is BELOW their historical average — i.e. the MONEY value of their orders is
+   * shrinking (not size/quantity). Honest-empty when none qualify.
+   *
+   * NOTE: per-partition window functions + FILTER are not expressible in the Drizzle
+   * query builder, so this uses parameterized raw SQL (Qoida 4). recentWindow/minOrders
+   * are numeric constants supplied by the service — no injection surface.
+   */
+  async getOrderValueTrend(recentWindow: number, minOrders: number): Promise<Result<{
+    customerId: number;
+    customerName: string;
+    orderCount: number;
+    recentAvg: number;
+    historicalAvg: number;
+    declinePct: number;
+  }[]>> {
+    return safeCall(async () => {
+      type Row = {
+        customer_id: number;
+        customer_name: string | null;
+        order_count: number | string;
+        recent_avg: string | null;
+        historical_avg: string | null;
+        decline_pct: string | null;
+      };
+      const rows = await typedExecute<Row>(sql`
+        WITH ordered AS (
+          SELECT so.customer_id,
+                 so.total_amount::numeric AS amount,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY so.customer_id
+                   ORDER BY COALESCE(so.order_date, so.created_at::date) DESC, so.id DESC
+                 ) AS rn_desc,
+                 COUNT(*) OVER (PARTITION BY so.customer_id) AS order_count
+          FROM sales_orders so
+          WHERE so.deleted_at IS NULL
+            AND so.customer_id IS NOT NULL
+            AND so.total_amount IS NOT NULL
+        ),
+        agg AS (
+          SELECT customer_id,
+                 MAX(order_count) AS order_count,
+                 AVG(amount) FILTER (WHERE rn_desc <= ${recentWindow}) AS recent_avg,
+                 AVG(amount) FILTER (WHERE rn_desc > ${recentWindow}) AS historical_avg
+          FROM ordered
+          WHERE order_count >= ${minOrders}
+          GROUP BY customer_id
+        )
+        SELECT a.customer_id,
+               c.name AS customer_name,
+               a.order_count,
+               a.recent_avg,
+               a.historical_avg,
+               ROUND(((a.historical_avg - a.recent_avg) / NULLIF(a.historical_avg, 0) * 100)::numeric, 1) AS decline_pct
+        FROM agg a
+        LEFT JOIN sd_customers c ON c.id = a.customer_id
+        WHERE a.recent_avg < a.historical_avg
+        ORDER BY decline_pct DESC
+        LIMIT 50
+      `);
+
+      return (Array.isArray(rows) ? rows : []).map((r) => ({
+        customerId: Number(r.customer_id),
+        customerName: r.customer_name ?? `#${r.customer_id}`,
+        orderCount: Number(r.order_count),
+        recentAvg: Number(r.recent_avg ?? 0),
+        historicalAvg: Number(r.historical_avg ?? 0),
+        declinePct: Number(r.decline_pct ?? 0),
+      }));
+    });
+  }
+
+  /**
+   * Optional owner-tunable minimum decline-% for the "kichiklashgan buyurtma" signal
+   * (marketing_settings KV, key 'marketing.order_trend.min_decline_pct'). Defaults to
+   * 0 when the key is absent or non-numeric — the base signal needs no threshold.
+   */
+  async getOrderTrendMinDeclinePct(): Promise<Result<number>> {
+    return safeCall(async () => {
+      type Row = { value: string | null };
+      const rows = await typedExecute<Row>(sql`
+        SELECT value FROM marketing_settings
+        WHERE key = 'marketing.order_trend.min_decline_pct'
+        LIMIT 1
+      `);
+      const raw = Array.isArray(rows) && rows[0] ? rows[0].value : null;
+      const parsed = raw !== null ? Number(raw) : NaN;
+      return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
     });
   }
 }

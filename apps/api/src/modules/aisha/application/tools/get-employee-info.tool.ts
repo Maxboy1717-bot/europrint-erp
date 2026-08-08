@@ -15,8 +15,9 @@ import { Injectable } from '@nestjs/common';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
-import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
-import { provSource, provResult, rowsOf } from './_helpers';
+import { HR_ROLES } from '@common/constants/roles.constants';
+import type { IAishaTool, ToolResult, AishaToolContext } from '../../domain/tool.interface';
+import { provSource, provResult, rowsOf, hasAishaRole } from './_helpers';
 
 export interface EmployeeInfo {
   employeeId: number; fullName: string; position: string;
@@ -37,14 +38,24 @@ export class GetEmployeeInfoTool implements IAishaTool {
     },
   };
 
-  async execute(input: Record<string, unknown>): Promise<Result<ToolResult<EmployeeInfo>>> {
+  async execute(input: Record<string, unknown>, ctx?: AishaToolContext): Promise<Result<ToolResult<EmployeeInfo>>> {
+    // Discovery sweep 2026-08-03 P0 fix ("Aisha chat tool'lari RBAC-cheklovisiz xodim/moliya
+    // ma'lumotini qaytaradi"): any authenticated Aisha user could ask for ANY employee's
+    // real-time location/attendance/KPI — PII with no role check, unlike the equivalent REST
+    // endpoints (HR module is @Roles-gated). Same allow-list precedent as
+    // org-structure.service.ts's canViewCompensation() / HR_ROLES (common/constants).
+    if (!hasAishaRole(ctx?.role, HR_ROLES)) {
+      return Err(AppErr('FORBIDDEN', "Xodim ma'lumotini faqat HR/rahbariyat so'rashi mumkin"));
+    }
     const q = String(input['employeeName'] ?? '');
     if (!q) return Err(AppErr('VALIDATION', 'employeeName majburiy'));
 
     try {
       const start = Date.now();
       const emp = rowsOf<{ id: number; full_name: string; position: string }>(await db.execute(sql`
-        SELECT id, full_name, position FROM hr_employees
+        -- Audit 2026-08-07: 'hr_employees' jadvali bazada YO'Q; kanonik xodim jadvali
+        -- 'employees' (id / full_name / position ustunlari aynan mavjud).
+        SELECT id, full_name, position FROM employees
         WHERE LOWER(full_name) LIKE LOWER('%' || ${q} || '%') OR id::text = ${q}
         LIMIT 1
       `))[0];

@@ -5,9 +5,11 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, Result } from '@common/result';
 import { AssetManagementRepo } from './repositories/asset-management.repo';
+import { GlPostingService, type JournalLine } from '@modules/finance/domain/services/gl-posting.service';
+import { GL } from '@modules/finance/domain/constants/gl-accounts.constants';
 
 type ResultData<R> = R extends Promise<infer T> ? (T extends { ok: true; data: infer D } ? D : never) : never;
 type AssetRow = ResultData<ReturnType<AssetManagementRepo['findAllAssets']>> extends ReadonlyArray<infer R> ? R : never;
@@ -17,7 +19,12 @@ type TransferRow = ResultData<ReturnType<AssetManagementRepo['findAllTransfers']
 
 @Injectable()
 export class AssetManagementService {
-  constructor(private readonly repo: AssetManagementRepo) {}
+  private readonly logger = new Logger(AssetManagementService.name);
+
+  constructor(
+    private readonly repo: AssetManagementRepo,
+    private readonly glPosting: GlPostingService,
+  ) {}
 
   async getAssets(status?: string, category?: string): Promise<Result<AssetRow[]>> {
     const result = await this.repo.findAllAssets();
@@ -86,8 +93,10 @@ export class AssetManagementService {
     const byStatus: Record<string, number>   = {};
     const byCategory: Record<string, number> = {};
     for (const a of all) {
-      byStatus[a.status]     = (byStatus[a.status] ?? 0) + 1;
-      byCategory[a.category] = (byCategory[a.category] ?? 0) + 1;
+      const status   = a.status ?? 'unknown';
+      const category = a.category ?? 'unknown';
+      byStatus[status]     = (byStatus[status] ?? 0) + 1;
+      byCategory[category] = (byCategory[category] ?? 0) + 1;
     }
     return Ok({ total: all.length, byStatus, byCategory, updatedAt: _time.now().toISOString() });
   }
@@ -188,6 +197,29 @@ export class AssetManagementService {
     if (!result.ok) return Err(result.error);
     const row = (Array.isArray(result.data) ? result.data : [])[0];
     if (!row) return Err({ code: 'NOT_FOUND', message: `Asset ${id} not found` });
+
+    // F8 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): depreciation was computed and applied to
+    // asset_items (accumulated_depreciation/current_value) but never reached the GL — a fixed
+    // asset's book value could silently diverge from the ledger. Dr 9430 (Amortizatsiya) /
+    // Cr 0200 (Asosiy vositalar amortizatsiyasi, contra-asset). Best-effort, mirroring
+    // AutoGlPostingService's POS pattern: the asset update above already succeeded and is the
+    // source of truth for the asset register; a ledger-write failure is logged, not fatal (the
+    // engine's own idempotency on reference `DEP-{id}-{YYYY-MM}` makes a retry safe).
+    const monthly = Number(row['monthlyDepreciation'] ?? 0);
+    if (monthly > 0) {
+      const period = _time.now().toISOString().slice(0, 7); // YYYY-MM
+      const lines: JournalLine[] = [
+        { accountCode: GL.DEPRECIATION_EXPENSE, accountName: 'Amortizatsiya', debit: monthly, credit: 0 },
+        { accountCode: GL.ACCUMULATED_DEPRECIATION, accountName: 'Asosiy vositalar amortizatsiyasi', debit: 0, credit: monthly },
+      ];
+      const glR = await this.glPosting.postJournal(lines, `DEP-${assetId}-${period}`);
+      if (!glR.ok) {
+        this.logger.warn(`depreciateAsset: GL posting failed for asset ${assetId} (${period}) — ${glR.error.message}`);
+      } else {
+        this.logger.log(`depreciateAsset: asset ${assetId} (${period}) posted to GL, entry id=${glR.data}`);
+      }
+    }
+
     return Ok(row);
   }
 

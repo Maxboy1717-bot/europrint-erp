@@ -152,23 +152,23 @@ export function DistributionSection({ isLoading, distributionData }: Distributio
           </div>
         )}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mt-4">
-          <div className="text-center p-2 rounded-lg bg-green-500/10 border border-green-500/30">
+          <div className="text-center p-2 rounded-lg bg-[var(--ep-green-soft)] border border-[var(--ep-green)]">
             <div className="text-xs text-muted-foreground">&gt;30%</div>
             <div className="text-lg font-bold text-[var(--ep-green)]">{distributionData[0]?.value ?? 0}</div>
           </div>
-          <div className="text-center p-2 rounded-lg bg-lime-500/10 border border-lime-500/30">
+          <div className="text-center p-2 rounded-lg bg-[var(--ep-green-soft)] border border-[var(--ep-green)]">
             <div className="text-xs text-muted-foreground">15-30%</div>
             <div className="text-lg font-bold text-[var(--ep-green)]">{distributionData[1]?.value ?? 0}</div>
           </div>
-          <div className="text-center p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+          <div className="text-center p-2 rounded-lg bg-[var(--ep-yellow-soft)] border border-[var(--ep-yellow)]">
             <div className="text-xs text-muted-foreground">0-15%</div>
             <div className="text-lg font-bold text-[var(--ep-yellow)]">{distributionData[2]?.value ?? 0}</div>
           </div>
-          <div className="text-center p-2 rounded-lg bg-orange-500/10 border border-orange-500/30">
+          <div className="text-center p-2 rounded-lg bg-[var(--ep-primary-soft)] border border-[var(--ep-primary)]">
             <div className="text-xs text-muted-foreground">-15-0%</div>
             <div className="text-lg font-bold text-[var(--ep-primary)]">{distributionData[3]?.value ?? 0}</div>
           </div>
-          <div className="text-center p-2 rounded-lg bg-red-500/10 border border-red-500/30">
+          <div className="text-center p-2 rounded-lg bg-[var(--ep-red-soft)] border border-[var(--ep-red)]">
             <div className="text-xs text-muted-foreground">&lt;-15%</div>
             <div className="text-lg font-bold text-[var(--ep-red)]">{distributionData[4]?.value ?? 0}</div>
           </div>

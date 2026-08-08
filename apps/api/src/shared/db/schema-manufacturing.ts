@@ -137,6 +137,9 @@ export const work_centers = pgTable('work_centers', {
   costPerHour: decimal('cost_per_hour', { precision: 18, scale: 2 }).notNull().default('0'),
   certificationLmsCourseId: uuid('certification_lms_course_id'),
   department: text('department'),
+  // Wave 1 (500K build): PP sex taxonomy — kanonik sex kodi + FLEKSO/OFSET bo'lim (struktura; qiymat egasi-DATA).
+  sexCode: text('sex_code'),
+  departmentKind: text('department_kind'),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -149,15 +152,23 @@ export const work_centers = pgTable('work_centers', {
 export const downtime_events = pgTable('downtime_events', {
   id: serial('id').primaryKey(),                                           // DB: serial (auto-increment), id excluded from insert type
   sessionId: text('session_id'),                                           // DB: session_id text
-  workCenterId: text('work_center_id').notNull(),                          // DB: work_center_id text NOT NULL
-  reasonCodeId: text('reason_code_id'),                                    // DB: reason_code_id text
+  // Audit 2026-08-08 (docs/audit/POS-KIRIM-CHIQIM-VA-MES-JADVAL-TAHLILI-2026-08-08.md
+  // §MES To'xtashlar): live column is `uuid`, nullable — was declared `text NOT NULL`
+  // here, which both lied about nullability (blocking any insert with workCenterId
+  // omitted, which is every create from MESDowntimes.tsx today) and about the type.
+  // No uuid-PK table named work_center/machine/station exists live, so this FK's
+  // real referent is unresolved schema drift — kept as a bare uuid, not joined.
+  workCenterId: uuid('work_center_id'),
+  reasonCodeId: text('reason_code_id'),                                    // used by drizzle-downtime.repo
   reasonCode: text('reason_code'),                                         // used by drizzle-downtime.repo
   eventType: text('event_type'),                                           // used by drizzle-downtime.repo
   startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
   endedAt: timestamp('ended_at', { withTimezone: true }),
+  durationSeconds: integer('duration_seconds'),                            // DB: duration_seconds int — was missing from this schema, so MESDowntimes.tsx's durationSeconds field was always undefined
   durationMin: decimal('duration_min', { precision: 8, scale: 2 }),        // DB: duration_min numeric
   durationMinutes: integer('duration_minutes'),                            // drift-added column
   reportedBy: text('reported_by'),                                         // used by drizzle-downtime.repo
+  isPlanned: boolean('is_planned'),                                        // DB: is_planned boolean — SB0430 planned/unplanned OEE split (get-oee.handler)
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });

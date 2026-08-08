@@ -33,12 +33,23 @@ export interface CreateProcurementRequest {
   items: ProcurementItemInput[];
 }
 
+/** Xodim/rahbar picker qatori — mavjud `/api/coordination/users-for-select` dan. */
+export interface EmployeeSelectOption {
+  id: number;
+  user_id: number | null;
+  full_name: string;
+  role: string | null;
+}
+
 const BASE = "/api/pos/procurement";
 
 export const procurementApi = {
   /** Xodim uchun org-sxema tasdiq zanjiri (eng yaqin rahbar → direktor). */
   approvalChain: (employeeId: number) =>
     apiRequest<ApprovalStep[]>("GET", `${BASE}/approval-chain/${employeeId}`),
+  /** Xodim/rahbar dropdown ro'yxati (odam-do'st picker; ID-input o'rniga). Q-46: mavjud CC picker qayta ishlatiladi. */
+  employeesForSelect: () =>
+    apiRequest<EmployeeSelectOption[]>("GET", "/api/coordination/users-for-select"),
   /** Yangi xarid so'rovi + tasdiq zanjirini biriktirish. */
   createRequest: (body: CreateProcurementRequest) =>
     apiRequest<Record<string, unknown>>("POST", `${BASE}/requests`, body),

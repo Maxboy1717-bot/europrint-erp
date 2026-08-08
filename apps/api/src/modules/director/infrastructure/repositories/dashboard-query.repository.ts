@@ -9,6 +9,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 import type { IDashboardQueryRepo } from '../../domain/repositories/i-dashboard-query.repo';
 
 type Row = Record<string, unknown>;
@@ -57,7 +58,10 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
 
   async getAdvancePending(): Promise<Result<number>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT COUNT(*) AS count FROM advances WHERE status = 'pending'`);
+      // NOTE: `advances` table is deprecated (no writer in codebase — seed-only rows).
+      // `payroll_advances` is the real writer (finance/advances flow: check-advance.handler
+      // → FinanceOpsRepo.recordAdvance / FinanceActionsRepository.listAdvances).
+      const r = await exec(sql`SELECT COUNT(*) AS count FROM payroll_advances WHERE status = 'pending'`);
       return Number(r[0]?.count ?? 0);
       }, 'DB_ERROR');
   }
@@ -74,8 +78,235 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
 
   async getOpenPayrollCount(): Promise<Result<number>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT COUNT(*) AS count FROM payroll WHERE status = 'open'`);
+      const r = await exec(sql`SELECT COUNT(*) AS count FROM payroll_periods WHERE status = 'open'`);
       return Number(r[0]?.count ?? 0);
       }, 'DB_ERROR');
+  }
+
+  // ── P30 EP-DIR-025/036/053/073: dashboard kengaytma ────────────────────────
+
+  /**
+   * Bo'limlar kesimida bugungi reja-fakt.
+   * vision 05-director#48: faqat to'liq tugagan ishlar "fakt" (completed);
+   * jarayondagi ishlar alohida ustunda (in_progress) — ikkalasi ajratilgan bucket.
+   */
+  async getPlanFact(): Promise<Result<Row[]>> {
+    return safeCall(async () =>
+      exec(sql`
+        SELECT
+          d.name AS department,
+          COUNT(po.id)::int AS total,
+          COUNT(po.id) FILTER (WHERE po.status = 'completed')::int AS completed,
+          COUNT(po.id) FILTER (WHERE po.status = 'in_progress')::int AS in_progress,
+          COUNT(po.id) FILTER (WHERE po.status NOT IN ('completed','cancelled'))::int AS remaining
+        FROM org_departments d
+        -- org_departments is canonical (owner decision 2026-07-11/13): production_orders.org_department_id
+        -- FKs to org_departments(id) (verified live via \d production_orders), never to the legacy
+        -- departments(id) space -- mirror-sync (org-structure/sync-helper.ts) inserts departments rows
+        -- with their OWN auto-generated serial id (code = 'ORG-'+orgId), unrelated to org_departments.id,
+        -- so the previous 'FROM departments d' join could never match. Same join-shape as
+        -- director-data.repository.ts's getCkpDeadlineComplianceRate (FROM org_departments d ... f.card_id = d.id).
+        LEFT JOIN production_orders po ON po.org_department_id = d.id
+          AND DATE(po.created_at) = CURRENT_DATE
+        GROUP BY d.id, d.name
+        ORDER BY d.name
+      `), 'DB_ERROR');
+  }
+
+  /** Eng kam tayyor buyurtmalar (readiness_pct) — joriy bo'lim bilan. */
+  async getOrderProgress(limit = 5): Promise<Result<Row[]>> {
+    return safeCall(async () =>
+      exec(sql`
+        SELECT
+          so.id, so.order_number,
+          ROUND(100.0 * COUNT(po.id) FILTER (WHERE po.status='completed')
+                / NULLIF(COUNT(po.id), 0), 1) AS readiness_pct,
+          (
+            -- org_departments canonical (owner decision 2026-07-11/13) -- see getPlanFact comment above.
+            SELECT d.name FROM production_orders pp
+            LEFT JOIN org_departments d ON d.id = pp.org_department_id
+            WHERE pp.sales_order_id = so.id AND pp.status = 'in_progress'
+            ORDER BY pp.created_at DESC LIMIT 1
+          ) AS current_department
+        FROM sales_orders so
+        LEFT JOIN production_orders po ON po.sales_order_id = so.id
+        WHERE so.status NOT IN ('cancelled','completed')
+        GROUP BY so.id, so.order_number
+        ORDER BY readiness_pct ASC NULLS FIRST
+        LIMIT ${limit}
+      `), 'DB_ERROR');
+  }
+
+  /**
+   * Buyurtma sikl-vaqt (reja vs fakt) — item #113: har buyurtma uchun ketgan/qolgan kun.
+   * reja  = planned_cycle_days (start→delivery rejalashtirilgan davomiylik)
+   * fakt  = days_elapsed (start→bugun); days_remaining = delivery−bugun (manfiy = kechikkan).
+   * order_date jonli DB'da ko'p qatorda NULL → COALESCE(..., created_at::date) bilan real
+   * start sanaga tushamiz (getPlanFact'dagi NULL-xavfsizlik uslubi bilan bir xil). Bekor
+   * qilingan buyurtma (delivery_date NULL) status filtri + IS NOT NULL bilan chiqib ketadi.
+   */
+  async getOrderCycleTime(limit = 20): Promise<Result<Row[]>> {
+    return safeCall(async () =>
+      exec(sql`
+        SELECT
+          so.id,
+          so.order_number,
+          so.status,
+          COALESCE(so.order_date, so.created_at::date)                                AS start_date,
+          so.delivery_date::date                                                      AS delivery_date,
+          (so.delivery_date::date - COALESCE(so.order_date, so.created_at::date))::int AS planned_cycle_days,
+          (CURRENT_DATE - COALESCE(so.order_date, so.created_at::date))::int           AS days_elapsed,
+          (so.delivery_date::date - CURRENT_DATE)::int                                AS days_remaining,
+          (so.delivery_date::date < CURRENT_DATE)                                     AS is_overdue
+        FROM sales_orders so
+        WHERE so.status NOT IN ('cancelled','completed')
+          AND so.delivery_date IS NOT NULL
+        ORDER BY days_remaining ASC NULLS LAST
+        LIMIT ${limit}
+      `), 'DB_ERROR');
+  }
+
+  /** Aktiv KPI definitsiyalar uchun N-kunlik haqiqiy trend (kpi_values dan). */
+  async getStatTrends(days = 7): Promise<Result<Row[]>> {
+    // period_date = varchar 'YYYY-MM-DD' — text taqqoslash to_char orqali
+    const cutoff = sql`to_char(CURRENT_DATE - ${days}::int, 'YYYY-MM-DD')`;
+    return safeCall(async () =>
+      exec(sql`
+        SELECT
+          kd.kpi_name AS metric,
+          kd.unit,
+          json_agg(json_build_object(
+            'date',   kv.period_date,
+            'value',  kv.actual_value::float,
+            'target', kv.target_value::float,
+            'status', kv.status
+          ) ORDER BY kv.period_date ASC) AS trend_points
+        FROM kpi_definitions kd
+        JOIN kpi_values kv ON kv.kpi_id = kd.id
+        WHERE kd.is_active = TRUE
+          AND kv.period_date >= ${cutoff}
+        GROUP BY kd.id, kd.kpi_name, kd.unit
+        ORDER BY kd.kpi_name
+      `), 'DB_ERROR');
+  }
+
+  /** Bugungi hal qilinmagan (draft) kundalik muammolar. */
+  async getOpenIssues(): Promise<Result<Row[]>> {
+    return safeCall(async () =>
+      exec(sql`
+        SELECT author_card_id, date, main_issue
+        FROM diary_entries
+        WHERE status = 'draft' AND main_issue IS NOT NULL
+          AND date = CURRENT_DATE
+        ORDER BY author_card_id
+      `), 'DB_ERROR');
+  }
+
+  /** EP-DIR-087: 'Kechikishlar soni' + 'plan-og'ish soni' alohida (xom ikki son;
+   *  sabab-kategoriya taqsimoti owner-gated, shu sababli bu yerda faqat sonlar). */
+  async getPlanDeviationCounts(): Promise<Result<Row[]>> {
+    return safeCall(async () =>
+      exec(sql`
+        SELECT
+          -- Kechikish soni: haqiqiy tugash sanasi rejadan kech.
+          -- actual/planned_end_date = varchar (YYYY-MM-DD yoki NULL); CASE-guard
+          -- ISO formatni tekshirib keyin xavfsiz ::date cast qiladi. Buzuq/bosh
+          -- matn cast-crash bermaydi (Postgres CASE kafolatlangan short-circuit).
+          COUNT(*) FILTER (
+            WHERE CASE
+              WHEN actual_end_date  ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+               AND planned_end_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+              THEN actual_end_date::date > planned_end_date::date
+              ELSE false
+            END
+          )::int AS delay_count,
+          -- Plan-ogish soni: tasdiqlangan miqdor rejadan farq qiladi (kam/kop).
+          COUNT(*) FILTER (
+            WHERE confirmed_quantity IS NOT NULL
+              AND planned_quantity  IS NOT NULL
+              AND confirmed_quantity <> planned_quantity
+          )::int AS deviation_count,
+          COUNT(*)::int AS total_orders
+        FROM production_orders
+        WHERE status <> 'cancelled'
+      `), 'DB_ERROR');
+  }
+
+  /**
+   * Priladka/setup vaqti sozlash-yo'qotish panel (EP-DIR-064 · vision 05-director#114).
+   * Fleet-darajasidagi setup vs samarali vaqt va yo'qotish % (oxirgi N kun).
+   * setup_seconds/main_seconds/teardown_seconds ustunlari MES/IoT bosqich
+   * o'tishlari orqali yoziladi (iot-tablet.controller / drizzle-mes.repo) va
+   * drizzle-iot-oee.repo tomonidan iste'mol qilinadi. Aggregate har doim bitta
+   * qator qaytaradi (bo'sh to'plamda ham 0/NULL) — soxta javob emas.
+   */
+  async getSetupLoss(days = 30): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const r = await exec(sql`
+        SELECT
+          COUNT(*)::int                                AS session_count,
+          COALESCE(SUM(setup_seconds), 0)::int         AS total_setup_seconds,
+          COALESCE(SUM(main_seconds), 0)::int          AS total_main_seconds,
+          COALESCE(SUM(teardown_seconds), 0)::int      AS total_teardown_seconds,
+          ROUND(
+            100.0 * COALESCE(SUM(setup_seconds), 0)
+            / NULLIF(COALESCE(SUM(setup_seconds + main_seconds + teardown_seconds), 0), 0)
+          , 1)                                         AS setup_loss_pct
+        FROM mes_production_sessions
+        WHERE started_at >= CURRENT_DATE - ${days}::int
+      `);
+      return (r[0] ?? {}) as Row;
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * Karta-AI agregat (vizyon item #104/#129 — director dashboardidagi aiInsights
+   * hardcoded [] o'rniga). ckp_fact_values (AI-daily-report orqali to'ldiriladi)
+   * so'nggi N kunlik achievement_pct'ni karta (org_departments, node_type='position')
+   * bo'yicha o'rtachalab, chegaradan past kartalarni eng-yomonidan qaytaradi.
+   * Ma'lumot yo'q bo'lsa bo'sh array — fabrikatsiya yo'q (Q-40).
+   */
+  async getCardAiAggregate(): Promise<Result<Array<{
+    cardId: number; positionName: string; ckp: string | null;
+    avgAchievementPct: number; factCount: number; aiFactCount: number;
+    latestAiNote: string | null; lastFactDate: string | null;
+  }>>> {
+    return safeCall(async () => {
+      const lookbackDays = await getBusinessSettingNumber('director.card_ai_lookback_days', 7);
+      const thresholdPct = await getBusinessSettingNumber('director.card_ai_underperform_threshold_pct', 80);
+      const limit        = await getBusinessSettingNumber('director.card_ai_aggregate_limit', 10);
+      const rows = await exec(sql`
+        WITH recent AS (
+          SELECT
+            f.card_id,
+            AVG(f.achievement_pct)::numeric(6,2)                               AS avg_achievement_pct,
+            COUNT(*)::int                                                      AS fact_count,
+            COUNT(*) FILTER (WHERE f.source = 'AI_CHAT')::int                  AS ai_fact_count,
+            (ARRAY_AGG(f.notes ORDER BY f.fact_date DESC, f.created_at DESC)
+               FILTER (WHERE f.source = 'AI_CHAT' AND f.notes IS NOT NULL))[1] AS latest_ai_note,
+            MAX(f.fact_date)                                                   AS last_fact_date
+          FROM ckp_fact_values f
+          WHERE f.fact_date >= CURRENT_DATE - ${lookbackDays}::int
+          GROUP BY f.card_id
+        )
+        SELECT r.card_id, d.name AS position_name, d.tskp AS ckp,
+               r.avg_achievement_pct, r.fact_count, r.ai_fact_count, r.latest_ai_note, r.last_fact_date
+        FROM recent r
+        JOIN org_departments d ON d.id = r.card_id AND d.node_type = 'position' AND d.is_active = true
+        WHERE r.avg_achievement_pct < ${thresholdPct}
+        ORDER BY r.avg_achievement_pct ASC
+        LIMIT ${limit}
+      `);
+      return (Array.isArray(rows) ? rows : []).map((row) => ({
+        cardId:            Number(row.card_id),
+        positionName:      String(row.position_name ?? ''),
+        ckp:               row.ckp == null ? null : String(row.ckp),
+        avgAchievementPct: safeNum(row.avg_achievement_pct),
+        factCount:         Number(row.fact_count ?? 0),
+        aiFactCount:       Number(row.ai_fact_count ?? 0),
+        latestAiNote:      row.latest_ai_note == null ? null : String(row.latest_ai_note),
+        lastFactDate:      row.last_fact_date == null ? null : String(row.last_fact_date),
+      }));
+    }, 'DB_ERROR');
   }
 }

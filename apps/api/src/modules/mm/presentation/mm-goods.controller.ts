@@ -10,6 +10,7 @@ import {
 BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -19,11 +20,12 @@ import { MmGoodsService } from '../application/mm-goods.service';
 import {
   MmCreateGoodsReceiptSchema, MmCreateGoodsReceiptDto,
   MmUpdateGoodsReceiptSchema, MmUpdateGoodsReceiptDto,
+  MmAssignReceiptLocationSchema, MmAssignReceiptLocationDto,
   MmCreateGoodsIssueSchema, MmCreateGoodsIssueDto,
   MmUpdateGoodsIssueSchema, MmUpdateGoodsIssueDto,
 } from '../dto/mm.dto';
 
-const MM_WRITE_ROLES = ['ERP_MANAGER', 'mm_manager', 'warehouse_manager', 'super_admin', 'director'];
+const MM_WRITE_ROLES = ['mm_manager', 'warehouse_manager', 'super_admin', 'director'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -32,7 +34,7 @@ const MM_WRITE_ROLES = ['ERP_MANAGER', 'mm_manager', 'warehouse_manager', 'super
 export class MmGoodsController {
   private readonly logger = new Logger(MmGoodsController.name);
 
-  constructor(private readonly svc: MmGoodsService) {}
+  constructor(private readonly svc: MmGoodsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List goods receipts' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -49,7 +51,7 @@ export class MmGoodsController {
     const _rGetGoodsReceipt = await this.svc.getGoodsReceipt(safeInt(id, 0));
     assertOk(_rGetGoodsReceipt);
     const r = _rGetGoodsReceipt.data as Record<string, unknown>;
-    assertFound(r, 'Goods receipt not found');
+    assertFound(r, await this.i18n.t('errors.goodsReceiptNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -60,8 +62,26 @@ export class MmGoodsController {
   @UsePipes(new ZodValidationPipe(MmCreateGoodsReceiptSchema))
   @Roles(...MM_WRITE_ROLES)
   async createGoodsReceipt(@Body() body: MmCreateGoodsReceiptDto) {
-    assertRequired((body as Record<string, unknown>).purchase_order_id ?? (body as Record<string, unknown>).vendor_id, 'purchase_order_id required');
-    return unwrapOrThrow(await this.svc.createGoodsReceipt(body.purchase_order_id, body.received_by, (body.items ?? []) as Array<Record<string, unknown>>, body.notes, body.delivery_note));
+    assertRequired((body as Record<string, unknown>).purchase_order_id ?? (body as Record<string, unknown>).vendor_id, await this.i18n.t('validation.purchaseOrderIdRequired'));
+    return unwrapOrThrow(await this.svc.createGoodsReceipt(body.purchase_order_id, body.received_by, (body.items ?? []) as Array<Record<string, unknown>>, body.notes, body.delivery_note, body.warehouse_id));
+  }
+
+  @ApiOperation({ summary: 'Post goods receipt to canonical warehouse_stock (xarid -> kirim)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Post('goods-receipts/:id/post')
+  @Roles(...MM_WRITE_ROLES)
+  async postGoodsReceipt(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.postGoodsReceipt(safeInt(id, 0)));
+  }
+
+  @ApiOperation({ summary: 'Assign warehouse location (zone/bin) to a goods-receipt line — required before confirm (kirim tasdiqlash, vision 10-wms#5)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Item not found or zone/bin invalid' })
+  @Patch('goods-receipts/items/:itemId/location')
+  @UsePipes(new ZodValidationPipe(MmAssignReceiptLocationSchema))
+  @Roles(...MM_WRITE_ROLES)
+  async assignReceiptItemLocation(@Param('itemId') itemId: string, @Body() body: MmAssignReceiptLocationDto) {
+    return unwrapOrThrow(await this.svc.assignReceiptItemLocation(safeInt(itemId, 0), body.zone_id, body.bin_location_id ?? null));
   }
 
   @ApiOperation({ summary: 'Update goods receipt' })
@@ -75,7 +95,7 @@ export class MmGoodsController {
     const _rR = await this.svc.updateGoodsReceipt(safeInt(id, 0), body.status, body.notes);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Goods receipt not found');
+    assertFound(r, await this.i18n.t('errors.goodsReceiptNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -106,7 +126,7 @@ export class MmGoodsController {
     const _rGetGoodsIssue = await this.svc.getGoodsIssue(safeInt(id, 0));
     assertOk(_rGetGoodsIssue);
     const r = _rGetGoodsIssue.data as Record<string, unknown>;
-    assertFound(r, 'Goods issue not found');
+    assertFound(r, await this.i18n.t('errors.goodsIssueNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -117,7 +137,7 @@ export class MmGoodsController {
   @UsePipes(new ZodValidationPipe(MmCreateGoodsIssueSchema))
   @Roles(...MM_WRITE_ROLES)
   async createGoodsIssue(@Body() body: MmCreateGoodsIssueDto) {
-    return unwrapOrThrow(await this.svc.createGoodsIssue(body.issued_by, body.cost_center, body.work_order_id, (body.items ?? []) as Array<Record<string, unknown>>, body.notes));
+    return unwrapOrThrow(await this.svc.createGoodsIssue(body.issued_by, body.cost_center, body.work_order_id, (body.items ?? []) as Array<Record<string, unknown>>, body.notes, body.warehouse_id));
   }
 
   @ApiOperation({ summary: 'Update goods issue' })
@@ -131,7 +151,7 @@ export class MmGoodsController {
     const _rR = await this.svc.updateGoodsIssue(safeInt(id, 0), body.status, body.notes);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Goods issue not found');
+    assertFound(r, await this.i18n.t('errors.goodsIssueNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 

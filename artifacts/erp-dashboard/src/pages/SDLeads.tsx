@@ -147,6 +147,8 @@ export default function SDLeads() {
   const [convertId, setConvertId] = useState<number | null>(null);
 
   const [form, setForm] = useState<LeadFormData>(EMPTY_FORM);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [csvText, setCsvText] = useState("");
 
   // Reset page when filters change
   useEffect(() => { setPage(1); }, [search, statusFilter]);
@@ -213,10 +215,10 @@ export default function SDLeads() {
     mutationFn: (data: LeadFormData) =>
       apiRequest("POST", "/api/sd/leads", {
         title: data.title,
-        customerId: data.customerId ? Number(data.customerId) : null,
-        source: data.source || null,
-        estimatedValue: data.estimatedValue ? Number(data.estimatedValue) : null,
-        notes: data.notes || null,
+        customer_id: data.customerId ? Number(data.customerId) : undefined,
+        source: data.source || undefined,
+        amount: data.estimatedValue ? Number(data.estimatedValue) : undefined,
+        notes: data.notes || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/leads"] });
@@ -236,10 +238,10 @@ export default function SDLeads() {
     mutationFn: ({ id, data }: { id: number; data: LeadFormData }) =>
       apiRequest("PATCH", `/api/sd/leads/${id}`, {
         title: data.title,
-        customerId: data.customerId ? Number(data.customerId) : null,
-        source: data.source || null,
-        estimatedValue: data.estimatedValue ? Number(data.estimatedValue) : null,
-        notes: data.notes || null,
+        customer_id: data.customerId ? Number(data.customerId) : undefined,
+        source: data.source || undefined,
+        amount: data.estimatedValue ? Number(data.estimatedValue) : undefined,
+        notes: data.notes || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/leads"] });
@@ -268,6 +270,18 @@ export default function SDLeads() {
         description: err.message,
         variant: "destructive",
       }),
+  });
+
+  const importMutation = useMutation({
+    mutationFn: (rows: Array<Record<string, string>>) =>
+      apiRequest<{ imported: number; skipped: number; errors: string[] }>("POST", "/api/sd/leads/import", { rows }),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sd/leads"] });
+      toast({ title: t("leadImportResult", { imported: result.imported, skipped: result.skipped }) });
+      setIsImportOpen(false);
+      setCsvText("");
+    },
+    onError: () => toast({ title: tLabel("sd.error", "Xatolik"), variant: "destructive" }),
   });
 
   const convertMutation = useMutation({
@@ -302,6 +316,20 @@ export default function SDLeads() {
     window.open("/api/sd/leads/export", "_blank");
   };
 
+  const handleImport = () => {
+    const lines = csvText.trim().split("\n").filter(Boolean);
+    if (lines.length < 2) {
+      toast({ title: t("importMinRows"), variant: "destructive" });
+      return;
+    }
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const rows = lines.slice(1).map((line) => {
+      const vals = line.split(",").map((v) => v.trim());
+      return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? ""]));
+    });
+    importMutation.mutate(rows);
+  };
+
   // ── Render ──
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
@@ -313,6 +341,10 @@ export default function SDLeads() {
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-4 w-4 mr-1" />
               {tLabel("sd.exportCsvBtn", "CSV")}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)}>
+              <FolderOpen className="h-4 w-4 mr-1" />
+              Import
             </Button>
             <Button size="sm" onClick={() => { setForm(EMPTY_FORM); setShowCreate(true); }}>
               {tLabel("sd.addLeadBtn", "Yangi lead")}
@@ -592,6 +624,33 @@ export default function SDLeads() {
               {convertMutation.isPending
                 ? tLabel("sd.converting", "Aylantirilmoqda...")
                 : tLabel("sd.convertBtn", "Aylantirish")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CSV Import dialog */}
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("csvImportTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {t("csvFirstRowHint")} <code className="bg-muted px-1 rounded text-xs">title,source,amount,notes</code>
+            </p>
+            <Textarea
+              value={csvText}
+              onChange={(e) => setCsvText(e.target.value)}
+              placeholder={"title,source,amount,notes\nABC Kompaniya,cold_call,5000000,Katta buyurtma\nXYZ Firma,website,,"}
+              rows={8}
+              className="font-mono text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportOpen(false)}>{t("cancelBtn")}</Button>
+            <Button onClick={handleImport} disabled={importMutation.isPending}>
+              {importMutation.isPending ? t("importingBtn") : t("importBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>

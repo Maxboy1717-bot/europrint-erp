@@ -26,6 +26,8 @@ export interface IWmsCrudRepo {
   softDeleteInventoryCount(id: number, userId: number | null): Promise<Result<Row>>;
   softDeleteWarehouse(id: string | number, userId: number | null): Promise<Result<Row>>;
   getStockById(id: number): Promise<Result<Row | null>>;
+  listGoodsIssues(limit: number, offset: number): Promise<Result<Row[]>>;
+  getGoodsIssueById(id: number): Promise<Result<Row>>;
 }
 
 export const WMS_CRUD_REPO = Symbol('WMS_CRUD_REPO');

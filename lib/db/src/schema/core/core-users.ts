@@ -33,6 +33,9 @@ export const admins = pgTable("admins", {
 });
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+// NOTE (Q-29 re-verify 2026-07-02): kept — re-exported live via
+// apps/api/src/shared/db/schema-business-a-1.ts (`notifications as notificationsApp`
+// from '@workspace/db'). NOT orphan.
 export const notifications = pgTable("notifications", {
   id:        serial("id").primaryKey(),
   userId:    integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

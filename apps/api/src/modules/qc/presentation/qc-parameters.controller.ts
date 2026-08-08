@@ -14,6 +14,8 @@ import { Role } from '@common/constants/roles.constants';
 import { unwrapOrInternal } from '@common/http-result';
 import { QcParametersService } from '../application/qc-parameters.service';
 import { z } from 'zod';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const ParameterDto = z.object({
   name: z.string().min(1),
@@ -25,15 +27,16 @@ const ParameterDto = z.object({
   description: z.string().optional(),
 });
 
-const TestDto = z.object({
-  order_id: z.number().optional(),
-  parameter_name: z.string().min(1),
-  value: z.number().optional(),
-  unit: z.string().optional(),
-  min_value: z.number().optional(),
-  max_value: z.number().optional(),
-  tested_by: z.string().optional(),
-  notes: z.string().optional(),
+const MaterialTestDto = z.object({
+  orderId: z.number().int().optional(),
+  materialId: z.number().int().optional(),
+  testCategory: z.enum(['physical', 'mechanical', 'printability', 'chemical', 'environmental', 'logistics', 'visual', 'documentation', 'ai_analysis']).default('physical'),
+  testDate: z.string().optional(),
+  testResults: z.array(z.record(z.unknown())).optional(),
+  overallStatus: z.enum(['pending', 'passed', 'failed', 'conditional']).default('pending'),
+  passedCount: z.number().int().optional(),
+  failedCount: z.number().int().optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 const QC_ROLES = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.QC_SPECIALIST, Role.PRODUCTION_MANAGER, 'qc_manager', 'qc_inspector'];
@@ -119,18 +122,27 @@ export class QcParametersController {
   @Roles(...QC_ROLES)
   @ApiOperation({ summary: 'Get a single QC test by id (used by QCApproval page detail view)' })
   async getTestById(@Param('id') id: string) {
-    // Service-level findById helper pending. Return a typed null shape so the
-    // QCApproval detail panel can render "test topilmadi" instead of 404.
-    return { id, results: [], passed: null, testedAt: null };
+    try {
+      const r = await rawSql(sql`
+        SELECT qmt.id::text AS id, qmt.test_results AS results,
+               qmt.overall_status AS status, qmt.passed_count AS "passedCount",
+               qmt.failed_count AS "failedCount", qmt.test_date AS "testedAt",
+               qmt.notes, qmt.batch_number AS "batchNumber",
+               qmt.material_id AS "materialId"
+        FROM qc_material_tests qmt WHERE qmt.id = ${parseInt(id, 10)}
+      `);
+      const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+      return row ?? { id, results: [], passed: null, testedAt: null, found: false };
+    } catch { return { id, results: [], passed: null, testedAt: null, found: false }; }
   }
 
   @Post('tests')
   @HttpCode(HttpStatus.CREATED)
   @Roles(...QC_ROLES)
-  @ApiOperation({ summary: 'Create QC material test' })
+  @ApiOperation({ summary: 'Create QC material test (writes to qc_material_tests)' })
   async createTest(@Body() body: unknown) {
-    const dto = TestDto.parse(body);
-    return unwrapOrInternal(await this.svc.createTest(dto));
+    const dto = MaterialTestDto.parse(body);
+    return unwrapOrInternal(await this.svc.createMaterialTest(dto));
   }
 
   @Post('tests/:id/ai-analyze')

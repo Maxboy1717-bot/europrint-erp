@@ -7,6 +7,7 @@ import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { eq, and, gte, lt, isNotNull, sql } from 'drizzle-orm';
 import { shiftSchedules, leaveRequestsApp, hrEmployees, hrDepartments } from '@shared/db';
 
@@ -49,6 +50,33 @@ export class ShiftRepository {
     }
   }
 
+  /**
+   * @description Hard-reject guard for shift scheduling (vision 02-hr #25):
+   * returns true when the employee holds an ACTIVE qualification/skill whose
+   * expiry_date is already in the past. `expiry_date` is VARCHAR in the live
+   * schema, so it is date-cast ONLY after a regex gate that skips '', NULL and
+   * non-ISO values — preventing a cast error from spuriously blocking assignment.
+   */
+  async hasExpiredQualification(employeeId: number): Promise<Result<boolean>> {
+    try {
+      // Raw SQL: the canonical Drizzle employee_skills model is drifted (no `status`
+      // column; expiry_date typed `date` not the live `varchar`), so the query
+      // builder cannot express this guard. In-repo raw SQL satisfies Qoida 4 + 15.
+      const rows = await typedExecute<{ found: number }>(sql`
+        SELECT 1 AS found
+        FROM employee_skills
+        WHERE employee_id = ${employeeId}
+          AND status = 'active'
+          AND expiry_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+          AND expiry_date::date < CURRENT_DATE
+        LIMIT 1
+      `);
+      return Ok(Array.isArray(rows) && rows.length > 0);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   async findShiftById(id: number): Promise<Result<Record<string, unknown> | null>> {
     try {
       const [row] = await db
@@ -82,9 +110,9 @@ export class ShiftRepository {
         .from(leaveRequestsApp)
         .where(
           and(
-            eq(leaveRequestsApp.employee_id, employeeId),
+            eq(leaveRequestsApp.employeeId, employeeId),
             eq(leaveRequestsApp.status, 'approved'),
-            sql`${shiftDate}::date BETWEEN ${leaveRequestsApp.start_date}::date AND ${leaveRequestsApp.end_date}::date`,
+            sql`${shiftDate}::date BETWEEN ${leaveRequestsApp.startDate}::date AND ${leaveRequestsApp.endDate}::date`,
           ),
         )
         .limit(1);
@@ -272,6 +300,42 @@ export class ShiftRepository {
         .where(and(eq(shiftSchedules.employeeId, employeeId), sql`${shiftSchedules.shiftDate} = ${shiftDate}`))
         .limit(1);
       return Ok(row?.id !== undefined ? Number(row.id) : undefined);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
+  /**
+   * @description Shift-swap requests for one employee (optionally filtered by status).
+   * Proxied here from hr-employees-ext.repository.ts's former `shift_schedules` compat
+   * stub (schema-business-c-2-hr-safety.ts) — both pointed at the same physical
+   * `shift_schedules` table; this repository is the canonical owner.
+   */
+  async getEmployeeSwapRequests(employeeId: number, status?: string): Promise<Result<Record<string, unknown>[]>> {
+    try {
+      const rows = await db
+        .select({
+          id: shiftSchedules.id,
+          employee_id: shiftSchedules.employeeId,
+          shift_date: shiftSchedules.shiftDate,
+          shift_type: shiftSchedules.shiftType,
+          start_time: shiftSchedules.startTime,
+          end_time: shiftSchedules.endTime,
+          status: shiftSchedules.status,
+          created_at: shiftSchedules.createdAt,
+          employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
+        })
+        .from(shiftSchedules)
+        .innerJoin(hrEmployees, eq(hrEmployees.id, shiftSchedules.employeeId))
+        .where(
+          and(
+            eq(shiftSchedules.employeeId, employeeId),
+            status ? eq(shiftSchedules.status, status) : undefined,
+          ),
+        )
+        .orderBy(sql`${shiftSchedules.shiftDate} DESC`)
+        .limit(50);
+      return Ok(castTo<Record<string, unknown>[]>(rows));
     } catch (_e) {
       return Err(String(_e));
     }

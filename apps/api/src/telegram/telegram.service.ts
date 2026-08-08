@@ -3,8 +3,9 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Ok, Err, safeCall, Result, AppError } from '@common/result';
+import { Ok, Err, AppErr, safeCall, Result, AppError } from '@common/result';
 import { Injectable, Logger } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { I18nService } from 'nestjs-i18n'
 import TelegramBot from 'node-telegram-bot-api'
 
@@ -20,11 +21,18 @@ interface DirectorReport {
 
 @Injectable()
 export class TelegramService {
-  private bot: TelegramBot
+  private bot: TelegramBot | null = null
   private readonly logger = new Logger(TelegramService.name)
 
-  constructor(private readonly i18n: I18nService) {
-    const token = process.env.TELEGRAM_BOT_TOKEN || ''
+  constructor(
+    private readonly i18n: I18nService,
+    private readonly config: ConfigService,
+  ) {
+    const token = this.config.get<string>('TELEGRAM_BOT_TOKEN')
+    if (!token) {
+      this.logger.warn('TELEGRAM_BOT_TOKEN topilmadi — Telegram xabarnomalari o\'chirilgan (best-effort, ixtiyoriy infra)')
+      return
+    }
     this.bot = new TelegramBot(token, { polling: false })
   }
 
@@ -32,7 +40,12 @@ export class TelegramService {
     chatId: string | number,
     text: string,
   ): Promise<Result<TelegramBot.Message, AppError>> {
-    return safeCall(async () => this.bot.sendMessage(chatId, text, { parse_mode: 'HTML' }));
+    const bot = this.bot;
+    if (!bot) {
+      this.logger.warn('Telegram bot ishga tushmagan (TELEGRAM_BOT_TOKEN yo\'q) — xabar yuborilmadi')
+      return Err(AppErr('EXTERNAL_SERVICE', 'Telegram bot sozlanmagan (TELEGRAM_BOT_TOKEN yo\'q)'));
+    }
+    return safeCall(async () => bot.sendMessage(chatId, text, { parse_mode: 'HTML' }));
   }
 
   async sendAlert(

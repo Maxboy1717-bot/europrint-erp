@@ -21,6 +21,24 @@ export class HrGsdService {
     return this.repo.findEmployeeHistory(id);
   }
 
+  // SB0300 fix: card-GSD definition + weekly fact history + manual-entry write.
+  getGsdDefinition(employeeId: number): Promise<Result<Row | null, AppError>> {
+    return this.repo.findGsdDefinition(employeeId);
+  }
+
+  getGsdFactHistory(employeeId: number, months: number): Promise<Result<Row[], AppError>> {
+    return this.repo.findGsdFactHistory(employeeId, months);
+  }
+
+  recordGsdActual(employeeId: number, dto: Parameters<typeof this.repo.recordGsdActual>[1]): Promise<Result<Row, AppError>> {
+    return this.repo.recordGsdActual(employeeId, dto);
+  }
+
+  // Q9: real UPDATE delegate
+  updateEmployee(id: number, dto: Parameters<typeof this.repo.updateEmployee>[1]): Promise<Result<Row, AppError>> {
+    return this.repo.updateEmployee(id, dto);
+  }
+
   getReferrals(): Promise<Result<Row[], AppError>> {
     return this.repo.findReferrals();
   }
@@ -33,6 +51,7 @@ export class HrGsdService {
     candidatePhone?: string;
     positionTitle?: string;
     hrNotes?: string;
+    candidateId?: number | null;
   }): Promise<Result<Row, AppError>> {
     return this.repo.createReferral(dto);
   }
@@ -43,6 +62,8 @@ export class HrGsdService {
     bonusAmount?: number;
     bonusPaid?: boolean;
     hrNotes?: string;
+    candidateId?: number | null;
+    hiredEmployeeId?: number | null;
   }): Promise<Result<Row, AppError>> {
     return this.repo.updateReferral(id, dto);
   }

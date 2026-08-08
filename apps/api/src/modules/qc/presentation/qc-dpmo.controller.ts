@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, Post, Body, Param, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -52,5 +52,14 @@ export class QcDpmoController {
   async calculateDpmo(@Body() body: unknown) {
     const dto = DpmoBodyDto.parse(body);
     return unwrapOrBadRequest(await this.dpmoSvc.calculate(dto));
+  }
+
+  @Get('ftq/weakest-link')
+  @RequirePermission('qc.dpmo:READ')
+  @ApiOperation({ summary: '09-qc#34: Har bosqich FTQ% + eng past = "eng zaif halqa" auto-belgi' })
+  async getStageFtq(@Query('orderId') orderId?: string) {
+    const n = orderId !== undefined && orderId !== '' ? Number(orderId) : NaN;
+    const orderIdNum = Number.isFinite(n) ? n : null;
+    return unwrapOrBadRequest(await this.dpmoSvc.getStageFtq(orderIdNum));
   }
 }

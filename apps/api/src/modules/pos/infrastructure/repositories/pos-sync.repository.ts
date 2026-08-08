@@ -55,6 +55,32 @@ export class PosSyncRepository {
     }
   }
 
+  /**
+   * G2-5 OFFLINE SYNC CONFLICT (2026-07-04, SB0558): `conflict_reason` va
+   * `retry_count` ustunlari ALLAQACHON mavjud edi (schema tayyor), lekin
+   * hech qanday kod ularni yozmagan — push() da xato bo'lganda entry abadiy
+   * 'PENDING' holatida qolib ketardi (getSyncStatus() 'CONFLICT' bucket'ini
+   * O'QIYDI, lekin hech kim YOZMAYDI edi). Endi push() muvaffaqiyatsizlikda
+   * shu metodni chaqiradi — status='CONFLICT', sabab saqlanadi, retry_count++
+   * (FE/admin "tekshirilsin" ro'yxatida ko'rishi uchun).
+   */
+  async markConflict(id: number, reason: string): Promise<Result<QueueRow>> {
+    try {
+      const [row] = await db
+        .update(posOfflineQueue)
+        .set({
+          syncStatus: 'CONFLICT',
+          conflictReason: reason,
+          retryCount: sql`COALESCE(${posOfflineQueue.retryCount}, 0) + 1`,
+        })
+        .where(eq(posOfflineQueue.id, id))
+        .returning();
+      return Ok(row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
   async getPendingForTerminal(
     terminalId: string,
     userId: number,

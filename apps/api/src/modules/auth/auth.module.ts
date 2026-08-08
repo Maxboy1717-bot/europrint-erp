@@ -12,7 +12,9 @@ import type { SignOptions } from 'jsonwebtoken';
 import { DatabaseModule } from '@/infrastructure/database/database.module';
 import { AuthController, AuthAccountController } from './presentation/auth.controller';
 import { MePermissionsController } from './presentation/me-permissions.controller';
+import { CardGatePrecheckController } from './presentation/card-gate-precheck.controller';
 import { LoginService } from './application/services/login.service';
+import { CardGatePrecheckService } from './application/services/card-gate-precheck.service';
 import { LogoutService } from './application/services/logout.service';
 import { ChangePasswordService } from './application/services/change-password.service';
 import { VerifyOtpService } from './application/services/verify-otp.service';
@@ -40,15 +42,17 @@ export { AUTH_REPO } from './auth.tokens';
       useFactory: (cfg: ConfigService) => ({
         secret: cfg.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: (cfg.get<string>('JWT_ACCESS_TOKEN_TTL') ?? cfg.get<string>('JWT_EXPIRES_IN') ?? '24h') as SignOptions['expiresIn'],
+          // T10-17: access-token TTL vizyon = 15 daqiqa — bir manba bilan (jwt.config.ts, login.service.ts, auth.controller.ts)
+          expiresIn: (cfg.get<string>('JWT_ACCESS_TOKEN_TTL') ?? cfg.get<string>('JWT_EXPIRES_IN') ?? '15m') as SignOptions['expiresIn'],
         },
       }),
     }),
     DatabaseModule,
   ],
-  controllers: [AuthController, AuthAccountController, MePermissionsController],
+  controllers: [AuthController, AuthAccountController, MePermissionsController, CardGatePrecheckController],
   providers: [
     LoginService,
+    CardGatePrecheckService,
     LogoutService,
     ChangePasswordService,
     VerifyOtpService,

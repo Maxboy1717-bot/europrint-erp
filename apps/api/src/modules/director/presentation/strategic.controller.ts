@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { I18nService } from 'nestjs-i18n';
 import { assertFound } from '@common/assertions';
 import { parseOrThrow } from '@common/utils/parse-or-throw.util';
 import { Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
@@ -74,7 +75,10 @@ const UpdateMilestoneSchema = z.object({
 export class StrategicController {
   private readonly logger = new Logger(StrategicController.name);
 
-  constructor(private readonly svc: StrategicService) {}
+  constructor(
+    private readonly svc: StrategicService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'List categories' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -130,7 +134,7 @@ export class StrategicController {
     const _rData = await this.svc.getTask(parseInt(id, 10));
     assertOk(_rData);
     const data = _rData.data;
-    assertFound(data, 'Topilmadi');
+    assertFound(data, await this.i18n.t('errors.notFound'));
     return data[0];
   }
 
@@ -142,7 +146,7 @@ export class StrategicController {
     @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
-    const dto = parseOrThrow(CreateTaskSchema, body);
+    const dto = parseOrThrow(CreateTaskSchema, body, await this.i18n.t('validation.validationFailed'));
     return unwrapOrInternal(await this.svc.createTask(
       dto.title,
       dto.category_id ?? null,

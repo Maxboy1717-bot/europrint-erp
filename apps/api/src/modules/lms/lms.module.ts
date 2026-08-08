@@ -19,14 +19,19 @@ import { LmsExamsService } from './application/services/lms-exams.service';
 import { LmsCoursesExtendedService } from './application/services/lms-courses-extended.service';
 import { LmsTestsService } from './application/services/lms-tests.service';
 import { LmsCertificatesStandaloneService } from './application/services/lms-certificates-standalone.service';
+import { LmsCertificatePdfService } from './application/services/lms-certificate-pdf.service';
 import { LmsMiscService } from './application/services/lms-misc.service';
+import { LmsCompletionService } from './application/services/lms-completion.service';
+import { LmsCardGateService } from './application/services/lms-card-gate.service';
 import { CertificationService } from './domain/services/certification.service';
 import { IssueCertificateHandler } from './application/commands/issue-certificate.handler';
 import { EnrollCourseHandler } from './application/commands/enroll-course.handler';
 import { OperatorCertificationsHandler } from './application/queries/operator-certifications.handler';
 import { GetCoursesHandler } from './application/queries/get-courses.handler';
-import { GetMyEnrollmentsHandler } from './application/queries/get-my-enrollments.handler';
 import { CertExpiryHandler } from './infrastructure/event-handlers/cert-expiry.handler';
+import { WeeklyProgressReportHandler } from './infrastructure/event-handlers/weekly-progress-report.handler';
+import { CardEmployeeAssignedHandler } from './infrastructure/event-handlers/card-employee-assigned.handler';
+import { CourseCompletedCreditHandler } from './infrastructure/event-handlers/course-completed-credit.handler';
 import { LmsCoursesController } from './presentation/lms-courses.controller';
 import { LmsCertificatesController } from './presentation/lms-certificates.controller';
 import { LmsEnrollmentsController } from './presentation/lms-enrollments.controller';
@@ -47,17 +52,14 @@ import {
 import { KnowledgeBaseController } from './presentation/knowledge-base.controller';
 import { KnowledgeBaseService } from './application/services/knowledge-base.service';
 import { KnowledgeBaseRepository } from './infrastructure/repositories/drizzle-knowledge-base.repo';
+import { CardRequiredKnowledgeController } from './presentation/card-required-knowledge.controller';
+import { CardRequiredKnowledgeService } from './application/services/card-required-knowledge.service';
+import { CardRequiredKnowledgeRepository } from './infrastructure/repositories/drizzle-card-required-knowledge.repo';
 import { LMS_REPO } from './domain/repositories/i-lms.repo';
-import { LMS_COURSES_REPO } from './courses/i-lms-courses.repo';
-import { DrizzleLmsCoursesRepository } from './courses/drizzle-lms-courses.repo';
-import { CoursesService } from './courses/courses.service';
-import { LMS_ENROLLMENTS_REPO } from './enrollments/i-lms-enrollments.repo';
-import { DrizzleLmsEnrollmentsRepository } from './enrollments/drizzle-lms-enrollments.repo';
-import { EnrollmentsService } from './enrollments/enrollments.service';
 
 const commandHandlers = [IssueCertificateHandler, EnrollCourseHandler];
-const queryHandlers = [OperatorCertificationsHandler, GetCoursesHandler, GetMyEnrollmentsHandler];
-const eventListeners = [CertExpiryHandler];
+const queryHandlers = [OperatorCertificationsHandler, GetCoursesHandler];
+const eventListeners = [CertExpiryHandler, CardEmployeeAssignedHandler, CourseCompletedCreditHandler, WeeklyProgressReportHandler];
 
 const appControllers = [
   LmsCoursesController,
@@ -79,6 +81,7 @@ const appControllers = [
   LmsMentorsController,
   LmsProgressCompatController,
   KnowledgeBaseController,
+  CardRequiredKnowledgeController,
 ];
 
 const appServices = [
@@ -88,10 +91,13 @@ const appServices = [
   LmsCoursesExtendedService,
   LmsTestsService,
   LmsCertificatesStandaloneService,
+  LmsCertificatePdfService,
   LmsMiscService,
-  CoursesService,
-  EnrollmentsService,
   KnowledgeBaseService,
+  CardRequiredKnowledgeService,
+  // EP-ORG-027 LMS oylik/razryad gate (A73): PURE 3-condition evaluator + DB-wrapper.
+  LmsCompletionService,
+  LmsCardGateService,
 ];
 
 const appRepos = [
@@ -102,15 +108,16 @@ const appRepos = [
   LmsCoursesExtendedRepository,
   LmsRepository,
   KnowledgeBaseRepository,
+  CardRequiredKnowledgeRepository,
   { provide: LMS_REPO, useClass: LmsRepository },
-  { provide: LMS_COURSES_REPO, useClass: DrizzleLmsCoursesRepository },
-  { provide: LMS_ENROLLMENTS_REPO, useClass: DrizzleLmsEnrollmentsRepository },
 ];
 
 @Module({
   imports: [AuthModule, CqrsModule, EventEmitterModule.forRoot(), ScheduleModule.forRoot()],
   controllers: appControllers,
   providers: [...appRepos, ...appServices, ...commandHandlers, ...queryHandlers, ...eventListeners],
-  exports: [LmsRepository, CertificationService, LMS_REPO],
+  // LmsCardGateService exported so HR payroll (FAZA 04) + org-structure razryad (FAZA 03)
+  // can consult the LMS oylik/razryad gate via DI (EP-ORG-027, A73).
+  exports: [LmsRepository, CertificationService, LMS_REPO, LmsCardGateService],
 })
 export class LmsModule {}

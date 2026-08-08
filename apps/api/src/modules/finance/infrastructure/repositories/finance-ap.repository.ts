@@ -7,10 +7,14 @@
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
-import { ap_aging_buckets, purchase_invoices } from '@shared/db';
+import { and, eq, ne, lt, sql } from 'drizzle-orm';
+import { ap_aging_buckets, finance_invoices } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import type { IFinanceApRepo, ApBucket, CreateApEntryDto } from '../../domain/repositories/i-finance-ap.repo';
+
+// OWNER QARORI 2026-07-02 (Moliya-GL-Kassa): finance_invoices = kanonik invoice-manba.
+// purchase_invoices o'rniga finance_invoices (invoice_type='purchase') ishlatiladi —
+// purchase_invoices'ning yagona yozuvchisi shu fayl edi (boshqa consumer yo'q edi, 0 satr).
 
 type Row = Record<string, unknown>;
 
@@ -41,22 +45,29 @@ export class FinanceApRepository implements IFinanceApRepo {
 
   async getOverduePurchaseInvoices(today: string): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      return db.select().from(purchase_invoices)
-        .where(sql`${purchase_invoices.payment_status} != 'paid' AND ${purchase_invoices.due_date} < ${today}::date`)
-        .orderBy(purchase_invoices.due_date).then(r => castTo<Row[]>(r));
+      return db.select().from(finance_invoices)
+        .where(and(
+          eq(finance_invoices.invoice_type, 'purchase'),
+          ne(finance_invoices.payment_status, 'paid'),
+          lt(finance_invoices.due_date, today),
+        ))
+        .orderBy(finance_invoices.due_date).then(r => castTo<Row[]>(r));
       }, 'DB_ERROR');
   }
 
   async getUnpaidPurchaseInvoices(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       return db.select({
-        id:            purchase_invoices.id,
-        due_date:      purchase_invoices.due_date,
-        total_amount:  purchase_invoices.total_amount,
-        paid_amount:   purchase_invoices.paid_amount,
-        supplier_name: purchase_invoices.supplier_name,
-      }).from(purchase_invoices)
-        .where(sql`${purchase_invoices.payment_status} != 'paid'`).then(r => castTo<Row[]>(r));
+        id:            finance_invoices.id,
+        due_date:      finance_invoices.due_date,
+        total_amount:  finance_invoices.total_amount,
+        paid_amount:   finance_invoices.paid_amount,
+        supplier_name: finance_invoices.supplier_name,
+      }).from(finance_invoices)
+        .where(and(
+          eq(finance_invoices.invoice_type, 'purchase'),
+          ne(finance_invoices.payment_status, 'paid'),
+        )).then(r => castTo<Row[]>(r));
       }, 'DB_ERROR');
   }
 
@@ -97,20 +108,21 @@ export class FinanceApRepository implements IFinanceApRepo {
 
   async createApEntry(dto: CreateApEntryDto): Promise<Result<Row>> {
     return safeCall(async () => {
-      const invoiceNo = `AP-${Date.now()}`;
-      const rows = await db.insert(purchase_invoices).values({
+      // C4 continued (CRITICAL-CORRECTNESS-AUDIT-2026-07-06, finding 1.3): was `AP-${Date.now()}` —
+      // same finance_invoices.invoice_number collision risk as the other 3 independent writers
+      // (drizzle-finance-invoice.repo.ts, finance-actions.repository.ts, finance-ar.repository.ts),
+      // now closed the same way — server-side nextval(invoice_number_seq), atomic.
+      const rows = await db.insert(finance_invoices).values({
+        invoice_number: sql`'AP-' || EXTRACT(YEAR FROM NOW())::text || '-' || LPAD(nextval('invoice_number_seq')::text, 6, '0')`,
+        invoice_type:   'purchase',
         vendor_id:      dto.vendorId != null ? Number(dto.vendorId) : null,
-        supplier_name:  null,
-        invoice_no:     invoiceNo,
         total_amount:   String(dto.amount),
         paid_amount:    '0',
-        amount:         String(dto.amount),
-        currency:       'UZS',
         due_date:       dto.dueDate ?? null,
-        status:         'pending',
         payment_status: 'unpaid',
         notes:          dto.description ?? null,
-      } as typeof purchase_invoices.$inferInsert).returning();
+        created_by:     dto.createdBy ?? null,
+      } as unknown as typeof finance_invoices.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
     }, 'DB_ERROR');
   }

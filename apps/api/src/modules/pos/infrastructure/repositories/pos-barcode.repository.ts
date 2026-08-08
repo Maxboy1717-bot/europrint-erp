@@ -57,12 +57,17 @@ export class PosBarcodeRepository {
         0     AS min_interval_days,
         0     AS max_qty_per_issue
       FROM material_cards mc
-      WHERE mc.barcode = ${barcode}
+      WHERE (
+        mc.barcode = ${barcode}
          OR mc.id IN (
               SELECT material_id FROM pos_barcode_map   WHERE barcode = ${barcode} AND is_primary = TRUE
               UNION
               SELECT material_id FROM material_barcodes WHERE gtin = ${barcode} OR sscc = ${barcode}
             )
+      )
+      -- C6.4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): a soft-deleted/deactivated material
+      -- must not resolve from a barcode scan, regardless of which of the 3 match paths hit.
+      AND mc.deleted_at IS NULL AND mc.is_active = true
       LIMIT 1
     `);
     if (!res.ok) return Err(res.error);

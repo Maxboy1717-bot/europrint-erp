@@ -251,7 +251,10 @@ export default function LogisticsDashboard() {
         setAddVehicleOpen={setAddVehicleOpen}
         vehicleForm={vehicleForm}
         setVehicleForm={setVehicleForm}
-        onSubmitVehicle={() => addVehicleMut.mutate(vehicleForm as Record<string, string>)}
+        onSubmitVehicle={() => {
+          const { plateNumber, ...rest } = vehicleForm;
+          addVehicleMut.mutate({ plate_number: plateNumber, ...rest } as Record<string, string>);
+        }}
         isSubmittingVehicle={addVehicleMut.isPending}
         addFuelOpen={addFuelOpen}
         setAddFuelOpen={setAddFuelOpen}

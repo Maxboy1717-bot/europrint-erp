@@ -18,6 +18,7 @@ export interface IOkrRepo {
     year: number | null,
     quarter: string | null,
     status: string | null,
+    parentGoalId?: number | null,
   ): Promise<Result<Row[]>>;
   getObjective(id: number): Promise<Result<Row[]>>;
   createObjective(
@@ -27,12 +28,15 @@ export interface IOkrRepo {
     quarter: string,
     description: string | null,
     ownerId: number,
+    parentGoalId?: number | null,
+    ownerCardId?: number | null,
   ): Promise<Result<Row>>;
   updateObjective(
     id: number,
     title: string | null,
     status: string | null,
     description: string | null,
+    updatedBy?: number | null,
   ): Promise<Result<Row>>;
   deleteObjective(id: number): Promise<void>;
   listKeyResults(objectiveId: number | null): Promise<Result<Row[]>>;
@@ -49,10 +53,13 @@ export interface IOkrRepo {
     currentValue: number | null,
     status: string | null,
     title: string | null,
+    updatedBy?: number | null,
   ): Promise<Result<Row>>;
   deleteKeyResult(id: number): Promise<void>;
   getDashboardObjectives(): Promise<Result<unknown[]>>;
   getDashboardKeyResults(): Promise<Result<KeyResultsDashboard>>;
+  // EP-DIR-016: kompaniya→bo'lim→karta kaskad daraxti, rolled-up progress bilan.
+  getCascade(year: number | null): Promise<Result<Row[]>>;
 }
 
 export const OKR_REPO = Symbol('OKR_REPO');

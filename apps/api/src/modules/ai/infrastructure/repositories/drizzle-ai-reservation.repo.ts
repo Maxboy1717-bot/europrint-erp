@@ -6,10 +6,23 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { eq, desc } from 'drizzle-orm';
+import { I18nService } from 'nestjs-i18n';
+import { eq, desc, sql } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { safeCall, Ok, Err, Result } from '@common/result';
 import { aiReservationRequests, aiReservationBatches } from '@europrint/schemas';
+
+/** 2.8 — AI-reservation → warehouse_stock wiring: resolves a free-text
+ * `materialType` (e.g. "Karton 250g/m²") to the canonical material_cards
+ * row + its default warehouse, so the reservation can hit the SAME
+ * warehouse_stock row the rest of WMS uses. Best-effort exact/partial
+ * name match (material_cards has no FK from ai_reservation_requests —
+ * the table predates a material_id column; Rule 4 raw-SQL exemption,
+ * same join pattern as get-inventory-levels.tool.ts). */
+export interface ResolvedMaterial {
+  materialId: number;
+  warehouseId: number;
+}
 
 export interface ReservationRequest {
   id:           string;
@@ -35,7 +48,10 @@ export interface ReservationBatch {
 
 @Injectable()
 export class DrizzleAiReservationRepo {
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly i18n: I18nService,
+  ) {}
 
   private toRequest(r: typeof aiReservationRequests.$inferSelect): ReservationRequest {
     return {
@@ -61,6 +77,42 @@ export class DrizzleAiReservationRepo {
       status:       r.status,
       createdAt:    r.createdAt?.toISOString() ?? _time.now().toISOString(),
     };
+  }
+
+  /**
+   * 2.8 — resolves `materialType` free text to a material_cards.id + its
+   * warehouse_id (exact name match first, then case-insensitive partial
+   * match), so callers can reserve against the canonical warehouse_stock
+   * row. Returns Ok(null) when no material_cards row matches (caller then
+   * skips the stock-reserve step instead of failing the whole request —
+   * the AI-reservation request itself is still a valid planning record).
+   */
+  async resolveMaterial(materialType: string): Promise<Result<ResolvedMaterial | null>> {
+    return safeCall(async () => {
+      const exec = this.drizzle.db as unknown as { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: unknown[] }> };
+      const r = await exec.execute(sql`
+        SELECT id, warehouse_id
+        FROM material_cards
+        WHERE deleted_at IS NULL
+          AND (LOWER(xom_ashyo) = LOWER(${materialType}) OR LOWER(kod) = LOWER(${materialType}))
+        ORDER BY (LOWER(xom_ashyo) = LOWER(${materialType})) DESC
+        LIMIT 1
+      `);
+      const rows = (Array.isArray(r.rows) ? r.rows : []) as Array<{ id: number; warehouse_id: number | null }>;
+      let row = rows[0];
+      if (!row) {
+        const r2 = await exec.execute(sql`
+          SELECT id, warehouse_id
+          FROM material_cards
+          WHERE deleted_at IS NULL AND LOWER(xom_ashyo) LIKE LOWER('%' || ${materialType} || '%')
+          ORDER BY id ASC LIMIT 1
+        `);
+        const rows2 = (Array.isArray(r2.rows) ? r2.rows : []) as Array<{ id: number; warehouse_id: number | null }>;
+        row = rows2[0];
+      }
+      if (!row || row.warehouse_id == null) return null;
+      return { materialId: Number(row.id), warehouseId: Number(row.warehouse_id) };
+    });
   }
 
   async findAllRequests(): Promise<Result<ReservationRequest[]>> {
@@ -109,7 +161,7 @@ export class DrizzleAiReservationRepo {
         .set({ status })
         .where(eq(aiReservationRequests.id, id))
         .returning();
-      if (!row) throw new NotFoundException(`Rezervatsiya topilmadi: ${id}`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.reservationNotFound', { args: { id } }));
       return this.toRequest(row);
     });
   }

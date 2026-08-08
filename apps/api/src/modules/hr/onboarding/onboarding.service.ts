@@ -11,14 +11,18 @@ const _time = new TashkentTimeService();
  */
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
   Inject,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IHrOnboardingRepository, HR_ONBOARDING_REPO } from './repos/i-hr-onboarding.repo';
 import { OnboardingJobService } from './onboarding-job.service';
 import { OnboardingProgressService, type OnboardingRecord } from './onboarding-progress.service';
+import { CardService } from '../../org-structure/card.service';
 import type {
   CreateOnboardingPlanDto,
   StartEmployeeOnboardingDto,
@@ -28,6 +32,9 @@ import type {
 } from './dto/onboarding.dto';
 import { safeCall, Result, AppError } from '@common/result';
 import { DEFAULT_HR_MANAGER_ONBOARDING } from './onboarding-defaults';
+// Referral Tizimi completion (2026-07-13, vizyon 02-hr#12/20/21): real
+// "probation completed" signal for the referral-bonus payroll listener.
+import { HR_PROBATION_COMPLETED_EVENT } from './onboarding.events';
 
 // Re-export so any external consumer importing from `onboarding.service` keeps working.
 // Per Rule 16 (≤ 300 lines): the 80-line default plan now lives in `onboarding-defaults.ts`.
@@ -35,10 +42,16 @@ export { DEFAULT_HR_MANAGER_ONBOARDING };
 
 @Injectable()
 export class OnboardingService {
+  private readonly logger = new Logger(OnboardingService.name);
+
   constructor(
     private readonly jobSvc: OnboardingJobService,
     @Inject(HR_ONBOARDING_REPO) private readonly hrOnboardingRepo: IHrOnboardingRepository,
     private readonly progressSvc: OnboardingProgressService,
+    // SB0072/SB0101: probation-pass activates the onboarding target card (employee_cards).
+    private readonly cardService: CardService,
+    private readonly i18n: I18nService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // ───────────────────── ONBOARDING PLANS ─────────────────────────────────
@@ -80,7 +93,7 @@ export class OnboardingService {
   async getPlanById(id: number) {
     const result = await this.hrOnboardingRepo.getPlanById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Onboarding plan #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.onboardingPlanNotFound', { args: { id } }));
     return result.data;
   }
 
@@ -90,7 +103,7 @@ export class OnboardingService {
     return safeCall(async () => {
     const empResult = await this.hrOnboardingRepo.findEmployeeById(dto.employeeId);
     if (!empResult.ok) throw new InternalServerErrorException(empResult.error);
-    if (!empResult.data) throw new NotFoundException(`Xodim #${dto.employeeId} topilmadi`);
+    if (!empResult.data) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id: dto.employeeId } }));
 
     const plan = await this.getPlanById(dto.planId);
 
@@ -98,17 +111,25 @@ export class OnboardingService {
     const expectedEndDate = new Date(startDate);
     expectedEndDate.setDate(expectedEndDate.getDate() + (plan.durationDays ?? 90));
 
-    const result = await this.hrOnboardingRepo.startOnboarding({ employeeId: dto.employeeId, planId: dto.planId, mentorId: dto.mentorId, startDate, expectedEndDate });
+    const result = await this.hrOnboardingRepo.startOnboarding({
+      employeeId: dto.employeeId,
+      planId: dto.planId,
+      mentorId: dto.mentorId,
+      startDate,
+      expectedEndDate,
+      // SB0072/SB0101: onboarding nishon-kartasi — completeProbation shu kartani faollashtiradi.
+      cardId: dto.cardId,
+    });
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
     });}
 
   async updateProgress(onboardingId: number, dto: UpdateOnboardingProgressDto, evaluatedById: number){
     return safeCall(async () => {
     const onboardingResult = await this.hrOnboardingRepo.getOnboardingById(onboardingId);
     if (!onboardingResult.ok) throw new InternalServerErrorException(onboardingResult.error);
-    if (!onboardingResult.data) throw new NotFoundException(`Onboarding #${onboardingId} topilmadi`);
+    if (!onboardingResult.data) throw new NotFoundException(await this.i18n.t('errors.onboardingNotFoundWithId', { args: { id: onboardingId } }));
 
     const onboarding = onboardingResult.data;
     const currentProgress = (onboarding.weeklyProgress ?? []) as Record<string, unknown>[];
@@ -135,11 +156,20 @@ export class OnboardingService {
   
     });}
 
+  /**
+   * SB0072/SB0101 fix — onboarding→karta uzilishi: probatsiya 'PASSED' bo'lsa va onboarding
+   * yozuvida nishon-karta (`card_id`) belgilangan bo'lsa, xodim shu kartaga CardService orqali
+   * biriktiriladi (employee_cards INSERT, EP-ORG-002 atomic guard bilan). FABRIKATSIYA YO'Q
+   * (Q-40): card_id NULL bo'lsa (eski yozuv yoki hali belgilanmagan) — hech narsa faollashtirilmaydi,
+   * faqat probatsiya natijasi yoziladi (avvalgi xulq o'zgarmaydi). Karta band bo'lsa (409 CONFLICT)
+   * yoki topilmasa (404) — probatsiya natijasi baribir saqlanadi (karta-faollashtirish ikkinchi
+   * darajali qadam, probatsiya bahosini bloklamaydi), xato faqat loglanadi.
+   */
   async completeProbation(onboardingId: number, dto: CompleteProbationDto){
     return safeCall(async () => {
     const onboardingResult = await this.hrOnboardingRepo.getOnboardingById(onboardingId);
     if (!onboardingResult.ok) throw new InternalServerErrorException(onboardingResult.error);
-    if (!onboardingResult.data) throw new NotFoundException(`Onboarding #${onboardingId} topilmadi`);
+    if (!onboardingResult.data) throw new NotFoundException(await this.i18n.t('errors.onboardingNotFoundWithId', { args: { id: onboardingId } }));
 
     const result = await this.hrOnboardingRepo.completeProbation(onboardingId, {
       status: dto.isProbationPassed ? 'COMPLETED' : 'FAILED',
@@ -150,8 +180,57 @@ export class OnboardingService {
       updatedAt: _time.now(),
     });
     if (!result.ok) throw new InternalServerErrorException(result.error);
+
+    if (dto.isProbationPassed) {
+      const onboarding = onboardingResult.data as Record<string, unknown>;
+      // Onboarding.employeeId is a users.id (findEmployeeById queries `users`), but
+      // employee_cards.employee_id FKs to employees(id) — bridge via employees.user_id
+      // (findEmployeesIdByUserId) before calling CardService (Q-40: no id fabricated/guessed).
+      const userId = Number(onboarding['employeeId'] ?? onboarding['employee_id'] ?? 0);
+      const cardId = onboarding['cardId'] ?? onboarding['card_id'];
+
+      // 2026-07-13: resolve employees.id once — used both by the (pre-existing)
+      // card-activation step below AND by the new referral-bonus event (was
+      // previously only resolved inside the `cardId` branch, so probation-passed
+      // employees with no target card never got an employees.id resolved at all).
+      let employeesId: number | null = null;
+      if (userId > 0) {
+        const empIdR = await this.hrOnboardingRepo.findEmployeesIdByUserId(userId);
+        if (empIdR.ok && empIdR.data) employeesId = empIdR.data;
+      }
+
+      if (cardId != null && Number(cardId) > 0) {
+        if (!employeesId) {
+          this.logger.warn(
+            `completeProbation #${onboardingId}: karta #${cardId} faollashtirilmadi — xodim (employees) userId=#${userId} uchun topilmadi`,
+          );
+        } else {
+          const assignR = await this.cardService.assignEmployeeToCard(Number(cardId), employeesId, true);
+          if (!assignR.ok) {
+            this.logger.warn(
+              `completeProbation #${onboardingId}: karta #${cardId} faollashtirilmadi (xodim #${employeesId}) — ${assignR.error.message}`,
+            );
+          }
+        }
+      }
+
+      // Referral Tizimi completion (2026-07-13, vizyon 02-hr#12/20/21): real
+      // "probation completed" signal — ReferralBonusListener pays the referral
+      // bonus (business_settings 'hr.referral_bonus_amount') if this employee
+      // was hired through a referral. Fired regardless of card-activation outcome
+      // (a referral bonus does not depend on whether a target card exists).
+      if (employeesId) {
+        this.eventEmitter.emit(HR_PROBATION_COMPLETED_EVENT, {
+          onboardingId,
+          employeeId: employeesId,
+          probationScore: dto.probationScore,
+          completedAt: _time.now(),
+        });
+      }
+    }
+
     return result.data;
-  
+
     });}
 
   async getEmployeeOnboarding(employeeId: number){
@@ -179,7 +258,7 @@ export class OnboardingService {
     return safeCall(async () => {
       const onboardingResult = await this.hrOnboardingRepo.getOnboardingById(onboardingId);
       if (!onboardingResult.ok) throw new InternalServerErrorException(onboardingResult.error);
-      if (!onboardingResult.data) throw new NotFoundException(`Onboarding #${onboardingId} topilmadi`);
+      if (!onboardingResult.data) throw new NotFoundException(await this.i18n.t('errors.onboardingNotFoundWithId', { args: { id: onboardingId } }));
 
       const employeeId = Number((onboardingResult.data as Record<string, unknown>)['employeeId'] ?? (onboardingResult.data as Record<string, unknown>)['employee_id'] ?? 0);
       const check = this.progressSvc.validateBuddyAssignment(employeeId, buddyId);
@@ -187,7 +266,7 @@ export class OnboardingService {
 
       const buddyExists = await this.hrOnboardingRepo.findEmployeeById(buddyId);
       if (!buddyExists.ok) throw new InternalServerErrorException(buddyExists.error);
-      if (!buddyExists.data) throw new NotFoundException(`Buddy xodim #${buddyId} topilmadi`);
+      if (!buddyExists.data) throw new NotFoundException(await this.i18n.t('errors.buddyEmployeeNotFound', { args: { id: buddyId } }));
 
       const updated = await this.hrOnboardingRepo.assignBuddy(onboardingId, buddyId);
       if (!updated.ok) throw new InternalServerErrorException(updated.error);

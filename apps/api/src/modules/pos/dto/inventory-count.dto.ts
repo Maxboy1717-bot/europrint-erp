@@ -27,6 +27,9 @@ export const CreateInventoryCountSchema = z.object({
   categoryFilter:    z.string().max(50).optional(),
   binLocationFilter: z.string().max(100).optional(),
   notes:             z.string().max(MAX_SHORT_TEXT).optional(),
+  // FAZA E (Inventarizatsiya, 2026-07-01) — "Davriy (rejalashtirilgan)" oqim: FE "New Plan"
+  // formasidagi sana endi haqiqatan saqlanadi (ilgari jim tashlab yuborilardi — Q-40 xato).
+  scheduledFor:      isoDate.optional(),
 });
 export class CreateInventoryCountDto extends createZodDto(CreateInventoryCountSchema) {}
 

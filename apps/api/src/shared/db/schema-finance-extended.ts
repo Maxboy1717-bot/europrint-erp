@@ -14,6 +14,7 @@ import {
   serial,
   varchar,
   numeric,
+  boolean,
 } from 'drizzle-orm/pg-core';
 
 // CFO configuration table — moved here from finance/domain/services/cfo-config.service.ts
@@ -27,15 +28,12 @@ export const cfoConfigTable = pgTable('cfo_config', {
   updatedAt:   timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const entries = pgTable('entries', {
-  id: integer('id').primaryKey(),
-  debitAccountId: text('debit_account_id'),
-  creditAccountId: text('credit_account_id'),
-  amount: decimal('amount', { precision: 18, scale: 2 }),
-  entryDate: text('entry_date'),
-  description: text('description'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+// Converged to single source (lib/db canonical fi-gl.ts) — see docs/schema-merge-plan.md.
+// Was a minimal 6-column stub (id/debitAccountId/creditAccountId/amount/entryDate/
+// description/createdAt) that drifted from the live `entries` table (24 columns:
+// entryNumber, documentType, referenceId, postedBy, tenantId, etc. — verified via
+// _audit/q.cjs information_schema.columns 2026-07-02). lib/db's version matches DB.
+export { entries } from '@workspace/db';
 
 // Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
 export { cashFlowTransactions } from '@workspace/db';
@@ -50,11 +48,22 @@ export const accountingPeriods = pgTable('accounting_periods', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+// G6 verify fix (2026-07-02): the live table's real discriminator is `category_type`
+// (NOT NULL, seeded 'expense'); the legacy `type` column is a NULL drift column. The
+// stub previously selected only id/name/type → GET /finance-extended/finance-categories
+// returned rows WITHOUT categoryType/isActive/code, so the CashierHub expense-category
+// filter (`c.categoryType === 'expense'`) always yielded []. Columns below are additive
+// and nullable in the stub (insert stays optional — no tsc/regress impact); canonical
+// definition lives in lib/db/src/schema/fi-kassa.ts.
 export const financeCategories = pgTable('finance_categories', {
   id: integer('id').primaryKey(),
+  code: varchar('code', { length: 20 }),
   name: text('name').notNull(),
-  type: text('type').notNull(),
+  type: text('type'),
+  categoryType: varchar('category_type', { length: 20 }),
   parentId: integer('parent_id'),
+  isActive: boolean('is_active'),
+  sortOrder: integer('sort_order'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 

@@ -16,12 +16,8 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrBadRequest, unwrapOrNotFound, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 import { AssetManagementService } from './asset-management.service';
-import {
-  AssetAclTranslator,
-  type LegacyAssetRow,
-  type AssetDto,
-} from './acl/asset-acl';
 
 const AssetSchema = z.object({
   name:          z.string().min(1),
@@ -39,7 +35,7 @@ const AssetSchema = z.object({
 });
 
 const MaintenanceSchema = z.object({
-  assetId:         z.string().uuid(),
+  assetId:         IntegerIdSchema,
   maintenanceType: z.string().default('routine'),
   scheduledAt:     z.string().datetime().optional(),
   completedAt:     z.string().datetime().optional(),
@@ -49,7 +45,7 @@ const MaintenanceSchema = z.object({
 });
 
 const DisposalSchema = z.object({
-  assetId:      z.string().uuid(),
+  assetId:      IntegerIdSchema,
   disposalType: z.string().default('retired'),
   disposalDate: z.string().datetime().optional(),
   saleValue:    z.string().optional(),
@@ -58,7 +54,7 @@ const DisposalSchema = z.object({
 });
 
 const TransferSchema = z.object({
-  assetId:      z.string().uuid(),
+  assetId:      IntegerIdSchema,
   fromDeptId:   z.number().int().optional(),
   toDeptId:     z.number().int().optional(),
   transferDate: z.string().datetime().optional(),
@@ -87,31 +83,11 @@ const InsuranceSchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Controller('asset-management')
 export class AssetManagementController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly assetAcl = new AssetAclTranslator();
-
   constructor(private readonly svc: AssetManagementService) {}
 
   @Get('assets')
   async getAssets(@Query('status') status?: string, @Query('category') category?: string) {
     return unwrapOrInternal(await this.svc.getAssets(status, category));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-7 (Finance) consumers should target
-   * this endpoint; the legacy `/assets` route stays for backwards-compat.
-   */
-  @Get('assets/v2')
-  async getAssetsV2(
-    @Query('status') status?: string,
-    @Query('category') category?: string,
-  ): Promise<AssetDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getAssets(status, category)) as unknown as LegacyAssetRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.assetAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: AssetDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Post('assets')

@@ -117,7 +117,6 @@ export type EmployeeIdea = typeof employeeIdeas.$inferSelect;
 export type InsertEmployeeIdea = z.infer<typeof insertEmployeeIdeaSchema>;
 
 
-// ==================== ADAPTATSINIYA BO'LIMI ====================
-// Re-export from canonical adaptation.ts
-export { adaptationPrograms, insertAdaptationProgramSchema } from "./adaptation";
-export type { AdaptationProgram, InsertAdaptationProgram } from "./adaptation";
+// ORFAN CLEANUP (2026-07-02): adaptationPrograms re-export removed — pgTable
+// deleted from adaptation.ts (dead lib/db duplicate, Q-29 verified: never
+// imported via @workspace/db anywhere in apps/).

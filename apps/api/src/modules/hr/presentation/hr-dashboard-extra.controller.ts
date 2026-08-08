@@ -27,16 +27,20 @@ export class HrDashboardExtraController {
   @ApiOperation({ summary: 'Get resignation stats' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('resignation-stats')
-  async getResignationStats() {
-    const r = await this.svc.getResignationStatsProjected();
+  async getResignationStats(@Query('lang') lang?: string) {
+    const r = await this.svc.getResignationStatsProjected(lang);
     return { data: r.ok && r.data ? r.data : [] };
   }
 
+  // SECURITY/BUG FIX: previously ignored `:lang` and delegated to the exact same
+  // handler as the base route (byte-identical response regardless of language —
+  // hr-dashboard-deep-audit-2026-05-28.md line ~70/108). Now threads `lang` through
+  // to `getResignationStatsProjected`, which localizes the dismissal-reason labels.
   @ApiOperation({ summary: 'Get resignation stats by lang' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('resignation-stats/:lang')
-  getResignationStatsByLang() {
-    return this.getResignationStats();
+  async getResignationStatsByLang(@Param('lang') lang: string) {
+    return this.getResignationStats(lang);
   }
 
   @ApiOperation({ summary: 'Get risk scores' })
@@ -83,10 +87,13 @@ export class HrDashboardExtraController {
   }
 
   @ApiOperation({ summary: 'Get contracts' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-9 (use /contracts/expiring)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('contracts')
-  async getContracts(@Query() _query: Record<string, unknown>) {
-    return notImplemented('GET /hr/contracts');
+  async getContracts(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(parseInt(page ?? '1', 10) || 1, 1);
+    const l = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
+    const r = await this.svc.getContractsProjected(p, l);
+    return { data: r.ok && Array.isArray(r.data) ? r.data : [] };
   }
 
   @ApiOperation({ summary: 'Get contracts expiring' })

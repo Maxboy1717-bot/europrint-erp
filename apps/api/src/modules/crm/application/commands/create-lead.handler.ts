@@ -83,7 +83,13 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
     if (!emailR.ok) return Err(emailR.error);
     const phoneR = PhoneNumber.create(command.phone);
     if (!phoneR.ok) return Err(phoneR.error);
-    const aiScoreResult = AIScore.create(Math.round(Math.random() * 100));
+    // Batch 2 item 1.11: was AIScore.create(Math.round(Math.random()*100)) — a fabricated random
+    // score that LOOKED real. It has no live effect today (this CQRS CreateLeadCommand path is not
+    // dispatched anywhere, and the live read recomputes ai_score via CrmLeadScoringService's real
+    // 5-criterion formula, never reading the stored value) — but Math.random() is a latent landmine
+    // if the path is revived. Use a deterministic "not yet scored" default (0); the real scorer
+    // owns the displayed value (Q-40 — no fabrication).
+    const aiScoreResult = AIScore.create(0);
     if (!aiScoreResult.ok || !aiScoreResult.data) {
       return Err('Failed to generate AI score');
     }

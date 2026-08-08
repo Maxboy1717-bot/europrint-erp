@@ -81,6 +81,10 @@ export interface Step {
 export interface FormData {
   papkaNo: string;
   mijozNomi: string;
+  // sd_customers.id — the real FK the order is created against (owner decision 2026-07-13,
+  // chat — "buyurtma 1 ta joydan"). mijozNomi alone (a display name) cannot be posted to
+  // POST /api/sd/orders, which requires an integer companyId/customerId.
+  customerId: string;
   mahsulotNomi: string;
   productId: string;
   mahsulotTuri: string;
@@ -88,6 +92,10 @@ export interface FormData {
   zakazFormy: string;
   tiraj: number;
   krasok: string;
+  // Unit sale price (owner decision 2026-07-13, chat) — this wizard's "product" picker
+  // actually sources from material_cards (raw materials, see useWizardState.ts), which has
+  // no sale price; sales_order_items.net_price has no other source, so it is captured here.
+  narx: number;
   formatA: number;
   formatB: number;
   formatC: number;

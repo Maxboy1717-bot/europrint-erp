@@ -19,3 +19,14 @@
  * step in CI without measurable security gain at our threat profile.
  */
 export const BCRYPT_ROUNDS = 12;
+
+/**
+ * Failed-login count at which an account is locked out.
+ *
+ * MAGIC-NUMBERS-AUDIT-V2-FULL-2026-07-05.md item #7 (M7): this value was
+ * previously duplicated as two independent literals (drizzle-auth.repo.ts's
+ * raw-SQL CASE WHEN and login.service.ts's application-layer check) with no
+ * shared source -- exactly the drift risk this file exists to prevent for
+ * BCRYPT_ROUNDS. Both call sites now import this constant.
+ */
+export const MAX_FAILED_LOGIN_ATTEMPTS = 5;

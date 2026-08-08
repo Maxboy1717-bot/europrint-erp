@@ -11,6 +11,7 @@ import {
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -23,8 +24,8 @@ import {
   UpdateTriggerRulesDtoSchema,
 } from './dto/iot-camera.dto';
 
-const CAM_READ = ['super_admin', 'director', 'security_manager', 'production_manager', 'ERP_MANAGER', 'admin'];
-const CAM_WRITE = ['super_admin', 'director', 'security_manager', 'ERP_MANAGER', 'admin'];
+const CAM_READ = ['super_admin', 'director', 'security_manager', 'production_manager'];
+const CAM_WRITE = ['super_admin', 'director', 'security_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,7 +33,7 @@ const CAM_WRITE = ['super_admin', 'director', 'security_manager', 'ERP_MANAGER',
 @ApiBearerAuth()
 @Controller('camera-ai')
 export class CameraAiController {
-  constructor(private readonly svc: CameraAiService) {}
+  constructor(private readonly svc: CameraAiService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'Get summary' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -114,7 +115,7 @@ export class CameraAiController {
   ) {
     const dto = UpdateCameraPromptDtoSchema.parse(body);
     const content = dto.prompt ?? dto.instructions;
-    assertRequired(content, 'prompt yoki instructions talab qilinadi');
+    assertRequired(content, await this.i18n.t('validation.promptOrInstructionsRequired'));
     const result = await this.svc.updateCameraPrompt(
       id, content, dto.zone, dto.alertThreshold, dto.isActive, dto.triggerRules,
     );

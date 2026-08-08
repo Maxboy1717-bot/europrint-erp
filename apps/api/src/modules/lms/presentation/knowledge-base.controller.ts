@@ -6,6 +6,7 @@
 import {
   Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put,
   Query, Req, UseGuards, UseInterceptors, UsePipes, HttpStatus, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
 import * as path from 'path';
@@ -41,7 +42,10 @@ const ALLOWED_UPLOAD_EXT = new Set([
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class KnowledgeBaseController {
-  constructor(private readonly svc: KnowledgeBaseService) {}
+  constructor(
+    private readonly svc: KnowledgeBaseService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -117,7 +121,7 @@ export class KnowledgeBaseController {
     if (data) {
       const ext = path.extname(data.filename).toLowerCase();
       if (!ALLOWED_UPLOAD_EXT.has(ext)) {
-        throw new BadRequestException(`File type not allowed: ${ext || '(none)'}`);
+        throw new BadRequestException(await this.i18n.t('validation.fileTypeNotAllowed', { args: { ext: ext || '(none)' } }));
       }
     }
     const fields = (data?.fields ?? {}) as Record<string, MultipartValue>;
@@ -126,7 +130,7 @@ export class KnowledgeBaseController {
     const category = 'value' in (fields['category'] ?? {}) ? String((fields['category'] as { value: string }).value) : 'other';
     const buf = await data?.toBuffer();
     if (buf && buf.length > MAX_UPLOAD_BYTES) {
-      throw new BadRequestException('File too large');
+      throw new BadRequestException(await this.i18n.t('validation.fileTooLarge'));
     }
     return data
       ? this.svc.uploadFile(title, titleRu, category, data.filename)

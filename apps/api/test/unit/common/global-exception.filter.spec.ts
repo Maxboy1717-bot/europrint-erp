@@ -42,6 +42,9 @@ function makeHost(method: string, url: string): {
       getResponse: () => replyMock,
       getRequest: () => request,
     }),
+    // I18nContext.current(host) calls host.getType() internally; real Nest
+    // ArgumentsHost always implements this, so the mock must too.
+    getType: () => 'http',
   } as unknown as ArgumentsHost;
   return { host, reply };
 }

@@ -24,18 +24,20 @@ import {
   UsePipes,
 } from '@nestjs/common';
 
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { HrCompatAService } from '../application/hr-compat-a.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 type Rows = { rows?: unknown[] };
+interface AuthenticatedUser { id: number; sub?: number; }
 import {
   Hr360ReviewSchema, Hr360ReviewDto,
   HrConflictReportSchema, HrConflictReportDto,
@@ -72,7 +74,10 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 export class HrCompatAController {
-  constructor(private readonly svc: HrCompatAService) {}
+  constructor(
+    private readonly svc: HrCompatAService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get('360/review')
   async get360Reviews(@Query('employeeId') employeeId?: string) {
@@ -119,8 +124,8 @@ export class HrCompatAController {
   @Post('employee-skills')
   @UsePipes(new ZodValidationPipe(HrEmployeeSkillSchema))
   async createEmployeeSkill(@Body() body: HrEmployeeSkillDto) {
-    const { employee_id, skill_name, proficiency_level, proficiency_score, certified_date } = body;
-    return unwrapOrThrow(await this.svc.createEmployeeSkill(employee_id, skill_name, proficiency_level, proficiency_score, certified_date));
+    const { employee_id, skill_name, skill_category, proficiency_level, proficiency_score, certified_date, notes } = body;
+    return unwrapOrThrow(await this.svc.createEmployeeSkill(employee_id, skill_name, skill_category, proficiency_level, proficiency_score, certified_date, notes));
   }
 
   @Get('employee-skills/:employeeId')
@@ -201,9 +206,17 @@ export class HrCompatAController {
 
   @Post('discipline-records')
   @UsePipes(new ZodValidationPipe(HrDisciplineRecordSchema))
-  async createDisciplineRecord(@Body() body: HrDisciplineRecordDto) {
+  // HR Nazorat fix (2026-07-13, verified live: POST /api/hr/discipline-records — the
+  // real "Intizom" page create flow, Discipline.tsx — ALWAYS 500'd): discipline_records
+  // .reason and .given_by are NOT NULL at the live DB with no default (see
+  // fix-discipline-schema.sql), but this Drizzle insert never wrote either column —
+  // confirmed via direct psql insert reproducing the exact NOT NULL violation. Wires
+  // the authenticated HR user as given_by/issued_by and the description as reason
+  // (mirrors the pattern already used in discipline-records-compat.service.ts).
+  async createDisciplineRecord(@Body() body: HrDisciplineRecordDto, @CurrentUser() user: AuthenticatedUser) {
     const { employee_id, violation_type, discipline_type, severity, violation_date, description, fine_amount } = body;
-    return unwrapOrThrow(await this.svc.createDisciplineRecord(employee_id, violation_type, discipline_type, severity, violation_date, description, fine_amount));
+    const issuedBy = user?.id ?? user?.sub ?? null;
+    return unwrapOrThrow(await this.svc.createDisciplineRecord(employee_id, violation_type, discipline_type, severity, violation_date, description, fine_amount, issuedBy));
   }
 
   @Get('vacancies')
@@ -276,7 +289,7 @@ export class HrCompatAController {
   @HttpCode(HttpStatus.OK)
   async deleteEmployeeSkill(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.deleteEmployeeSkill(id);
-    if (!r.ok) throw new NotFoundException(`Ko'nikma #${id} topilmadi`);
+    if (!r.ok) throw new NotFoundException(await this.i18n.t('errors.skillNotFoundWithId', { args: { id } }));
     return r.data;
   }
 
@@ -316,7 +329,7 @@ export class HrCompatAController {
   @HttpCode(HttpStatus.OK)
   async deleteSkill(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.deleteSkillCatalog(id);
-    if (!r.ok) throw new NotFoundException(`Ko'nikma #${id} topilmadi`);
+    if (!r.ok) throw new NotFoundException(await this.i18n.t('errors.skillNotFoundWithId', { args: { id } }));
     return r.data;
   }
 

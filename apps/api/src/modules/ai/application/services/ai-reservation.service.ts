@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Ok, Err, isOk, Result } from '@common/result';
 import { z } from 'zod';
 import {
@@ -15,6 +15,8 @@ import {
   ReservationRequest,
   ReservationBatch,
 } from '../../infrastructure/repositories/drizzle-ai-reservation.repo';
+import { WMS_REPO } from '../../../wms/domain/repositories/wms.repository';
+import type { IWmsRepository } from '../../../wms/domain/repositories/wms.repository';
 
 type RequestDto = z.infer<typeof CreateReservationRequestDtoSchema>;
 type BatchDto   = z.infer<typeof CreateBatchDtoSchema>;
@@ -23,7 +25,10 @@ type BatchDto   = z.infer<typeof CreateBatchDtoSchema>;
 export class AiReservationService {
   private readonly logger = new Logger(AiReservationService.name);
 
-  constructor(private readonly repo: DrizzleAiReservationRepo) {}
+  constructor(
+    private readonly repo: DrizzleAiReservationRepo,
+    @Inject(WMS_REPO) private readonly wmsRepo: IWmsRepository,
+  ) {}
 
   async getRequests(): Promise<Result<ReservationRequest[]>> {
     return this.repo.findAllRequests();
@@ -44,6 +49,33 @@ export class AiReservationService {
     );
     if (!isOk(result)) return Err(result.error);
     this.logger.log(`Reservation request created: ${result.data.id}`);
+
+    // 2.8 — actually reserve the stock (warehouse_stock.reserved_quantity)
+    // for the requested material, mirroring what the FE "Confirm" button
+    // presents to the user (create == confirm in this flow: AIReservationTab
+    // only exposes one action after optimize). Best-effort: if the material
+    // can't be resolved (no material_cards match) or stock is insufficient,
+    // the planning request row still stands (Q-40: don't fake success, but
+    // also don't destroy the already-created record for an unrelated lookup
+    // miss) — the mismatch is logged so it's visible to ops.
+    const resolved = await this.repo.resolveMaterial(dto.materialType);
+    if (isOk(resolved) && resolved.data) {
+      const reserveResult = await this.wmsRepo.reserveMaterial(
+        resolved.data.materialId, resolved.data.warehouseId, dto.quantity,
+      );
+      if (!isOk(reserveResult)) {
+        this.logger.warn(
+          `Reservation ${result.data.id}: warehouse_stock reserve failed for material_id=${resolved.data.materialId}: ${JSON.stringify(reserveResult.error)}`,
+        );
+      } else {
+        this.logger.log(
+          `Reservation ${result.data.id}: reserved ${dto.quantity} of material_id=${resolved.data.materialId} @ warehouse_id=${resolved.data.warehouseId}`,
+        );
+      }
+    } else {
+      this.logger.warn(`Reservation ${result.data.id}: no material_cards match for "${dto.materialType}" — stock not reserved`);
+    }
+
     return result;
   }
 

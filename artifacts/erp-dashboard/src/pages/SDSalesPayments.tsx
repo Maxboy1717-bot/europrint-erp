@@ -24,6 +24,7 @@ import { tLabel } from "@/lib/i18n/tLabel";
 import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 import { Pagination } from "@/components/Pagination";
+import { exportToCSV } from "@/lib/export-utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -54,6 +55,8 @@ interface SalesOrder {
   id: string;
   orderNumber: string;
   totalAmount: number;
+  advancePaid?: number;
+  advanceStatus?: string;
 }
 
 interface OrdersResponse {
@@ -95,6 +98,14 @@ export default function SDSalesPayments() {
   // Detail dialog
   const [detailDialog, setDetailDialog] = useState<{ open: boolean; payment?: SalesPayment }>({ open: false });
 
+  // Advance payment dialog
+  const [advanceDialog, setAdvanceDialog] = useState<{
+    open: boolean;
+    orderId: string;
+    maxAmount: number;
+    amount: string;
+  }>({ open: false, orderId: "", maxAmount: 0, amount: "" });
+
   useForm({ resolver: zodResolver(PaymentSchema), defaultValues: { orderId: "", amount: 0, type: "advance" } });
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -129,6 +140,26 @@ export default function SDSalesPayments() {
   })();
   const totalPages = Math.ceil(paymentsTotal / pageSize) || 1;
 
+  // Audit 2026-08-08: tugma avval `window.open("/api/sd/payments/export")` chaqirardi —
+  // bunday BE marshrut umuman yo'q edi (404). Sahifa allaqachon `/api/sd/payments`dan
+  // haqiqiy ma'lumot yuklaydi (paymentsArr) — shu jonli ro'yxatdan mavjud lib/export-utils.ts
+  // (bu sessiyada boshqa 10+ sahifada ishlatilgan real naqsh, rol-darvoza bilan) orqali
+  // client-side CSV yasaladi, yangi BE endpoint qurish shart emas.
+  const handleExportCsv = () => {
+    if (view === "debitors") return;
+    exportToCSV(paymentsArr as unknown as Record<string, unknown>[], "sd_tolovlar", [
+      { key: "id", label: "ID" },
+      { key: "orderId", label: "Buyurtma" },
+      { key: "type", label: "Turi" },
+      { key: "amount", label: "Summa" },
+      { key: "status", label: "Holat" },
+      { key: "dueDate", label: "Muddat" },
+      { key: "paidDate", label: "To'langan sana" },
+      { key: "overdueDays", label: "Kechikkan kun" },
+      { key: "notes", label: "Izoh" },
+    ]);
+  };
+
   const { data: orders } = useQuery<OrdersResponse>({
     queryKey: ["/api/sd/orders"],
     queryFn: () => apiRequest("GET", "/api/sd/orders?limit=100"),
@@ -159,9 +190,14 @@ export default function SDSalesPayments() {
   });
 
   const advancePaymentMut = useMutation({
-    mutationFn: (orderId: string) => apiRequest("POST", `/api/sd/orders/${orderId}/advance-payment`, { amount: 0 }),
+    mutationFn: ({ orderId, amount }: { orderId: string; amount: number }) => {
+      const idempotencyKey = crypto.randomUUID();
+      return apiRequest("POST", `/api/sd/orders/${orderId}/advance-payment`, { amount, idempotencyKey });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/payments"] });
+      qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
+      setAdvanceDialog({ open: false, orderId: "", maxAmount: 0, amount: "" });
       toast({ title: tLabel("sd.payments.advance", "Avans to'lovi qayd etildi") });
     },
     onError: () => toast({ title: tLabel("sd.payments.advanceError", "Avans to'lovida xatolik"), variant: "destructive" }),
@@ -189,7 +225,8 @@ export default function SDSalesPayments() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => window.open("/api/sd/payments/export", "_blank")}
+          onClick={handleExportCsv}
+          disabled={view === "debitors" || paymentsArr.length === 0}
           data-testid="button-export-csv"
         >
           <Download className="h-4 w-4 mr-1" />
@@ -336,7 +373,14 @@ export default function SDSalesPayments() {
                   </span>
                   {pay.status === "pending" && pay.type !== "advance" && (
                     <Button size="sm" variant="outline" data-testid={`button-advance-payment-${pay.id}`}
-                      onClick={(e) => { e.stopPropagation(); advancePaymentMut.mutate(pay.orderId); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const matchedOrder = Array.isArray(orders?.data)
+                          ? orders!.data.find((o) => String(o.id) === String(pay.orderId))
+                          : undefined;
+                        const maxAmt = matchedOrder?.totalAmount ?? 0;
+                        setAdvanceDialog({ open: true, orderId: pay.orderId, maxAmount: maxAmt, amount: String(maxAmt > 0 ? maxAmt : "") });
+                      }}
                       disabled={advancePaymentMut.isPending}>
                       {t("avans")}
                     </Button>
@@ -419,6 +463,65 @@ export default function SDSalesPayments() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Advance Payment Dialog ───────────────────────────────────── */}
+      <Dialog
+        open={advanceDialog.open}
+        onOpenChange={(o) => {
+          if (!o) setAdvanceDialog({ open: false, orderId: "", maxAmount: 0, amount: "" });
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tLabel("sd.payments.advanceTitle", "Avans to'lovini kiritish")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {advanceDialog.maxAmount > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {tLabel("sd.payments.orderTotal", "Buyurtma summasi")}:{" "}
+                <strong>{fmt(advanceDialog.maxAmount)} so'm</strong>
+              </p>
+            )}
+            <div>
+              <Label>{tLabel("sd.payments.advanceAmount", "Avans summasi (so'm)")}</Label>
+              <Input
+                data-testid="input-advance-amount"
+                type="number"
+                min={1}
+                max={advanceDialog.maxAmount > 0 ? advanceDialog.maxAmount : undefined}
+                value={advanceDialog.amount}
+                onChange={(e) => setAdvanceDialog((prev) => ({ ...prev, amount: e.target.value }))}
+                placeholder={tLabel("sd.payments.advanceAmountPlaceholder", "Musbat son kiriting")}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setAdvanceDialog({ open: false, orderId: "", maxAmount: 0, amount: "" })}
+                disabled={advancePaymentMut.isPending}
+              >
+                {tLabel("sd.cancel", "Bekor")}
+              </Button>
+              <Button
+                data-testid="button-advance-submit"
+                onClick={() => {
+                  const parsedAmount = parseFloat(advanceDialog.amount);
+                  if (!parsedAmount || parsedAmount <= 0) {
+                    toast({ title: tLabel("sd.payments.amountRequired", "Summa musbat son bo'lishi kerak"), variant: "destructive" });
+                    return;
+                  }
+                  advancePaymentMut.mutate({ orderId: advanceDialog.orderId, amount: parsedAmount });
+                }}
+                disabled={!advanceDialog.amount || advancePaymentMut.isPending}
+              >
+                {advancePaymentMut.isPending
+                  ? tLabel("sd.saving", "Saqlanmoqda...")
+                  : tLabel("sd.payments.advanceConfirm", "Tasdiqlash")}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

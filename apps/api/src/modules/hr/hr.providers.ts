@@ -20,6 +20,8 @@ import { KpiService } from './domain/services/kpi.service';
 import { AttritionService } from './analytics/attrition.service';
 import { UtilizationService } from './analytics/utilization.service';
 import { OvertimeCalculatorService } from './domain/services/overtime-calculator.service';
+import { HrRatingReader } from './infrastructure/repositories/hr-rating.reader';
+import { HrRatingService } from './domain/services/hr-rating.service';
 import { RecordAttendanceHandler } from './application/commands/record-attendance.handler';
 import { CalculatePayrollHandler } from './application/commands/calculate-payroll.handler';
 import { ApproveLeaveHandler } from './application/commands/approve-leave.handler';
@@ -46,11 +48,13 @@ import { HrDashboardController } from './presentation/hr-dashboard.controller';
 import { HrDashboardExtraController, HrCapitalController } from './presentation/hr-dashboard-extra.controller';
 import { HrShiftsCompatController } from './presentation/hr-shifts-compat.controller';
 import { HrCompatAController } from './presentation/hr-compat-a.controller';
+import { HrMentorshipPairingsController } from './presentation/hr-mentorship-pairings.controller';
 import { HrCompatSafetyController } from './presentation/hr-compat-safety.controller';
 import { HrEmployeesExtController } from './presentation/hr-employees-ext.controller';
 // application services + repositories
 import { HrDashboardService } from './application/hr-dashboard.service';
 import { HrCompatAService } from './application/hr-compat-a.service';
+import { HrMentorshipPairingsService } from './application/hr-mentorship-pairings.service';
 import { HrCompatSafetyService } from './application/hr-compat-safety.service';
 import { HrDashboardExtraService } from './application/hr-dashboard-extra.service';
 import { HrEmployeesExtService } from './application/hr-employees-ext.service';
@@ -71,6 +75,8 @@ import { OnboardingController } from './onboarding/onboarding.controller';
 import { OnboardingService } from './onboarding/onboarding.service';
 import { OnboardingJobService } from './onboarding/onboarding-job.service';
 import { OnboardingProgressService } from './onboarding/onboarding-progress.service';
+import { OnboardingCardAssignedHandler } from './onboarding/onboarding-card-assigned.handler';
+import { OnboardingDocumentGateService } from './onboarding/onboarding-document-gate.service';
 import { RecruitmentController } from './recruitment/recruitment.controller';
 import { RecruitmentOffersController } from './recruitment/recruitment-offers.controller';
 import { RecruitmentService } from './recruitment/recruitment.service';
@@ -90,7 +96,11 @@ import { HR_PAYROLL_REPO } from './payroll/i-hr-payroll.repo';
 import { DrizzleHrPayrollRepository } from './payroll/drizzle-hr-payroll.repo';
 import { PayrollService } from './payroll/payroll.service';
 import { PayrollClosureService } from './payroll/payroll-closure.service';
+import { CkpGateService } from './payroll/ckp-gate';
 import { HrPayrollClosureController } from './payroll/hr-payroll-closure.controller';
+import { BonusRepository } from './payroll/bonus.repository';
+import { BonusService } from './payroll/bonus.service';
+import { HrBonusController } from './payroll/hr-bonus.controller';
 import { HR_LEAVE_SVC_REPO } from './leave/i-hr-leave-svc.repo';
 import { DrizzleHrLeaveSvcRepository } from './leave/drizzle-hr-leave-svc.repo';
 import { LeaveService } from './leave/leave.service';
@@ -117,6 +127,11 @@ import { HrOffboardingController } from './offboarding/hr-offboarding.controller
 import { HrOffboardingService } from './offboarding/hr-offboarding.service';
 import { HrOffboardingRepository } from './offboarding/hr-offboarding.repository';
 import { OffboardingWorkflowService } from './offboarding/offboarding-workflow.service';
+import { HrOffboardingCcListener } from './offboarding/hr-offboarding-cc.listener';
+// Referral Tizimi completion (2026-07-13, vizyon 02-hr#12/20/21)
+import { ReferralBonusListener } from './payroll/referral-bonus.listener';
+import { ReferralStageSyncListener } from './recruitment/referral-stage-sync.listener';
+import { HrOffboardingCompletedListener } from './offboarding/hr-offboarding-completed.listener';
 import { HrGsdController } from './presentation/hr-gsd.controller';
 import { HrGsdService } from './presentation/hr-gsd.service';
 import { HrGsdRepository } from './presentation/hr-gsd.repository';
@@ -148,10 +163,23 @@ export const hrQueryHandlers = [
   GetAttendanceHandler, GetLeavesHandler, GetLeaveBalanceHandler,
 ];
 
-export const hrEventListeners = [MesTo360Listener];
+// 2026-07-13: OnboardingCardAssignedHandler reacts to org-structure's CARD_EMPLOYEE_ASSIGNED_EVENT
+// (same channel LMS's CardEmployeeAssignedHandler already listens on) to create the real
+// hr_employee_onboardings row + materialize onboarding_tasks — see file header for the full chain.
+// 2026-07-13: HrOffboardingCompletedListener reacts to OFFBOARDING_COMPLETED (previously
+// zero listeners on this event — finalizing a case never touched employees/users and never
+// wrote to hr_alumni via the real app flow). See file header for full rationale.
+// 2026-07-13: ReferralBonusListener (HR_PROBATION_COMPLETED_EVENT -> real payroll bonus)
+// + ReferralStageSyncListener (CANDIDATE_STAGE_CHANGED_EVENT -> hr_referrals.status sync)
+// — Referral Tizimi completion, vizyon 02-hr#12/20/21.
+export const hrEventListeners = [
+  MesTo360Listener, HrOffboardingCcListener, HrOffboardingCompletedListener, OnboardingCardAssignedHandler,
+  ReferralBonusListener, ReferralStageSyncListener,
+];
 
 export const hrDomainServices = [
   KpiService, AttritionService, UtilizationService, OvertimeCalculatorService,
+  HrRatingService, HrRatingReader,
 ];
 
 export const hrLegacyRepositories = [LeaveRepository, HrLeaveRepo];
@@ -170,6 +198,7 @@ export const hrControllers = [
   HrCapitalController,
   HrShiftsCompatController,
   HrCompatAController,
+  HrMentorshipPairingsController,
   HrCompatSafetyController,
   HrEmployeesExtController,
   HrEmployeesController,
@@ -186,6 +215,7 @@ export const hrControllers = [
   HrSafetyController,
   HrOffboardingController,
   HrPayrollClosureController,
+  HrBonusController,
   HrLeaveAccrualController,
   HrGsdController,
   EmployeesForFaceController,
@@ -210,6 +240,9 @@ export const hrProviders = [
   AttendanceService,
   { provide: HR_PAYROLL_REPO, useClass: DrizzleHrPayrollRepository },
   PayrollClosureService,
+  CkpGateService,
+  BonusRepository,
+  BonusService,
   PayrollService,
   { provide: HR_LEAVE_SVC_REPO, useClass: DrizzleHrLeaveSvcRepository },
   LeaveService,
@@ -225,6 +258,9 @@ export const hrProviders = [
   OnboardingService,
   OnboardingJobService,
   OnboardingProgressService,
+  // 2026-07-13: onboarding-document Payroll gate (EP-ORG-027 sibling — mandatory-document-complete
+  // gate, mirrors LmsCardGateService). Injected into PayrollService.computeGatedMonthlySalary.
+  OnboardingDocumentGateService,
   RecruitmentService,
   RecruitmentFunnelService,
   RecruitmentGateway,
@@ -238,6 +274,7 @@ export const hrProviders = [
   HrCompatARepository,
   { provide: HR_COMPAT_A_REPO, useClass: HrCompatARepository },
   HrCompatAService,
+  HrMentorshipPairingsService,
   HrCompatSafetyRepository,
   { provide: HR_COMPAT_SAFETY_REPO, useClass: HrCompatSafetyRepository },
   HrCompatSafetyService,
@@ -282,4 +319,12 @@ export const hrExports = [
   HR_REPO, Record360FeedbackHandler, LeaveRepository,
   AttritionService, UtilizationService, OvertimeCalculatorService,
   Feedback360Service, ApplicationsService,
+  // FAZA Q (Ombor AI-kamera nazorati): IoT modulidagi WarehouseExitGuardService
+  // xodim identifikatsiyasi uchun HR yuz-tanish infratuzilmasini reuse qiladi
+  // (Q-46 — dublikat kod yozilmadi, mavjud servis eksport qilindi).
+  FaceRecognitionService,
+  // Moliya-GL-Kassa (2026-07-02): HR PayrollService.closePeriod (GL+gate+event) —
+  // Finance ning yalang'och PayrollService.close() shunga proxy qiladi (dublikat
+  // yopish yo'li yo'q qilindi, Q-46).
+  PayrollService,
 ];

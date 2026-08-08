@@ -54,29 +54,37 @@ export class GetMyPermissionsService {
 
     const isAdmin = user.role !== null && ADMIN_ROLES.includes(user.role);
     if (isAdmin) return Ok(this.buildAdminPermissions(user));
-    if (user.positionId === null) return Ok(this.buildEmptyPermissions(user));
-
-    const cached = await this.tryGetFromCache(user.positionId);
-    if (cached) {
-      return Ok(this.assemblePermissions(user, cached.modules, cached.featureFlags, false));
+    // KARTA-birinchi gate: KARTA (org_function) HAM, eski position HAM yo'q bo'lsa = ruxsatsiz.
+    if (user.orgFunctionId === null && user.positionId === null) {
+      return Ok(this.buildEmptyPermissions(user));
     }
-    return this.loadFromDbAndCache(user, user.positionId);
+
+    // Cache kaliti KARTA-birinchi: org_function_id bor bo'lsa shuni, aks holda position_id.
+    // (Karta va position grant'lari bir xil bo'lsa-da, kalit izchil bo'lishi uchun.)
+    const cacheKey = user.orgFunctionId ?? user.positionId;
+    if (cacheKey !== null) {
+      const cached = await this.tryGetFromCache(cacheKey);
+      if (cached) {
+        return Ok(this.assemblePermissions(user, cached.modules, cached.featureFlags, false));
+      }
+    }
+    return this.loadFromDbAndCache(user, cacheKey);
   }
 
   private async loadFromDbAndCache(
     user: UserPositionRow,
-    positionId: number,
+    cacheKey: number | null,
   ): Promise<Result<MyPermissions>> {
     const [modulesRes, featuresRes] = await Promise.all([
-      this.repo.findModulePermissions(positionId),
-      this.repo.findFeatureFlags(positionId),
+      this.repo.findModulePermissions(user.positionId, user.orgFunctionId),
+      this.repo.findFeatureFlags(user.positionId, user.orgFunctionId),
     ]);
     if (!modulesRes.ok) return Err(AppErr('INTERNAL', String(modulesRes.error)));
     if (!featuresRes.ok) return Err(AppErr('INTERNAL', String(featuresRes.error)));
 
     const modules: ReadonlyArray<ModulePermission> = this.normalizeModules(modulesRes.data);
     const featureFlags: ReadonlyArray<string> = featuresRes.data;
-    await this.trySetCache(positionId, modules, featureFlags);
+    if (cacheKey !== null) await this.trySetCache(cacheKey, modules, featureFlags);
     return Ok(this.assemblePermissions(user, modules, featureFlags, false));
   }
 

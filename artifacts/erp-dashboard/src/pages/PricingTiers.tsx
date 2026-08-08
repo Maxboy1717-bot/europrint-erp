@@ -241,7 +241,7 @@ export default function PricingTiers() {
         </CardHeader>
         {showAddForm && (
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <Label>{t('productNameLabel')} *</Label>
                 <Input value={tierForm.productName} onChange={e => setTierForm(f => ({ ...f, productName: e.target.value }))} placeholder={t("offsetA4")} />

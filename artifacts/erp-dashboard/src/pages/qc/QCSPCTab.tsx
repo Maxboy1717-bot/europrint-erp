@@ -83,7 +83,7 @@ export function QCSPCTab() {
     <>
       <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-1">
             <p className="text-sm text-muted-foreground">{t("oLchovSoniN")}</p>

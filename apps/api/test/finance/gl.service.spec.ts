@@ -2,10 +2,23 @@
  * test/finance/gl.service.spec.ts
  *
  * Unit tests for GlService (General Ledger). Mocks IFinanceGlRepository.
+ *
+ * Also covers FinanceAccountingService.reverseEntry() — the Q2 (SAP-conformance,
+ * 2026-07-04) reversal path that replaced the deleted GlService.postDocument()/
+ * DrizzleFinanceGlRepository.postDocument() dead code (which used to write a
+ * `[REVERSAL]`-tagged gl_documents header that never touched the canonical
+ * `entries` ledger). reverseEntry() instead posts a swapped, balanced journal
+ * entry through GlPostingService.postJournal() with reference `REV-{id}`.
  */
+
+jest.mock('@shared/db', () => ({ runQuery: jest.fn() }));
 
 import { GlService } from '../../src/modules/finance/gl/gl.service';
 import { Ok, Err, AppErr } from '../../src/common/result';
+import { runQuery } from '@shared/db';
+import { FinanceAccountingService } from '../../src/modules/finance/application/finance-accounting.service';
+import type { GlPostingService } from '../../src/modules/finance/domain/services/gl-posting.service';
+import type { DrizzleFinanceAccountingRepo } from '../../src/modules/finance/infrastructure/repositories/drizzle-finance-accounting.repo';
 
 function makeI18n() {
   return {
@@ -18,17 +31,23 @@ function makeRepo(overrides: Partial<{
   findAllDocuments: jest.Mock;
   findAllAccounts: jest.Mock;
   findAccountById: jest.Mock;
-  postDocument: jest.Mock;
   seedAccounts: jest.Mock;
 }> = {}) {
   return {
     findAllDocuments: jest.fn().mockResolvedValue(Ok({ data: [], count: 0 })),
     findAllAccounts: jest.fn().mockResolvedValue(Ok([])),
     findAccountById: jest.fn().mockResolvedValue(Ok({ id: 1, accountCode: '1010' })),
-    postDocument: jest.fn().mockResolvedValue(Ok({ id: 1 })),
     seedAccounts: jest.fn().mockResolvedValue(Ok([])),
     ...overrides,
   };
+}
+
+/** Minimal GlPostingService mock — only postJournal is exercised by reverseEntry(). */
+function makeGlPosting(overrides: Partial<{ postJournal: jest.Mock }> = {}) {
+  return {
+    postJournal: jest.fn().mockResolvedValue(Ok(999)),
+    ...overrides,
+  } as unknown as GlPostingService;
 }
 
 describe('GlService', () => {
@@ -110,46 +129,74 @@ describe('GlService', () => {
     });
   });
 
-  describe('postDocument()', () => {
-    it('rejects unbalanced debit/credit with BadRequest → BAD_REQUEST', async () => {
-      const repo = makeRepo();
-      const svc = new GlService(repo as never, makeI18n());
-
-      const r = await svc.postDocument({ totalDebit: 100, totalCredit: 50 });
-
-      expect(r.ok).toBe(false);
-      if (!r.ok) expect(r.error.code).toBe('BAD_REQUEST');
-      expect(repo.postDocument).not.toHaveBeenCalled();
+  describe('FinanceAccountingService.reverseEntry() — Q2 reversal path', () => {
+    beforeEach(() => {
+      (runQuery as jest.Mock).mockReset();
     });
 
-    it('accepts balanced entries', async () => {
-      const repo = makeRepo();
-      const svc = new GlService(repo as never, makeI18n());
+    function buildSvc(glPosting: GlPostingService) {
+      // reverseEntry() never touches accountingRepo — only runQuery() + glPosting.postJournal() —
+      // so an empty stub satisfies the constructor without needing a real DrizzleFinanceAccountingRepo.
+      return new FinanceAccountingService({} as DrizzleFinanceAccountingRepo, glPosting, makeI18n());
+    }
 
-      const r = await svc.postDocument({ totalDebit: 100, totalCredit: 100 });
+    it('posts a swapped, balanced journal entry referencing REV-{id}', async () => {
+      (runQuery as jest.Mock).mockResolvedValue([
+        { id: 42, amount: '1500.00', debit_code: '1010', credit_code: '9010' },
+      ]);
+      const glPosting = makeGlPosting();
+      const svc = buildSvc(glPosting);
 
-      expect(r.ok).toBe(true);
-      expect(repo.postDocument).toHaveBeenCalled();
+      const result = await svc.reverseEntry(42);
+
+      expect(result).toEqual({ entryId: 999, reference: 'REV-42', reversedEntryId: 42, ledger: 'entries' });
+      expect(glPosting.postJournal).toHaveBeenCalledWith(
+        [
+          { accountCode: '9010', accountName: '9010', debit: 1500, credit: 0 },
+          { accountCode: '1010', accountName: '1010', debit: 0, credit: 1500 },
+        ],
+        'REV-42',
+      );
     });
 
-    it('balanced with zero amounts is allowed', async () => {
-      const repo = makeRepo();
-      const svc = new GlService(repo as never, makeI18n());
+    it('throws NotFoundException when the original entry does not exist', async () => {
+      (runQuery as jest.Mock).mockResolvedValue([]);
+      const glPosting = makeGlPosting();
+      const svc = buildSvc(glPosting);
 
-      const r = await svc.postDocument({ totalDebit: 0, totalCredit: 0 });
-
-      expect(r.ok).toBe(true);
+      await expect(svc.reverseEntry(999)).rejects.toThrow('errors.entriesRowNotFoundWithId');
+      expect(glPosting.postJournal).not.toHaveBeenCalled();
     });
 
-    it('returns Err when repo write fails', async () => {
-      const repo = makeRepo({
-        postDocument: jest.fn().mockResolvedValue(Err(AppErr('DB_ERROR', 'fk violation'))),
+    it('is idempotent: relies on GlPostingService reference-based dedup, does not double-post', async () => {
+      (runQuery as jest.Mock).mockResolvedValue([
+        { id: 7, amount: '200.00', debit_code: '1010', credit_code: '9010' },
+      ]);
+      // Simulates GlPostingService.postJournal's own findEntryIdByReference short-circuit:
+      // a second reverse of the same id returns the SAME entry id without a fresh insert.
+      const postJournal = jest.fn().mockResolvedValue(Ok(555));
+      const glPosting = makeGlPosting({ postJournal });
+      const svc = buildSvc(glPosting);
+
+      const first = await svc.reverseEntry(7);
+      const second = await svc.reverseEntry(7);
+
+      expect(first).toEqual(second);
+      expect(postJournal).toHaveBeenCalledTimes(2);
+      expect(postJournal).toHaveBeenNthCalledWith(1, expect.anything(), 'REV-7');
+      expect(postJournal).toHaveBeenNthCalledWith(2, expect.anything(), 'REV-7');
+    });
+
+    it('surfaces a GlPostingService failure (e.g. period lock, unbalanced) as InternalServerErrorException', async () => {
+      (runQuery as jest.Mock).mockResolvedValue([
+        { id: 5, amount: '80.00', debit_code: '1010', credit_code: '9010' },
+      ]);
+      const glPosting = makeGlPosting({
+        postJournal: jest.fn().mockResolvedValue(Err(AppErr('DB_ERROR', 'Davr yopilgan (EP-FIN-064)'))),
       });
-      const svc = new GlService(repo as never, makeI18n());
+      const svc = buildSvc(glPosting);
 
-      const r = await svc.postDocument({ totalDebit: 50, totalCredit: 50 });
-
-      expect(r.ok).toBe(false);
+      await expect(svc.reverseEntry(5)).rejects.toThrow('Davr yopilgan (EP-FIN-064)');
     });
   });
 

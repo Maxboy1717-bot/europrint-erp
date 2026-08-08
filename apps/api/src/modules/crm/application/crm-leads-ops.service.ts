@@ -5,17 +5,21 @@
  */
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError, AppErr, Err, Ok } from '@common/result';
 import { CrmLeadsOpsRepository } from './crm-leads-ops.repository';
 
 @Injectable()
 export class CrmLeadsOpsService {
-  constructor(private readonly repo: CrmLeadsOpsRepository) {}
+  constructor(
+    private readonly repo: CrmLeadsOpsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async updateStage(leadId: number, stageId: number, notes?: string): Promise<Result<object, AppError>> {
     const stageResult = await this.repo.findStage(stageId);
     if (!stageResult.ok) return Err(stageResult.error);
-    if (!stageResult.data) throw new NotFoundException(`Stage #${stageId} topilmadi`);
+    if (!stageResult.data) throw new NotFoundException(await this.i18n.t('errors.crmStageNotFoundWithId', { args: { id: stageId } }));
 
     const updateResult = await this.repo.updateLeadStage(leadId, stageId);
     if (!updateResult.ok) return Err(updateResult.error);

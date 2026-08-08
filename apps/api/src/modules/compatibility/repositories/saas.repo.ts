@@ -79,4 +79,19 @@ export class SaasRepo {
       return ((r as { rows?: unknown[] }).rows ?? []) as unknown[];
     }, 'DB_ERROR');
   }
+
+  // Item #121: system_error_logs is not a Drizzle import here — raw SQL (matches
+  // findTenantModules above). The client-error beacon (general-legacy-a.controller.ts)
+  // writes real rows here; SaaS's own getErrorLogs() previously never read this table.
+  findErrorLogs(limit: number) {
+    return safeCall(async () => {
+      const r = await db.execute(sql`
+        SELECT id, timestamp, path, method, message, status_code, user_id
+        FROM system_error_logs
+        ORDER BY id DESC
+        LIMIT ${limit}
+      `);
+      return ((r as { rows?: unknown[] }).rows ?? []) as unknown[];
+    }, 'DB_ERROR');
+  }
 }

@@ -10,41 +10,41 @@ import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from '@/lib/i18n';
 import { tLabel } from '@/lib/i18n/tLabel';
 const CATEGORY_OPTIONS = [
-  { value: "PAPER",      label: "📄 Qog'oz" },
-  { value: "CARDBOARD",  label: "📦 Karton" },
-  { value: "INK",        label: "🖋️ Bo'yoq" },
-  { value: "PLATE",      label: "🟫 Plastina" },
-  { value: "FILM",       label: "🎞️ Plyonka" },
-  { value: "CHEMICAL",   label: "⚗️ Kimyo" },
-  { value: "ASSET",      label: "🧰 Aktiv" },
-  { value: "OFFICE",     label: "📎 Ofis" },
-  { value: "GLUE",       label: "🧴 Yelim" },
-  { value: "SOLVENT",    label: "🧪 Erituvchi" },
-  { value: "TOOL",       label: "🔧 Asbob" },
-  { value: "SPARE",      label: "⚙️ Ehtiyot qism" },
-  { value: "PACKAGING",  label: "📮 Qadoqlash" },
+  { value: "PAPER",      label: `📄 ${tLabel('common.PosMaterialNew.catPaper', "Qog'oz")}` },
+  { value: "CARDBOARD",  label: `📦 ${tLabel('common.PosMaterialNew.catCardboard', "Karton")}` },
+  { value: "INK",        label: `🖋️ ${tLabel('common.PosMaterialNew.catInk', "Bo'yoq")}` },
+  { value: "PLATE",      label: `🟫 ${tLabel('common.PosMaterialNew.catPlate', "Plastina")}` },
+  { value: "FILM",       label: `🎞️ ${tLabel('common.PosMaterialNew.catFilm', "Plyonka")}` },
+  { value: "CHEMICAL",   label: `⚗️ ${tLabel('common.PosMaterialNew.catChemical', "Kimyo")}` },
+  { value: "ASSET",      label: `🧰 ${tLabel('common.PosMaterialNew.catAsset', "Aktiv")}` },
+  { value: "OFFICE",     label: `📎 ${tLabel('common.PosMaterialNew.catOffice', "Ofis")}` },
+  { value: "GLUE",       label: `🧴 ${tLabel('common.PosMaterialNew.catGlue', "Yelim")}` },
+  { value: "SOLVENT",    label: `🧪 ${tLabel('common.PosMaterialNew.catSolvent', "Erituvchi")}` },
+  { value: "TOOL",       label: `🔧 ${tLabel('common.PosMaterialNew.catTool', "Asbob")}` },
+  { value: "SPARE",      label: `⚙️ ${tLabel('common.PosMaterialNew.catSpare', "Ehtiyot qism")}` },
+  { value: "PACKAGING",  label: `📮 ${tLabel('common.PosMaterialNew.catPackaging', "Qadoqlash")}` },
 ];
 
 const UNIT_OPTIONS = [
-  { value: "dona",  label: "📦 Dona (pcs)" },
-  { value: "kg",    label: "⚖️ Kilogramm" },
-  { value: "g",     label: "⚖️ Gramm" },
-  { value: "l",     label: "💧 Litr" },
-  { value: "ml",    label: "💧 Millilitr" },
-  { value: "m",     label: "📏 Metr" },
-  { value: "cm",    label: "📏 Santimetr" },
-  { value: "m2",    label: "🟦 Kv. metr" },
-  { value: "m3",    label: "🟪 Kub. metr" },
-  { value: "rulon", label: "🧻 Rulon" },
-  { value: "tonna", label: "🏋️ Tonna" },
+  { value: "dona",  label: `📦 ${tLabel('common.PosMaterialNew.unitDona', "Dona (pcs)")}` },
+  { value: "kg",    label: `⚖️ ${tLabel('common.PosMaterialNew.unitKg', "Kilogramm")}` },
+  { value: "g",     label: `⚖️ ${tLabel('common.PosMaterialNew.unitG', "Gramm")}` },
+  { value: "l",     label: `💧 ${tLabel('common.PosMaterialNew.unitL', "Litr")}` },
+  { value: "ml",    label: `💧 ${tLabel('common.PosMaterialNew.unitMl', "Millilitr")}` },
+  { value: "m",     label: `📏 ${tLabel('common.PosMaterialNew.unitM', "Metr")}` },
+  { value: "cm",    label: `📏 ${tLabel('common.PosMaterialNew.unitCm', "Santimetr")}` },
+  { value: "m2",    label: `🟦 ${tLabel('common.PosMaterialNew.unitM2', "Kv. metr")}` },
+  { value: "m3",    label: `🟪 ${tLabel('common.PosMaterialNew.unitM3', "Kub. metr")}` },
+  { value: "rulon", label: `🧻 ${tLabel('common.PosMaterialNew.unitRulon', "Rulon")}` },
+  { value: "tonna", label: `🏋️ ${tLabel('common.PosMaterialNew.unitTonna', "Tonna")}` },
 ];
 
 const MATERIAL_TYPE_OPTIONS = [
-  { value: "raw_material", label: "Xom ashyo" },
-  { value: "finished",     label: "Tayyor mahsulot" },
-  { value: "consumable",   label: "Iste'mol" },
-  { value: "asset",        label: "Aktiv" },
-  { value: "spare",        label: "Ehtiyot qism" },
+  { value: "raw_material", label: tLabel('common.PosMaterialNew.typeRaw', "Xom ashyo") },
+  { value: "finished",     label: tLabel('common.PosMaterialNew.typeFinished', "Tayyor mahsulot") },
+  { value: "consumable",   label: tLabel('common.PosMaterialNew.typeConsumable', "Iste'mol") },
+  { value: "asset",        label: tLabel('common.PosMaterialNew.typeAsset', "Aktiv") },
+  { value: "spare",        label: tLabel('common.PosMaterialNew.typeSpare', "Ehtiyot qism") },
 ];
 
 export default function PosMaterialNew() {
@@ -69,7 +69,7 @@ export default function PosMaterialNew() {
 
   const submit = async () => {
     if (!form.kod || !form.xom_ashyo || !form.unit_of_measure) {
-      setError("Kod, nom va o'lchov birligi to'ldirilishi shart");
+      setError(t("kodNomVaOlchovBirligiShart"));
       return;
     }
     setSaving(true);
@@ -91,7 +91,7 @@ export default function PosMaterialNew() {
         supplier_name:   form.supplier_name || undefined,
       });
       const data = res as { id?: number; message?: string };
-      alert(`✅ Material yaratildi! ID: ${data.id}`);
+      alert(`✅ ${t("materialYaratildiId")}: ${data.id}`);
       navigate(`/pos-monitor/materials/360/${data.id}`);
     } catch (e) {
       setError(String((e as Error).message));
@@ -99,24 +99,24 @@ export default function PosMaterialNew() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "20px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--pos-bg)", padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <button onClick={() => navigate("/pos-monitor/materials")} style={{ padding: "6px 12px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
+        <button onClick={() => navigate("/pos-monitor/materials")} style={{ padding: "6px 12px", background: "var(--pos-bg)", border: "1px solid var(--pos-border)", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
           {t("orqaga")}
         </button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>YANGI MATERIAL</div>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>{t("yangiMaterialUpper")}</div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{t("materialQoshish")}</h1>
         </div>
       </div>
 
       {error && (
-        <div style={{ padding: 12, background: "#FEE2E2", border: "1px solid #FCA5A5", borderRadius: 8, color: "#991B1B", marginBottom: 16 }}>
+        <div style={{ padding: 12, background: "color-mix(in srgb, var(--pos-danger) 12%, var(--pos-card))", border: "1px solid color-mix(in srgb, var(--pos-danger) 40%, var(--pos-card))", borderRadius: 8, color: "var(--pos-danger)", marginBottom: 16 }}>
           ❌ {error}
         </div>
       )}
 
-      <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", padding: 20 }}>
+      <div style={{ background: "var(--pos-card)", borderRadius: 12, border: "1px solid var(--pos-border)", padding: 20 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <Field label={t('materialKodi1')} required>
             <input
@@ -222,11 +222,11 @@ export default function PosMaterialNew() {
         </div>
 
         <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={() => navigate("/pos-monitor/materials")} style={{ padding: "10px 20px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer" }}>
+          <button onClick={() => navigate("/pos-monitor/materials")} style={{ padding: "10px 20px", background: "var(--pos-bg)", border: "1px solid var(--pos-border)", borderRadius: 8, cursor: "pointer" }}>
             {t("cancel")}
           </button>
-          <button onClick={submit} disabled={saving} style={{ padding: "10px 24px", background: "#10B981", color: "#FFF", border: "none", borderRadius: 8, cursor: saving ? "not-allowed" : "pointer", fontWeight: 700 }}>
-            {saving ? "⏳ Saqlanmoqda..." : "💾 Yaratish"}
+          <button onClick={submit} disabled={saving} style={{ padding: "10px 24px", background: "var(--pos-success)", color: "var(--pos-card)", border: "none", borderRadius: 8, cursor: saving ? "not-allowed" : "pointer", fontWeight: 700 }}>
+            {saving ? `⏳ ${t("saqlanmoqda")}` : `💾 ${t("yaratish")}`}
           </button>
         </div>
       </div>
@@ -237,8 +237,8 @@ export default function PosMaterialNew() {
 function Field({ label, children, required, colSpan }: { label: string; children: React.ReactNode; required?: boolean; colSpan?: number }) {
   return (
     <div style={{ gridColumn: colSpan ? `span ${colSpan}` : undefined }}>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
-        {label} {required && <span style={{ color: "#DC2626" }}>*</span>}
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--pos-text-muted)", marginBottom: 4 }}>
+        {label} {required && <span style={{ color: "var(--pos-danger)" }}>*</span>}
       </label>
       {children}
     </div>
@@ -246,6 +246,6 @@ function Field({ label, children, required, colSpan }: { label: string; children
 }
 
 const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "8px 12px", border: "1px solid #E5E7EB", borderRadius: 8,
-  fontSize: 13, outline: "none", background: "#FFF",
+  width: "100%", padding: "8px 12px", border: "1px solid var(--pos-border)", borderRadius: 8,
+  fontSize: 13, outline: "none", background: "var(--pos-card)",
 };

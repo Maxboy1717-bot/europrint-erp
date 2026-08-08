@@ -58,7 +58,23 @@ export type AiTaskType =
   | 'prepress.vision_preflight'
   // Communication Center AI (2)
   | 'cc.interview_question'
-  | 'cc.generate_document';
+  | 'cc.generate_document'
+  // IoT Camera AI (1) — 2.11: real VLM mission analysis (safety/quality/productivity)
+  | 'iot.camera_vision_analyze';
+
+/**
+ * Optional vision input (2.10-ai-ocr-rasm-fix): raw image bytes (base64) sent ALONGSIDE
+ * `prompt` so providers analyze the actual picture instead of a file-path string. All three
+ * providers support single-image vision calls (Claude image content-block, OpenAI
+ * `image_url` data URI, Gemini `inlineData`) — `AiRouterService` maps this to each SDK's
+ * native shape. Callers that omit `image` keep the pure-text behaviour unchanged.
+ */
+export interface AiImageInput {
+  /** Base64-encoded image bytes (no `data:` prefix). */
+  base64: string;
+  /** e.g. 'image/jpeg' | 'image/png' | 'image/webp'. */
+  mediaType: string;
+}
 
 export interface AiRequest {
   taskType: AiTaskType;
@@ -70,6 +86,8 @@ export interface AiRequest {
   userId?: string | number;
   sessionId?: string;
   metadata?: Record<string, unknown>;
+  /** Optional vision input — see `AiImageInput`. */
+  image?: AiImageInput;
 }
 
 export interface AiResponse {
@@ -124,6 +142,7 @@ export const TASK_PROVIDER_MAP: Record<AiTaskType, AiProvider> = {
   'prepress.vision_preflight': 'gemini',
   'cc.interview_question': 'claude',
   'cc.generate_document':  'claude',
+  'iot.camera_vision_analyze': 'gemini',
 };
 
 export const PROVIDER_MODELS: Record<AiProvider, string> = {
@@ -152,4 +171,10 @@ export interface UsageStats {
   };
   byProvider: Record<AiProvider, { spent: number; requestCount: number }>;
   topTaskTypes: Array<{ taskType: AiTaskType; spent: number; count: number }>;
+  /**
+   * SB0529: per-karta (org-chart karta) xarajat rollup — ai_usage_logs.user_id →
+   * users.card_id orqali. cardId/fullName null bo'lishi mumkin (user_id yo'q
+   * yoki users bilan mos kelmasa) — bunda ham spent yo'qolmaydi (umumiy jamg'arma).
+   */
+  byCard: Array<{ cardId: number | null; userId: string | null; fullName: string | null; spent: number; count: number }>;
 }

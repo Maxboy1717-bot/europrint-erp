@@ -38,6 +38,11 @@ export interface PapkaOrder {
   mijozNomi?: string;
   mahsulotNomi?: string;
   sana?: string;
+  // Audit 2026-08-08: GET /api/papka-orders (legacy-warehouse.helpers.ts `SELECT po.*`)
+  // returns raw snake_case columns with NO camelCase aliasing — `dueDate` above is never
+  // actually populated. `tayyor_bolish_sanasi` (ready-by date) is the real column used
+  // for "muddati o'tgan" (overdue) computation.
+  tayyor_bolish_sanasi?: string;
   items?: PapkaOrder[];
   data?: PapkaOrder[];
   orders?: PapkaOrder[];

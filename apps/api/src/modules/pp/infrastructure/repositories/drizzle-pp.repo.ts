@@ -15,10 +15,11 @@ import { Bom } from '../../domain/aggregates/bom.aggregate';
 import { Routing } from '../../domain/aggregates/routing.aggregate';
 import { IPpRepository, BomComponentRow } from '../../domain/repositories/pp.repository';
 import {
-  execSavePo, queryPo, queryPoByStatus,
+  execSavePo, execUpdatePoStatus, queryPo, queryPoByStatus,
   execSaveBom, queryBom, queryBomByProduct,
   execSaveRouting, queryRouting, queryRoutingByProduct,
   execUnlockPlanning, queryProductionPlan, queryMachineLoad,
+  countPoBySalesOrder, querySalesOrderItemsForPlanning, execCreatePlanLine,
 } from '@common/database/queries-pp';
 
 type DbRow = Record<string, unknown>;
@@ -31,7 +32,13 @@ export class DrizzlePpRepository implements IPpRepository {
 
   async savePo(po: ProductionOrder): Promise<Result<number>> {
     try {
-      const id = await execSavePo(po.getSoId(), po.getStatus(), po.getBomId(), po.getRoutingId(), po.getPlannedStart(), po.getPlannedEnd());
+      // Existing order (release/transition) → UPDATE status; new order → INSERT (with product_id +
+      // sales_order_id). Previously this always re-inserted, so release created a duplicate row.
+      if (po.getId() > 0) {
+        const id = await execUpdatePoStatus(po.getId(), po.getStatus());
+        return Ok(id);
+      }
+      const id = await execSavePo(po.getSoId(), po.getStatus(), po.getBomId(), po.getRoutingId(), po.getPlannedStart(), po.getPlannedEnd(), po.getProductId(), null, po.getOrgDepartmentId());
       return Ok(id);
     } catch {
       this.logger.error('Failed to save production order');
@@ -134,6 +141,52 @@ export class DrizzlePpRepository implements IPpRepository {
     }
   }
 
+  async createPlanFromSalesOrder(
+    salesOrderId: number,
+    createdBy?: number,
+  ): Promise<Result<number>> {
+    try {
+      // Idempotency: a production order already exists for this sales order → skip.
+      const existing = await countPoBySalesOrder(salesOrderId);
+      if (existing > 0) {
+        this.logger.log(
+          `createPlanFromSalesOrder: ${existing} PO already exist for sales order ${salesOrderId} — skip`,
+        );
+        return Ok(0);
+      }
+
+      const items = await querySalesOrderItemsForPlanning(salesOrderId);
+      if (items.length === 0) {
+        // No product-bound line items → nothing plannable yet (no DDL, no fake row).
+        this.logger.warn(
+          `createPlanFromSalesOrder: sales order ${salesOrderId} has no product-bound line items — no plan created`,
+        );
+        return Ok(0);
+      }
+
+      let created = 0;
+      for (const item of items) {
+        if (!Number.isFinite(item.productId) || item.productId <= 0) continue;
+        const id = await execCreatePlanLine(
+          salesOrderId,
+          item.productId,
+          item.quantity,
+          item.unit,
+          createdBy ?? null,
+        );
+        if (id > 0) created += 1;
+      }
+
+      this.logger.log(
+        `createPlanFromSalesOrder: opened ${created} production order(s) for sales order ${salesOrderId}`,
+      );
+      return Ok(created);
+    } catch (e) {
+      this.logger.error(`Failed to create plan from sales order: ${String(e)}`);
+      return Err('Reja yaratishda xatolik');
+    }
+  }
+
   async getProductionPlan(startDate: Date, endDate: Date): Promise<Result<DbRow[]>> {
     try {
       return Ok(await queryProductionPlan(startDate, endDate));
@@ -154,11 +207,24 @@ export class DrizzlePpRepository implements IPpRepository {
 
   async findActiveBomComponents(): Promise<Result<BomComponentRow[]>> {
     try {
+      // Audit 2026-08-07 (docs/audit/FANTOM-JADVALLAR-2026-08-07.md): 'bom_components' jadvali
+      // bazada YO'Q — bu so'rov HAR DOIM yiqilardi, ya'ni ko'p bosqichli BOM yoyish (MRP
+      // explosion) hech qachon ishlamasdi. Kanonik BOM juftligi — 'bom_headers' + 'bom_items'
+      // (aynan shu jadvallarni 'pp/bom/drizzle-pp-bom.repo.ts' — PP ning boshqa, faol ishlaydigan
+      // BOM repository'si — ishlatadi; komponent-yozish oqimi 'bom_items.component_id' ga
+      // yozadi, eski 'material_id' ustuni yozilmaydi). parent = BOM qaysi mahsulotni ishlab
+      // chiqaradi (bom_headers.product_id); child = tarkibiy material (bom_items.component_id);
+      // qtyPerUnit = bir dona parent uchun kerakli miqdor (bom_items.quantity, base_quantity=1
+      // bo'yicha normallashtirilgan — ustunning default qiymati 1, shuning uchun ko'pchilik BOM
+      // uchun ikkalasi bir xil).
       const result = await runQuery<DbRow>(sql`
-        SELECT parent_id AS "parentId", child_id AS "childId",
-               qty_per_unit AS "qtyPerUnit"
-        FROM bom_components
-        WHERE is_active = true
+        SELECT h.product_id                                              AS "parentId",
+               i.component_id                                            AS "childId",
+               (i.quantity / NULLIF(h.base_quantity, 0))::numeric        AS "qtyPerUnit"
+        FROM bom_items i
+        JOIN bom_headers h ON h.id = i.bom_id
+        WHERE h.is_active = true AND h.deleted_at IS NULL AND i.deleted_at IS NULL
+          AND i.component_id IS NOT NULL
       `);
       const rawRows = result?.rows ?? [];
       const rows: BomComponentRow[] = (Array.isArray(rawRows) ? rawRows : []).map((r) => ({
@@ -170,6 +236,31 @@ export class DrizzlePpRepository implements IPpRepository {
     } catch (e) {
       this.logger.error(`Failed to load active BOM components: ${String(e)}`);
       return Err('BOM komponentlarini o\'qishda xatolik');
+    }
+  }
+
+  // EP-PP-091 / EP-PP-124 lab-gate: latest active, non-deleted technology card for the
+  // production order's finished-good product (joined via production_orders.product_id =
+  // technology_cards.product_id — both integer columns on the live DB). `is_active`/
+  // `deleted_at` mirror the filters technology.repository.ts already applies elsewhere
+  // (findTechnologyCards / cloneLatestApproved); ORDER BY version DESC picks the newest
+  // revision when a product has more than one card.
+  async getLabApprovalStatus(poId: number): Promise<Result<{ cardExists: boolean; labApproved: boolean }>> {
+    try {
+      const result = await runQuery<DbRow>(sql`
+        SELECT tc.lab_approved AS "labApproved"
+        FROM production_orders po
+        JOIN technology_cards tc ON tc.product_id = po.product_id
+        WHERE po.id = ${poId} AND tc.is_active = true AND tc.deleted_at IS NULL
+        ORDER BY tc.version DESC, tc.id DESC
+        LIMIT 1
+      `);
+      const row = (result?.rows ?? [])[0];
+      if (!row) return Ok({ cardExists: false, labApproved: false });
+      return Ok({ cardExists: true, labApproved: row['labApproved'] === true });
+    } catch (e) {
+      this.logger.error(`Failed to check lab approval status: ${String(e)}`);
+      return Err('Lab tasdiq holatini tekshirishda xatolik');
     }
   }
 }

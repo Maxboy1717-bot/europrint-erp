@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CheckCircle, XCircle, AlertTriangle, FileCheck, Search, Scale, TrendingUp } from "lucide-react";
-import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { EPErrorState, EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 interface VendorInvoice {
   id: string;
@@ -82,14 +82,19 @@ export default function InvoiceVerification() {
     queryKey: ["/api/integration/invoice/three-way-match/results"],
   });
 
-  type RunMatchResponse = { summary?: { status?: string } };
+  // Audit 2026-08-06: this posted to /api/integration/invoice/three-way-match/:id, which
+  // compared nothing (it inserted a status='pending' row) and crashed at runtime anyway —
+  // its onConflictDoUpdate targeted invoice_id, and three_way_match_results has no unique
+  // index on that column. The MM module now has a real implementation writing to the same
+  // table, so the stats/results queries below keep working unchanged.
+  type RunMatchResponse = { overall_status?: string; summary?: { status?: string } };
   const runMatchMutation = useMutation<RunMatchResponse, Error, string>({
     mutationFn: async (invoiceId: string) => {
-      const res = await apiRequest<RunMatchResponse>("POST", `/api/integration/invoice/three-way-match/${invoiceId}`, { tolerancePercent: 5 });
+      const res = await apiRequest<RunMatchResponse>("POST", `/api/mm/3way-match/${invoiceId}`, { tolerancePercent: 5 });
       return res;
     },
     onSuccess: (data) => {
-      toast({ title: "3-Way Match bajarildi", description: `Natija: ${data.summary?.status || "unknown"}` });
+      toast({ title: "3-Way Match bajarildi", description: `Natija: ${data.overall_status ?? data.summary?.status ?? "unknown"}` });
       queryClient.invalidateQueries({ queryKey: ["/api/integration/invoice"] });
     },
     onError: () => {
@@ -118,11 +123,11 @@ export default function InvoiceVerification() {
   }
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-invoice-verification">
-      <div>
-        <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("k3WayMatchFakturaTekshirish")}</h1>
-        <p className="text-muted-foreground">{t("poQabulHujjatiFakturaAvtomatik")}</p>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6" data-testid="page-invoice-verification">
+      <EPPageHeader
+        title={t("k3WayMatchFakturaTekshirish")}
+        subtitle={t("poQabulHujjatiFakturaAvtomatik")}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card data-testid="card-stat-total">

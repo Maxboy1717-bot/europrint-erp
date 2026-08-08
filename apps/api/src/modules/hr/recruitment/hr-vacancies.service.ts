@@ -7,8 +7,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DrizzleHrVacanciesRepository } from './repos/drizzle-hr-vacancies.repo';
 import { Result, safeCall } from '@common/result';
+import {
+  CANDIDATE_STAGE_CHANGED_EVENT,
+  type CandidateStageChangedPayload,
+} from './recruitment-funnel.service';
+import type { FunnelStage } from './dto/create-funnel.dto';
 
 type Row = Record<string, unknown>;
+
+/** Vacancy create/import input (Phase 7 D4: card link + priority + counts + closing_date now persisted). */
+export type VacancyInput = {
+  title: string; description?: string; department?: string; status?: string;
+  orgFunctionId?: number | null; priority?: string | null;
+  openPositions?: number | null; numberOfPositions?: number | null; closingDate?: string | null;
+};
 
 const SUPPORTED_CHANNELS = ['telegram', 'linkedin', 'hhuz', 'uzjob', 'myjob'] as const;
 type Channel = typeof SUPPORTED_CHANNELS[number];
@@ -29,8 +41,13 @@ export class HrVacanciesService {
     return this.repo.findById(id);
   }
 
-  create(data: { title: string; description?: string; department?: string; status?: string }): Promise<Result<Row>> {
+  create(data: VacancyInput): Promise<Result<Row>> {
     return this.repo.create(data);
+  }
+
+  /** EP-ORG-075/076 bulk import. */
+  bulkCreate(items: VacancyInput[]): Promise<Result<{ inserted: number; ids: number[] }>> {
+    return this.repo.bulkCreate(items);
   }
 
   findPipeline(vacancyId?: number): Promise<Result<Row[]>> {
@@ -41,8 +58,28 @@ export class HrVacanciesService {
     return this.repo.findPipelineById(id);
   }
 
-  updatePipelineStage(id: number, stage: string, userId: number): Promise<Result<Row>> {
-    return this.repo.updatePipelineStage(id, stage, userId);
+  // Q-Recruiting fix (2026-07-13): emit the same `candidate.stage-changed`
+  // domain event the solid `RecruitmentFunnelService.moveFunnelStage` path
+  // emits, so `RecruitmentGateway` re-broadcasts `candidate:moved` over the
+  // `/recruitment` websocket namespace. The FE's `useKanbanRealtime` hook was
+  // already built and listening for this event (T5.2) but it never fired
+  // for actual Kanban drag/drop because this endpoint never emitted it.
+  async updatePipelineStage(id: number, stage: string, userId: number, notes?: string): Promise<Result<Row>> {
+    const r = await this.repo.updatePipelineStage(id, stage, userId, notes);
+    if (r.ok) {
+      const row = r.data;
+      const payload: CandidateStageChangedPayload = {
+        funnelId: id,
+        candidateId: (row['candidate_id'] as number | undefined) ?? null,
+        fromStage: (row['from_stage'] as string | undefined ?? null) as FunnelStage | null,
+        toStage: stage as FunnelStage,
+        changedById: userId,
+        notes: notes ?? null,
+        occurredAt: new Date(),
+      };
+      this.events.emit(CANDIDATE_STAGE_CHANGED_EVENT, payload);
+    }
+    return r;
   }
 
   findKpi(): Promise<Result<Row[]>> {
@@ -94,8 +131,16 @@ export class HrVacanciesService {
     return this.repo.findProbationDates(pipelineId);
   }
 
+  findProbationReviews(pipelineId: number): Promise<Result<Row[]>> {
+    return this.repo.findProbationReviews(pipelineId);
+  }
+
   findMarketAnalysisByVacancy(vacancyId: number): Promise<Result<Row | null>> {
     return this.repo.findMarketAnalysisByVacancy(vacancyId);
+  }
+
+  saveMarketAnalysis(vacancyId: number, data: Record<string, unknown>): Promise<Result<Row>> {
+    return this.repo.saveMarketAnalysis(vacancyId, data);
   }
 
   recordFunnelHistory(funnelId: string, stage: string, changedBy: string, notes?: string): Promise<Result<Row>> {

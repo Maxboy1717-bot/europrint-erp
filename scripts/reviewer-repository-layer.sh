@@ -18,11 +18,22 @@ while IFS= read -r file; do
   # Business-logic markers inside a repo, but NOT inside SQL template strings.
   # SQL aggregates like `SUM(x) * 0.05` and `value / 100` are legitimate query
   # syntax; the rule targets JavaScript-side post-processing.
-  # Filter heuristic: skip lines that contain `sql\`` (SQL template tag) or
-  # are inside a SQL literal (start with SELECT/UPDATE/INSERT/WITH).
-  computed=$(grep -nE '(\* 0\.[0-9]|reduce\([^)]*\+)' "$file" 2>/dev/null \
-    | grep -vE 'sql\`|SELECT |UPDATE |INSERT |WITH |COALESCE|SUM\(|AVG\(|::numeric' \
-    | wc -l | tr -d ' ')
+  # Filter: track whether each line is inside an open `sql\`...\`` template
+  # literal (multi-line aware — a single-line-only grep misses continuation
+  # lines of a wrapped SQL string, e.g. a weighted-average ROUND(...) spread
+  # across 3 lines) and only flag matches found OUTSIDE such a block.
+  computed=$(awk '
+    BEGIN { inSql = 0 }
+    {
+      line = $0
+      if (!inSql && match(line, /sql`/)) { inSql = 1; line = substr(line, RSTART + RLENGTH) }
+      if (inSql) {
+        if (match(line, /`/)) { inSql = 0 }
+        next
+      }
+      if (line ~ /(\* 0\.[0-9]|reduce\([^)]*\+)/) print NR
+    }
+  ' "$file" 2>/dev/null | wc -l | tr -d ' ')
   if [ -n "$computed" ] && [ "$computed" -gt 0 ]; then
     rel="${file#$ROOT_DIR/}"
     echo -e "${RED}✗${NC} $rel — repository contains $computed JS calc lines (move to service)"

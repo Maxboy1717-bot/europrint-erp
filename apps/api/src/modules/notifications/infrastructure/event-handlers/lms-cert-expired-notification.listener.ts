@@ -15,10 +15,9 @@
  *   listener was previously in.
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { Notification } from '../../domain/aggregates/notification.aggregate';
-import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
+import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { CreateNotificationCommand } from '../../application/commands/create-notification.command';
 import { CertificateExpiredEvent } from '@modules/lms/domain/events/certificate-expired.event';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
@@ -30,9 +29,10 @@ export class LmsCertExpiredNotificationListener
 {
   private readonly logger = new Logger(LmsCertExpiredNotificationListener.name);
 
-  constructor(
-    @Inject(NOTIFICATION_REPO) private readonly notificationRepo: INotificationRepo,
-  ) {}
+  // Audit 2026-08-07: was `notificationRepo.save()` — in-app row only. An expired certificate
+  // blocks the operator from running the machine, so it has to reach them off-screen; routed
+  // through CreateNotificationHandler (preferences → Telegram/email/SMS → status write-back).
+  constructor(private readonly commandBus: CommandBus) {}
 
   async handle(event: CertificateExpiredEvent): Promise<void> {
     this.logger.log(
@@ -43,15 +43,16 @@ export class LmsCertExpiredNotificationListener
 
     try {
       // Notify the specific operator directly when their numeric id is known.
-      const operatorNotification = Notification.createForUser(
-        String(employeeId),
-        'Certificate Expired',
-        `Your certificate for ${courseName} has expired. Please renew it immediately.`,
-        'lms_expired',
+      await this.commandBus.execute(
+        new CreateNotificationCommand(
+          String(employeeId),
+          'Certificate Expired',
+          `Your certificate for ${courseName} has expired. Please renew it immediately.`,
+          'lms_expired',
+          String(certificateId),
+          'certificate',
+        ),
       );
-      operatorNotification.referenceId = String(certificateId);
-      operatorNotification.referenceType = 'certificate';
-      await this.notificationRepo.save(operatorNotification);
 
       // Fan out to active HR managers.
       const result = await runQuery<{ id: number }>(
@@ -61,18 +62,19 @@ export class LmsCertExpiredNotificationListener
         this.logger.warn('LmsCertExpiredNotificationListener: result capped at 50 HR managers — some may not be notified');
       }
 
-      await Promise.all(
-        result.rows.map((u) => {
-          const notification = Notification.createForUser(
-            String(u.id),
-            'Operator Certificate Expired',
-            `Operator ${employeeId}'s certificate for ${courseName} has expired`,
-            'lms_expired',
-          );
-          notification.referenceId = String(certificateId);
-          notification.referenceType = 'certificate';
-          return this.notificationRepo.save(notification);
-        }),
+      await Promise.allSettled(
+        result.rows.map((u) =>
+          this.commandBus.execute(
+            new CreateNotificationCommand(
+              String(u.id),
+              'Operator Certificate Expired',
+              `Operator ${employeeId}'s certificate for ${courseName} has expired`,
+              'lms_expired',
+              String(certificateId),
+              'certificate',
+            ),
+          ),
+        ),
       );
     } catch (err: unknown) {
       this.logger.warn(`LmsCertExpiredNotificationListener failed: ${String(err)}`);

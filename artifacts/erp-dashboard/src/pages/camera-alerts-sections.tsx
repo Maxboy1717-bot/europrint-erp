@@ -29,7 +29,7 @@ interface StatCardsProps {
   totalAlerts: number;
   unresolvedAlerts: number;
   criticalAlerts: number;
-  t: AlertTranslations & ((key: string) => string);
+  t: AlertTranslations;
 }
 
 export function AlertStatCards({ totalAlerts, unresolvedAlerts, criticalAlerts, t }: StatCardsProps) {
@@ -61,7 +61,7 @@ export function AlertStatCards({ totalAlerts, unresolvedAlerts, criticalAlerts, 
 }
 
 interface PageHeaderProps {
-  t: AlertTranslations & ((key: string) => string);
+  t: AlertTranslations;
   language: Language;
   onLanguageChange: (lang: Language) => void;
 }
@@ -79,8 +79,8 @@ export function AlertPageHeader({ t, language, onLanguageChange }: PageHeaderPro
           </Link>
         </div>
         <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("kameraOgohlantirishlari")}</b></>}
-        title={t("kameraOgohlantirishlari")}
+        breadcrumb={<>{t.dashboard}<b className="text-foreground">{t.pageTitle}</b></>}
+        title={t.pageTitle}
         subtitle={t.subtitle}
       />
       </div>
@@ -111,7 +111,7 @@ export function AlertPageHeader({ t, language, onLanguageChange }: PageHeaderPro
 interface AlertsTableProps {
   filteredAlerts: CameraAlert[];
   language: Language;
-  t: AlertTranslations & ((key: string) => string);
+  t: AlertTranslations;
   searchTerm: string;
   onSearchChange: (v: string) => void;
   filterType: string;

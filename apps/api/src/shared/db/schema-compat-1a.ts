@@ -11,10 +11,13 @@
  */
 
 import { date } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, text, boolean, decimal, integer, varchar, jsonb, createId, ts } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, varchar, jsonb, createId, ts, serial } from './schema-compat-helpers';
 
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — `id` uses `serial()` (not
+// plain `integer()`) so Drizzle marks it optional on INSERT, matching the
+// live DB's `nextval('users_id_seq')` default (no app-side id generation).
 export const users = pgTable('users', {
-  id: integer('id').primaryKey(),
+  id: serial('id').primaryKey(),
   email: text('email').notNull(),
   username: text('username').notNull(),
   passwordHash: text('password_hash').notNull(),
@@ -46,6 +49,18 @@ export const crmLeads = pgTable('crm_leads', {
   // title NOT NULL in live DB — exposed so DDD-layer save() + auto-lead inserts set it
   title:              text('title'),
   manager_id:         integer('assigned_to'),         // live: assigned_to
+  // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see
+  // apps/api/src/modules/crm/common/crm-row-scope.ts module doc comment): assigned_to (exposed
+  // above as `manager_id`, confusingly) was declared canonical for CRM ownership but that is
+  // superseded — authorization now resolves COALESCE(assigned_by_id, manager_id) on the REAL
+  // physical columns. This property exposes the real assigned_by_id column, which was previously
+  // undeclared here (so any write to it was silently dropped by Drizzle — same footgun as
+  // created_by_id below), so drizzle-crm-leads.repo.ts can populate it going forward.
+  assigned_by_id:     integer('assigned_by_id'),       // live: assigned_by_id
+  // B14 (2026-07-05): live column exists (created_by_id) but was never declared here,
+  // so Drizzle silently dropped it on every insert/select — same alias pattern as
+  // crmDeals.created_by below.
+  created_by:         integer('created_by_id'),        // live: created_by_id (alias)
   status_id:          varchar('status_id', { length: 50 }).default('NEW'), // Bitrix state NEW/CONVERTED
   status_description: varchar('status_description', { length: 200 }), // lifecycle code new/converted/qualified
   source:             text('source_description'),      // live: source_description
@@ -53,6 +68,16 @@ export const crmLeads = pgTable('crm_leads', {
   contact_phone:      varchar('contact_phone', { length: 50 }),
   contact_email:      varchar('contact_email', { length: 200 }),
   notes:              text('comments'),                // live: comments
+  // Marketing-14 #59/#67 (2026-07-11): product category the lead is interested in —
+  // ofset/gofra/etiketka/flekso/blanka (CHECK-constrained in the migration; nullable
+  // here for the same reason it's nullable in the DB — see migration comment).
+  product_type:       text('product_type'),
+  // EP-MKT-102 (owner-approved, docs/audit/decisions/14-marketing.md:733-738, action:
+  // CREATE) — Marketing #80 "Hudud+eksport belgisi": lid hududi (viloyat/davlat) +
+  // eksport/ichki belgisi. Additive; nullable region + default-false is_export
+  // (Q-39/Q-46 safe — no existing caller reads/writes these names).
+  region:             text('region'),
+  is_export:          boolean('is_export').notNull().default(false),
   deleted_at:         ts('deleted_at'),
   created_at:         ts('date_create').defaultNow(),  // live: date_create
   updated_at:         ts('date_modify').defaultNow(),  // live: date_modify
@@ -121,6 +146,13 @@ export const crmCompanies = pgTable('crm_companies', {
   address:      text('address'),
   credit_limit: decimal('credit_limit').default('0'),
   used_credit:  decimal('credit_used').default('0'),
+  // Financial/risk fields (columns already added live via migrations-drift.ts
+  // + drift-fix-04a-missing-cols.sql). Not previously mapped here, so
+  // db.select().from(crmCompanies) silently omitted them from getCompany()
+  // (VISION-3340 #29 — Customer 360 financial status block).
+  is_blocked:   boolean('is_blocked').notNull().default(false),
+  block_reason: text('block_reason'),
+  open_debt:    decimal('open_debt'),
   created_at:   ts('date_create').defaultNow(),
   deleted_at:   ts('deleted_at'),
   updated_at:   ts('date_modify').defaultNow(),

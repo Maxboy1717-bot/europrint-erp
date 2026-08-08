@@ -43,7 +43,11 @@ export class ApplicationsRepository {
 
   async create(body: Row): Promise<Result<Row | null>> {
     try {
-      const r = await exec(sql`INSERT INTO hr_applications (first_name, last_name, email, phone, position_id, resume_url, cover_letter, status, source) VALUES (${body.first_name ?? ''}, ${body.last_name ?? ''}, ${body.email ?? null}, ${body.phone ?? null}, ${body.position_id ?? null}, ${body.resume_url ?? null}, ${body.cover_letter ?? null}, ${body.status ?? 'pending'}, ${body.source ?? 'direct'}) RETURNING *`);
+      // hr_applications is a VIEW over `applications`, which conflates job-postings and applicants and
+      // has NOT NULL `title` + `questions`. An applicant insert must still satisfy them: title = the
+      // applicant's name (a human label for the application), questions = empty jsonb array.
+      const applicantTitle = `${String(body.first_name ?? '')} ${String(body.last_name ?? '')}`.trim() || 'Ariza';
+      const r = await exec(sql`INSERT INTO hr_applications (first_name, last_name, email, phone, position_id, resume_url, cover_letter, status, source, title, questions) VALUES (${body.first_name ?? ''}, ${body.last_name ?? ''}, ${body.email ?? null}, ${body.phone ?? null}, ${body.position_id ?? null}, ${body.resume_url ?? null}, ${body.cover_letter ?? null}, ${body.status ?? 'pending'}, ${body.source ?? 'direct'}, ${applicantTitle}, '[]'::jsonb) RETURNING *`);
       return Ok(r[0] ?? null);
     } catch (_e) {
       return Err(String(_e));
@@ -90,7 +94,11 @@ export class ApplicationsRepository {
 
   async createResponse(body: Row): Promise<Result<Row | null>> {
     try {
-      const r = await exec(sql`INSERT INTO hr_application_responses (application_id, responder_id, stage, decision, notes, scheduled_at) VALUES (${body.application_id ?? null}, ${body.responder_id ?? null}, ${body.stage ?? 'screening'}, ${body.decision ?? 'pending'}, ${body.notes ?? null}, ${body.scheduled_at ?? null}) RETURNING *`);
+      // hr_application_responses is a VIEW over `application_responses`. The real columns are
+      // status/response_type/responder_id/user_id/answers (user_id + answers NOT NULL) — there is no
+      // stage/decision/scheduled_at column (old insert crashed 42703 + omitted NOT NULL). Map:
+      // response_type := stage, status := decision, user_id := responder, answers := empty jsonb.
+      const r = await exec(sql`INSERT INTO hr_application_responses (application_id, responder_id, user_id, response_type, status, notes, answers) VALUES (${body.application_id ?? null}, ${body.responder_id ?? null}, ${body.responder_id ?? null}, ${body.stage ?? 'screening'}, ${body.decision ?? 'pending'}, ${body.notes ?? null}, '[]'::jsonb) RETURNING *`);
       return Ok(r[0] ?? null);
     } catch (_e) {
       return Err(String(_e));

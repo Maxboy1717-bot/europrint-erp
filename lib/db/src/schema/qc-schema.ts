@@ -4,9 +4,11 @@
  */
 
 import { numericMoney } from "./numeric-money";
+import { index, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, date, jsonb, unique, uuid, check, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { pgEnum } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { Test } from "./lms-schema";
@@ -17,28 +19,6 @@ import { papkaOrders } from "./pp-schema";
 // ============================================
 // QUALITY CONTROL (QC) MODULE - SIFAT NAZORATI
 // ============================================
-
-// QC Standards (Normalar bazasi - ISO, GOST, O'zDSt, ichki normalar)
-export const qcStandards = pgTable("qc_standards", {
-  id: serial("id").primaryKey(),
-  code: varchar("code", { length: 50 }).notNull().unique(), // ISO 3037, GOST 7376, UzDSt 1234
-  name: text("name").notNull(),
-  nameRu: text("name_ru"),
-  type: varchar("type", { length: 30 }).notNull(), // iso, gost, uzst, internal
-  category: varchar("category", { length: 50 }).notNull(), // physical, mechanical, printability, chemical, environmental, logistics, visual
-  description: text("description"),
-  descriptionRu: text("description_ru"),
-  validFrom: varchar("valid_from", { length: 10 }), // YYYY-MM-DD
-  validTo: varchar("valid_to", { length: 10 }), // YYYY-MM-DD (null = hozirgi)
-  isActive: boolean("is_active").notNull().default(true),
-  documentUrl: text("document_url"), // Litsenziya hujjati
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
-}, (t) => [
-  check("qc_standards_type_chk", sql`${t.type} IN ('iso','gost','uzst','internal')`),
-  check("qc_standards_category_chk", sql`${t.category} IN ('physical','mechanical','printability','chemical','environmental','logistics','visual','documentation','ai_analysis')`),
-]);
-
 
 // QC Parameter Definitions (Parametr ta'riflari)
 export const qcParameterDefinitions = pgTable("qc_parameter_definitions", {
@@ -54,7 +34,8 @@ export const qcParameterDefinitions = pgTable("qc_parameter_definitions", {
   warningMinValue: numericMoney("warning_min_value"), // Warning threshold (lower)
   warningMaxValue: numericMoney("warning_max_value"), // Warning threshold (upper)
   defaultValue: numericMoney("default_value"), // Standart qiymat
-  standardId: integer("standard_id").references(() => qcStandards.id, { onDelete: "set null" }), // Bog'langan standart
+  // NOTE: FK to qcStandards removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  standardId: integer("standard_id"), // Bog'langan standart
   testMethod: text("test_method"), // Test usuli tavsifi
   testMethodRu: text("test_method_ru"),
   equipmentRequired: text("equipment_required"), // Kerakli uskuna
@@ -103,19 +84,6 @@ export const qcMaterialTests = pgTable("qc_material_tests", {
 
 
 // Insert schemas for QC module
-export const insertQcStandardSchema = createInsertSchema(qcStandards, {
-  code: z.string().min(1, "Kod kerak"),
-  name: z.string().min(1, "Nom kerak"),
-  type: z.enum(["iso", "gost", "uzst", "internal"]),
-  category: z.enum(["physical", "mechanical", "printability", "chemical", "environmental", "logistics", "visual", "documentation", "ai_analysis"]),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-
-export type QcStandard = typeof qcStandards.$inferSelect;
-
-export type InsertQcStandard = z.infer<typeof insertQcStandardSchema>;
-
-
 export const insertQcParameterDefinitionSchema = createInsertSchema(qcParameterDefinitions, {
   code: z.string().min(1, "Kod kerak"),
   name: z.string().min(1, "Nom kerak"),
@@ -164,6 +132,10 @@ export const qcFinalInspections = pgTable("qc_final_inspections", {
   parameters: jsonb("parameters"),  // { moisture, thickness, printColor, ... }
   // Natija: passed | failed | rework
   result: varchar("result", { length: 20 }).notNull().default("pending"), // pending, passed, failed, rework
+  // T11-06: rework holatida qaysi papka_orders qayta ishlanmoqda (parent link) + qayta ishlash narxi.
+  // Faqat result='rework'/'rework_required' uchun to'ldiriladi (boshqa holatlarda NULL).
+  parentOrderId: varchar("parent_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
+  reworkCost: numericMoney("rework_cost"),  // Qayta ishlash narxi (so'm)
   notes: text("notes"),
   photos: jsonb("photos"),  // URL massivi
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -253,68 +225,6 @@ export type QcReclamation = typeof qcReclamations.$inferSelect;
 export type InsertQcReclamation = z.infer<typeof insertQcReclamationSchema>;
 
 
-// ========== TZ_04: Brak boshqaruvi ==========
-export const qcBraks = pgTable("qc_braks", {
-  id: serial("id").primaryKey(),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
-  brakDate: varchar("brak_date", { length: 10 }).notNull(),
-  stage: varchar("stage", { length: 50 }).notNull(), // incoming, production, final, warehouse
-  quantity: integer("quantity").notNull().default(0),
-  unit: varchar("unit", { length: 20 }).default("dona"),
-  reason: varchar("reason", { length: 100 }).notNull(), // misprint, size, damage, moisture, equipment, operator_error, material
-  description: text("description"),
-  equipmentId: varchar("equipment_id"),
-  operatorId: varchar("operator_id").references(() => users.id, { onDelete: "set null" }),
-  costImpact: numericMoney("cost_impact").default(0),
-  isReworkable: boolean("is_reworkable").default(false),
-  reworked: boolean("reworked").default(false),
-  // ── ADD-ONLY: live DB superset columns ──
-  productionOrderId: varchar("production_order_id"),
-  materialId: varchar("material_id"),
-  status: varchar("status", { length: 30 }),
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("qc_braks_stage_chk", sql`${t.stage} IN ('incoming','production','final','warehouse')`),
-]);
-
-export const insertQcBrakSchema = createInsertSchema(qcBraks, {
-  brakDate: z.string().min(10, "Sana kerak"),
-  stage: z.enum(["incoming", "production", "final", "warehouse"]),
-  quantity: z.number().int().min(1, "Miqdor kerak"),
-  reason: z.string().min(1, "Sabab kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type QcBrak = typeof qcBraks.$inferSelect;
-export type InsertQcBrak = z.infer<typeof insertQcBrakSchema>;
-
-
-// ========== TZ_04: Supplier Quality reytingi ==========
-export const qcSupplierQuality = pgTable("qc_supplier_quality", {
-  id: serial("id").primaryKey(),
-  supplierId: varchar("supplier_id"),
-  supplierName: text("supplier_name").notNull(),
-  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
-  deliveryDate: varchar("delivery_date", { length: 10 }).notNull(),
-  totalQuantity: integer("total_quantity").notNull().default(0),
-  rejectedQuantity: integer("rejected_quantity").default(0),
-  passRate: numericMoney("pass_rate").default(100),
-  qualityScore: integer("quality_score").default(100), // 0-100
-  testId: varchar("test_id").references(() => qcMaterialTests.id, { onDelete: "set null" }),
-  issues: jsonb("issues"), // [{parameter, value, expected}]
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertQcSupplierQualitySchema = createInsertSchema(qcSupplierQuality, {
-  supplierName: z.string().min(1, "Yetkazuvchi nomi kerak"),
-  deliveryDate: z.string().min(10, "Sana kerak"),
-  totalQuantity: z.number().int().min(0),
-}).omit({ id: true, createdAt: true } as never);
-
-export type QcSupplierQuality = typeof qcSupplierQuality.$inferSelect;
-export type InsertQcSupplierQuality = z.infer<typeof insertQcSupplierQualitySchema>;
-
 // Inline QC checks — recorded by tablet operators during production
 export const inlineQcChecks = pgTable("inline_qc_checks", {
   id: serial("id").primaryKey(),
@@ -371,3 +281,204 @@ export const insertQcRootCauseSchema = createInsertSchema(qcRootCauses, {
 
 export type QcRootCause = typeof qcRootCauses.$inferSelect;
 export type InsertQcRootCause = z.infer<typeof insertQcRootCauseSchema>;
+
+
+// ========== Vision 09-qc #48: QC brak statistika Director paneli snapshot (durable outbox fallback) ==========
+// Real-time oqim = KANONIK outbox (domain_events + OutboxRepository/OutboxPublisher).
+// Bu jadval = faqat Director paneli QC momentan uzilganda ko'rsatadigan oxirgi SNAPSHOT
+// (oee_snapshots / financial_ratios_snapshot naqshiga mos). Yangi qc_outbox YARATILMAYDI —
+// u domain_events ni takrorlagan bo'lardi. Migration: qc-brak-snapshot-2026-07-11.sql.
+export const qcBrakSnapshot = pgTable("qc_brak_snapshot", {
+  id: serial("id").primaryKey(),
+  scope: varchar("scope", { length: 64 }).notNull().default("global"),
+  totalBraks: integer("total_braks").notNull().default(0),
+  totalBrakQty: numericMoney("total_brak_qty").notNull().default(0),
+  openDefects: integer("open_defects").notNull().default(0),
+  scrap7daysQty: numericMoney("scrap_7days_qty").notNull().default(0),
+  topReason: text("top_reason"),
+  byStage: jsonb("by_stage").notNull().default(sql`'[]'::jsonb`),
+  byReason: jsonb("by_reason").notNull().default(sql`'[]'::jsonb`),
+  computedAt: timestamp("computed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  unique("uq_qc_brak_snapshot_scope").on(t.scope),
+]);
+
+export type QcBrakSnapshotRow = typeof qcBrakSnapshot.$inferSelect;
+
+
+// ========== Vision 09-qc#11: per-roll tablet scan log (FIFO aybdor-lot) ==========
+// Each roll a floor operator scans on the tablet writes ONE append-only row
+// (order/lot/stanok=work_center/smena=shift/ts). Idempotency + indexes live in the
+// migration apps/api/src/shared/db/migrations/qc-material-scan-log-2026-07-11.sql.
+// Columns match that migration EXACTLY (all business columns nullable).
+export const qcMaterialScanLog = pgTable("qc_material_scan_log", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id"),
+  sessionId: integer("session_id"),
+  lot: varchar("lot", { length: 100 }),
+  materialId: integer("material_id"),
+  workCenterId: integer("work_center_id"),
+  shiftId: integer("shift_id"),
+  scannedBy: integer("scanned_by"),
+  scannedAt: timestamp("scanned_at").notNull().defaultNow(),
+  tabletId: text("tablet_id"),
+  localSeqNo: bigint("local_seq_no", { mode: "number" }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type QcMaterialScanLog = typeof qcMaterialScanLog.$inferSelect;
+
+
+// ========== Vision 09-qc #26: Yakuniy sifat xulosasi (per-dispatch + yakuniy, N+1) ==========
+// PP buyurtma "Yopildi" da bitta yakuniy xulosa (deliveryId NULL); qisman yetkazishda
+// har dispatch tasdiqlanganda bitta per-dispatch xulosa (deliveryId SET) — jami N+1 yozuv.
+// Partial unique index'lar N+1 shaklini kafolatlaydi: buyurtmaga ko'pi bilan 1 ta 'final',
+// (buyurtma, dispatch) juftligiga ko'pi bilan 1 ta xulosa. FK'lar (production_orders/deliveries/
+// users) DDL migratsiyada — jonli integer PK'lar bilan; Drizzle'da plain ustun (tip-drift oldini olish).
+export const qcDispatchConclusions = pgTable("qc_dispatch_conclusions", {
+  id: serial("id").primaryKey(),
+  productionOrderId: integer("production_order_id").notNull(),   // PP buyurtma (FK production_orders — DDL)
+  deliveryId: integer("delivery_id"),                            // dispatch (FK deliveries — DDL); NULL = yakuniy
+  conclusionType: varchar("conclusion_type", { length: 20 }).notNull().default("dispatch"), // dispatch | final
+  totalInspected: integer("total_inspected").notNull().default(0),
+  totalPassed: integer("total_passed").notNull().default(0),
+  totalDefects: integer("total_defects").notNull().default(0),
+  defectRate: numericMoney("defect_rate"),                       // nuqson foizi (0-100)
+  verdict: varchar("verdict", { length: 20 }).notNull().default("pending"), // pending|passed|conditional_pass|failed
+  summary: jsonb("summary"),                                     // per-dispatch / kumulyativ breakdown
+  notes: text("notes"),
+  concludedBy: integer("concluded_by"),                          // FK users(id) — DDL (Drizzle'da plain)
+  concludedAt: timestamp("concluded_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  check("qc_dispatch_conclusions_type_chk", sql`${t.conclusionType} IN ('dispatch','final')`),
+  check("qc_dispatch_conclusions_verdict_chk", sql`${t.verdict} IN ('pending','passed','conditional_pass','failed')`),
+  check("qc_dispatch_conclusions_final_no_delivery_chk", sql`(${t.conclusionType} = 'final') = (${t.deliveryId} IS NULL)`),
+  uniqueIndex("uq_qc_dispatch_conclusions_final").on(t.productionOrderId).where(sql`${t.deliveryId} IS NULL`),
+  uniqueIndex("uq_qc_dispatch_conclusions_dispatch").on(t.productionOrderId, t.deliveryId).where(sql`${t.deliveryId} IS NOT NULL`),
+  index("idx_qc_dispatch_conclusions_order").on(t.productionOrderId),
+]);
+
+export const insertQcDispatchConclusionSchema = createInsertSchema(qcDispatchConclusions, {
+  productionOrderId: z.number().int().positive(),
+  conclusionType: z.enum(["dispatch", "final"]),
+  verdict: z.enum(["pending", "passed", "conditional_pass", "failed"]).default("pending"),
+}).omit({ id: true, createdAt: true, concludedAt: true } as never);
+
+export type QcDispatchConclusion = typeof qcDispatchConclusions.$inferSelect;
+export type InsertQcDispatchConclusion = z.infer<typeof insertQcDispatchConclusionSchema>;
+
+
+// ========== vision 09-qc#8: ISO 2859 kuchaytirilgan nazorat rejimi (per-supplier + per-material) ==========
+// APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+// Ketma-ket 2 partiya rad -> 'tightened'; 'tightened' ostida ketma-ket 5 qabul -> 'normal' (ISO 2859-1).
+export const inspectionRegimeEnum = pgEnum("inspection_regime", ["normal", "tightened", "reduced"]);
+
+export const qcSupplierRegime = pgTable("qc_supplier_regime", {
+  id: serial("id").primaryKey(),
+  supplierId: integer("supplier_id").notNull(),            // vendors.id (soft ref)
+  materialId: integer("material_id").notNull(),            // material_cards.id (soft ref)
+  regime: inspectionRegimeEnum("regime").notNull().default("normal"),
+  consecutiveRejections: integer("consecutive_rejections").notNull().default(0),
+  consecutiveAccepts: integer("consecutive_accepts").notNull().default(0),
+  lastInspectionId: integer("last_inspection_id"),         // qc_inspections.id (soft ref, audit)
+  tightenedAt: timestamp("tightened_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  unique("qc_supplier_regime_supplier_material_uq").on(t.supplierId, t.materialId),
+]);
+
+export type QcSupplierRegime = typeof qcSupplierRegime.$inferSelect;
+export type InsertQcSupplierRegime = typeof qcSupplierRegime.$inferInsert;
+
+
+
+// ============================================
+// QC NORM VERSIONS (Norma snapshot-versiyalash) — 09.39
+// ============================================
+// Norma o'zgarganda joriy normalar JSON-snapshot sifatida [valid_from, valid_to) oynasi
+// bilan saqlanadi. Eski sanadagi buyurtma o'sha paytdagi (eski) norma versiyasiga
+// bog'lanadi. valid_to IS NULL = joriy faol versiya. Migration: qc-norm-versions-2026-07-11.sql.
+export const qcNormVersions = pgTable("qc_norm_versions", {
+  id: serial("id").primaryKey(),
+  normRef: text("norm_ref").notNull(),                    // norma to'plami biznes-kaliti (standart/material kodi)
+  versionNo: integer("version_no").notNull().default(1),  // norm_ref bo'yicha monoton versiya
+  validFrom: timestamp("valid_from", { withTimezone: true }).notNull().defaultNow(),
+  validTo: timestamp("valid_to", { withTimezone: true }), // NULL = joriy faol versiya
+  snapshotJson: jsonb("snapshot_json").notNull().default(sql`'{}'::jsonb`),
+  note: text("note"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  check("ck_qc_norm_versions_window", sql`${t.validTo} IS NULL OR ${t.validTo} >= ${t.validFrom}`),
+]);
+
+export const insertQcNormVersionSchema = createInsertSchema(qcNormVersions, {
+  normRef: z.string().min(1).max(200),
+}).omit({ id: true, createdAt: true } as never);
+
+export type QcNormVersion = typeof qcNormVersions.$inferSelect;
+export type InsertQcNormVersion = z.infer<typeof insertQcNormVersionSchema>;
+
+
+// ========== Item 09#67: Arxiv namuna (etalon) 6 oy + joylashuv (TASDIQ-2146 §09 #21) ==========
+// Etalon namuna arxivi: metadata + ombor joylashuvi + 6 oy saqlash muddati.
+// NOTE: repo raw SQL (reference-sample.repository.ts) — bu ta'rif migratsiyaga mos, tsc/schema uchun.
+export const qcReferenceSamples = pgTable("qc_reference_samples", {
+  id: serial("id").primaryKey(),
+  sampleRef: text("sample_ref").notNull(),                          // namuna kodi / etalon nomeri
+  productId: integer("product_id"),
+  orderId: integer("order_id"),
+  inspectionId: integer("inspection_id"),
+  description: text("description"),
+  storageLocation: text("storage_location"),                       // ombor joylashuvi (run-time)
+  responsibleUserId: integer("responsible_user_id"),
+  metadataJson: jsonb("metadata_json").notNull().default(sql`'{}'::jsonb`),
+  archivedAt: timestamp("archived_at", { withTimezone: true }).notNull().defaultNow(),
+  retentionMonths: integer("retention_months").notNull().default(6), // vizyon: 6 oy
+  retentionUntil: date("retention_until"),                         // = archived_at + retention_months
+  status: text("status").notNull().default("archived"),            // archived | disposed
+  disposedAt: timestamp("disposed_at", { withTimezone: true }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  check("ck_qc_ref_sample_status", sql`${t.status} IN ('archived','disposed')`),
+  check("ck_qc_ref_sample_retention", sql`${t.retentionMonths} > 0`),
+]);
+
+export type QcReferenceSample = typeof qcReferenceSamples.$inferSelect;
+
+
+// ========== 09-qc #22: Davriy ichki sifat auditi (qc_internal_audits, cron) ==========
+// Vizyon (vision-1000-answers/09-qc.md #22): davriy ichki sifat auditi QC modulida alohida jadvalda
+// saqlanadi (cron choraklik/yillik); Coordination kalendar (calendar_event_id) + protokol (protocol_id)
+// bilan bog'lanadi. auditor_id/findings/calendar_event_id/protocol_id/completed_at NULL — runtime'da to'ladi.
+export const QC_INTERNAL_AUDIT_STATUSES = ["scheduled", "in_progress", "completed", "cancelled"] as const;
+export type QcInternalAuditStatus = typeof QC_INTERNAL_AUDIT_STATUSES[number];
+
+export const qcInternalAudits = pgTable("qc_internal_audits", {
+  id: serial("id").primaryKey(),
+  // Idempotentlik kaliti — cron takror ishga tushsa dublikat yozmaydi (masalan '2026-Q3').
+  period: varchar("period", { length: 20 }).notNull().unique(),
+  scheduledFor: date("scheduled_for").notNull(),        // audit rejalashtirilgan sana (chorak boshi)
+  scope: varchar("scope", { length: 50 }).notNull().default("full_quality_system"),
+  auditorId: integer("auditor_id").references(() => users.id, { onDelete: "set null" }), // NULL = tayinlanmagan
+  findings: jsonb("findings"),                          // topilmalar (runtime'da to'ladi)
+  status: varchar("status", { length: 20 }).notNull().default("scheduled"),
+  // Coordination integratsiya — kalendar hodisasi + protokol (runtime'da bog'lanadi; NULL = hali yo'q).
+  // FK'lar migration'da (calendar_events / protocol); bu yerda plain integer (cross-file import yo'q).
+  calendarEventId: integer("calendar_event_id"),
+  protocolId: integer("protocol_id"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  check("chk_qc_internal_audits_status", sql`${t.status} IN ('scheduled','in_progress','completed','cancelled')`),
+]);
+
+export type QcInternalAudit = typeof qcInternalAudits.$inferSelect;
+

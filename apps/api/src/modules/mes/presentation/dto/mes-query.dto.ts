@@ -4,11 +4,12 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const GetSessionsDtoSchema = z.object({
   status: z.enum(['pending', 'in_progress', 'paused', 'completed', 'failed']).optional(),
-  operatorId: z.string().uuid().optional(),
-  productionOrderId: z.string().uuid().optional(),
+  operatorId: IntegerIdSchema.optional(),
+  productionOrderId: IntegerIdSchema.optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   page: z.number().int().positive().default(1),

@@ -58,7 +58,40 @@ export class WarehouseCatalogService {
                   material_type AS "materialType", category, current_stock AS "currentStock"
       `);
       const row = dbRows(result)[0];
-      if (!row) throw new ConflictException(`Bu kod allaqachon mavjud: ${kod}`);
+      if (!row) throw new ConflictException(await this.i18n.t('errors.materialCodeAlreadyExists', { args: { kod } }));
+      return row;
+    });
+  }
+
+  /**
+   * PUT /api/warehouse/materials/:id — SB0756/SB0757: MaterialCardsPage (the routed
+   * FE material-master page) had create but no edit; this closes that gap using the
+   * same COALESCE-update pattern as updateBatch() below. Same field mapping as
+   * createMaterial (materialCode/name/unit/category/minStock -> kod/xom_ashyo/...).
+   */
+  async updateMaterial(id: string, body: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const name = body['name'] != null ? String(body['name']).trim() : null;
+      const unit = body['unit'] != null ? String(body['unit']).trim() : null;
+      const category =
+        body['category'] != null && String(body['category']).trim() !== ''
+          ? String(body['category']).trim()
+          : null;
+      const minStock = body['minStock'] != null ? Number(body['minStock']) : null;
+      const result = await rawSql(sql`
+        UPDATE material_cards SET
+          xom_ashyo = COALESCE(${name}, xom_ashyo),
+          unit_of_measure = COALESCE(${unit}, unit_of_measure),
+          category = COALESCE(${category}, category),
+          min_stock = COALESCE(${minStock}, min_stock),
+          updated_at = NOW()
+        WHERE id = ${Number(id)}
+        RETURNING id, xom_ashyo AS "xomAshyo", xom_ashyo_ru AS "xomAshyoRu",
+                  COALESCE(kod, id::text) AS "kod", unit_of_measure AS "unitOfMeasure",
+                  material_type AS "materialType", category, current_stock AS "currentStock"
+      `);
+      const row = dbRows(result)[0];
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id } }));
       return row;
     });
   }

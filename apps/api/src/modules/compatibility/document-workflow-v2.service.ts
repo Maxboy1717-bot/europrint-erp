@@ -34,9 +34,11 @@ interface InitiateDocumentDto {
 @Injectable()
 export class DocumentWorkflowV2Service {
   private readonly logger = new Logger(DocumentWorkflowV2Service.name);
-  private readonly decisions = new DocumentWorkflowV2DecisionsService();
+  private readonly decisions: DocumentWorkflowV2DecisionsService;
 
-  constructor(private readonly i18n: I18nService) {}
+  constructor(private readonly i18n: I18nService) {
+    this.decisions = new DocumentWorkflowV2DecisionsService(i18n);
+  }
 
   /** Hujjat workflow ro'yxati — qaysi turdagi hujjat qanday yo'l yuradi */
   async listRoutes(): Promise<Result<unknown, AppError>> {
@@ -88,7 +90,7 @@ export class DocumentWorkflowV2Service {
     `);
     if (!dbRows(routeRows)[0]) {
       throw new BadRequestException(
-        `Hujjat turi "${documentType}" uchun workflow shabloni topilmadi`,
+        await this.i18n.t('errors.workflowTemplateNotFoundForDocumentType', { args: { documentType } }),
       );
     }
   }

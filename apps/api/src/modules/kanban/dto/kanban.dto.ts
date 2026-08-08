@@ -21,6 +21,11 @@ export const KanbanAddColumnSchema = z.object({
   color:      z.string().max(50).optional(),
   sort_order: z.number().int().min(0).optional(),
   sortOrder:  z.number().int().min(0).optional(),
+  // Owner decision 2026-07-13 (chat): per-column WIP-limit override
+  // (kanban_columns.wip_limit). Unset/omitted -> falls back to the global
+  // KANBAN_WIP_LIMIT_JARAYONDA default (kanban-boards.service.ts).
+  wip_limit:  z.number().int().positive().optional(),
+  wipLimit:   z.number().int().positive().optional(),
 });
 export type KanbanAddColumnDto = z.infer<typeof KanbanAddColumnSchema>;
 
@@ -29,6 +34,9 @@ export const KanbanUpdateColumnSchema = z.object({
   color:      z.string().max(50).optional(),
   sort_order: z.number().int().min(0).optional(),
   sortOrder:  z.number().int().min(0).optional(),
+  // Owner decision 2026-07-13 (chat): per-column WIP-limit override (kanban_columns.wip_limit).
+  wip_limit:  z.number().int().positive().optional(),
+  wipLimit:   z.number().int().positive().optional(),
 });
 export type KanbanUpdateColumnDto = z.infer<typeof KanbanUpdateColumnSchema>;
 
@@ -43,10 +51,22 @@ export const KanbanAddCardSchema = z.object({
   dueDate:       z.string().optional(),
   due_date:      z.string().optional(),
   startDate:     z.string().optional(),
-  ownerUserId:   z.string().optional(),
-  owner_user_id: z.string().optional(),
+  ownerUserId:      z.string().optional(),
+  owner_user_id:    z.string().optional(),
+  assignerUserId:   z.string().optional(),
+  assigner_user_id: z.string().optional(),
   estimatedTime: z.number().int().positive().optional(),
   projectId:     z.string().optional(),
+  // Owner 4-field request (2026-07-13): Tiraj/progress, stansiya-operator, Izoh-belgi.
+  // qoldiq-to'lov is intentionally absent — it's a read-only computed field, never settable.
+  progress:            z.number().optional(),
+  stationOperatorId:   z.string().optional(),
+  station_operator_id: z.string().optional(),
+  commentFlag:         z.boolean().optional(),
+  comment_flag:        z.boolean().optional(),
+  // Owner 2026-07-13: confidential-card flag (hides from the general board — kanban-visibility.helper.ts).
+  isConfidential:   z.boolean().optional(),
+  is_confidential:  z.boolean().optional(),
 });
 export type KanbanAddCardDto = z.infer<typeof KanbanAddCardSchema>;
 
@@ -78,6 +98,16 @@ export const KanbanUpdateCardSchema = z.object({
   recurrenceInterval: z.number().int().positive().nullable().optional(),
   recurrenceEndDate:  z.string().nullable().optional(),
   recurrence_end_date: z.string().nullable().optional(),
+  // Owner 4-field request (2026-07-13): Tiraj/progress, stansiya-operator, Izoh-belgi.
+  // qoldiq-to'lov is intentionally absent — it's a read-only computed field, never settable.
+  progress:             z.number().nullable().optional(),
+  stationOperatorId:    z.string().nullable().optional(),
+  station_operator_id:  z.string().nullable().optional(),
+  commentFlag:          z.boolean().nullable().optional(),
+  comment_flag:         z.boolean().nullable().optional(),
+  // Owner 2026-07-13: confidential-card flag (hides from the general board — kanban-visibility.helper.ts).
+  isConfidential:     z.boolean().optional(),
+  is_confidential:    z.boolean().optional(),
 });
 export type KanbanUpdateCardDto = z.infer<typeof KanbanUpdateCardSchema>;
 

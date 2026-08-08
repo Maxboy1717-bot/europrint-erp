@@ -77,7 +77,7 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
 
       <div>
         <Label className="text-xs mb-2 block">{t("ijtimoiyPaket")}</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
           {(Array.isArray(socialPackageOptions) ? socialPackageOptions : []).map(opt => (
             <button
               key={opt}

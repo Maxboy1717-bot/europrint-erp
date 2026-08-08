@@ -236,7 +236,11 @@ export function BoomerangTab({ alumni }: BoomerangTabProps) {
                 <TableCell className="text-sm text-muted-foreground">{a.position_name || "—"}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className="text-xs">
-                    {a.status === "fired" ? "Ishdan bo'shatilgan" : a.status === "resigned" ? "Ketgan" : a.status}
+                    {/* 2026-07-13: real query returns employees.status='terminated'
+                        (see hr-gsd.repository.ts findBoomerangs()) — "fired"/"resigned"
+                        were never actual values coming back from the old placeholder
+                        query, so this always fell through to raw a.status. */}
+                    {a.status === "terminated" ? "Ishdan bo'shatilgan" : a.status === "fired" ? "Ishdan bo'shatilgan" : a.status === "resigned" ? "Ketgan" : a.status}
                   </Badge>
                 </TableCell>
               </TableRow>

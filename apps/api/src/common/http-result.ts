@@ -61,6 +61,8 @@ export function throwFromError(error: AppError): never {
       throw new HttpException(msg, HttpStatus.PAYMENT_REQUIRED);
     case 'BUSINESS_RULE_VIOLATION':
       throw new UnprocessableEntityException(msg);
+    case 'NOT_IMPLEMENTED':
+      throw new HttpException(msg, HttpStatus.NOT_IMPLEMENTED);
     default:
       throw new InternalServerErrorException(msg);
   }
@@ -207,7 +209,13 @@ export function assertOkOrThrow<T>(
  *
  * @param r - either a Result<T> or a plain T
  * @returns success payload
- * @throws mapped NestJS HttpException
+ * @throws NotFoundException for NOT_FOUND
+ * @throws ConflictException for CONFLICT
+ * @throws BadRequestException for VALIDATION / BAD_REQUEST
+ * @throws UnauthorizedException for UNAUTHORIZED
+ * @throws ForbiddenException for FORBIDDEN
+ * @throws HttpException(501) for NOT_IMPLEMENTED — honest "not built yet", not a server fault
+ * @throws InternalServerErrorException for any other code
  */
 export function unwrapOrInternal<T>(r: Result<T> | T): T {
   if (_isResultShape(r)) {
@@ -229,6 +237,12 @@ export function unwrapOrInternal<T>(r: Result<T> | T): T {
         throw new UnauthorizedException(msg);
       case 'FORBIDDEN':
         throw new ForbiddenException(msg);
+      case 'NOT_IMPLEMENTED':
+        // Honest "not built yet" signal (Q-40/Q-46) — 501, not a 500. The
+        // GlobalExceptionFilter already special-cases HttpStatus.NOT_IMPLEMENTED
+        // as INFO-level (see getLogLevel); routing it through the `default`
+        // 500 branch previously masked it as a CRITICAL-logged internal error.
+        throw new HttpException(msg, HttpStatus.NOT_IMPLEMENTED);
       default:
         throw new InternalServerErrorException(msg);
     }

@@ -75,7 +75,7 @@ export default function QCApproval() {
       return apiRequest("PATCH", `/api/qc/inspector-submit/${orderId}`, { qcTestId, comments });
     },
     onSuccess: () => {
-      toast({ title: "Muvaffaqiyat", description: "Inspeksiya yuborildi — QC menejer ko'rib chiqishini kutmoqda" });
+      toast({ title: t("qcMuvaffaqiyat"), description: t("qcInspeksiyaYuborildi") });
       queryClient.invalidateQueries({ queryKey: ["/api/qc/pending/qc"] });
       setInspectorSubmitDialog(false);
       setSelectedOrder(null);

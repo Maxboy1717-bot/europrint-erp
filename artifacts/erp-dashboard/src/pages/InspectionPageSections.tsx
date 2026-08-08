@@ -76,7 +76,7 @@ export function RoomCard({
           <div className="flex items-center gap-1 text-xs">
             <span className="text-gray-500">{t("jihozlar1")}</span>
             <span className={eq ? 'text-[var(--ep-green)] font-medium' : 'text-[var(--ep-red)] font-medium'}>
-              {eq ? '✓ Joyida' : '✗ Muammo'}
+              {eq ? `✓ ${t("qcJoyida")}` : `✗ ${t("qcMuammo")}`}
             </span>
             {avg !== undefined && (
               <span className="ml-auto font-semibold text-gray-700">{Math.round(avg * 100)}%</span>

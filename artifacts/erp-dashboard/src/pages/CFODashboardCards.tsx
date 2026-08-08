@@ -4,8 +4,7 @@
  *   for CFODashboard.
  *
  *   Migrated to the EuroPrint design system:
- *     - <EPKpiCard> replaces the old flat coloured boxes
- *       (bg-green-500 / bg-red-500 / bg-blue-500 / bg-purple-500)
+ *     - <EPKpiCard> replaces the old flat raw-palette coloured boxes
  *     - 42px round icon tile in the module/status hue (FI cyan + EP green/red/blue/purple)
  *     - Animated count-up via `staticValue` (we pass the pre-formatted short
  *       currency string so the animation just fades in)

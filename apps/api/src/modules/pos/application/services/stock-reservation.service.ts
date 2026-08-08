@@ -18,6 +18,7 @@ import { MS_PER_HOUR } from '@common/constants/app.constants';
  */
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { stockReservations } from '@workspace/db';
 import { PosStockReservationRepository } from '../../infrastructure/repositories/pos-stock-reservation.repository';
@@ -34,7 +35,10 @@ interface CreateReservationDto {
 export class StockReservationService {
   private readonly logger = new Logger(StockReservationService.name);
 
-  constructor(private readonly stockReservationRepo: PosStockReservationRepository) {}
+  constructor(
+    private readonly stockReservationRepo: PosStockReservationRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   /**
    * Bronni tekshirish va yaratish.
@@ -52,8 +56,7 @@ export class StockReservationService {
   
       if (available < dto.reservedQty) {
         throw new BadRequestException(
-          `Yetarli mavjud emas: mavjud=${available}, so'ralgan=${dto.reservedQty} ` +
-          `(jami=${onHand}, bronlangan=${reserved})`,
+          await this.i18n.t('errors.insufficientAvailableStock', { args: { available, requested: dto.reservedQty, total: onHand, reserved } }),
         );
       }
   
@@ -82,14 +85,25 @@ export class StockReservationService {
   }
 
   /**
+   * G1-2 BRON-BLOK (2026-07-02): material+ombor uchun ACTIVE bron yig'indisi.
+   * PosMovementService chiqim-gate'i (EXTERNAL_OUT/INTERNAL_ISSUE) shu orqali
+   * bron bor-yo'qligini tekshiradi — GET issuable (pos-stock-issuable.service
+   * :182-239) bilan BIR XIL semantika: bron > 0 → blok, faqat
+   * super_admin/direktor override qila oladi.
+   */
+  async getActiveReservedTotal(materialCardId: number, warehouseId: number): Promise<Result<number, AppError>> {
+    return this.stockReservationRepo.sumActiveReservations(materialCardId, warehouseId);
+  }
+
+  /**
    * Bronni bekor qilish (CANCELLED).
    */
   async cancel(reservationId: number, cancelledById: number) {
     const reservationR = await this.stockReservationRepo.findById(reservationId);
-    if (!reservationR.ok) throw new BadRequestException(`Bron topilmadi: ${reservationId}`);
+    if (!reservationR.ok) throw new BadRequestException(await this.i18n.t('errors.reservationNotFound', { args: { id: reservationId } }));
     const reservation = reservationR.data as { status: string };
     if (reservation.status !== 'ACTIVE') {
-      throw new BadRequestException(`Bron faol emas: ${reservation.status}`);
+      throw new BadRequestException(await this.i18n.t('errors.reservationNotActive', { args: { status: reservation.status } }));
     }
 
     const updated = await this.stockReservationRepo.cancelById(reservationId);

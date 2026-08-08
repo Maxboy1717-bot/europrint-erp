@@ -20,6 +20,7 @@ export interface ISdDashboardRepo {
   getExtendedStats(): Promise<Result<Row>>;
   getLeadFunnelStats(): Promise<Result<Row[]>>;
   getDebitorStats(): Promise<Result<Row>>;
+  getManagerLeaderboard(period: string | null, lim: number): Promise<Result<Row[]>>;
 }
 
 export const SD_DASHBOARD_REPO = Symbol('SD_DASHBOARD_REPO');

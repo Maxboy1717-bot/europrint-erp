@@ -43,6 +43,7 @@ export class KanbanColumnsRepository {
           name:       input.name,
           sort_order: input.sort_order,
           color:      input.color,
+          wip_limit:  input.wip_limit,
         })
         .returning();
       const row = rows[0];
@@ -59,7 +60,8 @@ export class KanbanColumnsRepository {
       const rows = await runQuery<Record<string, unknown>>(sql`
         UPDATE kanban_columns
         SET name = COALESCE(${input.name ?? null}, name), color = COALESCE(${input.color ?? null}, color),
-            sort_order = COALESCE(${input.sort_order ?? null}, sort_order), updated_at = NOW()
+            sort_order = COALESCE(${input.sort_order ?? null}, sort_order),
+            wip_limit = COALESCE(${input.wip_limit ?? null}, wip_limit), updated_at = NOW()
         WHERE id = ${columnId} AND board_id = ${boardId} AND deleted_at IS NULL RETURNING *
       `);
       if (!rows.rows[0]) return Err({ message: `Column ${columnId} topilmadi`, code: 'NOT_FOUND' });

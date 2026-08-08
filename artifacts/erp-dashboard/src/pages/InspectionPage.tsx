@@ -62,15 +62,15 @@ export default function InspectionPage() {
     <div className="p-6 max-w-6xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Building2 className="w-6 h-6 text-[var(--ep-blue)]" />
             {t("xonaInspeksiyasi")}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">{t("aiTahlilVaRealTimeMonitoring")}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("aiTahlilVaRealTimeMonitoring")}</p>
         </div>
         <div className="flex items-center gap-3">
           {anomalyCount > 0 && (
-            <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
+            <div className="flex items-center gap-1.5 bg-destructive/10 border border-destructive/40 rounded-lg px-3 py-1.5">
               <AlertTriangle className="w-4 h-4 text-[var(--ep-red)]" />
               <span className="text-sm font-semibold text-[var(--ep-red)]">{anomalyCount} muammo</span>
             </div>
@@ -97,13 +97,13 @@ export default function InspectionPage() {
 
         <TabsContent value="rooms" className="mt-4">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {(Array.isArray(ROOMS) ? ROOMS : []).map((r) => (
                 <div key={r.code} className="h-48 bg-gray-100 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {(Array.isArray(ROOMS) ? ROOMS : []).map((r) => (
                 <RoomCard
                   key={r.code}

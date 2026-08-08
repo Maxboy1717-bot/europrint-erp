@@ -7,6 +7,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
+import { I18nService } from 'nestjs-i18n';
 import { DailyReportService } from './daily-report.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { unwrapOrInternal } from '@common/http-result';
@@ -30,9 +31,14 @@ const SubmitReportSchema = z.object({
 });
 class SubmitReportDto extends createZodDto(SubmitReportSchema) {}
 
+// Audit 2026-08-08: FE (DailyReportPage.tsx handleOverride) sends {is_auto_absent, reason} —
+// neither key existed here (`is_auto_absent` missing entirely, `reason` vs `override_notes`
+// name mismatch), so Zod silently dropped both and the "HR override — mark as absence"
+// button never actually changed anything.
 const OverrideReportSchema = z.object({
   hr_user_id:     z.number().int().optional(),
-  override_notes: z.string().optional(),
+  is_auto_absent: z.boolean().optional(),
+  reason:         z.string().optional(),
 });
 class OverrideReportDto extends createZodDto(OverrideReportSchema) {}
 
@@ -43,7 +49,10 @@ class OverrideReportDto extends createZodDto(OverrideReportSchema) {}
 @Controller('hr-v2/daily-reports')
 export class DailyReportController {
   private readonly logger = new Logger(DailyReportController.name);
-  constructor(private readonly svc: DailyReportService) {}
+  constructor(
+    private readonly svc: DailyReportService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Post()
   async submit(@Body() body: SubmitReportDto) {
@@ -69,7 +78,9 @@ export class DailyReportController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const hrUserId = body.hr_user_id ?? user?.id ?? 0;
-    return unwrapOrInternal(await this.svc.hrOverride(id, hrUserId, body.override_notes ?? ''));
+    return unwrapOrInternal(
+      await this.svc.hrOverride(id, hrUserId, body.reason ?? '', undefined, body.is_auto_absent),
+    );
   }
 
   @Get('stats')
@@ -125,7 +136,7 @@ export class DailyReportController {
   ) {
     const empId = parseInt(employeeId, 10);
     if (!Number.isFinite(empId) || empId <= 0) {
-      throw new BadRequestException('employeeId is required');
+      throw new BadRequestException(await this.i18n.t('errors.employeeIdRequired'));
     }
     return unwrapOrInternal(await this.svc.getByEmployee(empId, this.parseLimit(limit, 30)));
   }

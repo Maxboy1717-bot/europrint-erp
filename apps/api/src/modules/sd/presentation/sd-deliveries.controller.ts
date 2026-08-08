@@ -13,6 +13,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, UsePipes,} from '@nestjs/common';
@@ -25,7 +26,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@shared/interceptors/audit.interceptor';
 import { DeliveriesService } from '../deliveries/deliveries.service';
-import { SdUpdateDeliveryStatusSchema, SdUpdateDeliveryStatusDto } from '../dto/sd.dto';
+import { SdUpdateDeliveryStatusSchema, SdUpdateDeliveryStatusDto, SdCreateDeliverySchema } from '../dto/sd.dto';
 
 @ApiThrottle()
 @ApiTags('Sd Deliveries')
@@ -45,6 +46,22 @@ export class SdDeliveriesController {
   async getDeliveries(@Query() query: Record<string, unknown>) {
     const result = await this.deliveriesService.findAll(query);
     return unwrapOrThrow(result);
+  }
+
+  @ApiOperation({ summary: 'Create delivery' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post()
+  async createDelivery(@Body() body: unknown) {
+    const parsed = SdCreateDeliverySchema.safeParse(body ?? {});
+    if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
+    const dto = parsed.data;
+    // delivery_number is NOT NULL UNIQUE with no DB default — generate server-side
+    const deliveryNumber = `DLV-${String(Date.now() % 10000000000).padStart(10, '0')}`;
+    const result = await this.deliveriesService.create({ ...dto, deliveryNumber });
+    if (!result.ok) throw new InternalServerErrorException(result.error);
+    this.logger.log('Delivery created');
+    return { statusCode: HttpStatus.CREATED, data: result.data };
   }
 
   @ApiOperation({ summary: 'Get delivery' })

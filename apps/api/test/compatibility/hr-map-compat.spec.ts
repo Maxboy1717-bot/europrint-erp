@@ -34,8 +34,10 @@ describe('HrMapCompatController', () => {
   });
 
   it('getMapEmployees forwards department and status filters', async () => {
+    // Controller signature: getMapEmployees(departmentId?, orgDepartmentId?, status?)
+    // deptId = departmentId ?? orgDepartmentId; pass status as 3rd arg.
     (svc.getMapEmployees as jest.Mock).mockResolvedValue(ok([{ id: 'e1' }]));
-    await ctrl.getMapEmployees('d1', 'active');
+    await ctrl.getMapEmployees('d1', undefined, 'active');
     expect(svc.getMapEmployees).toHaveBeenCalledWith('d1', 'active');
   });
 

@@ -12,7 +12,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
   AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Clock, Check, Calendar, X } from "lucide-react";
+import { Clock, Check, Calendar, X, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import type { UseMutationResult } from "@tanstack/react-query";
 import {
@@ -53,6 +53,10 @@ export function PendingActivitiesSection({
             ) : (
               (Array.isArray(pendingActivities) ? pendingActivities : []).map((activity) => {
                 const Icon = getActivityIcon(activity.type);
+                const isOverdue =
+                  !!activity.scheduledAt &&
+                  new Date(activity.scheduledAt) < new Date() &&
+                  activity.status !== "completed";
                 return (
                   <Card key={activity.id} className="hover-elevate" data-testid={`card-activity-${activity.id}`}>
                     <CardContent className="p-4">
@@ -68,12 +72,26 @@ export function PendingActivitiesSection({
                                 {activity.description}
                               </p>
                             )}
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
                               <Badge variant="outline" className={priorityColors[activity.priority]}>
                                 {activity.priority}
                               </Badge>
+                              {isOverdue && (
+                                <Badge
+                                  variant="destructive"
+                                  className="gap-1"
+                                  data-testid={`badge-overdue-${activity.id}`}
+                                >
+                                  <AlertTriangle className="h-3 w-3" />
+                                  {t("overdue")}
+                                </Badge>
+                              )}
                               {activity.scheduledAt && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <span
+                                  className={`text-xs flex items-center gap-1 ${
+                                    isOverdue ? "text-[var(--ep-red)] font-medium" : "text-muted-foreground"
+                                  }`}
+                                >
                                   <Calendar className="h-3 w-3" />
                                   {format(new Date(activity.scheduledAt), "dd.MM.yyyy HH:mm")}
                                 </span>

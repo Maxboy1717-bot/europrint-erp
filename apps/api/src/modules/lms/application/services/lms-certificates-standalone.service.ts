@@ -37,7 +37,8 @@ export class LmsCertificatesStandaloneService {
   async createCertificate(
     dto: CreateCertificateDto,
     userId: string,
+    issuedIp?: string,
   ): Promise<Result<Record<string, unknown>>> {
-    return this.repo.saveCertificate(castTo<Record<string, unknown>>(dto), userId);
+    return this.repo.saveCertificate(castTo<Record<string, unknown>>({ ...dto, issuedIp }), userId);
   }
 }

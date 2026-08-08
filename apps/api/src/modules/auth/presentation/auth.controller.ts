@@ -12,6 +12,7 @@ import { AuthThrottle } from '@common/decorators/throttle-profiles';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import type { SignOptions } from 'jsonwebtoken';
 import { I18nService } from 'nestjs-i18n';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { LoginService, LoginCommand } from '../application/services/login.service';
@@ -28,7 +29,7 @@ import { assertOk } from '@common/http-result';
 export { AuthAccountController } from './auth-account.controller';
 
 // ─── Cookie configuration ───────────────────────────────────────────────────
-// Access token cookie: short-lived (24h), sent to every /api/* request.
+// Access token cookie: short-lived (15m, vizyon), sent to every /api/* request.
 // Refresh token cookie: longer-lived (7d), restricted to /api/auth path
 // (defense in depth — refresh token never leaves the auth surface).
 // Both cookies are httpOnly so JavaScript on the page cannot read them; this
@@ -37,7 +38,10 @@ export { AuthAccountController } from './auth-account.controller';
 // the cookie — sufficient CSRF mitigation for MVP without a separate token.
 const ACCESS_COOKIE_NAME = 'access_token';
 const REFRESH_COOKIE_NAME = 'refresh_token';
-const ACCESS_COOKIE_MAX_AGE_SEC = 24 * 60 * 60; // 24 hours
+// T10-17: access cookie umri = access-token TTL (vizyon 15 daqiqa) — token o'lib, cookie
+// 24h yashab qolishi (drift) oldini oladi. Refresh cookie uzun (7d) → refresh oqimi yangi
+// access mint qiladi, foydalanuvchi qayta login qilmaydi.
+const ACCESS_COOKIE_MAX_AGE_SEC = 15 * 60; // 15 minutes
 const REFRESH_COOKIE_MAX_AGE_SEC = 7 * 24 * 60 * 60; // 7 days
 
 /**
@@ -125,7 +129,10 @@ export class AuthController {
     const authHeader = req.headers['authorization'] as string | undefined;
     const headerToken = authHeader?.replace(/^Bearer\s+/i, '') || '';
     const token = cookieToken || headerToken;
-    const command: LogoutCommand = { token, userId: user.id };
+    // T8-03 xavfsizlik: refresh-token ham revoke qilinadi — aks holda chiqib ketgandan keyin
+    // ham eski refresh-token /auth/refresh orqali yangi access-token mint qilaverardi.
+    const refreshToken = req.cookies?.[REFRESH_COOKIE_NAME];
+    const command: LogoutCommand = { token, userId: user.id, refreshToken };
     const result = await this.logoutHandler.execute(command);
     assertOk(result);
 
@@ -139,8 +146,9 @@ export class AuthController {
 
   /**
    * POST /auth/refresh — exchange a valid refresh token for a fresh access token
-   * AND a fresh refresh token (rotation). The OLD refresh token is blacklisted
-   * the moment a new pair is issued.
+   * AND a fresh refresh token (rotation). The OLD refresh token is atomically
+   * claimed (revoked) BEFORE a new pair is minted (C7.6 fix) — single-use,
+   * race-free even under concurrent refresh calls with the same old token.
    * Uses JWT_REFRESH_SECRET (NOT JWT_SECRET) to verify, so an exfiltrated
    * access token cannot be replayed here.
    */
@@ -163,14 +171,24 @@ export class AuthController {
       const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
       const payload = this.jwtService.verify(oldRefreshToken, { secret: refreshSecret });
 
-      // Reject replays: blacklisted tokens must not mint new pairs.
-      const isBlacklisted = await this.authRepo.isTokenBlacklisted(oldRefreshToken);
-      if (isBlacklisted) throw new UnauthorizedException(await this.i18n.t('auth.tokenRevoked'));
+      // C7.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): atomically CLAIM (revoke) the old refresh
+      // token BEFORE minting a new pair — this is what actually closes the race, not a separate
+      // check-then-mint-then-revoke sequence. Two concurrent requests with the same old token:
+      // only one's claim can win (blacklistToken()'s guarded UPDATE is serialized by Postgres
+      // row-level locking); the loser is rejected here and never mints a second live pair.
+      // Replaces the old separate isTokenBlacklisted() pre-check, which left exactly this gap
+      // open (both requests could pass it before either blacklisted).
+      const oldExpiresAt = typeof payload.exp === 'number'
+        ? new Date(payload.exp * 1000)
+        : new Date(Date.now() + REFRESH_COOKIE_MAX_AGE_SEC * 1000);
+      const claimed = await this.authRepo.blacklistToken(oldRefreshToken, oldExpiresAt);
+      if (!claimed) throw new UnauthorizedException(await this.i18n.t('auth.tokenRevoked'));
 
       // Issue NEW access token (same lifetime / claims as login).
+      // T10-17: 15-daqiqalik access TTL — login.service bilan bir manba (JWT_ACCESS_TOKEN_TTL).
       const accessToken = this.jwtService.sign(
         { sub: payload.sub, username: payload.username, role: payload.role },
-        { expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '24h' },
+        { expiresIn: (this.configService.get<string>('JWT_ACCESS_TOKEN_TTL') ?? '15m') as SignOptions['expiresIn'] },
       );
 
       // Issue NEW refresh token — signed with JWT_REFRESH_SECRET, longer lifetime.
@@ -179,13 +197,6 @@ export class AuthController {
         { sub: payload.sub, username: payload.username, role: payload.role },
         { secret: refreshSecret, expiresIn: refreshExpiresIn },
       );
-
-      // Blacklist the OLD refresh token AFTER successfully minting the new pair,
-      // so a transient DB error doesn't leave the user locked out.
-      const oldExpiresAt = typeof payload.exp === 'number'
-        ? new Date(payload.exp * 1000)
-        : new Date(Date.now() + REFRESH_COOKIE_MAX_AGE_SEC * 1000);
-      await this.authRepo.blacklistToken(oldRefreshToken, oldExpiresAt);
 
       // Rotate both cookies on the response so the browser picks up the new pair.
       if (typeof reply.setCookie === 'function') {

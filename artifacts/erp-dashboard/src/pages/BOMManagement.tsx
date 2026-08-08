@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Package, ChevronRight, ChevronDown, Trash2, Edit, FileText, Layers, AlertCircle } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useUndoDelete } from "@/components/undo-toast";
 import { ModulePage } from "@/components/ui/module-page";
 import { CardSkeleton } from "@/components/ui/loading-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -30,7 +29,6 @@ import { EPErrorState, EPStatusPill, EPLoader } from "@/components/ep";
 
 export default function BOMManagement() {
   const { toast } = useToast();
-  const { showUndoToast } = useUndoDelete();
   const { t } = useTranslation("production");
   const { t: tCommon } = useTranslation('common');
   const [showBOMDialog, setShowBOMDialog] = useState(false);
@@ -41,43 +39,141 @@ export default function BOMManagement() {
   const [expandedBOMs, setExpandedBOMs] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteBomId, setDeleteBomId] = useState<string | null>(null);
-  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const [deleteItemId, setDeleteItemId] = useState<{ itemId: string; bomId: string } | null>(null);
 
   const bomForm = useForm<BOMFormValues>({ resolver: zodResolver(bomFormSchema), defaultValues: { bomNumber: "", productId: "", version: "1.0", status: "draft", baseQuantity: 1, unit: "pcs", effectiveDate: "", expiryDate: "" } });
   const itemForm = useForm<ItemFormValues>({ resolver: zodResolver(itemFormSchema), defaultValues: { componentId: "", quantity: 1, unit: "pcs", componentType: "raw", scrapPercentage: 0, position: 10, itemNumber: "", notes: "" } });
 
-  const { data: bomList = [], isLoading: bomLoading, error: bomError, isError, refetch } = useQuery<Array<{ bom: BOMHeader; product: Product }>>({ queryKey: ["/api/erp/bom-headers"] });
-  const { data: products = [] } = useQuery<Product[]>({ queryKey: ["/api/erp/products"] });
-  const { data: bomItems = [] } = useQuery<Array<{ item: BOMItem; component: Product }>>({ queryKey: ["/api/erp/bom-items"], enabled: !!selectedBOM });
+  const { data: bomList = [], isLoading: bomLoading, error: bomError, isError, refetch } = useQuery({
+    queryKey: ["/api/pp/bom"],
+    select: (raw: unknown): Array<{ bom: BOMHeader; product: Product }> => {
+      const r = raw as Record<string, unknown>;
+      const items = Array.isArray(r?.items) ? (r.items as Record<string, unknown>[])
+        : Array.isArray(r?.data) ? (r.data as Record<string, unknown>[])
+        : Array.isArray(raw) ? (raw as Record<string, unknown>[])
+        : [];
+      return items.map((row) => ({
+        bom: {
+          id: String(row.id ?? ""),
+          bomNumber: String(row.bom_number ?? row.bomNumber ?? `BOM-${row.id}`),
+          productId: String(row.product_id ?? row.productId ?? ""),
+          version: String(row.version ?? "1.0"),
+          status: String(row.status ?? "draft"),
+          baseQuantity: Number(row.base_quantity ?? row.baseQuantity ?? 1),
+          unit: String(row.base_unit ?? row.baseUnit ?? "dona"),
+          effectiveDate: (row.effective_date ?? row.effectiveDate ?? null) as string | null,
+          expiryDate: (row.expiry_date ?? row.expiryDate ?? null) as string | null,
+        },
+        product: {
+          id: String(row.product_id ?? row.productId ?? ""),
+          code: "",
+          name: String(row.product_name ?? ""),
+          type: "",
+        },
+      }));
+    },
+  });
+  const { data: products = [] } = useQuery({
+    queryKey: ["/api/material-cards"],
+    select: (raw: unknown): Product[] => {
+      const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+      return items.map((item) => ({
+        id: String(item.id ?? ""),
+        code: String(item.sku ?? item.kod ?? ""),
+        name: String(item.name ?? item.xom_ashyo ?? ""),
+        type: "",
+      }));
+    },
+  });
+  const { data: bomItems = [] } = useQuery({
+    queryKey: ["/api/pp/bom", selectedBOM?.header?.id, "items"],
+    enabled: !!selectedBOM?.header?.id,
+    select: (raw: unknown): Array<{ item: BOMItem; component: Product }> => {
+      const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+      return items.map((row) => ({
+        item: {
+          id: String(row.id ?? ""),
+          bomId: String(row.bomId ?? row.bom_id ?? ""),
+          itemNumber: String(row.itemNumber ?? row.item_number ?? ""),
+          componentType: String(row.componentType ?? row.component_type ?? "material"),
+          componentId: String(row.componentId ?? row.component_id ?? ""),
+          quantity: Number(row.quantity ?? 1),
+          unit: String(row.unit ?? "dona"),
+          scrapPercentage: Number(row.scrapPercentage ?? row.scrap_percentage ?? 0),
+          position: Number(row.position ?? 0),
+          notes: (row.notes as string | null) ?? null,
+        },
+        component: {
+          id: String(row.componentId ?? row.component_id ?? ""),
+          code: "",
+          name: "",
+          type: "",
+        },
+      }));
+    },
+  });
 
   const createBOMMutation = useMutation({
-    mutationFn: (data: BOMFormValues) => apiRequest("POST", "/api/erp/bom-headers", data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/erp/bom-headers"] }); setShowBOMDialog(false); bomForm.reset(); toast({ title: tCommon("createdSuccessfully") }); },
+    mutationFn: (data: BOMFormValues) => apiRequest("POST", "/api/pp/bom", {
+      productId: Number(data.productId),
+      bomNumber: data.bomNumber,
+      version: data.version,
+      baseQuantity: data.baseQuantity,
+      baseUnit: data.unit,
+      items: [],
+      reason: "BOM yaratildi",
+    }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/pp/bom"] }); setShowBOMDialog(false); bomForm.reset(); toast({ title: tCommon("createdSuccessfully") }); },
     onError: () => { toast({ variant: "destructive", title: tCommon("error"), description: tCommon("operationFailed") }); },
   });
   const createItemMutation = useMutation({
-    mutationFn: (data: ItemFormValues & { bomId: string }) => apiRequest("POST", "/api/erp/bom-items", data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/erp/bom-items"] }); setShowItemDialog(false); itemForm.reset(); toast({ title: tCommon("createdSuccessfully") }); },
+    mutationFn: (data: ItemFormValues & { bomId: string }) => apiRequest("POST", `/api/pp/bom/${data.bomId}/items`, {
+      componentId: Number(data.componentId),
+      quantity: data.quantity,
+      unit: data.unit,
+      componentType: data.componentType,
+      scrapPercentage: data.scrapPercentage,
+      position: data.position,
+      itemNumber: data.itemNumber,
+      notes: data.notes,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/bom", selectedBOM?.header?.id, "items"] });
+      setShowItemDialog(false); itemForm.reset(); toast({ title: tCommon("createdSuccessfully") });
+    },
     onError: () => { toast({ variant: "destructive", title: tCommon("error"), description: tCommon("operationFailed") }); },
   });
   const deleteBOMMutation = useMutation({
-    mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/erp/bom-headers/${id}`); return id; },
-    onSuccess: (id) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/bom-headers"] });
+    mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/pp/bom/${id}`); return id; },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/bom"] });
       setDeleteBomId(null);
-      const bom = (Array.isArray(bomList) ? bomList : []).find((b) => b.bom.id === id);
-      showUndoToast("bom_headers", id, bom?.bom?.bomNumber || id, () => { queryClient.invalidateQueries({ queryKey: ["/api/erp/bom-headers"] }); });
+      toast({ title: tCommon("deletedSuccessfully") });
     },
     onError: () => { setDeleteBomId(null); toast({ variant: "destructive", title: tCommon("error"), description: tCommon("operationFailed") }); },
   });
   const deleteItemMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("DELETE", `/api/erp/bom-items/${id}`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/erp/bom-items"] }); setDeleteItemId(null); toast({ title: tCommon("deletedSuccessfully") }); },
+    mutationFn: ({ itemId, bomId }: { itemId: string; bomId: string }) =>
+      apiRequest("DELETE", `/api/pp/bom/${bomId}/items/${itemId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pp/bom", selectedBOM?.header?.id, "items"] });
+      setDeleteItemId(null); toast({ title: tCommon("deletedSuccessfully") });
+    },
     onError: () => { setDeleteItemId(null); toast({ variant: "destructive", title: tCommon("error"), description: tCommon("operationFailed") }); },
   });
   const explosionMutation = useMutation({
-    mutationFn: async (bomId: string) => {
-      return await apiRequest<ExplosionData>('GET', `/api/erp/bom-headers/${bomId}/explosion?quantity=1`);
+    mutationFn: async (bomId: string): Promise<ExplosionData> => {
+      const items = await apiRequest<Record<string, unknown>[]>('GET', `/api/pp/bom/${bomId}/items`);
+      const explosion: ExplosionItem[] = (Array.isArray(items) ? items : []).map((it) => ({
+        level: 0,
+        componentName: `Component ${it.componentId ?? it.component_id ?? ""}`,
+        componentCode: String(it.itemNumber ?? it.item_number ?? ""),
+        componentType: String(it.componentType ?? it.component_type ?? "material"),
+        quantity: Number(it.quantity ?? 1),
+        unit: String(it.unit ?? "dona"),
+        ...(it.notes ? { notes: String(it.notes) } : {}),
+      }));
+      return { explosion, totalComponents: explosion.length };
     },
     onSuccess: (data) => { setExplosionData(data); setShowExplosion(true); toast({ title: tCommon("success") }); },
     onError: () => { toast({ variant: "destructive", title: tCommon("error"), description: tCommon("operationFailed") }); },
@@ -166,7 +262,7 @@ export default function BOMManagement() {
                         <div className="flex items-center gap-4">
                           <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold" data-testid={`badge-qty-${item.item.id}`}>{item.item.quantity} {item.item.unit}</Badge>
                           {item.item.scrapPercentage > 0 && <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("scrap")}: {item.item.scrapPercentage}%</Badge>}
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteItemId(item.item.id)} data-testid={`button-delete-item-${item.item.id}`}><Trash2 className="h-4 w-4" /></Button>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteItemId({ itemId: item.item.id, bomId: bomData.bom.id })} data-testid={`button-delete-item-${item.item.id}`}><Trash2 className="h-4 w-4" /></Button>
                         </div>
                       </div>
                     ))}
@@ -196,7 +292,7 @@ export default function BOMManagement() {
                 {getBOMItems(selectedBOM.header.id).map((item) => (
                   <div key={item.item.id} className="flex items-center justify-between p-3 rounded-md border">
                     <div><p className="font-medium">{item.component?.name}</p><p className="text-sm text-muted-foreground">{item.item.quantity} {item.item.unit} • {item.item.componentType}</p></div>
-                    <Button size="sm" variant="ghost" onClick={() => setDeleteItemId(item.item.id)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => setDeleteItemId({ itemId: item.item.id, bomId: selectedBOM.header.id })}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 ))}
               </div>

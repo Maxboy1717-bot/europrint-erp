@@ -74,99 +74,34 @@ export interface ReservationRequestData {
   createdAt: string;
 }
 
-export interface Translations {
-  title: string;
-  subtitle: string;
-  tabs: {
-    aiReservation: string;
-    batches: string;
-    history: string;
-  };
-  dashboard: {
-    totalStock: string;
-    reservedPct: string;
-    expiringSoon: string;
-    aiConfidence: string;
-  };
-  aiPanel: {
-    title: string;
-    materialType: string;
-    quantity: string;
-    unit: string;
-    requiredBy: string;
-    priority: string;
-    notes: string;
-    optimize: string;
-    selectType: string;
-  };
-  priorities: {
-    low: string;
-    normal: string;
-    high: string;
-    urgent: string;
-  };
-  recommendation: {
-    title: string;
-    batch: string;
-    takeQty: string;
-    expiry: string;
-    location: string;
-    grade: string;
-    score: string;
-    coverage: string;
-    confidence: string;
-    shortage: string;
-    confirm: string;
-    cancel: string;
-    noData: string;
-  };
-  batches: {
-    title: string;
-    addBatch: string;
-    batchNum: string;
-    material: string;
-    type: string;
-    total: string;
-    reserved: string;
-    available: string;
-    expiry: string;
-    received: string;
-    location: string;
-    grade: string;
-    status: string;
-    cost: string;
-    noBatches: string;
-  };
-  history: {
-    title: string;
-    id: string;
-    type: string;
-    qty: string;
-    reserved: string;
-    shortage: string;
-    confidence: string;
-    status: string;
-    date: string;
-    actions: string;
-    noRequests: string;
-  };
-  statuses: {
-    pending: string;
-    reserved: string;
-    partial: string;
-    insufficient: string;
-    cancelled: string;
-    available: string;
-    depleted: string;
-    expired: string;
-  };
-  save: string;
-  cancel: string;
-  close: string;
-  search: string;
-  allTypes: string;
-  allStatuses: string;
-  addBatchTitle: string;
-  materialName: string;
-  batchNumber: string;
-}
+/** Signature of the real i18n `t()` function from `useTranslation()` (see src/lib/i18n). */
+export type TFunc = (key: string, params?: Record<string, string | number> | string) => string;
+
+export const STATUS_COLORS: Record<string, string> = {
+  pending: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400",
+  reserved: "bg-blue-500/20 text-[var(--ep-blue)] dark:text-blue-400",
+  partial: "bg-orange-500/20 text-[var(--ep-primary)] dark:text-orange-400",
+  insufficient: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
+  cancelled: "bg-muted text-muted-foreground",
+  available: "bg-green-500/20 text-[var(--ep-green)] dark:text-green-400",
+  depleted: "bg-muted text-muted-foreground",
+  expired: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
+};
+
+export const GRADE_COLORS: Record<string, string> = {
+  A: "bg-green-500/20 text-[var(--ep-green)] dark:text-green-400",
+  B: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400",
+  C: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
+};
+
+/** Maps a batch/request `status` DB value to its i18n key under the "wms" namespace. */
+export const STATUS_I18N_KEY: Record<string, string> = {
+  pending: "Reservation.statusPending",
+  reserved: "Reservation.statusReserved",
+  partial: "Reservation.statusPartial",
+  insufficient: "Reservation.statusInsufficient",
+  cancelled: "Reservation.statusCancelled",
+  available: "Reservation.statusAvailable",
+  depleted: "Reservation.statusDepleted",
+  expired: "Reservation.statusExpired",
+};

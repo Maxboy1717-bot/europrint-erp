@@ -9,9 +9,12 @@ import { db, eq, desc, and } from '@workspace/db';
 import { glPostingLog } from '@workspace/db';
 import { sql } from 'drizzle-orm';
 import { typedExecute } from '@shared/db/typed-execute';
+import { GlPostingService, type JournalLine } from '@modules/finance/domain/services/gl-posting.service';
 
 @Injectable()
 export class GlPostingLogRepository {
+  constructor(private readonly glPostingService: GlPostingService) {}
+
   async insertLog(data: typeof glPostingLog.$inferInsert): Promise<Result<typeof glPostingLog.$inferSelect>> {
     try {
       const [row] = await db.insert(glPostingLog).values(data).returning();
@@ -142,15 +145,34 @@ export class GlPostingLogRepository {
         return Ok({ posted: false, reason: `account code(s) not in CoA: ${map.debitAccount}/${map.creditAccount}` });
       }
 
-      const entryDate = new Date().toISOString().slice(0, 10);
-      await db.execute(sql`
-        INSERT INTO entries
-          (entry_number, entry_date, document_type, document_id, debit_account_id, credit_account_id,
-           debit_account, credit_account, amount, description, created_by, created_at)
-        VALUES
-          (${`POS-GL-${movementId}`}, ${entryDate}, 'pos_movement', ${movementId}, ${debitId}, ${creditId},
-           ${map.debitAccount}, ${map.creditAccount}, ${mov.total},
-           ${`POS harakat #${movementId} (${mov.movementType})`}, ${postedBy ?? null}, NOW())`);
+      // A65 — balanced-GL guard. The ledger row is a BALANCED PAIR (one amount, debit+credit both set),
+      // so ΣDr == ΣCr == amount by construction; but a zero/negative amount or a same-account pair
+      // produces NO real GL value. Skip both rather than write a meaningless wash row (Q-40):
+      //   - amount <= 0  → nothing happened (empty/zero-priced movement) — no ledger entry.
+      //   - debitId === creditId (e.g. INTERNAL_TRANSFER 1010↔1010, same-class warehouse move) →
+      //     Dr X / Cr X nets to zero, no GL impact — no ledger entry (the seed comment's own intent).
+      const amount = Number(mov.total);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return Ok({ posted: false, reason: `amount <= 0 (${mov.total}) — no GL value to post` });
+      }
+      if (debitId === creditId) {
+        return Ok({ posted: false, reason: `same debit/credit account ${map.debitAccount} — zero net GL impact (wash), skipped` });
+      }
+
+      // F3 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): route the actual write through the ONE engine
+      // (GlPostingService.postJournal) instead of a bespoke raw INSERT INTO entries — gains
+      // period-lock (EP-FIN-064), the F2 data-quality gate, and reference-based idempotency, on top
+      // of the movement/account checks already done above (all of which are UNCHANGED — this only
+      // replaces the final write). The idempotency pre-check a few lines above (document_type=
+      // 'pos_movement' AND document_id=movementId) remains the authoritative guard for THIS method —
+      // it is format-independent, unlike the engine's own entry_number-prefix LIKE check.
+      const description = `POS harakat #${movementId} (${mov.movementType})`;
+      const lines: JournalLine[] = [
+        { accountCode: map.debitAccount, accountName: description, debit: amount, credit: 0 },
+        { accountCode: map.creditAccount, accountName: description, debit: 0, credit: amount },
+      ];
+      const glResult = await this.glPostingService.postJournal(lines, `POS-GL-${movementId}`, postedBy);
+      if (!glResult.ok) return Err(glResult.error.message);
       return Ok({ posted: true });
     } catch (e) {
       return Err(String(e));

@@ -146,37 +146,6 @@ export type InsertSystemErrorLog = z.infer<typeof insertSystemErrorLogSchema>;
 // XAVFSIZLIK HODISALARI (Security Incidents)
 // ============================================================
 
-export const securityIncidents = pgTable("security_incidents", {
-  id: serial("id").primaryKey(),
-  tenantId: varchar("tenant_id", { length: 100 }).notNull().default("default"),
-  type: varchar("type", { length: 50 }).notNull(),
-  description: text("description").notNull(),
-  severity: varchar("severity", { length: 20 }).notNull().default("medium"),
-  location: varchar("location", { length: 200 }).notNull(),
-  reportedBy: varchar("reported_by", { length: 200 }).notNull(),
-  assignedTo: varchar("assigned_to", { length: 200 }),
-  status: varchar("status", { length: 20 }).notNull().default("open"),
-  resolvedBy: varchar("resolved_by", { length: 200 }),
-  resolvedAt: timestamp("resolved_at"),
-  notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}, (t) => [
-  check("security_incidents_type_chk", sql`${t.type} IN ('unauthorized_access','ppe_violation','fire_alarm','gas_leak','accident','theft','other')`),
-  check("security_incidents_severity_chk", sql`${t.severity} IN ('high','medium','low')`),
-  check("security_incidents_status_chk", sql`${t.status} IN ('open','investigating','resolved','closed')`),
-]);
-
-export const insertSecurityIncidentSchema = createInsertSchema(securityIncidents, {
-  type: z.enum(["unauthorized_access", "ppe_violation", "fire_alarm", "gas_leak", "accident", "theft", "other"]),
-  severity: z.enum(["high", "medium", "low"]).default("medium"),
-  status: z.enum(["open", "investigating", "resolved", "closed"]).default("open"),
-}).omit({ id: true, createdAt: true, updatedAt: true, tenantId: true } as never);
-
-export type SecurityIncidentRow = typeof securityIncidents.$inferSelect;
-export type InsertSecurityIncident = z.infer<typeof insertSecurityIncidentSchema>;
-
 // ============================================================
 // QOLDA PPE TEKSHIRUVI (Manual PPE Inspection)
 // ============================================================

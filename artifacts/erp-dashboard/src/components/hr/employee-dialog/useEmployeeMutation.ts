@@ -83,14 +83,14 @@ export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEm
     // Phase 2 / Task 2.5 — managerId is an integer FK; baseSalary is a
     // decimal stored as digit-only string from BaseSalaryInput. Both pass
     // through with type coercion below.
-    const numericFields = ["age", "childrenCount", "householdSize", "managerId"];
+    const numericFields = ["childrenCount", "householdSize", "managerId"];
     const floatFields = ["latitude", "longitude", "baseSalary"];
     const clearableFields = [
       "departmentId", "positionId", "managerId", "baseSalary",
       "shift", "salaryType", "workshopZone",
       "telegramChatId", "birthDate", "hireDate", "address", "attestationDate",
       "gender", "maritalStatus", "childrenEducation", "householdMembers",
-      "housingType", "age", "childrenCount", "householdSize", "latitude", "longitude",
+      "housingType", "childrenCount", "householdSize", "latitude", "longitude",
     ];
 
     Object.entries(data).forEach(([key, value]) => {

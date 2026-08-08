@@ -99,6 +99,19 @@ describe('http-result helpers', () => {
     expect(() => unwrapOrInternal(r)).toThrow(InternalServerErrorException);
   });
 
+  it('throws HttpException with 501 status (not InternalServerErrorException) when unwrapOrInternal receives NOT_IMPLEMENTED Err', () => {
+    const r = Err(AppErr('NOT_IMPLEMENTED', 'no AI provider configured')) as Result<number>;
+    try {
+      unwrapOrInternal(r);
+      throw new Error('expected throw');
+    } catch (e) {
+      expect(e).toBeInstanceOf(HttpException);
+      expect(e).not.toBeInstanceOf(InternalServerErrorException);
+      expect((e as HttpException).getStatus()).toBe(HttpStatus.NOT_IMPLEMENTED);
+      expect((e as HttpException).message).toBe('no AI provider configured');
+    }
+  });
+
   it('throws BadRequestException when unwrapOrBadRequest receives any Err', () => {
     const r = Err(AppErr('NOT_FOUND', 'irrelevant')) as Result<number>;
     expect(() => unwrapOrBadRequest(r)).toThrow(BadRequestException);

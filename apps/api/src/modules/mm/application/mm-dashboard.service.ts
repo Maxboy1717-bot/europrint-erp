@@ -55,4 +55,40 @@ export class MmDashboardService {
   async getPriceHistory(materialId: number) {
     return this.repo.getPriceHistory(materialId);
   }
+
+  async getFleetMaintenance() {
+    return this.repo.getFleetMaintenance();
+  }
+
+  async getVehicleLocations() {
+    return this.repo.getVehicleLocations();
+  }
+
+  async getDriverExpenses() {
+    return this.repo.getDriverExpenses();
+  }
+
+  async getVendorInvoices() {
+    return this.repo.getVendorInvoices();
+  }
+
+  async getVendorInvoiceById(id: number) {
+    return this.repo.getVendorInvoiceById(id);
+  }
+
+  async getThreeWayMatch() {
+    return this.repo.getThreeWayMatch();
+  }
+
+  async getFleetDeliveries() {
+    return this.repo.getFleetDeliveries();
+  }
+
+  async createFleetDelivery(body: Record<string, unknown>) {
+    return this.repo.createFleetDelivery(body);
+  }
+
+  async updateFleetDeliveryStatus(id: number, status: string) {
+    return this.repo.updateFleetDeliveryStatus(id, status);
+  }
 }

@@ -1,0 +1,21 @@
+-- APPROVED: egasi F1 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06.md), 2026-07-06 --
+--   "purge the 62.8B garbage POS-GL-1 entry... archive it first."
+--
+-- TO'LIQ ARXIV: docs/audit/GL-GARBAGE-ROW-ARCHIVE-2026-07-06.md (butun qator, ildiz-sabab
+--   tahlili, tiklash-SQL). Bu fayl faqat operatsiyaning o'zi -- to'liq kontekst arxiv
+--   hujjatida.
+--
+-- QISQACHA: entries.id=85 ("POS-GL-1") 62,823,437,295 UZS -- manba pos_movements.id=1
+--   status='pending', total_amount=0. Haqiqiy sabab: pos_movement_lines.id=1 (yaratilgan
+--   2026-05-11, asl urug'-ma'lumot) quantity=15123, unit_price=4154165 -- "Qalam (qora)"
+--   uchun (haqiqiy narx 5000 UZS). Sinov/urug'-ma'lumot, haqiqiy tranzaksiya emas.
+--
+-- FAQAT USHBU BITTA QATOR: DDL yo'q. DESTRUCTIVE amal -- FAQAT SHU ITEM UCHUN egasi
+--   aniq ruxsat berdi ("except the one explicitly-approved garbage-row purge in F1"),
+--   arxivdan KEYIN qo'llanildi (git commit 3508537d). Qayta ishga tushirish xavfsiz
+--   (id=85 allaqachon yo'q bo'lsa 0 qator ta'sirlanadi).
+--
+-- Dry-run (rollback-tx) TASDIQLANDI: 7->6 qator, ΣDebit=ΣCredit 62,963,781,568 UZS dan
+-- 140,344,273 UZS gacha. Keyin to'liq qo'llanildi (jonli DB, 2026-07-06).
+
+DELETE FROM entries WHERE id = 85;

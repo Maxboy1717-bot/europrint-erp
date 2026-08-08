@@ -21,8 +21,18 @@ import { z } from 'zod';
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
+
+// Audit 2026-08-07: these five were z.string().uuid(), but AiDecisionLogService.toEntityUuid()
+// exists precisely because "agents reference entities by different ID formats: production
+// orders use INT, customers use UUID, machines use string codes" (its own file header) — it
+// hashes any non-UUID id into a deterministic UUID before storing it in ai_decision_log.entity_id.
+// The DTO gate therefore contradicted the service it feeds: TechApproval.tsx sends papka_orders.id
+// (INTEGER), so POST /ai-agents/prepress/tech-card returned 400 for its only caller. AnomalySchema
+// below already used the free-form shape; the other five now match it.
+const AgentEntityIdSchema = z.string().min(1).max(128);
+
 const SalesCopilotSchema = z.object({
-  orderId:  z.string().uuid(),
+  orderId:  AgentEntityIdSchema,
   baseCost: z.number().positive(),
   profile: z.object({
     tier:            z.enum(['NEW', 'REGULAR', 'VIP']),
@@ -37,7 +47,7 @@ const SalesCopilotSchema = z.object({
 });
 
 const TechCardSchema = z.object({
-  orderId:      z.string().uuid(),
+  orderId:      AgentEntityIdSchema,
   surveyFields: z.record(z.unknown()),
   fileMeta:     z.object({
     dpi:        z.number().optional(),
@@ -48,7 +58,7 @@ const TechCardSchema = z.object({
 });
 
 const PlannerSchema = z.object({
-  referenceId: z.string().uuid(),
+  referenceId: AgentEntityIdSchema,
   jobs: z.array(z.object({ id: z.string(), t1: z.number(), t2: z.number(), label: z.string() })),
   tasks: z.array(z.object({ id: z.string(), duration: z.number(), predecessors: z.array(z.string()) })),
   estimatedDelivery: z.string().datetime(),
@@ -64,7 +74,7 @@ const OeeSchema = z.object({
 });
 
 const VisionQcSchema = z.object({
-  workOrderId:  z.string().uuid(),
+  workOrderId:  AgentEntityIdSchema,
   imageUrl:     z.string().url(),
   colorTargets: z.array(z.object({ L: z.number(), a: z.number(), b: z.number() })),
 });
@@ -76,7 +86,7 @@ const AnomalySchema = z.object({
 });
 
 const VrpSchema = z.object({
-  requestId:    z.string().uuid(),
+  requestId:    AgentEntityIdSchema,
   depot:        z.object({ lat: z.number(), lng: z.number() }),
   customers:    z.array(z.object({ id: z.string(), lat: z.number(), lng: z.number(), demand: z.number() })),
   trucks:       z.array(z.object({ id: z.string(), capacity: z.number() })),

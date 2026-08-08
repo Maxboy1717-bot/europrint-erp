@@ -18,6 +18,11 @@ export const CreateInvoiceDtoSchema = z.object({
   items: z.array(InvoiceItemSchema).min(1, 'At least one item is required'),
   dueDate: z.string().datetime('Due date must be valid datetime'),
   notes: z.string().optional().nullable(),
+  // Master-reja 3.5 "eksport-invoys (Incoterms)" — ixtiyoriy, EP-SD-070 javobiga mos
+  // erkin matn (samovyvoz / zavod yetkazadi va h.k.), fabrikatsiya qilinmagan.
+  deliveryTerm: z.string().max(120).optional().nullable(),
+  incotermCode: z.string().max(16).optional().nullable(),
+  currency: z.string().max(10).optional().nullable(),
 });
 
 export type CreateInvoiceDto = z.infer<typeof CreateInvoiceDtoSchema>;

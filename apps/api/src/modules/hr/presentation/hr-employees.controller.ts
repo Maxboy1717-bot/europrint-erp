@@ -15,6 +15,7 @@ import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 type Rows = { rows?: unknown[] };
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { assertOk, throwFromError, unwrapOrThrow, unwrapOrDefault } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -31,6 +32,9 @@ import {
   HrUpdateEmployeeStatusSchema, HrUpdateEmployeeStatusDto,
   HrReviewSalarySchema, HrReviewSalaryDto,
 } from './dto/hr.dto';
+import { HrRatingReader } from '../infrastructure/repositories/hr-rating.reader';
+import { HrRatingService } from '../domain/services/hr-rating.service';
+import { AppErr } from '@common/result';
 
 interface AuthenticatedUser { id: number; role: string; }
 
@@ -45,6 +49,9 @@ export class HrEmployeesController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
+    private readonly hrRatingReader: HrRatingReader,
+    private readonly hrRatingService: HrRatingService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get employees' })
@@ -74,8 +81,51 @@ export class HrEmployeesController {
   async getEmployee(@Param('id') id: string) {
     const result = await this.hrRepo.findEmployeeById(id);
     assertOk(result);
-    assertFound(result.data, `Xodim #${id} topilmadi`);
+    assertFound(result.data, await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
     return result.data;
+  }
+
+  /**
+   * GET /hr/employees/:id/rating
+   *
+   * Computes the 7-factor composite rating for an employee from REAL DB data.
+   * Missing factor data → neutral default (documented in HrRatingReader).
+   *
+   * @returns { score, label, breakdown, appliedWeights, meta }
+   *   score          — 0-100 composite (drives pay-queue ordering)
+   *   label          — 'excellent'|'good'|'average'|'poor'
+   *   breakdown      — per-factor weighted contribution
+   *   appliedWeights — weight map used (default HR_RATING_WEIGHTS)
+   *   meta           — per-factor source + isDefault flag for UI transparency
+   */
+  @ApiOperation({ summary: 'Compute 7-factor employee rating from real DB data' })
+  @ApiResponse({ status: 200, description: 'OK — composite rating score + breakdown' })
+  @ApiResponse({ status: 404, description: 'Employee not found' })
+  @ApiResponse({ status: 500, description: 'Internal error reading factors' })
+  @Get(':id/rating')
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async getEmployeeRating(@Param('id', ParseIntPipe) id: number) {
+    // 1. Verify employee exists (404 guard)
+    const empResult = await this.hrRepo.findEmployeeById(String(id));
+    assertOk(empResult);
+    assertFound(empResult.data, await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
+
+    // 2. Read all 7 factors from existing DB tables
+    const readerResult = await this.hrRatingReader.readFactors(id);
+    if (!readerResult.ok) {
+      throwFromError(AppErr('INTERNAL', `Rating factor read failed: ${readerResult.error.message}`));
+    }
+    const { factors, meta } = readerResult.data!;
+
+    // 3. Compute composite score (pure domain service — no DB access)
+    const ratingResult = this.hrRatingService.computeRating(factors);
+    if (!ratingResult.ok) {
+      throwFromError(AppErr('VALIDATION', `Rating computation failed: ${ratingResult.error.message}`));
+    }
+
+    const { score, label, breakdown, appliedWeights } = ratingResult.data!;
+
+    return { score, label, breakdown, appliedWeights, meta };
   }
 
   @ApiOperation({ summary: 'Get employee kpi' })
@@ -106,7 +156,9 @@ export class HrEmployeesController {
   async createEmployee(@Body() body: HrCreateEmployeeDto, @CurrentUser() _user: AuthenticatedUser) {
     const result = await this.hrRepo.saveEmployee({
       ...body,
-      employeeCode: body.employeeCode ?? `EMP-${Date.now()}`,
+      // Bug #3 fix: prefer the user-entered code (employeeCode, or the FE's
+      // `employeeId` field alias) over the auto-generated fallback.
+      employeeCode: body.employeeCode ?? body.employeeId ?? `EMP-${Date.now()}`,
       createdAt:    _time.now(),
       updatedAt:    _time.now(),
     });
@@ -153,11 +205,12 @@ export class HrEmployeesController {
   ) {
     const existing = await this.hrRepo.findEmployeeById(String(id));
     assertOk(existing);
-    if (!existing.data) throw new NotFoundException(`Xodim #${id} topilmadi`);
+    if (!existing.data) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
     const result = await this.hrRepo.updateEmployee(String(id), {
-      status:           'terminated',
+      status:            'terminated',
       employment_status: 'terminated',
-      deleted_at:       _time.now().toISOString(),
+      deleted_at:        _time.now().toISOString(),
+      is_active:         false,
     });
     assertOk(result);
     return { success: true, message: "Xodim o'chirildi", deletedBy: user?.id ?? null };
@@ -230,8 +283,8 @@ export class HrEmployeesController {
     const newSalary      = currentSalary + body.proposedIncrease;
     const today          = _time.now().toISOString().split('T')[0];
 
-    // P1.6.3: wrap UPDATE employees + INSERT salary_history in a single transaction
-    const txResult = await this.hrRepo.reviewSalaryTransactional(parseInt(employeeId, 10), newSalary, today);
+    // P1.6.3: wrap UPDATE employees + INSERT salary_change_log in a single transaction
+    const txResult = await this.hrRepo.reviewSalaryTransactional(parseInt(employeeId, 10), newSalary, today, user.id);
     assertOk(txResult);
 
     return {

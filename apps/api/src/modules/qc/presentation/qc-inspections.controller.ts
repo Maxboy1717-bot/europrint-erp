@@ -20,15 +20,18 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { unwrapOrNotFoundDefined } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { GetInspectionsQuery } from '../application/queries/get-inspections.query';
+import { GetInspectionStatsQuery } from '../application/queries/get-inspection-stats.query';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { SubmitInspectionCommand, CreateInspectionCommand } from '../application/commands';
+import { QcDecision } from '../application/commands/submit-inspection.command';
 import { QcNewService } from '../application/qc-new.service';
 
 const QC_INSPECTION_ROLES = ['qc_specialist', 'super_admin', 'director', 'qc_manager', 'qc_inspector'];
@@ -47,6 +50,7 @@ export class QcInspectionsController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly qcNewService: QcNewService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List inspections' })
@@ -58,6 +62,24 @@ export class QcInspectionsController {
     @Query('limit') limit?: string,
   ) {
     return await this.queryBus.execute(new GetInspectionsQuery(status, undefined, undefined, Number(page), Number(limit)));
+  }
+
+  @ApiOperation({ summary: 'QC quality KPI panel — brak% / pass-rate / FTQ (EP-QC-077)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('stats')
+  async getInspectionStats(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const fromDate = from ? new Date(from) : undefined;
+    const toDate = to ? new Date(to) : undefined;
+    const result = await this.queryBus.execute(
+      new GetInspectionStatsQuery(
+        fromDate && !Number.isNaN(fromDate.getTime()) ? fromDate : undefined,
+        toDate && !Number.isNaN(toDate.getTime()) ? toDate : undefined,
+      ),
+    );
+    return result;
   }
 
   @ApiOperation({ summary: 'Get inspection' })
@@ -81,17 +103,41 @@ export class QcInspectionsController {
     return { statusCode: HttpStatus.CREATED, data: result };
   }
 
-  @ApiOperation({ summary: 'Submit inspection' })
+  @ApiOperation({ summary: 'Submit inspection (3-way: pass / fail / rework)' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/submit')
   async submitInspection(
     @Param('id') inspectionId: string,
-    @Body() dto: { orderId: number; passed: boolean; reason?: string; supplierId?: number },
+    @Body() dto: { orderId: number; passed?: boolean; decision?: QcDecision; reason?: string; supplierId?: number },
   ) {
-    const cmd = new SubmitInspectionCommand(inspectionId, dto.orderId, dto.passed, dto.reason ?? '', dto.supplierId);
+    // 3-way QC verdict: explicit `decision` (pass/fail/rework) wins; legacy
+    // callers may still send `passed` (true→pass, false→fail).
+    const decision: QcDecision | undefined =
+      dto.decision ?? (typeof dto.passed === 'boolean' ? (dto.passed ? 'pass' : 'fail') : undefined);
+    const passed = decision ? decision === 'pass' : Boolean(dto.passed);
+    const cmd = new SubmitInspectionCommand(
+      inspectionId, dto.orderId, passed, dto.reason ?? '', dto.supplierId, decision,
+    );
     const result = await this.commandBus.execute(cmd);
-    this.logger.log('Inspection submitted');
+    this.logger.log(`Inspection submitted (decision=${decision ?? (passed ? 'pass' : 'fail')})`);
+    return { statusCode: HttpStatus.OK, data: result };
+  }
+
+  @ApiOperation({ summary: 'QC rework decision — return batch to production (Qayta ishlash)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post(':id/rework')
+  @HttpCode(HttpStatus.OK)
+  async reworkInspection(
+    @Param('id') inspectionId: string,
+    @Body() dto: { orderId: number; reason?: string },
+  ) {
+    const cmd = new SubmitInspectionCommand(
+      inspectionId, dto.orderId, false, dto.reason ?? '', undefined, 'rework',
+    );
+    const result = await this.commandBus.execute(cmd);
+    this.logger.log(`Inspection ${inspectionId} sent to rework`);
     return { statusCode: HttpStatus.OK, data: result };
   }
 
@@ -106,7 +152,7 @@ export class QcInspectionsController {
     this.logger.log(`Updating inspection ${inspectionId}`);
     const existing = await this.qcNewService.getInspectionById(inspectionId);
     if (!existing.ok || existing.data == null) {
-      throw new NotFoundException(`Tekshiruv #${inspectionId} topilmadi`);
+      throw new NotFoundException(await this.i18n.t('errors.inspectionNotFoundWithId', { args: { id: inspectionId } }));
     }
     const updated = await this.qcNewService.updateInspection(inspectionId, dto);
     return { statusCode: HttpStatus.OK, data: unwrapOrNotFoundDefined(updated, `Inspection ${inspectionId} not found`) };
@@ -122,10 +168,10 @@ export class QcInspectionsController {
     this.logger.log(`Deleting inspection ${inspectionId}`);
     const existing = await this.qcNewService.getInspectionById(inspectionId);
     if (!existing.ok || existing.data == null) {
-      throw new NotFoundException(`Tekshiruv #${inspectionId} topilmadi`);
+      throw new NotFoundException(await this.i18n.t('errors.inspectionNotFoundWithId', { args: { id: inspectionId } }));
     }
     const deleted = await this.qcNewService.deleteInspection(inspectionId);
-    if (!deleted.ok) throw new NotFoundException(`Inspection ${inspectionId} o'chirib bo'lmadi`);
+    if (!deleted.ok) throw new NotFoundException(await this.i18n.t('errors.inspectionDeleteFailedWithId', { args: { id: inspectionId } }));
     return { statusCode: HttpStatus.OK, data: { id: inspectionId, deleted: deleted.data } };
   }
 }

@@ -20,6 +20,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -47,7 +48,7 @@ const HR_ROLES = ['hr_manager', 'hr_specialist', 'director', 'super_admin'];
 export class ApplicationResponsesController {
   private readonly logger = new Logger(ApplicationResponsesController.name);
 
-  constructor(private readonly svc: ApplicationsService) {}
+  constructor(private readonly svc: ApplicationsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -73,7 +74,7 @@ export class ApplicationResponsesController {
   async getById(@Param('id') id: string) {
     const _rGetById = await this.svc.getResponseById(safeInt(id, 0));
     assertOk(_rGetById);
-    assertFound(_rGetById.data, 'Application response not found');
+    assertFound(_rGetById.data, await this.i18n.t('errors.applicationResponseNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return _rGetById.data;
   }
 

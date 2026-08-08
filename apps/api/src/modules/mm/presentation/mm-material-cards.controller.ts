@@ -16,6 +16,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -35,7 +36,7 @@ const MM_ROLES = ['super_admin', 'director', 'warehouse_manager', 'production_ma
 export class MmMaterialCardsController {
   private readonly logger = new Logger(MmMaterialCardsController.name);
 
-  constructor(private readonly svc: MmMaterialsExtrasService) {}
+  constructor(private readonly svc: MmMaterialsExtrasService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -55,7 +56,7 @@ export class MmMaterialCardsController {
   @Get(':id')
   async getById(@Param('id') id: string) {
     const r = await this.svc.getMaterialCard(safeInt(id, 0));
-    assertFound(r, 'Material card not found');
+    assertFound(r, await this.i18n.t('errors.materialCardNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 }

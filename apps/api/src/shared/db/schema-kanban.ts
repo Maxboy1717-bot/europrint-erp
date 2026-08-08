@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, text, varchar, boolean, integer, jsonb, timestamp, index, serial } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, varchar, boolean, integer, jsonb, timestamp, index, serial, numeric } from 'drizzle-orm/pg-core';
 
 // ── Kanban Boards / Columns / Cards (canonical) ───────────────────────────────
 // Moved here from apps/api/src/modules/kanban/infrastructure/kanban-tables.ts
@@ -24,25 +24,104 @@ export const kanbanColumns = pgTable('kanban_columns', {
   name:       text('name').notNull(),
   sort_order: integer('sort_order').notNull().default(0),
   color:      varchar('color', { length: 20 }),
+  // Per-column WIP-limit override (owner decision 2026-07-13, chat). NULL = use the
+  // global KANBAN_WIP_LIMIT_JARAYONDA default (kanban-boards.service.ts). CRUD via
+  // POST/PATCH /kanban/boards/:boardId/columns[/:columnId] (wipLimit/wip_limit).
+  wip_limit:  integer('wip_limit'),
   created_at: timestamp('created_at').notNull().defaultNow(),
   updated_at: timestamp('updated_at'),
   deleted_at: timestamp('deleted_at'),
 });
 
 export const kanbanCards = pgTable('kanban_cards', {
-  id:           serial('id').primaryKey(),
-  board_id:     integer('board_id').notNull(),
-  column_id:    integer('column_id').notNull(),
-  title:        text('title').notNull(),
-  description:  text('description'),
-  priority:     varchar('priority', { length: 20 }).notNull().default('normal'),
-  related_type: varchar('related_type', { length: 20 }),
-  related_id:   varchar('related_id', { length: 100 }),
-  sort_order:   integer('sort_order').notNull().default(0),
-  created_at:   timestamp('created_at').notNull().defaultNow(),
-  updated_at:   timestamp('updated_at').notNull().defaultNow(),
-  deleted_at:   timestamp('deleted_at'),
+  id:               serial('id').primaryKey(),
+  board_id:         integer('board_id').notNull(),
+  column_id:        integer('column_id').notNull(),
+  title:            text('title').notNull(),
+  description:      text('description'),
+  priority:         varchar('priority', { length: 20 }).notNull().default('normal'),
+  related_type:     varchar('related_type', { length: 20 }),
+  related_id:       varchar('related_id', { length: 100 }),
+  // G4: UUID manbalar (cc_documents) uchun — related_id INTEGER (jonli DB), UUID sig'maydi.
+  related_ref:      text('related_ref'),
+  owner_user_id:    integer('owner_user_id'),       // assignee (bajaruvchi)
+  assigner_user_id: integer('assigner_user_id'),    // EP-KAN-027: topshiruvchi (assigner)
+  // Owner 4-field request (2026-07-13, chat): Tiraj/progress, stansiya-operator, Izoh-belgi.
+  // qoldiq-to'lov is deliberately NOT a stored column here — it's computed on read from
+  // sales_orders via kc.related_id (see KanbanCardsController.getBoardCards/getAllCards).
+  progress:            numeric('progress'),                              // Tiraj/progress (percent or produced-vs-ordered count; owner didn't specify unit, Q-40)
+  station_operator_id: integer('station_operator_id'),                   // stansiya-operator — FK -> work_centers.id
+  comment_flag:        boolean('comment_flag').notNull().default(false), // Izoh-belgi ("has important note")
+  // Owner 2026-07-13: confidential-card flag — hides card from the general board view
+  // (kanban-visibility.helper.ts kanbanConfidentialClause); still visible to
+  // owner_user_id/assigner_user_id/privileged roles.
+  is_confidential:  boolean('is_confidential').notNull().default(false),
+  // Owner 2026-07-13 (chat): TT (topshiriq/task) turi — taxonomy_entries(category=
+  // 'kanban_task_type', code) ga soft-reference (related_type kabi FK'siz); qaysi mandatory-
+  // field/SLA qoidasi qo'llanishini belgilaydi (kanban-cron.processor.ts TT_SLA_ESCALATION).
+  // sla_hours — shu kartaning ixtiyoriy SLA override'i (soat); NULL bo'lsa job
+  // taxonomy_entries.attrs->>'sla_hours', undan keyin business_settings
+  // 'kanban.tt_task_sla_hours_default' (default 24) ga qaraydi.
+  task_type:        varchar('task_type', { length: 60 }),
+  sla_hours:        numeric('sla_hours', { precision: 6, scale: 2 }),
+  sort_order:       integer('sort_order').notNull().default(0),
+  created_at:       timestamp('created_at').notNull().defaultNow(),
+  updated_at:       timestamp('updated_at').notNull().defaultNow(),
+  deleted_at:       timestamp('deleted_at'),
 });
+
+// ── WIP override log (per-column Kanban WIP limits, owner decision 2026-07-13) ──
+// Written by KanbanBoardsService.assertCanMoveTo() when a supervisor-role user moves
+// a card into an at-limit "Jarayonda" column: instead of the normal CONFLICT block,
+// the move is allowed and logged here. Shape/naming mirrors qc_override_log's
+// convention (schema-misc-qc.ts / qc-override-log-2026-07-11.sql): user_id ->
+// overridden_by_user_id, reason, created_at.
+export const kanbanWipOverrides = pgTable('kanban_wip_overrides', {
+  id:                 serial('id').primaryKey(),
+  cardId:             integer('card_id').notNull(),
+  columnId:           integer('column_id').notNull(),
+  overriddenByUserId: integer('overridden_by_user_id').notNull(),
+  reason:             text('reason').notNull(),
+  createdAt:          timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('kanban_wip_overrides_column_idx').on(t.columnId),
+  index('kanban_wip_overrides_card_idx').on(t.cardId),
+]);
+
+// ── SD status → Kanban column auto-move mapping (owner policy, INERT by default) ──
+// Guruh-B owner decision (owner-decisions batch item 4): when a sales order's SD
+// status changes, a linked kanban card may auto-move to a mapped column. Ships with
+// ZERO rows → the move mechanism (KanbanCardsRepository.moveOrderCardByStatusMap) is
+// a no-op until the owner inserts (sd_status → kanban_column_id) rules. One rule per
+// SD status (UNIQUE sd_status). kanban_column_id → kanban_columns.id (integer serial).
+export const kanbanStatusColumnMap = pgTable('kanban_status_column_map', {
+  id:             serial('id').primaryKey(),
+  sdStatus:       varchar('sd_status', { length: 64 }).notNull().unique(),
+  kanbanColumnId: integer('kanban_column_id').notNull(),
+  createdAt:      timestamp('created_at').defaultNow(),
+});
+
+// ── Per-column SLA (owner policy, Q-35 schema-gap close) ──────────────────────
+// NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md §1.3/§6 P0-4 Item 19
+// confirmed live: `kanban_column_sla` did not exist (to_regclass NULL). One row
+// per kanban_columns.id: how long a card may sit in that column before it is
+// SLA-late. business_settings-style CRUD-with-defaults: ships with ONE row per
+// existing column (see migration kanban-column-sla-2026-08-03.sql), slaHours
+// defaulting to the same 24h used elsewhere for task SLA
+// (business_settings 'kanban.tt_task_sla_hours_default', see kanbanCards.sla_hours
+// comment above). Owner tunes per column later via CRUD; no consumer (cron/alert)
+// wiring included in this change.
+export const kanbanColumnSla = pgTable('kanban_column_sla', {
+  id:                  serial('id').primaryKey(),
+  columnId:            integer('column_id').notNull().unique()
+                         .references(() => kanbanColumns.id, { onDelete: 'cascade' }),
+  slaHours:            numeric('sla_hours', { precision: 6, scale: 2 }).notNull().default('24'),
+  warningThresholdPct: numeric('warning_threshold_pct', { precision: 5, scale: 2 }).notNull().default('80'),
+  createdAt:           timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt:           timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('kanban_column_sla_column_idx').on(t.columnId),
+]);
 
 export const kanbanFlows = pgTable('kanban_flows', {
   id:          uuid('id').primaryKey().defaultRandom(),

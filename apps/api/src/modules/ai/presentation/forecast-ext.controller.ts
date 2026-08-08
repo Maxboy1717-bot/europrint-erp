@@ -5,6 +5,7 @@
 
 import { Controller, Post, Param, Body, HttpCode, HttpStatus, UseGuards, UseInterceptors, InternalServerErrorException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
@@ -65,6 +66,7 @@ export class ForecastExtController {
     private readonly ensembleSvc:     EnsembleForecastService,
     private readonly persistenceSvc:  ForecastPersistenceService,
     private readonly weeklyJob:       ForecastWeeklyJob,
+    private readonly i18n:            I18nService,
   ) {}
 
   @Post('run')
@@ -114,7 +116,7 @@ export class ForecastExtController {
       })),
     );
     if (!saveR.ok) {
-      throw new InternalServerErrorException(`forecast_series yozishda xato: ${saveR.error.message}`);
+      throw new InternalServerErrorException(await this.i18n.t('errors.forecastSeriesSaveFailed', { args: { message: saveR.error.message } }));
     }
 
     return { materialId: id, model: 'croston', ...data };
@@ -146,7 +148,7 @@ export class ForecastExtController {
       })),
     );
     if (!saveR.ok) {
-      throw new InternalServerErrorException(`forecast_series yozishda xato: ${saveR.error.message}`);
+      throw new InternalServerErrorException(await this.i18n.t('errors.forecastSeriesSaveFailed', { args: { message: saveR.error.message } }));
     }
 
     return { materialId: id, model: 'ensemble', ...data };

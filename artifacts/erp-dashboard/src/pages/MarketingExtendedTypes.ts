@@ -32,7 +32,8 @@ export interface MarketingCampaign {
   name?: string;
   type?: string;
   budget?: number | string;
-  spent?: number | string;
+  /** Aliased from live column `spent_amount` by campaigns.repository.ts (COLS). */
+  spentAmount?: number | string;
   status?: string;
 }
 
@@ -45,24 +46,28 @@ export interface NpsMonthly {
   promoters: number;
 }
 
+// Matches the marketing_ab_tests row shape (two variants A/B, per-variant counters).
+// All counters optional — a freshly-created test has DB-default 0s; guard before use.
 export interface AbTest {
   id?: string;
   name: string;
-  variant: string;
-  conversion: number;
-  visitors: number;
-  status: string;
+  variant_a?: string;
+  variant_b?: string;
+  impressions_a?: number;
+  impressions_b?: number;
+  clicks_a?: number;
+  clicks_b?: number;
+  conversions_a?: number;
+  conversions_b?: number;
+  status?: string;
 }
 
 export interface Competitor {
-  id?: string;
   name: string;
-  share?: number;
-  price?: string;
-  quality?: number;
-  delivery?: string;
-  weakness?: string;
-  companyName?: string;
+  customersCount: number;
+  avgOurShare: number;
+  avgTheirShare: number;
+  switchRisk: string;
 }
 
 export interface SeoKeyword {

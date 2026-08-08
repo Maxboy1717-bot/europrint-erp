@@ -42,6 +42,10 @@ interface CourseForEdit {
   mentorId: string | null;
   startDate: string | null;
   endDate: string | null;
+  cardId?: string | null;
+  card_id?: string | number | null;
+  courseType?: string | null;
+  course_type?: string | null;
 }
 
 export default function Courses() {
@@ -104,14 +108,14 @@ export default function Courses() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
       toast({
-        title: "Muvaffaqiyat",
-        description: "Kurs muvaffaqiyatli o'chirildi",
+        title: tCommon("muvaffaqiyatToast"),
+        description: tCommon("kursMuvaffaqiyatliOchirildiToast"),
       });
     },
     onError: () => {
       toast({
-        title: "Xatolik",
-        description: "Kurs o'chirishda xatolik yuz berdi",
+        title: tCommon("xatolikTitle"),
+        description: tCommon("kursOchirishdaXatolikToast"),
         variant: "destructive",
       });
     },
@@ -246,12 +250,16 @@ export default function Courses() {
                         mentorId: fullCourse.mentorId,
                         startDate: fullCourse.startDate,
                         endDate: fullCourse.endDate,
+                        cardId: fullCourse.cardId != null
+                          ? String(fullCourse.cardId)
+                          : (fullCourse.card_id != null ? String(fullCourse.card_id) : null),
+                        courseType: fullCourse.courseType ?? fullCourse.course_type ?? null,
                       });
                       setShowAddDialog(true);
                     } catch (error) {
                       toast({
-                        title: "Xatolik",
-                        description: "Kurs ma'lumotini yuklashda xatolik yuz berdi",
+                        title: tCommon("xatolikTitle"),
+                        description: tCommon("kursMalumotiniYuklashdaXatolik"),
                         variant: "destructive",
                       });
                     }
@@ -308,7 +316,7 @@ export default function Courses() {
         onOpenChange={(v) => { if (!v) setDeleteCourseId(null); }}
         title={t("kursniOchirish")}
         description={t("ushbuKursniOchirishniTasdiqlaysizmiBu")}
-        confirmText="O'chirish"
+        confirmText={tCommon("delete")}
         variant="destructive"
         onConfirm={() => { if (deleteCourseId) { deleteMutation.mutate(deleteCourseId); setDeleteCourseId(null); } }}
       />

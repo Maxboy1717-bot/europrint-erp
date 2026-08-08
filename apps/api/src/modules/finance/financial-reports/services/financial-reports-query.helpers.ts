@@ -10,9 +10,10 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { db } from '@shared/db';
 import {
-  cashTransactions, warehouseTransactions, invoicePayments,
+  warehouseTransactions, invoicePayments,
   accounts, entries,
 } from '@europrint/schemas';
+import { cashierMovements } from '@workspace/db';
 import { customer_payments as customerPayments } from '@shared/db/schema-compat-5';
 import { sql, count, and, eq } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
@@ -22,19 +23,21 @@ import type { CashSummary, WarehouseBalance, AgingBucket, BalanceSheet, Producti
 export async function queryCashSummary(date?: string): Promise<Result<CashSummary>> {
   try {
     const targetDate = date ?? _time.now().toISOString().slice(0, 10);
+    // Retired cash_transactions o'rniga cashier_movements (fi-cashier-hub kanonik):
+    // kirim = type='cash_in'; chiqim = cash_out/salary_payout/advance/expense.
     const rows = await db.select({
-      type: cashTransactions.transactionType,
-      total: sql<number>`COALESCE(SUM(${cashTransactions.amount}::numeric), 0)`,
+      type: cashierMovements.type,
+      total: sql<number>`COALESCE(SUM(${cashierMovements.amount}::numeric), 0)`,
     })
-      .from(cashTransactions)
-      .where(sql`DATE(${cashTransactions.transactionDate}) = ${targetDate}`)
-      .groupBy(cashTransactions.transactionType);
+      .from(cashierMovements)
+      .where(sql`DATE(${cashierMovements.createdAt}) = ${targetDate}`)
+      .groupBy(cashierMovements.type);
 
     let inflow = 0;
     let outflow = 0;
     for (const row of rows) {
-      if (row.type === 'inflow') inflow = Number(row.total);
-      else if (row.type === 'outflow') outflow = Number(row.total);
+      if (row.type === 'cash_in') inflow += Number(row.total);
+      else outflow += Number(row.total);
     }
 
     return Ok({
@@ -91,14 +94,18 @@ export async function queryReceivables(date: string | undefined, overdueThreshol
     const targetDate = date ?? _time.now().toISOString().slice(0, 10);
     const rows = await db.select({
       total: sql<number>`COALESCE(SUM(${customerPayments.amount}::numeric), 0)`,
-      overdueCount: sql<number>`COUNT(CASE WHEN ${customerPayments.payment_date} < ${targetDate}::date - (${overdueThreshold} * INTERVAL '1 day') THEN 1 END)`,
+      overdueAmount: sql<number>`COALESCE(SUM(CASE WHEN ${customerPayments.payment_date}::date < ${targetDate}::date - (${overdueThreshold} * INTERVAL '1 day') THEN ${customerPayments.amount}::numeric ELSE 0 END), 0)`,
     }).from(customerPayments);
 
     const total = Number(rows[0]?.total ?? 0);
-    const overdue = Number(rows[0]?.overdueCount ?? 0) > 0 ? total * 0.3 : 0;
+    const overdue = Number(rows[0]?.overdueAmount ?? 0);
     return Ok([{
       total,
       current: total - overdue,
+      // NOTE: single overdue-threshold bucket only (real SUM, not fabricated) --
+      // sub-bucketing into 30/60/90-day ages would need 3 separate cutoffs,
+      // out of scope for this fix (M3: replace the fabricated total*0.3, not
+      // add a full aging-bucket feature).
       overdue30: overdue,
       overdue60: 0,
       overdue90plus: 0,
@@ -129,15 +136,23 @@ export async function queryBalanceSheet(date?: string): Promise<Result<BalanceSh
       total: sql<number>`COALESCE(SUM(${entries.amount}::numeric), 0)`,
     })
       .from(accounts)
+      // NOTE: both accounts.id and entries.debit_account_id are INTEGER in the live DB
+      // (the Drizzle schema types debit_account_id as varchar — historical drift). The
+      // prior `${accounts.id}::varchar` cast threw `operator does not exist:
+      // integer = character varying` at runtime, so this query always errored and
+      // rpt_balans was never fed. Compare the columns natively (integer = integer) via
+      // raw SQL — this both typechecks and runs against the real integer columns.
       .leftJoin(entries, and(
-        eq(entries.debitAccountId, sql`${accounts.id}::varchar`),
+        sql`${entries.debitAccountId} = ${accounts.id}`,
         sql`DATE(${entries.createdAt}) <= ${targetDate}`,
       ))
       .where(eq(accounts.isActive, true))
       .groupBy(accounts.accountType);
 
+    // account_type is stored UPPERCASE (ASSET/LIABILITY/EQUITY/REVENUE/EXPENSE);
+    // normalise to lowercase so the lookups below match.
     const byType: Record<string, number> = {};
-    for (const row of rows) byType[row.type ?? ''] = Number(row.total ?? 0);
+    for (const row of rows) byType[(row.type ?? '').toLowerCase()] = Number(row.total ?? 0);
 
     const currentAssets = byType['asset'] ?? 0;
     const totalLiabilities = byType['liability'] ?? 0;

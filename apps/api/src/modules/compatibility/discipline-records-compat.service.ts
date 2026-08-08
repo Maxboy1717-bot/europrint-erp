@@ -4,17 +4,20 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result } from '@common/result';
+import { computeDisciplineEscalation, escalationFlags } from '../hr/attendance/discipline-escalation.helper';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class DisciplineRecordsCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getDisciplineRecords(employeeId?: string, type?: string, status?: string): Promise<Result<Record<string, unknown>[]>>{
     return safeCall(async () => {
@@ -25,11 +28,13 @@ export class DisciplineRecordsCompatService {
       SELECT dr.id, dr.employee_id, dr.violation_type, dr.discipline_type,
              dr.severity, dr.violation_date, dr.issued_date, dr.description,
              dr.fine_amount, dr.suspension_days, dr.status, dr.created_at, dr.updated_at,
+             dr.escalation_stage, dr.violation_count_this_category,
              e.first_name || ' ' || e.last_name AS employee_name, d.name AS department_name
       FROM discipline_records dr
       JOIN employees e ON e.id = dr.employee_id
       LEFT JOIN departments d ON d.id = e.department_id
       WHERE dr.deleted_at IS NULL AND dr.is_soft_deleted = false
+        AND COALESCE(dr.is_archived, false) = false
         ${empFilter} ${typeFilter} ${statusFilter}
       ORDER BY dr.created_at DESC LIMIT ${MAX_QUERY_LIMIT}
     `);
@@ -39,19 +44,43 @@ export class DisciplineRecordsCompatService {
 
   async createDisciplineRecord(body: Record<string, unknown>){
     return safeCall(async () => {
-    const { employee_id, violation_type, discipline_type, severity, violation_date, description, fine_amount } = body;
-    if (!employee_id || !violation_type) throw new BadRequestException('employee_id va violation_type majburiy');
+    // FIX (iter-77 drift catalog #11): two bugs. (1) The FE (AddDisciplineDialog) sends camelCase
+    // keys (userId/type/amount/reason/reasonRu/givenBy) through CompatBodyDto.passthrough(), but the
+    // service destructured snake_case → employee_id/violation_type were undefined → guard 400'd before
+    // the INSERT. (2) reason + given_by are NOT NULL (no default) but were never written → 23502.
+    // Accept both casings; write reason/reason_ru/given_by; default violation_type structurally.
+    const employee_id    = body['employee_id']    ?? body['userId']       ?? body['employeeId'];
+    const given_by       = body['given_by']        ?? body['givenBy'];
+    const reason         = body['reason']          ?? body['description'];
+    const reason_ru      = body['reasonRu']        ?? body['reason_ru']    ?? null;
+    const discipline_type = body['discipline_type'] ?? body['disciplineType'] ?? body['type'] ?? null;
+    const violation_type = body['violation_type']  ?? body['violationType'] ?? 'general';
+    const severity       = body['severity']        ?? 'minor';
+    const violation_date = body['violation_date']  ?? body['violationDate'] ?? null;
+    const description     = body['description']      ?? body['reason']       ?? null;
+    const fine_amount    = body['fine_amount']      ?? body['amount']       ?? null;
+    if (!employee_id) throw new BadRequestException(await this.i18n.t('errors.employeeIdRequired'));
+    if (!given_by)    throw new BadRequestException(await this.i18n.t('validation.givenByRequired'));
+    if (!reason)      throw new BadRequestException(await this.i18n.t('validation.reasonRequired'));
+    // Owner directive 2026-07-13 (HR Nazorat fix): stamp cumulative escalation stage
+    // (verbal/written/fine/dismissal) — business_settings-driven, discipline-escalation.helper.ts.
+    const { stage, cumulativeCount, previousRecordId } = await computeDisciplineEscalation(si(employee_id));
+    const flags = escalationFlags(stage);
     const r = await rawSql(sql`
       INSERT INTO discipline_records
         (employee_id, violation_type, discipline_type, severity,
-         violation_date, issued_date, description, fine_amount, status)
-      VALUES (${employee_id ?? null}, ${violation_type ?? null}, ${discipline_type ?? null},
-              ${severity ?? 'minor'}, ${violation_date ?? null}::date, NOW()::date,
-              ${description ?? null}, ${fine_amount ?? null}, 'issued')
-      RETURNING id, violation_type, severity, status, created_at
+         violation_date, issued_date, description, reason, reason_ru, given_by, fine_amount, status,
+         escalation_stage, violation_count_this_category, previous_warning_id,
+         is_first_warning, is_second_warning, is_final_warning)
+      VALUES (${employee_id}, ${violation_type}, ${discipline_type ?? null},
+              ${severity}, ${violation_date}::date, NOW()::date,
+              ${description}, ${reason}, ${reason_ru}, ${given_by}, ${fine_amount ?? null}, 'issued',
+              ${stage}, ${cumulativeCount}, ${previousRecordId},
+              ${flags.isFirstWarning}, ${flags.isSecondWarning}, ${flags.isFinalWarning})
+      RETURNING id, violation_type, reason, given_by, severity, status, created_at, escalation_stage
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -67,7 +96,7 @@ export class DisciplineRecordsCompatService {
       WHERE dr.id = ${si(id)} AND dr.deleted_at IS NULL
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -86,7 +115,7 @@ export class DisciplineRecordsCompatService {
       RETURNING id, status, fine_amount, updated_at
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}

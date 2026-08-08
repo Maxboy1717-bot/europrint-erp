@@ -5,7 +5,10 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, Post, Param, Query, Body, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { DocumentAccessLogService } from '@common/document-control/document-access-log.service';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -13,16 +16,85 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { TechnologyService } from './technology.service';
+import { TechnologyGrammageService } from './technology-grammage.service';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
+const GrammageQueryDto = z.object({ materialCardId: z.coerce.number().int().positive().optional() });
+// Config-mexanizm: material layer-stack (gofra grammage manbai) — owner-editable, replace-set.
+const SetMaterialLayersDto = z.object({
+  layers: z.array(z.object({
+    layerIndex: z.coerce.number().int().min(0),
+    role: z.enum(['liner', 'flute']),
+    gsm: z.coerce.number().positive(),
+    fluteType: z.enum(['A', 'B', 'C', 'E', 'BC', 'EB', 'F']).optional(),
+    takeUpFactor: z.coerce.number().positive().optional(),
+  })).min(1).max(20),
+});
 const ApproveDto = z.object({ bomApproved: z.boolean().default(false), routingApproved: z.boolean().default(false), techCardApproved: z.boolean().default(false), notes: z.string().optional() });
 const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manager', 'designer']).default('manager') });
 
+// 07-pp#119 owner-correction (docs/audit/QARORLAR-JURNALI-2026-07-11.md:85): "bezash
+// turlari = CRUD ro'yxat (AI-reja+operator-tayinlash uchun MAJBURIY), 'erkin matn' EMAS."
+// These 3 literals mirror the exact seeded taxonomy_entries rows (category='decoration_type',
+// apps/api/src/shared/db/migrations/taxonomy-seed-2026-07-11.sql:25-27) — no free text allowed;
+// do not add a 4th literal here without a corresponding taxonomy_entries row (Q-40).
+const DECORATION_TYPE_CODES = ['laminatsiya_yaltiroq_mat', 'uv_lak_toliq_spot', 'oddiy_lak'] as const;
 
+const CreateCardDto = z.object({
+  code: z.string().max(50).optional(),
+  productId: z.coerce.number().int().positive().optional(),
+  name: z.string().max(200).optional(),
+  direction: z.string().max(20).optional(),
+  materialType: z.string().max(50).optional(),
+  productType: z.string().optional(),
+  formatA: z.coerce.number().int().optional(),
+  formatB: z.coerce.number().int().optional(),
+  formatCode: z.string().max(20).optional(),
+  gofraProfile: z.string().max(20).optional(),
+  raskroyPerList: z.coerce.number().int().optional(),
+  scrapPct: z.coerce.number().optional(),
+  qolipId: z.coerce.number().int().optional(),
+  printParams: z.any().optional(),
+  kesim: z.any().optional(),
+  postPress: z.any().optional(),
+  ishTartibi: z.any().optional(),
+  operations: z.string().optional(),
+  // Nullable at the schema level (not every card involves a decoration/lamination/varnish
+  // operation), but structured-only when provided — free text is rejected (07-pp#119).
+  decorationType: z.enum(DECORATION_TYPE_CODES).optional(),
+});
+const UpdateCardDto = CreateCardDto.extend({ status: z.enum(['draft', 'approved', 'archived']).optional() });
+const BomItemDto = z.object({ materialCode: z.string().min(1), quantity: z.coerce.number(), unit: z.string().max(10).optional(), layer: z.string().max(20).optional() });
+const CloneCardDto = z.object({ productId: z.coerce.number().int().positive(), papkaOrderId: z.coerce.number().int().positive().optional() });
+const RouteDto = z.object({
+  opSeq: z.coerce.number().int(), operation: z.string().min(1).max(100),
+  machineId: z.coerce.number().int().optional(), altMachineId: z.coerce.number().int().optional(),
+  normPerHour: z.coerce.number().optional(), setupMinutes: z.coerce.number().int().optional(),
+  scrapFixed: z.coerce.number().int().optional(), scrapPct: z.coerce.number().optional(),
+  minRazryad: z.coerce.number().int().optional(), isCore: z.boolean().optional(),
+  operationSubtype: z.enum(['pvc_window']).optional(), materialId: z.coerce.number().int().positive().optional(),
+  isExternal: z.boolean().optional(), externalLeadTimeHours: z.coerce.number().nonnegative().optional(),
+});
+
+
+
+// EP-PP-126 (§07 #132) — Konstruktor/dizayn bosqichi (chizma+qolip) marshrutda: qo'shish + holat/davomiylik.
+const ConstructionPhaseDto = z.object({
+  opSeq: z.coerce.number().int().optional(),
+  operation: z.string().min(1).max(100).optional(),
+  machineId: z.coerce.number().int().positive().optional(),
+  minRazryad: z.coerce.number().int().optional(),
+  status: z.enum(['not_started', 'drawing', 'mold_making', 'completed']).optional(),
+  durationMinutes: z.coerce.number().int().nonnegative().optional(),
+});
+const UpdateConstructionPhaseDto = z.object({
+  status: z.enum(['not_started', 'drawing', 'mold_making', 'completed']).optional(),
+  durationMinutes: z.coerce.number().int().nonnegative().optional(),
+});
 
 @ApiTags('Technology')
 @ApiBearerAuth()
@@ -31,7 +103,12 @@ const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manag
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class TechnologyController {
-  constructor(private readonly svc: TechnologyService) {}
+  constructor(
+    private readonly svc: TechnologyService,
+    private readonly grammage: TechnologyGrammageService,
+    private readonly i18n: I18nService,
+    private readonly accessLog: DocumentAccessLogService,
+  ) {}
 
   @Get('dashboard')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
@@ -117,9 +194,29 @@ export class TechnologyController {
   @Get('cards/:id')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Get technology card by ID' })
-  async getCardById(@Param('id') id: string) {
+  async getCardById(@Param('id') id: string, @Req() req: FastifyRequest) {
     const r = await this.svc.getCardById(id);
-    if (!r.ok) throw new HttpException('Texnologik karta topilmadi', HttpStatus.NOT_FOUND);
+    if (!r.ok) throw new HttpException(await this.i18n.t('errors.technologyCardNotFound'), HttpStatus.NOT_FOUND);
+    // STEP 3.10 roll-out — log the single-card view.
+    await this.accessLog.logFromReq(req, { documentType: 'technology_card', documentId: id, action: 'view' });
+    return r.data;
+  }
+
+  // ⭐ Gofra/Sloy 3-formula consumer: effective board grammage + kg↔sheet for a tech card.
+  // Reads the card's material → material_layer_config + pp_flute_types, delegates ALL math to
+  // the pure GofraConversionService. Honest `complete:false` payload when data is unfilled (Q-40).
+  @Get('cards/:id/grammage')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Effective corrugated grammage (g/m²) + kg↔sheet conversions for a tech card' })
+  async getCardGrammage(@Param('id') id: string, @Query() query: unknown) {
+    const q = GrammageQueryDto.parse(query);
+    const cardId = parseInt(id, 10);
+    if (!Number.isFinite(cardId)) throw new HttpException(await this.i18n.t('validation.invalidCardId'), HttpStatus.BAD_REQUEST);
+    const r = await this.svc.getCardGrammage(cardId, q.materialCardId);
+    if (!r.ok) {
+      const code = r.error.code === 'NOT_FOUND' ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException(r.error.message, code);
+    }
     return r.data;
   }
 
@@ -128,5 +225,170 @@ export class TechnologyController {
   @ApiOperation({ summary: 'Optimize technology card' })
   async optimizeCard(@Param('id') _id: string, @Body() _body: unknown) {
     return notImplemented('POST /technology/cards/:id/optimize');
+  }
+
+  // ⭐ Config-mexanizm: material layer-stack sozlash (gofra grammage manbai). Owner-editable —
+  // layer'lar to'ldirilgach GET cards/:id/grammage real grammage hisoblaydi (complete:false o'rniga).
+  @Put('materials/:materialCardId/layers')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Configure (set/replace) a material layer stack — gofra grammage source' })
+  async setMaterialLayers(@Param('materialCardId') materialCardId: string, @Body() body: unknown) {
+    const { layers } = SetMaterialLayersDto.parse(body);
+    const id = parseInt(materialCardId, 10);
+    if (!Number.isFinite(id)) throw new HttpException(await this.i18n.t('validation.invalidMaterialId'), HttpStatus.BAD_REQUEST);
+    return unwrapOrInternal(await this.grammage.setMaterialLayers(id, layers));
+  }
+
+  // ── Phase 1: texkarta MASTER CRUD ─────────────────────────────────────────
+  @Post('cards')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Create a technology master card' })
+  async createCard(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = CreateCardDto.parse(body);
+    return unwrapOrInternal(await this.svc.createCard({ ...dto, createdBy: Number(user.id) }));
+  }
+
+  // EP-PP-104 (§07 #110) — Takror buyurtmada eng oxirgi tasdiqlangan texkartani klonlash.
+  @Post('cards/clone')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Clone latest lab-approved tech card for a product onto a repeat order (EP-PP-104)' })
+  async cloneCard(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = CloneCardDto.parse(body);
+    return unwrapOrThrow(await this.svc.cloneLatestApproved(dto.productId, { papkaOrderId: dto.papkaOrderId, createdBy: Number(user.id) }));
+  }
+
+  @Put('cards/:id')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Update a technology master card (bumps version + snapshots)' })
+  async updateCard(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = UpdateCardDto.parse(body);
+    const r = await this.svc.updateCard(id, dto, Number(user.id));
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  @Delete('cards/:id')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Soft-delete a technology master card' })
+  async deleteCard(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    unwrapOrInternal(await this.svc.deleteCard(id, Number(user.id)));
+    return { id, deletedAt: _time.now().toISOString() };
+  }
+
+  @Post('cards/:id/lab-approve')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Mark lab-approved gate' })
+  async labApprove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const r = await this.svc.labApprove(id, Number(user.id));
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.NOT_FOUND);
+    return r.data;
+  }
+
+  @Post('cards/:id/maket-approve')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Mark maket-approved gate' })
+  async maketApprove(@Param('id') id: string) {
+    const r = await this.svc.maketApprove(id);
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.NOT_FOUND);
+    return r.data;
+  }
+
+  // EP-PP-131 (§07 #131) — maket status cycle + auto deadline shift (dorabotka).
+  @Post('cards/:id/maket-send')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'EP-PP-131 maket cycle: send to client (draft/revision -> sent)' })
+  async maketSend(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.maketSend(id));
+  }
+
+  @Post('cards/:id/maket-request-revision')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'EP-PP-131 maket cycle: client requests revision (sent -> revision_requested); starts auto deadline-shift clock' })
+  async maketRequestRevision(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.maketRequestRevision(id));
+  }
+
+  @Get('cards/:id/bom')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'List BOM rows of a card' })
+  async getBom(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getBom(id));
+  }
+
+  @Post('cards/:id/bom')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Add a BOM row to a card' })
+  async addBom(@Param('id') id: string, @Body() body: unknown) {
+    const dto = BomItemDto.parse(body);
+    const r = await this.svc.addBomItem(id, dto);
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  @Get('cards/:id/routes')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'List route operations of a card' })
+  async getRoutes(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getRoutes(id));
+  }
+
+  // EP-PP-119 (§07 #125) — external-stage (material prep / delivery) lead-time roll-up.
+  @Get('cards/:id/route-lead-time')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'External-stage lead-time roll-up for a card (EP-PP-119)' })
+  async getRouteLeadTime(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getRouteLeadTime(id));
+  }
+
+  @Post('cards/:id/routes')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Add a route operation to a card' })
+  async addRoute(@Param('id') id: string, @Body() body: unknown) {
+    const dto = RouteDto.parse(body);
+    const r = await this.svc.addRoute(id, dto);
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  // ── EP-PP-126 (§07 #132) — Konstruktor/dizayn bosqichi (chizma+qolip) marshrutda ──
+  @Post('cards/:id/construction-phase')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Add the construction/design phase (drawing+mold) to a card route — EP-PP-126' })
+  async addConstructionPhase(@Param('id') id: string, @Body() body: unknown) {
+    const dto = ConstructionPhaseDto.parse(body);
+    const r = await this.svc.addConstructionPhase(id, dto);
+    if (!r.ok) throw new HttpException(r.error.message, HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  @Put('routes/:routeId/construction-phase')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Update construction-phase status/duration (drawing→mold→completed) — EP-PP-126' })
+  async updateConstructionPhase(@Param('routeId') routeId: string, @Body() body: unknown) {
+    const dto = UpdateConstructionPhaseDto.parse(body);
+    const r = await this.svc.updateConstructionPhase(routeId, dto);
+    if (!r.ok) throw new HttpException(r.error.message, r.error.code === 'NOT_FOUND' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  @Get('cards/:id/versions')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'List version history of a card' })
+  async getVersions(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getVersions(id));
+  }
+
+  // SB0741 — rollback: restore a card to a prior snapshot (additive; bumps version, re-snapshots).
+  @Post('cards/:id/versions/:versionId/restore')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Restore a technology card to a prior version (rollback)' })
+  async restoreVersion(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const r = await this.svc.restoreVersion(id, versionId, Number(user.id));
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
   }
 }

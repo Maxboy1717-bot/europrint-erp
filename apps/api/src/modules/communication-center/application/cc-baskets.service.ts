@@ -12,9 +12,9 @@ import { unwrapOrThrow } from '@common/http-result';
 export class CcBasketsService {
   constructor(private readonly repo: CcBasketsRepository) {}
 
-  /** Berilgan xodim uchun bitta savatdagi hujjatlar */
-  async listBasket(userId: number, basket: BasketState) {
-    return unwrapOrThrow(await this.repo.listBasket(userId, basket));
+  /** Berilgan xodim uchun bitta savatdagi hujjatlar (CC #19: 100+ hujjat sahifalanadi) */
+  async listBasket(userId: number, basket: BasketState, limit?: number, offset?: number) {
+    return unwrapOrThrow(await this.repo.listBasket(userId, basket, limit, offset));
   }
 
   /** Sarlavhada ko'rsatiladigan badge raqamlari */

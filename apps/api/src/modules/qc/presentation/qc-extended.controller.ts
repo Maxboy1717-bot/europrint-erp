@@ -10,6 +10,7 @@ import {
 BadRequestException, Body, Controller, Get, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -39,7 +40,7 @@ const QC_FLOOR_ROLES = ['qc_inspector', 'operator', 'worker', 'QC_MANAGER', 'pro
 export class QcExtendedController {
   private readonly logger = new Logger(QcExtendedController.name);
 
-  constructor(private readonly svc: QcExtendedService) {}
+  constructor(private readonly svc: QcExtendedService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List standards' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -56,7 +57,7 @@ export class QcExtendedController {
     const _rR = await this.svc.getStandard(safeInt(id, 0));
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Standard not found');
+    assertFound(r, await this.i18n.t('errors.qcStandardNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -67,7 +68,7 @@ export class QcExtendedController {
   @UsePipes(new ZodValidationPipe(QcCreateStandardSchema))
   @Roles(...QC_WRITE_ROLES)
   async createStandard(@Body() body: QcCreateStandardDto) {
-    assertRequired((body as Record<string, unknown>).name, 'name required');
+    assertRequired((body as Record<string, unknown>).name, await this.i18n.t('validation.nameRequired'));
     return unwrapOrThrow(await this.svc.createStandard(body.name, body.category ?? null, body.description ?? null, body.parameters ?? null, body.is_active ?? null));
   }
 
@@ -82,7 +83,7 @@ export class QcExtendedController {
     const _rR = await this.svc.updateStandard(safeInt(id, 0), body.name ?? null, body.category ?? null, body.description ?? null, body.is_active ?? null);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Standard not found');
+    assertFound(r, await this.i18n.t('errors.qcStandardNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -108,7 +109,21 @@ export class QcExtendedController {
   @UsePipes(new ZodValidationPipe(QcCreateFinalInspectionSchema))
   @Roles(...QC_WRITE_ROLES)
   async createFinalInspection(@Body() body: QcCreateFinalInspectionDto) {
-    return unwrapOrThrow(await this.svc.createFinalInspection(body.order_id, body.inspector_id ?? null, 'pending', body.notes ?? null, false));
+    const papkaOrderId = body.order_id ?? body.papkaOrderId ?? null;
+    const sampleQty = body.sampleQty ?? 10;
+    const defectQty = body.defectQty ?? 0;
+    const passedCount = Math.max(0, sampleQty - defectQty);
+    const defectRate = sampleQty > 0 ? (defectQty / sampleQty) * 100 : null;
+    // Derive pass/fail from defect rate (>5% = failed)
+    const passed = defectRate === null ? true : defectRate <= 5;
+    const status = passed ? 'passed' : 'failed';
+    const notes = body.notes ?? body.comments ?? null;
+    return unwrapOrThrow(
+      await this.svc.createFinalInspection(
+        papkaOrderId, body.inspector_id ?? null, status, notes, passed,
+        sampleQty, defectQty, passedCount, defectRate,
+      )
+    );
   }
 
   @ApiOperation({ summary: 'Complete final inspection' })
@@ -119,10 +134,13 @@ export class QcExtendedController {
   @UsePipes(new ZodValidationPipe(QcCompleteFinalInspectionSchema))
   @Roles(...QC_WRITE_ROLES)
   async completeFinalInspection(@Param('id') id: string, @Body() body: QcCompleteFinalInspectionDto) {
-    const _rR = await this.svc.completeFinalInspection(safeInt(id, 0), body.result ?? null, body.notes ?? null, body.defect_count ?? 0, body.passed !== false);
+    const _rR = await this.svc.completeFinalInspection(
+      safeInt(id, 0), body.result ?? null, body.notes ?? null, body.defect_count ?? 0, body.passed !== false,
+      body.parent_order_id ?? null, body.rework_cost ?? null,
+    );
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Final inspection not found');
+    assertFound(r, await this.i18n.t('errors.qcFinalInspectionNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -171,7 +189,7 @@ export class QcExtendedController {
     const _rR = await this.svc.updateRootCause(safeInt(id, 0), body.name ?? null, body.description ?? null, body.category ?? null);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Root cause not found');
+    assertFound(r, await this.i18n.t('errors.qcRootCauseNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 }

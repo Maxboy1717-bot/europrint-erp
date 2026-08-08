@@ -15,11 +15,15 @@ import { Result, Ok, Err } from '@common/result';
 import {
   CreateCardInput,
   CreateKanbanForOrderInput,
+  CreateKanbanForQcInspectionInput,
+  CreateKanbanForMesSessionInput,
+  CreateKanbanForDesignTaskInput,
+  CreateKanbanForMaintenanceInput,
   KanbanCard,
   MoveCardInput,
   UpdateCardInput,
 } from '../../domain/repositories/i-kanban-boards.repo';
-import { kanbanBoards, kanbanColumns, kanbanCards } from '../kanban-tables';
+import { kanbanBoards, kanbanColumns, kanbanCards, kanbanStatusColumnMap } from '../kanban-tables';
 
 @Injectable()
 export class KanbanCardsRepository {
@@ -29,15 +33,17 @@ export class KanbanCardsRepository {
     try {
       // sort_order: ustundagi MAX + 1 — har doim oxirga qo'shiladi
       const rows = await runQuery<Record<string, unknown>>(sql`
-        INSERT INTO kanban_cards (board_id, column_id, title, description, priority, due_date, owner_user_id, sort_order)
+        INSERT INTO kanban_cards (board_id, column_id, title, description, priority, due_date, owner_user_id, assigner_user_id, progress, station_operator_id, comment_flag, sort_order, is_confidential)
         VALUES (
           ${input.board_id}, ${input.column_id}, ${input.title}, ${input.description},
-          ${input.priority}, ${input.due_date}, ${input.owner_user_id},
+          ${input.priority}, ${input.due_date}, ${input.owner_user_id}, ${input.assigner_user_id},
+          ${input.progress}, ${input.station_operator_id}, ${input.comment_flag},
           COALESCE(
             (SELECT MAX(sort_order) FROM kanban_cards
              WHERE column_id = ${input.column_id} AND deleted_at IS NULL),
             -1
-          ) + 1
+          ) + 1,
+          ${input.is_confidential ?? false}
         )
         RETURNING *
       `);
@@ -61,7 +67,11 @@ export class KanbanCardsRepository {
           priority            = COALESCE(${input.priority ?? null},             priority),
           due_date            = COALESCE(${input.due_date ?? null},             due_date),
           start_date          = COALESCE(${input.start_date ?? null},           start_date),
-          owner_user_id       = COALESCE(${input.owner_user_id ?? null},        owner_user_id),
+          owner_user_id       = CASE
+                                  WHEN ${input.owner_user_id} = '__CLEAR__' THEN NULL
+                                  WHEN ${input.owner_user_id} IS NOT NULL    THEN ${input.owner_user_id}::integer
+                                  ELSE owner_user_id
+                                END,
           estimated_time      = COALESCE(${input.estimated_time ?? null},       estimated_time),
           parent_card_id      = COALESCE(${input.parent_card_id ?? null},       parent_card_id),
           project_id          = COALESCE(${input.project_id ?? null},           project_id),
@@ -69,6 +79,10 @@ export class KanbanCardsRepository {
           related_id          = COALESCE(${input.related_id ?? null},           related_id),
           recurrence_pattern  = COALESCE(${input.recurrence_pattern ?? null},   recurrence_pattern),
           recurrence_end_date = COALESCE(${input.recurrence_end_date ?? null},  recurrence_end_date),
+          progress             = COALESCE(${input.progress ?? null},             progress),
+          station_operator_id  = COALESCE(${input.station_operator_id ?? null},  station_operator_id),
+          comment_flag         = COALESCE(${input.comment_flag ?? null},         comment_flag),
+          is_confidential      = COALESCE(${input.is_confidential ?? null},      is_confidential),
           updated_at          = NOW()
         WHERE id = ${id} AND deleted_at IS NULL RETURNING *
       `);
@@ -288,5 +302,318 @@ export class KanbanCardsRepository {
       this.logger.error('moveOrderCardToCancelled: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
     }
+  }
+
+  /**
+   * Golden-thread sync (§15 #127 / vision #22): when a sales order's status
+   * changes, append a dated status note to every kanban card linked to that
+   * order so the transition is visible/auditable on the card. Mirrors the
+   * note-append half of {@link moveOrderCardToCancelled} (find by
+   * related_type='sales_order' + related_id, `COALESCE(description,'') || note`)
+   * but deliberately does NOT change column/stage — the status→column mapping is
+   * an owner policy decision (Guruh-B). Best-effort: when no card is linked to
+   * the order the UPDATE matches nothing and this is a no-op that still returns
+   * Ok(void), so a sync miss can never break the SD status change.
+   */
+  async appendOrderStatusNote(
+    orderId: number,
+    oldStatus: string,
+    newStatus: string,
+  ): Promise<Result<void>> {
+    try {
+      // related_id is stored as text (createKanbanForOrder inserts String(orderId));
+      // mirror moveOrderCardToCancelled's String(orderId) binding.
+      const orderIdText = String(orderId);
+      const note = `\n[${new Date().toISOString()}] Buyurtma holati: ${oldStatus} -> ${newStatus}`;
+
+      const res = await runQuery<{ id: number }>(sql`
+        UPDATE kanban_cards
+        SET description = COALESCE(description, '') || ${note},
+            updated_at  = NOW()
+        WHERE related_type = 'sales_order'
+          AND related_id   = ${orderIdText}
+          AND deleted_at IS NULL
+        RETURNING id
+      `);
+
+      const rows = Array.isArray(res.rows) ? res.rows : [];
+      this.logger.log(
+        `appendOrderStatusNote: orderId=${orderId} ${oldStatus}->${newStatus} cards=${rows.length}`,
+      );
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error('appendOrderStatusNote: ' + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * SD status → Kanban column auto-move (owner-decisions batch item 4, Guruh-B).
+   * INERT until the owner seeds `kanban_status_column_map`: this reads the mapping
+   * rule for `newStatus` and, if one exists, moves every linked sales_order card to
+   * the mapped column. With ZERO map rows (ships empty) this is a pure no-op that
+   * returns Ok(void), so the status→column policy stays off until the owner enables
+   * it. This is a SEPARATE mechanism from {@link appendOrderStatusNote} (which only
+   * appends a note and must stay column-agnostic) — the two run side by side.
+   *
+   * Move guard: a card is moved ONLY when the mapped column lives on the card's own
+   * board AND is a different column than the card currently sits in. sort_order is
+   * placed at MAX+1 of the target column (appended last). Mirrors
+   * {@link moveOrderCardToCancelled}'s transaction/style and its String(orderId)
+   * binding for the drifted-to-varchar `related_id` (integer live). Best-effort:
+   * any failure returns Err (never throws) so a move miss can't break the SD status
+   * change.
+   */
+  async moveOrderCardByStatusMap(orderId: number, newStatus: string): Promise<Result<void>> {
+    try {
+      const orderIdText = String(orderId);
+
+      const outcome = await db.transaction(async (tx) => {
+        // 1. Owner-policy lookup: is there a mapping rule for this SD status?
+        const mapRows = await tx
+          .select({ kanban_column_id: kanbanStatusColumnMap.kanbanColumnId })
+          .from(kanbanStatusColumnMap)
+          .where(eq(kanbanStatusColumnMap.sdStatus, newStatus))
+          .limit(1);
+
+        const mappedColumnId = mapRows[0]?.kanban_column_id;
+        // INERT: no rule for this status → no-op (this is the ships-empty default).
+        if (mappedColumnId == null) return { mapped: false as const, moved: 0 };
+
+        // 2. Resolve the mapped column's board (move stays within the card's board).
+        const mappedColRows = await tx
+          .select({ id: kanbanColumns.id, board_id: kanbanColumns.board_id })
+          .from(kanbanColumns)
+          .where(and(eq(kanbanColumns.id, mappedColumnId), isNull(kanbanColumns.deleted_at)))
+          .limit(1);
+
+        const mappedColBoardId = mappedColRows[0]?.board_id;
+        if (mappedColBoardId == null) return { mapped: true as const, moved: 0 };
+
+        // 3. Find all cards linked to this order (mirror moveOrderCardToCancelled's
+        //    related_type + String(orderId) binding).
+        const linkedCards = await tx
+          .select({
+            id:        kanbanCards.id,
+            board_id:  kanbanCards.board_id,
+            column_id: kanbanCards.column_id,
+          })
+          .from(kanbanCards)
+          .where(
+            and(
+              eq(kanbanCards.related_type, 'sales_order'),
+              eq(kanbanCards.related_id, orderIdText),
+              isNull(kanbanCards.deleted_at),
+            ),
+          );
+
+        let moved = 0;
+        for (const card of linkedCards) {
+          // Move ONLY within the same board and only when it actually changes column.
+          if (card.board_id !== mappedColBoardId) continue;
+          if (card.column_id === mappedColumnId) continue;
+
+          // sort_order = MAX(sort_order)+1 in the target column (append at the end).
+          const maxRows = await tx
+            .select({ max_order: sql<number>`COALESCE(MAX(${kanbanCards.sort_order}), -1)` })
+            .from(kanbanCards)
+            .where(and(eq(kanbanCards.column_id, mappedColumnId), isNull(kanbanCards.deleted_at)));
+          const nextOrder = Number(maxRows[0]?.max_order ?? -1) + 1;
+
+          await tx
+            .update(kanbanCards)
+            .set({ column_id: mappedColumnId, sort_order: nextOrder, updated_at: sql`NOW()` })
+            .where(eq(kanbanCards.id, card.id));
+          moved += 1;
+        }
+
+        return { mapped: true as const, moved };
+      });
+
+      this.logger.log(
+        `moveOrderCardByStatusMap: orderId=${orderId} status=${newStatus} ` +
+        `mapped=${outcome.mapped} moved=${outcome.moved}`,
+      );
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error('moveOrderCardByStatusMap: ' + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * QC/MES/Design Kanban fan-out (owner decision 2026-07-13): shared board-lookup +
+   * card-insert helper used by {@link createKanbanForQcInspection},
+   * {@link createKanbanForMesSession} and {@link createKanbanForDesignTask}. Mirrors
+   * {@link createKanbanForOrder}'s transaction shape exactly (type match OR fuzzy
+   * name match on the oldest matching board, first column by sort_order) and its
+   * "skip silently, never block the source workflow" semantic: if no matching
+   * board/column exists yet (owner hasn't created one via CRUD) this returns Ok(void)
+   * without inserting — same as createKanbanForOrder behaved before any sales board
+   * existed.
+   */
+  private async createKanbanForSource(params: {
+    boardTypeHints: string[];
+    boardNameHints: string[];
+    title: string;
+    description: string;
+    relatedType: string;
+    relatedId: string | null;
+    relatedRef: string | null;
+    logLabel: string;
+  }): Promise<Result<void>> {
+    try {
+      const outcome = await db.transaction(async (tx) => {
+        const boardRows = await tx
+          .select({ id: kanbanBoards.id })
+          .from(kanbanBoards)
+          .where(
+            and(
+              isNull(kanbanBoards.deleted_at),
+              or(
+                ...params.boardTypeHints.map((t) => eq(kanbanBoards.type, t)),
+                ...params.boardNameHints.map((n) => ilike(kanbanBoards.name, `%${n}%`)),
+              ),
+            ),
+          )
+          .orderBy(asc(kanbanBoards.created_at))
+          .limit(1);
+
+        const boardId = boardRows[0]?.id;
+        if (!boardId) return { ok: false as const, reason: 'no-board' };
+
+        const colRows = await tx
+          .select({ id: kanbanColumns.id })
+          .from(kanbanColumns)
+          .where(and(eq(kanbanColumns.board_id, boardId), isNull(kanbanColumns.deleted_at)))
+          .orderBy(asc(kanbanColumns.sort_order))
+          .limit(1);
+
+        const columnId = colRows[0]?.id;
+        if (!columnId) return { ok: false as const, reason: 'no-column', boardId };
+
+        await tx.insert(kanbanCards).values({
+          board_id:     boardId,
+          column_id:    columnId,
+          title:        params.title,
+          description:  params.description,
+          priority:     'normal',
+          related_type: params.relatedType,
+          related_id:   params.relatedId,
+          related_ref:  params.relatedRef,
+          sort_order:   0,
+        });
+
+        return { ok: true as const, boardId, columnId };
+      });
+
+      if (!outcome.ok) {
+        if (outcome.reason === 'no-board') {
+          this.logger.warn(
+            `${params.logLabel}: mos board topilmadi (type/nom mos kelmadi). ` +
+            `Board ochish uchun mos type/nom bilan kanban board yarating.`,
+          );
+        } else {
+          this.logger.warn(`${params.logLabel}: board ${outcome.boardId} da ustun topilmadi.`);
+        }
+        return Ok(undefined);
+      }
+
+      this.logger.log(
+        `${params.logLabel}: karta yaratildi — boardId=${outcome.boardId}, columnId=${outcome.columnId}`,
+      );
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error(`${params.logLabel}: ` + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * QC inspection FAILED → Kanban karta (owner decision 2026-07-13). Triggered by
+   * QcFailedEvent (submit-inspection.handler.ts) via QcFailedKanbanHandler.
+   */
+  async createKanbanForQcInspection(input: CreateKanbanForQcInspectionInput): Promise<Result<void>> {
+    return this.createKanbanForSource({
+      boardTypeHints: ['qc'],
+      boardNameHints: ['sifat', 'qc', 'nazorat'],
+      title:          `⛔ QC: buyurtma #${input.orderId} — tekshiruv #${input.inspectionId}`,
+      description:
+        `QC inspection ID: ${input.inspectionId}\n` +
+        `Buyurtma ID: ${input.orderId}\n` +
+        `Sabab: ${input.reason}`,
+      relatedType: 'qc_inspection',
+      relatedId:   input.inspectionId,
+      relatedRef:  null,
+      logLabel:    `createKanbanForQcInspection: inspectionId=${input.inspectionId} orderId=${input.orderId}`,
+    });
+  }
+
+  /**
+   * MES production session COMPLETED → Kanban karta (owner decision 2026-07-13).
+   * Triggered by MesCompletedEvent (complete-session.handler.ts, Trigger 10) via
+   * MesCompletedKanbanHandler.
+   */
+  async createKanbanForMesSession(input: CreateKanbanForMesSessionInput): Promise<Result<void>> {
+    return this.createKanbanForSource({
+      boardTypeHints: ['production', 'mes'],
+      boardNameHints: ['ishlab chiqarish', 'mes', 'production'],
+      title:          `\u{1F3ED} MES sessiya tugadi — PP #${input.ppId} (sessiya #${input.sessionId})`,
+      description:
+        `MES sessiya ID: ${input.sessionId}\n` +
+        `Ishlab chiqarish reja ID: ${input.ppId}`,
+      relatedType: 'mes_session',
+      relatedId:   String(input.sessionId),
+      relatedRef:  null,
+      logLabel:    `createKanbanForMesSession: sessionId=${input.sessionId} ppId=${input.ppId}`,
+    });
+  }
+
+  /**
+   * Design task SO'RALDI → Kanban karta (owner decision 2026-07-13). Triggered by
+   * DesignRequestedEvent (request-design.handler.ts, Trigger 3) via
+   * DesignRequestedKanbanHandler. `designOrderId` is the DesignOrder aggregate's UUID
+   * (pre-existing two-worlds drift — it is NOT the design_orders integer PK), so it is
+   * stored in `related_ref` (the G4 UUID-source column) rather than `related_id`.
+   */
+  async createKanbanForDesignTask(input: CreateKanbanForDesignTaskInput): Promise<Result<void>> {
+    return this.createKanbanForSource({
+      boardTypeHints: ['design'],
+      boardNameHints: ['dizayn', 'design'],
+      title:          `\u{1F3A8} Dizayn so'rovi — buyurtma #${input.salesOrderId}`,
+      description:
+        `Dizayn buyurtma UUID: ${input.designOrderId}\n` +
+        `Savdo buyurtma ID: ${input.salesOrderId}\n` +
+        `Mijoz ID: ${input.customerId}`,
+      relatedType: 'design_task',
+      relatedId:   null,
+      relatedRef:  input.designOrderId,
+      logLabel:    `createKanbanForDesignTask: designOrderId=${input.designOrderId} salesOrderId=${input.salesOrderId}`,
+    });
+  }
+
+  /**
+   * MES emergency/breakdown downtime → Kanban karta (VISION 08-mes#37 completion,
+   * mirrors the owner-decision-2026-07-13 QC/MES/Design fan-out shape). Triggered by
+   * MesBreakdownEvent (record-downtime.handler.ts) via MesBreakdownKanbanHandler, right
+   * after MesMaintenanceRepository.createFromDowntime auto-opens the
+   * request+task pair. `taskId` (mes_maintenance_tasks.id) is stored as `related_id` —
+   * the more specific "vazifa" (task) entity, consistent with the card's Uzbek title.
+   */
+  async createKanbanForMaintenanceRequest(input: CreateKanbanForMaintenanceInput): Promise<Result<void>> {
+    return this.createKanbanForSource({
+      boardTypeHints: ['maintenance', 'mes'],
+      boardNameHints: ["ta'mirlash", 'texnik xizmat', 'maintenance', 'mes'],
+      title:          `\u{1F527} Avariya remont — ${input.equipmentId != null ? `mashina #${input.equipmentId}` : `so'rov #${input.requestId}`}`,
+      description:
+        `Ta'mirlash so'rovi ID: ${input.requestId}\n` +
+        `Vazifa ID: ${input.taskId}\n` +
+        `${input.equipmentId != null ? `Mashina/ish markazi ID: ${input.equipmentId}\n` : ''}` +
+        `Sabab: ${input.description}`,
+      relatedType: 'mes_maintenance_task',
+      relatedId:   String(input.taskId),
+      relatedRef:  null,
+      logLabel:    `createKanbanForMaintenanceRequest: requestId=${input.requestId} taskId=${input.taskId}`,
+    });
   }
 }

@@ -1,1 +1,11 @@
-{}
+{
+  "title": "Планирование",
+  "loading": "Загрузка...",
+  "error": "Произошла ошибка",
+  "PlanningDialogsA.1Smena": "1-я смена",
+  "PlanningDialogsA.2Smena": "2-я смена",
+  "PlanningDialogsA.3Smena": "3-я смена",
+  "PlanningDialogsB.1Smena": "1-я смена",
+  "PlanningDialogsB.2Smena": "2-я смена",
+  "PlanningDialogsB.3Smena": "3-я смена"
+}

@@ -4,11 +4,10 @@
  */
 
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
-  InternalServerErrorException,
+  Inject,
   Logger,
   Param,
   Patch,
@@ -17,9 +16,9 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { throwFromError, assertOk } from '@common/http-result';
+import { assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -32,9 +31,10 @@ import { CreateApprovalRequestCommand } from '../application/commands/create-app
 import { ApproveRequestCommand } from '../application/commands/approve-request.command';
 import { RejectRequestCommand } from '../application/commands/reject-request.command';
 import { GetPendingApprovalsQuery } from '../application/queries/get-pending-approvals.query';
-import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
 import { GetApprovalHistoryQuery } from '../application/queries/get-approval-history.query';
+import { IApprovalRepo, APPROVAL_REPO } from '../domain/repositories/i-approval.repo';
+import { ApprovalStepsRepository } from '../infrastructure/repositories/approval-steps.repository';
+import { unwrapOrInternal } from '@common/http-result';
 import {
   CreateApprovalRequestDto,
   CreateApprovalRequestDtoSchema,
@@ -59,6 +59,8 @@ export class ApprovalsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    @Inject(APPROVAL_REPO) private readonly approvalRepo: IApprovalRepo,
+    private readonly stepsRepo: ApprovalStepsRepository,
   ) {}
 
   @Get()
@@ -103,20 +105,13 @@ export class ApprovalsController {
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
   @ApiOperation({ summary: 'Get approval statistics' })
   async getStats(@CurrentUser() _user: AuthenticatedUser) {
-    const result = await this.queryBus.execute(new GetPendingApprovalsQuery());
-    assertOk(result);
-    const r = await db.execute(sql`
-      SELECT
-        COUNT(*) FILTER (WHERE status='approved' AND DATE(approved_at)=CURRENT_DATE)::int AS approved_today,
-        COUNT(*) FILTER (WHERE status='rejected' AND DATE(rejected_at)=CURRENT_DATE)::int AS rejected_today
-      FROM approval_requests
-    `);
-    const row = ((r as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+    const statsResult = await this.approvalRepo.getStats();
+    assertOk(statsResult);
     return {
-      pending: result.data.total,
-      approvedToday: Number(row?.approved_today ?? 0),
-      rejectedToday: Number(row?.rejected_today ?? 0),
-      avgApprovalTimeHours: 0,
+      pending: statsResult.data?.pending ?? 0,
+      approvedToday: statsResult.data?.approvedToday ?? 0,
+      rejectedToday: statsResult.data?.rejectedToday ?? 0,
+      avgApprovalTimeHours: statsResult.data?.avgApprovalTimeHours ?? 0,
     };
   }
 
@@ -154,10 +149,19 @@ export class ApprovalsController {
         parsedBody.currency,
         String(user.id),
         parsedBody.notes || null,
+        Number(user.id),
       ),
     );
     assertOk(result);
     return this.mapToResponse(result.data);
+  }
+
+  @Get(':id/steps')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.FINANCE_MANAGER, Role.PRODUCTION_MANAGER)
+  @ApiOperation({ summary: 'List the resolved GORIZONTAL approval chain steps for a request' })
+  async getSteps(@Param('id') id: string) {
+    const steps = unwrapOrInternal(await this.stepsRepo.listByRequest(parseInt(id, 10)));
+    return { data: Array.isArray(steps) ? steps : [] };
   }
 
   @Patch(':id/approve')

@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { IntegerIdSchema } from '@common/dto/integer-id.zod';
 
 export const RegisterDeviceDtoSchema = z.object({
   deviceCode: z.string().min(3),
@@ -20,7 +21,7 @@ export const RegisterDeviceDtoSchema = z.object({
 export type RegisterDeviceDto = z.infer<typeof RegisterDeviceDtoSchema>;
 
 export const RecordReadingDtoSchema = z.object({
-  deviceId: z.string().uuid(),
+  deviceId: IntegerIdSchema,
   value: z.number(),
   unit: z.string(),
 });
@@ -47,7 +48,7 @@ export const GetDevicesDtoSchema = z.object({
 export type GetDevicesDto = z.infer<typeof GetDevicesDtoSchema>;
 
 export const GetReadingsDtoSchema = z.object({
-  deviceId: z.string().uuid(),
+  deviceId: IntegerIdSchema,
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
   limit: z.number().int().min(1).max(100).default(50),

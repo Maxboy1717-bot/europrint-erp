@@ -10,7 +10,7 @@ import { initTelegramWebApp, isTelegramWebApp } from "./lib/telegram";
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from "@/hooks/useAuth";
 
-const PosDashboard     = lazy(() => import("./pages/PosDashboard"));
+const PosHome          = lazy(() => import("./pages/PosHome"));
 const PosMonitorMain   = lazy(() => import("@/pages/PosMonitorPage"));
 const PosWarehouses    = lazy(() => import("./pages/PosWarehouses"));
 const PosWarehouseDetail = lazy(() => import("./pages/PosWarehouseDetail"));
@@ -26,9 +26,9 @@ const PosMaterialBalance = lazy(() => import("./pages/PosMaterialBalance"));
 const PosMovements      = lazy(() => import("./pages/PosMovements"));
 const PosMovementNew    = lazy(() => import("./pages/PosMovementNew"));
 const PosMovementKirim  = lazy(() => import("./pages/PosMovementKirim"));
+const PosPresKirim      = lazy(() => import("./pages/PosPresKirim"));
 const PosMovementChiqim = lazy(() => import("./pages/PosMovementChiqim"));
 const PosMovementDetail = lazy(() => import("./pages/PosMovementDetail"));
-const PosLedger        = lazy(() => import("./pages/PosLedger"));
 const PosMyInventory   = lazy(() => import("./pages/PosMyInventory"));
 const PosRequests      = lazy(() => import("./pages/PosRequests"));
 const RequisitionDetail = lazy(() => import("./pages/RequisitionDetail"));
@@ -37,6 +37,8 @@ const PosReports       = lazy(() => import("./pages/PosReports"));
 const PosAdmin         = lazy(() => import("./pages/PosAdmin"));
 const PosQuarantine    = lazy(() => import("./pages/PosQuarantine"));
 const PosQCReview      = lazy(() => import("./pages/PosQCReview"));
+const PosHandovers     = lazy(() => import("./pages/PosHandovers"));
+const PosTraining      = lazy(() => import("./pages/PosTraining"));
 const PosLayout        = lazy(() => import("./layout/PosLayout"));
 
 function PosLoader() {
@@ -114,20 +116,20 @@ export default function PosMonitorApp() {
           <Redirect to="/pos-monitor" />
         </Route>
 
-        {/* Dashboard — PosMonitorPage: tabs+kirim/chiqim+barcode+P2P qabul */}
+        {/* BOSH EKRAN — market-POS uslubi: ombor + katta rangli amal-tugmalari (spec 2026-06-27) */}
         <Route path="/pos-monitor">
           <AuthGuard>
             <WithLayout>
-              <Suspense fallback={<PosLoader />}><PosMonitorMain /></Suspense>
+              <Suspense fallback={<PosLoader />}><PosHome /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>
 
-        {/* Legacy dashboard (eski boshqaruv ko'rinishi) */}
-        <Route path="/pos-monitor/dashboard-legacy">
+        {/* Eski tab-ko'rinishli boshqaruv sahifasi (PosMonitorPage) — saqlanadi, deep-link */}
+        <Route path="/pos-monitor/legacy-main">
           <AuthGuard>
             <WithLayout>
-              <Suspense fallback={<PosLoader />}><PosDashboard /></Suspense>
+              <Suspense fallback={<PosLoader />}><PosMonitorMain /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>
@@ -240,6 +242,15 @@ export default function PosMonitorApp() {
           </AuthGuard>
         </Route>
 
+        {/* Pres-kirim — kg → barkod → ichki kirim tez oqimi (VISION-3340 #59) */}
+        <Route path="/pos-monitor/movements/new/pres-kirim">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosPresKirim /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
         <Route path="/pos-monitor/movements/new">
           <AuthGuard>
             <WithLayout>
@@ -258,15 +269,6 @@ export default function PosMonitorApp() {
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosMovements /></Suspense>
-            </WithLayout>
-          </AuthGuard>
-        </Route>
-
-        {/* Ledger */}
-        <Route path="/pos-monitor/ledger">
-          <AuthGuard>
-            <WithLayout>
-              <Suspense fallback={<PosLoader />}><PosLedger /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>
@@ -316,11 +318,29 @@ export default function PosMonitorApp() {
           </AuthGuard>
         </Route>
 
+        {/* Smena topshirish (2-imzo) */}
+        <Route path="/pos-monitor/handovers">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosHandovers /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
         {/* QC Review */}
         <Route path="/pos-monitor/qc-review">
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosQCReview /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
+        {/* Tez o'quv (LMS mikro-modul + video davomi) — VISION 12-lms#85 */}
+        <Route path="/pos-monitor/training">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosTraining /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>

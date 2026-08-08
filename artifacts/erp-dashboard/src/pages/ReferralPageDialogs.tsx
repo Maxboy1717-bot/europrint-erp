@@ -120,14 +120,20 @@ export function EditReferralDialog({
               <Select value={editForm.status} onValueChange={v => onEditFormChange(f => ({ ...f, status: v }))}>
                 <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  {/* 2026-07-13 fix: values now match the live hr_referrals_status_check
+                      CHECK constraint (pending|contacted|interviewing|hired|rejected|
+                      bonus_paid) — "interview" was never a valid DB value, so saving
+                      that option always failed the constraint. */}
                   <SelectItem value="pending">{t("Kutilmoqda")}</SelectItem>
-                  <SelectItem value="interview">{t("intervyuda")}</SelectItem>
+                  <SelectItem value="contacted">Bog'lanildi</SelectItem>
+                  <SelectItem value="interviewing">{t("intervyuda")}</SelectItem>
                   <SelectItem value="hired">{t("qabulQilindi")}</SelectItem>
                   <SelectItem value="rejected">{t("radEtildi")}</SelectItem>
+                  <SelectItem value="bonus_paid">Bonus to'landi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            {editForm.status === "hired" && (
+            {(editForm.status === "hired" || editForm.status === "bonus_paid") && (
               <>
                 <div>
                   <Label>{t("bonusTuri")}</Label>

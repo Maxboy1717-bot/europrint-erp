@@ -4,19 +4,17 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { db, invoices as legacyInvoices, sales_orders as legacySalesOrders } from '@shared/db';
-import { salesInvoices } from '@europrint/schemas';
-import { eq, isNull, count, desc } from 'drizzle-orm';
+import { db, invoices as canonicalInvoices, sales_orders as legacySalesOrders } from '@shared/db';
+import { eq, sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import {
   ISdInvoicesRepository,
   CreateInvoiceInput,
   InvoiceRow,
   OrderForInvoice,
+  OrderFulfillmentQty,
   DrizzleExecutor,
 } from './i-sd-invoices.repo';
-
-type Row = Record<string, unknown>;
 
 /**
  * Narrow shape we need from a Drizzle executor (db or tx). Restricted to
@@ -25,44 +23,13 @@ type Row = Record<string, unknown>;
 type ExecLike = {
   select: typeof db.select;
   insert: typeof db.insert;
+  execute: typeof db.execute;
 };
 
 const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as ExecLike;
 
 @Injectable()
 export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
-  // Canonical sales_invoices has snake_case columns and no deletedAt column.
-  async findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
-    try {
-      const [countResult, data] = await Promise.all([
-        db.select({ count: count() }).from(salesInvoices).limit(1).offset(0),
-        db.select().from(salesInvoices).orderBy(desc(salesInvoices.created_at)).limit(limit).offset(offset),
-      ]);
-      return Ok({ data, count: Number(countResult[0]?.count || 0) });
-    } catch (e: unknown) { return Err((e as Error)?.message || 'Hisob-fakturalar topilmadi'); }
-  }
-
-  async findById(id: number): Promise<Result<any | null>> {
-    try {
-      const rows = await db.select().from(salesInvoices).where(eq(salesInvoices.id, id)).limit(1).offset(0);
-      return Ok((rows)[0] || null);
-    } catch (e: unknown) { return Err((e as Error)?.message || `Hisob-faktura #${id} topilmadi`); }
-  }
-
-  async findByInvoiceNumber(invoiceNumber: string): Promise<Result<any | null>> {
-    try {
-      const rows = await db.select().from(salesInvoices).where(eq(salesInvoices.invoice_number, invoiceNumber)).limit(1).offset(0);
-      return Ok((rows)[0] || null);
-    } catch (e: unknown) { return Err((e as Error)?.message || 'Hisob-faktura topilmadi'); }
-  }
-
-  async create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>> {
-    try {
-      const result = await db.insert(salesInvoices).values({ ...dto, status: 'draft', ...(createdBy ? { createdBy } : {} as typeof salesInvoices.$inferInsert) } as typeof salesInvoices.$inferInsert).returning();
-      return Ok((result[0] as Record<string, unknown>));
-    } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
-  }
-
   async findOrderForInvoicing(
     orderId: string,
     tx?: DrizzleExecutor,
@@ -88,6 +55,54 @@ export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
     }
   }
 
+  /**
+   * VISION-3340 SD-06 #24 — feeds CreateInvoiceHandler's `invoices.invoice_type` stamp.
+   * Raw SQL (Qoida 4): `sales_order_items` / `delivery_items` / `deliveries` are live
+   * integer-keyed tables outside the Drizzle schema (same known id-type drift noted in
+   * findOrderForInvoicing above) — the `::text` cast keeps the comparison safe.
+   */
+  async getOrderFulfillmentQty(
+    salesOrderId: string,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<OrderFulfillmentQty>> {
+    try {
+      const exec = asExec(tx);
+      const result = await exec.execute(sql`
+        SELECT
+          COALESCE((
+            SELECT SUM(soi.order_quantity) FROM sales_order_items soi
+            WHERE soi.sales_order_id::text = ${salesOrderId}
+          ), 0) AS ordered_qty,
+          COALESCE((
+            SELECT SUM(di.delivery_quantity) FROM delivery_items di
+            JOIN deliveries d ON d.id = di.delivery_id
+            WHERE d.sales_order_id::text = ${salesOrderId} AND d.deleted_at IS NULL
+          ), 0) AS delivered_qty,
+          EXISTS (
+            SELECT 1 FROM delivery_items di
+            JOIN deliveries d ON d.id = di.delivery_id
+            WHERE d.sales_order_id::text = ${salesOrderId} AND d.deleted_at IS NULL
+          ) AS has_delivery_data
+      `);
+      type FulfillmentRow = {
+        ordered_qty: string | number;
+        delivered_qty: string | number;
+        has_delivery_data: boolean;
+      };
+      const rows = (result as unknown as { rows?: FulfillmentRow[] }).rows ?? [];
+      const row = rows[0];
+      return Ok({
+        orderedQty: Number(row?.ordered_qty ?? 0),
+        deliveredQty: Number(row?.delivered_qty ?? 0),
+        hasDeliveryData: Boolean(row?.has_delivery_data),
+      });
+    } catch (e: unknown) {
+      return Err(
+        AppErr('DB_ERROR', (e as Error)?.message || "Buyurtma bajarilish miqdorini yuklab bo'lmadi"),
+      );
+    }
+  }
+
   async withTransaction<T>(
     work: (tx: DrizzleExecutor) => Promise<Result<T>>,
   ): Promise<Result<T>> {
@@ -101,7 +116,7 @@ export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
   async createInvoice(input: CreateInvoiceInput, tx?: DrizzleExecutor): Promise<Result<InvoiceRow>> {
     try {
       const exec = asExec(tx);
-      await exec.insert(legacyInvoices).values({
+      await exec.insert(canonicalInvoices).values({
         invoice_number: input.invoiceNumber,
         sales_order_id: input.salesOrderId ?? undefined,
         customer_name: input.customerName,
@@ -116,6 +131,10 @@ export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
         created_by: input.createdBy,
         created_at: input.createdAt,
         updated_at: input.updatedAt,
+        delivery_term: input.deliveryTerm ?? undefined,
+        incoterm_code: input.incotermCode ?? undefined,
+        currency: input.currency ?? undefined,
+        invoice_type: input.invoiceType ?? undefined,
       });
       return Ok({
         invoiceNumber: input.invoiceNumber,

@@ -3,7 +3,7 @@
  * @description React UI component.
  */
 
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "@/lib/i18n";
 import { useRoleMenus } from "@/hooks/use-role-menus";
@@ -37,13 +37,20 @@ export function ModuleTabs({ activeModule, onModuleChange }: ModuleSidebarProps)
     }
   };
 
+  // Active modul tasmaning chetida bo'lsa — ko'rinishga surib chiqar (klip bo'lib qolmasin).
+  const activeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [activeModule]);
+
   return (
-    <div className="flex items-end h-full gap-0">
+    <div className="ep-module-tabs flex items-end h-full gap-0 w-full min-w-0">
       {(Array.isArray(filteredModules) ? filteredModules : []).map(([key, group]) => {
         const isActive = activeModule === key;
         return (
           <button
             key={key}
+            ref={isActive ? activeRef : undefined}
             onClick={() => handleModuleClick(key)}
             data-testid={`tab-${key}`}
             title={group.title}

@@ -34,12 +34,22 @@ export interface InterviewQuestion {
   maxScore?: number;
 }
 
+/**
+ * Audit 2026-08-08: BE `GET /api/ai-hr/interviews` (drizzle-ai-hr-new.repo.ts AiInterviewRow)
+ * faqat `id/candidateId/positionTitle/interviewType/status/scheduledAt/notes/createdAt`
+ * qaytaradi — `sessionId/candidateName/provider/language/startedAt/completedAt/duration/
+ * transcript/evaluation/questions/audioUrl/videoUrl` `ai_hr_interviews` jadvalida umuman
+ * yo'q (haqiqiy AI-intervyu OLIB BORISH — audio/video/transkript/baholash — alohida,
+ * katta feature; bu jadval faqat REJALASHTIRISHNI kuzatadi). Optional saqlanadi (kelajakda
+ * to'ldirilishi mumkin), lekin hozircha har doim undefined — FE shartli render qiladi.
+ */
 export interface AIInterview {
   id: string;
-  sessionId: string;
+  sessionId?: string;
   candidateId: string;
   candidateName?: string;
-  jobTitle?: string;
+  positionTitle?: string;
+  interviewType?: string;
   status: "scheduled" | "in_progress" | "completed";
   provider?: string;
   language?: string;
@@ -52,13 +62,6 @@ export interface AIInterview {
   questions?: InterviewQuestion[];
   audioUrl?: string;
   videoUrl?: string;
-}
-
-export interface InterviewsResponse {
-  interviews: AIInterview[];
-  total: number;
-  page: number;
-  limit: number;
 }
 
 export interface InterviewQuestion2 {
@@ -75,9 +78,12 @@ export interface InterviewQuestion2 {
 
 // ── Zod Schema ────────────────────────────────────────────────────────────────
 
+// Audit 2026-08-08: BE CreateAiInterviewDtoSchema (ai-hr-new.dto.ts) `candidateId`ni
+// IntegerIdSchema (musbat butun son) va `positionTitle`ni majburiy deb talab qiladi —
+// FE avval `jobTitle` yuborardi (nomi mos emas) — forma HAR SAFAR 400 qaytarardi.
 export const interviewSchema = z.object({
-  candidateId: z.string().min(1, "Nomzod ID majburiy"),
-  jobTitle: z.string().min(1, "Lavozim majburiy"),
+  candidateId: z.string().min(1, "Nomzod ID majburiy").regex(/^[1-9]\d*$/, "Nomzod ID musbat butun son bo'lishi kerak"),
+  positionTitle: z.string().min(1, "Lavozim majburiy"),
   language: z.string().default("uz"),
   scheduledAt: z.string().min(1, "Sana va vaqt majburiy"),
 });

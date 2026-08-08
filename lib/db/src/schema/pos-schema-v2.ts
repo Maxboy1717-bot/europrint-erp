@@ -28,6 +28,11 @@ export const movementTypeEnum = pgEnum('pos_movement_type_enum', [
   'INTERNAL_TRANSFER',
   'INVENTORY_ADJ_PLUS',
   'INVENTORY_ADJ_MINUS',
+  // POS Monitor vizyon-kengaytirish (ADDITIVE, 2026-06-27)
+  'WASTE_IN',          // chiqindi/qoldiq (makulatura) kirim
+  'LAB_SAMPLE_OUT',    // laboratoriya namuna olish (chiqim)
+  'PARTIAL_RECEIPT',   // kam/buzuq material qisman qabul
+  'CUSTOMER_MATERIAL', // mijoz-mol (davalcheskoe) kirim
 ]);
 
 export const movementStatusEnum = pgEnum('pos_movement_status_enum', [
@@ -110,6 +115,9 @@ export const posMovements = pgTable('pos_movements', {
   // Standart maydonlar
   referenceDoc:          varchar('reference_doc', { length: 100 }),
   notes:                 text('notes'),
+  // Idempotency (2026-07-01, Savdo-sity referens H-8 naqshi): double-tap/retry bir xil
+  // harakatni ikki marta yaratmasligi uchun — FE crypto.randomUUID() yuboradi.
+  idempotencyKey:        varchar('idempotency_key', { length: 100 }),
   createdBy:             integer('created_by').notNull(),
   approvedBy:            integer('approved_by'),
   approvedAt:            timestamp('approved_at'),
@@ -133,6 +141,19 @@ export const posMovements = pgTable('pos_movements', {
   direction:             varchar('direction', { length: 20 }),
   documentRef:           varchar('document_ref', { length: 100 }),
   completedBy:           integer('completed_by'),
+  // photo_evidence_url — jonli DB ustuni (text, nullable); avval faqat pos_shift_handovers
+  // yozardi. VISION-3340 #60: harakat-yaratish oqimiga ulandi (kirim/chiqim ixtiyoriy
+  // foto-dalil). ADD-ONLY superset — mavjud jonli ustunni ORM'ga ko'rsatadi (yangi migration YO'Q).
+  photoEvidenceUrl:      text('photo_evidence_url'),
+  // 19-pos#17 (vision-1000-answers/19-pos.md #17, Q-35 owner schema-approval 2026-07-11):
+  // shoshilinch/rejasiz chiqim (INTERNAL_ISSUE) bayrog'i — true bo'lsa sabab (notes) majburiy
+  // (CreateMovementSchema + PosMovementService.createMovement tekshiradi) va boshliqqa real-time
+  // Telegram push yuboriladi (pos.events.ts onMovementCreated). ADDITIVE — migration:
+  // pos-movements-unplanned-issue-2026-07-11.sql.
+  isUnplanned:           boolean('is_unplanned').notNull().default(false),
+  // 19-pos#17: shoshilinch chiqim miqdori — PP kunlik reja balansini o'zgartirmaydi, "og'ish"
+  // sifatida shu ustunda alohida qaydlanadi (fabrikatsiya yo'q — faqat kelgan qatorlar yig'indisi).
+  varianceQty:           numericMoney('variance_qty'),
 }, (t) => [
   index('idx_pos_movements_type').on(t.movementType),
   index('idx_pos_movements_status').on(t.status),
@@ -166,6 +187,15 @@ export const posMovementLines = pgTable('pos_movement_lines', {
   expiryDate:          timestamp('expiry_date'),
   // Bron bilan bog'lanish
   reservationId:       integer('reservation_id'),
+  // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN qatorlarida majburiy barkod
+  // (egasi: "barcode bo'lmasa qabul qilmaydi", kitob 18400-18402). Migration:
+  // pos-movement-lines-barcode-2026-07-02.sql (ADD COLUMN IF NOT EXISTS, additive).
+  barcode:             text('barcode'),
+  // Partiya/lot (§19 #25 FIFO/FEFO traceability): batch_number (Code-128 partiya) + lot_number
+  // (seriya). Live columns existed but were unmapped in the ORM, so the KIRIM line's
+  // batchNumber/lotNumber were dropped. ADD-ONLY superset (no migration) — mirrors `barcode`.
+  batchNumber:         varchar('batch_number', { length: 100 }),
+  lotNumber:           text('lot_number'),
   sortOrder:           integer('sort_order').notNull().default(0),
   notes:               text('notes'),
   createdAt:           timestamp('created_at').notNull().defaultNow(),
@@ -173,6 +203,35 @@ export const posMovementLines = pgTable('pos_movement_lines', {
   index('idx_pos_mv_lines_movement').on(t.movementId),
   index('idx_pos_mv_lines_material').on(t.materialCardId),
   index('idx_pos_mv_lines_batch').on(t.batchId),
+]);
+
+// ─── 2b. POS_MOVEMENT_CONTEXT — Yangi harakat turlari uchun qo'shimcha kontekst ─
+//
+// ADDITIVE (2026-06-27): WASTE_IN / LAB_SAMPLE_OUT / PARTIAL_RECEIPT /
+// CUSTOMER_MATERIAL harakatlarining maxsus kontekstini saqlaydi. pos_movements
+// (dvigatel jadvali) tegilmaydi — 1:1 bog'lanish movement_id orqali. Hech bir
+// mavjud oqim bu jadvalga bog'liq emas (Q-46 regress yo'q).
+export const posMovementContext = pgTable('pos_movement_context', {
+  id:               serial('id').primaryKey(),
+  movementId:       integer('movement_id').notNull().unique(),
+  // LAB_SAMPLE_OUT
+  labSampleReason:  text('lab_sample_reason'),
+  labTestRef:       varchar('lab_test_ref', { length: 100 }),
+  // PARTIAL_RECEIPT (kam/buzuq qabul) — qatorlar bo'yicha jami
+  orderedQty:       numericMoney('ordered_qty'),
+  acceptedQty:      numericMoney('accepted_qty'),
+  rejectedQty:      numericMoney('rejected_qty'),
+  partialReason:    text('partial_reason'),
+  // CUSTOMER_MATERIAL (davalcheskoe) — mol egasi
+  customerId:       varchar('customer_id', { length: 50 }),
+  customerName:     text('customer_name'),
+  isCustomerOwned:  boolean('is_customer_owned').notNull().default(false),
+  // WASTE_IN (makulatura/chiqindi)
+  wasteSource:      varchar('waste_source', { length: 100 }),
+  createdAt:        timestamp('created_at').notNull().defaultNow(),
+  updatedAt:        timestamp('updated_at').notNull().defaultNow(),
+}, (t) => [
+  index('idx_pos_movement_context_movement').on(t.movementId),
 ]);
 
 // ─── 3. POS_MATERIAL_REQUESTS — Bo'lim ombor so'rovi ─────────────────────────
@@ -417,6 +476,9 @@ export const posInventoryCounts = pgTable('pos_inventory_counts', {
   id:                   serial('id').primaryKey(),
   countNumber:          varchar('count_number', { length: 50 }).notNull().unique(),
   warehouseId:          varchar('warehouse_id', { length: 50 }).notNull(),
+  // FAZA E (Inventarizatsiya, 2026-07-01) — kanonik `inventory_counts.count_type` NOT NULL,
+  // avval bu ustun Drizzle sxemasida umuman yo'q edi (createCount har doim 500 qaytarardi).
+  countType:            varchar('count_type', { length: 50 }).notNull().default('cycle'),
   status:               countStatusEnum('status').notNull().default('DRAFT'),
   isWarehouseLocked:    boolean('is_warehouse_locked').notNull().default(false),
   systemSnapshotAt:     timestamp('system_snapshot_at'),
@@ -430,6 +492,10 @@ export const posInventoryCounts = pgTable('pos_inventory_counts', {
   notes:                text('notes'),
   createdAt:            timestamp('created_at').notNull().defaultNow(),
   updatedAt:            timestamp('updated_at').notNull().defaultNow(),
+  // FAZA E (Inventarizatsiya, 2026-07-01) — davriy (rejalashtirilgan) oqim.
+  scheduledFor:         date('scheduled_for'),
+  autoGenerated:        boolean('auto_generated').notNull().default(false),
+  cycleAbcSegment:      varchar('cycle_abc_segment', { length: 1 }),
 }, (t) => [
   index('idx_inv_count_wh').on(t.warehouseId),
   index('idx_inv_count_status').on(t.status),

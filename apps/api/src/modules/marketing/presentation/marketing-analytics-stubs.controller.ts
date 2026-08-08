@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -22,10 +23,20 @@ import { AuthenticatedUser } from '@common/types/user.types';
 import { MarketingExtService } from '../application/marketing-ext.service';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { LEAD_SCORE } from '@common/constants/business.constants';
 
 type Row = Record<string, unknown>;
 const rows = (r: unknown): Row[] => ((r as { rows?: Row[] }).rows) ?? [];
 const first = (r: unknown): Row | null => rows(r)[0] ?? null;
+
+const AbTestSchema = z.object({
+  name:        z.string().min(1).max(500),
+  variant_a:   z.string().min(1).max(500),
+  variant_b:   z.string().min(1).max(500),
+  description: z.string().max(2000).optional(),
+  campaign_id: z.number().int().optional(),
+  status:      z.string().max(50).optional(),
+}).passthrough();
 
 const ExhibitionSchema = z.object({
   name: z.string().max(500).optional(),
@@ -101,10 +112,13 @@ const InboxStatusSchema = z.object({
 export class MarketingAnalyticsStubsController {
   private readonly logger = new Logger(MarketingAnalyticsStubsController.name);
 
-  constructor(private readonly svc: MarketingExtService) {}
+  constructor(
+    private readonly svc: MarketingExtService,
+    private readonly i18n: I18nService,
+  ) {}
 
   // -- Content ---------------------------------------------------------------
-  @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.CREATED)
   async aiGenerateContent(@Body() body: unknown) {
     // AI provider not wired — save draft content to marketing_content so the FE round-trip works.
@@ -112,9 +126,10 @@ export class MarketingAnalyticsStubsController {
     const title = String(dto['title'] ?? dto['topic'] ?? 'AI-generated draft');
     const content = String(dto['content'] ?? dto['prompt'] ?? '');
     const platform = String(dto['platform'] ?? 'general');
+    // marketing_content.id is varchar with NO default — supply one (insert omitted it -> 23502).
     const row = first(await db.execute(sql`
-      INSERT INTO marketing_content (title, content, type, platform, status, created_at)
-      VALUES (${title}, ${content}, ${'ai-generated'}, ${platform}, ${'draft'}, NOW())
+      INSERT INTO marketing_content (id, title, content, type, platform, status, created_at)
+      VALUES (gen_random_uuid()::text, ${title}, ${content}, ${'ai-generated'}, ${platform}, ${'draft'}, NOW())
       RETURNING id, title, status
     `));
     return { data: row, ai_provider: 'pending', message: 'Mazmun saqlandi (AI provayder konfiguratsiyasi kerak)' };
@@ -122,21 +137,24 @@ export class MarketingAnalyticsStubsController {
 
   // -- NPS & Churn (already real via MarketingExtService) --------------------
   @Get('nps/stats')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getNpsStats() {
     return unwrapOrThrow(await this.svc.getNpsStats());
   }
 
   @Get('nps/monthly')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getNpsMonthly() {
+    // FE reads this with `useQuery<NpsMonthly[]>` (no `select` unwrap) — must return
+    // a bare array, not `{ monthlyTrend: [...] }`, or Array.isArray() fails silently
+    // and the NPS trend + newly-created records never render (Q-40).
     const r = await this.svc.getNpsStats();
-    if (!r.ok) return { monthlyTrend: [] };
-    return { monthlyTrend: r.data.monthlyTrend };
+    if (!r.ok) return [];
+    return r.data.monthlyTrend;
   }
 
   @Get('nps')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getNps() {
     return unwrapOrThrow(await this.svc.getNps());
   }
@@ -164,18 +182,18 @@ export class MarketingAnalyticsStubsController {
   }
 
   @Get('churn-risk/ai-signal')
-  @Roles('super_admin', 'marketing_manager', 'director')
-  async getChurnRiskAiSignal() {
-    return unwrapOrThrow(await this.svc.getChurnRisk());
+  @Roles('super_admin', 'director', 'marketing_manager', 'finance', 'finance_manager', 'manager')
+  async getChurnRiskAiSignal(@CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.getChurnRisk(user?.role));
   }
 
   @Get('churn-risk')
-  @Roles('super_admin', 'marketing_manager', 'director')
-  async getChurnRisk() {
-    return unwrapOrThrow(await this.svc.getChurnRisk());
+  @Roles('super_admin', 'director', 'marketing_manager', 'finance', 'finance_manager', 'manager')
+  async getChurnRisk(@CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.getChurnRisk(user?.role));
   }
 
-  @Post('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director') @HttpCode(HttpStatus.OK)
+  @Post('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'manager', 'director') @HttpCode(HttpStatus.OK)
   async postChurnRiskAiSignal(@Body() body: unknown) {
     // Accept AI churn signal and lower scores for at-risk leads (score threshold: status=hot → -10)
     const dto = StubBodySchema.parse(body ?? {});
@@ -196,12 +214,12 @@ export class MarketingAnalyticsStubsController {
 
   // -- AI / Leads (already real or AI-gated) --------------------------------
   @Get('ai/hot-leads')
-  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
   async getAiHotLeads() {
     return unwrapOrThrow(await this.svc.getHotLeads());
   }
 
-  @Get('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('ai-assistant') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getAiAssistant() {
     // AI assistant conversation history — stored in marketing_settings under 'ai_chat_history'
     try {
@@ -212,7 +230,7 @@ export class MarketingAnalyticsStubsController {
     } catch { return { messages: [], ai_provider: 'pending' }; }
   }
 
-  @Post('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('ai-assistant') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.OK)
   async postAiAssistant(@Body() body: unknown) {
     const dto = StubBodySchema.parse(body ?? {});
@@ -234,29 +252,30 @@ export class MarketingAnalyticsStubsController {
   }
 
   @Get('leads/sources/summary')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getLeadsSourcesSummary() {
     return unwrapOrThrow(await this.svc.getLeadsSourcesSummary());
   }
 
   @Get('leads/automation/overdue-leads')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getAutomationOverdueLeads() {
     return unwrapOrThrow(await this.svc.getOverdueLeads());
   }
 
-  @Post('leads/recalculate-scores') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('leads/recalculate-scores') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.OK)
   async recalculateLeadScores(@Body() _body: unknown) {
-    // Recompute score: base 30 + channel bonus (10 for organic) + status bonus (15 for hot)
+    // Recompute score: base + channel bonus (organic/referral) + status bonus, capped at MAX.
+    // Weights live in business.constants.ts (LEAD_SCORE) — values unchanged (Qoida 12).
     const r = await db.execute(sql`
       UPDATE marketing_leads
-         SET score = LEAST(100,
-               30
-               + CASE WHEN channel IN ('organic', 'referral') THEN 10 ELSE 0 END
-               + CASE WHEN status = 'hot'      THEN 15
-                      WHEN status = 'warm'     THEN 8
-                      WHEN status = 'new'      THEN 3
+         SET score = LEAST(${LEAD_SCORE.max},
+               ${LEAD_SCORE.base}
+               + CASE WHEN channel IN ('organic', 'referral') THEN ${LEAD_SCORE.channelBonus} ELSE 0 END
+               + CASE WHEN status = 'hot'      THEN ${LEAD_SCORE.statusHot}
+                      WHEN status = 'warm'     THEN ${LEAD_SCORE.statusWarm}
+                      WHEN status = 'new'      THEN ${LEAD_SCORE.statusNew}
                       ELSE 0 END
              ),
              updated_at = NOW()
@@ -267,14 +286,34 @@ export class MarketingAnalyticsStubsController {
     return { updated, message: `${updated} ta lid ball qayta hisoblandi` };
   }
 
-  @Post('leads/:id/convert-to-crm') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @Post('leads/:id/convert-to-crm') @Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
   @HttpCode(HttpStatus.CREATED)
   async convertLeadToCrm(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    // NOTE: marketing_leads.id is varchar(36) (UUID-style / seed slugs like "demo-lead-003"),
+    // NOT an integer — parseInt(id) always produced NaN/garbage here, so the SELECT below
+    // never matched a row and crm_lead_id could never be backfilled (bug fixed 2026-07-02).
     const ml = first(await db.execute(sql`
-      SELECT * FROM marketing_leads WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
+      SELECT * FROM marketing_leads WHERE id=${id} AND deleted_at IS NULL LIMIT 1
     `));
-    if (!ml) throw new NotFoundException(`Marketing lead #${id} topilmadi`);
+    if (!ml) throw new NotFoundException(await this.i18n.t('errors.marketingLeadNotFoundWithId', { args: { id } }));
     if (ml['crm_lead_id']) return { message: 'Allaqachon CRM ga aylantirilgan', crm_lead_id: ml['crm_lead_id'] };
+
+    // VISION EP-MKT-118 / #96 — rekvizit to'liqlik darvozasi: owner qaror
+    // (docs/audit/QARORLAR-JURNALI-2026-07-11.md:62) "SD'ga o'tish majburiy → STIR +
+    // shartnoma + manzil" — STIR (soliq raqami), shartnoma raqami va manzil
+    // to'ldirilmagan lid CRM ga (demak keyinchalik SD/savdoga) o'tkazilmaydi —
+    // invoys/to'lov muammosi oldini olish (TASDIQ-2146 §14 #96).
+    const missingRequisites: string[] = [];
+    if (!String(ml['stir'] ?? '').trim()) missingRequisites.push('STIR');
+    if (!String(ml['contract_number'] ?? '').trim()) missingRequisites.push('shartnoma');
+    if (!String(ml['address'] ?? '').trim()) missingRequisites.push('manzil');
+    if (missingRequisites.length > 0) {
+      throw new HttpException(
+        await this.i18n.t('errors.marketingLeadRequisitesIncomplete', { args: { fields: missingRequisites.join(', ') } }),
+        HttpStatus.CONFLICT,
+      );
+    }
+
     const crmRow = first(await db.execute(sql`
       INSERT INTO crm_leads (contact_name, contact_phone, contact_email, source, notes, status, assigned_by_id, created_at, updated_at)
       VALUES (
@@ -293,31 +332,31 @@ export class MarketingAnalyticsStubsController {
     await db.execute(sql`
       UPDATE marketing_leads
          SET crm_lead_id=${crmId}, converted_at=NOW(), status=${'converted'}, updated_at=NOW()
-       WHERE id=${parseInt(id, 10)}
+       WHERE id=${id}
     `);
     return { crm_lead_id: crmId, message: 'Marketing lid CRM ga aylantirildi', converted: true };
   }
 
   // -- Inbox (no table — DDL-NEEDED) ----------------------------------------
   @Get('inbox/stats')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getInboxStats() {
     return unwrapOrThrow(await this.svc.getInboxStats());
   }
 
-  @Get('inbox/conversations') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('inbox/conversations') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getInboxConversations(@Query('platform') platform?: string, @Query('status') status?: string) {
     const data = rows(await db.execute(sql`
       SELECT * FROM social_conversations
-      WHERE (${platform ?? null} IS NULL OR platform=${platform ?? null})
-        AND (${status ?? null} IS NULL OR status=${status ?? null})
+      WHERE (${platform ?? null}::text IS NULL OR platform=${platform ?? null}::text)
+        AND (${status ?? null}::text IS NULL OR status=${status ?? null}::text)
       ORDER BY last_message_at DESC NULLS LAST
       LIMIT 50
     `));
     return { items: data, total: data.length };
   }
 
-  @Get('inbox/conversations/:id/messages') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('inbox/conversations/:id/messages') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getConversationMessages(@Param('id') id: string) {
     const convId = parseInt(id, 10);
     const data = rows(await db.execute(sql`
@@ -329,7 +368,7 @@ export class MarketingAnalyticsStubsController {
     return { items: data, total: data.length };
   }
 
-  @Post('inbox/conversations/:id/reply') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('inbox/conversations/:id/reply') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.CREATED)
   async replyToConversation(@Param('id') id: string, @Body() body: unknown) {
     const dto = InboxReplySchema.parse(body ?? {});
@@ -348,7 +387,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row };
   }
 
-  @Post('inbox/ai-reply/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('inbox/ai-reply/:id') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.CREATED)
   async aiReplyToConversation(@Param('id') id: string) {
     // AI provider not wired — insert placeholder outbound message so FE round-trip succeeds.
@@ -366,7 +405,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row, ai_provider: 'pending' };
   }
 
-  @Patch('inbox/conversations/:id/status') @Roles('super_admin', 'marketing_manager', 'director')
+  @Patch('inbox/conversations/:id/status') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async updateConversationStatus(@Param('id') id: string, @Body() body: unknown) {
     const dto = InboxStatusSchema.parse(body ?? {});
     await db.execute(sql`
@@ -376,13 +415,38 @@ export class MarketingAnalyticsStubsController {
   }
 
   // -- A/B tests (marketing_ab_tests EXISTS) ---------------------------------
-  @Get('ab-tests') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('ab-tests') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getAbTests() {
     return { items: rows(await db.execute(sql`SELECT * FROM marketing_ab_tests ORDER BY created_at DESC`)) };
   }
 
+  @Post('ab-tests') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.CREATED)
+  async createAbTest(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = AbTestSchema.parse(body ?? {});
+    // marketing_ab_tests.id is varchar NOT NULL with no default (same as the PR-/AI- pattern in
+    // this file) — must supply it. campaign_id has no FK; impressions/clicks/conversions counters,
+    // status and start_date all take their DB defaults. Before this, only GET existed so the table
+    // (read by the FE A/B section) could never fill.
+    const r = await db.execute(sql`
+      INSERT INTO marketing_ab_tests
+        (id, campaign_id, name, description, variant_a, variant_b, status, created_by, created_at, updated_at)
+      VALUES (
+        ${`AB-${Date.now()}`},
+        ${dto.campaign_id ?? null},
+        ${dto.name},
+        ${dto.description ?? null},
+        ${dto.variant_a},
+        ${dto.variant_b},
+        ${dto.status ?? 'running'},
+        ${user?.id ?? null},
+        NOW(), NOW()
+      ) RETURNING *
+    `);
+    return { data: first(r) };
+  }
+
   // -- Exhibitions (exhibitions + exhibition_leads EXIST) --------------------
-  @Get('exhibitions') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('exhibitions') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getExhibitions() {
     const data = rows(await db.execute(sql`
       SELECT * FROM exhibitions WHERE deleted_at IS NULL ORDER BY created_at DESC
@@ -390,39 +454,38 @@ export class MarketingAnalyticsStubsController {
     return { items: data, total: data.length };
   }
 
-  @Get('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getExhibitionById(@Param('id') id: string) {
     const row = first(await db.execute(sql`
-      SELECT * FROM exhibitions WHERE id=${id} AND deleted_at IS NULL LIMIT 1
+      SELECT * FROM exhibitions WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
     `));
-    if (!row) throw new NotFoundException(`Exposition #${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.exhibitionNotFoundWithId', { args: { id } }));
     return { data: row };
   }
 
-  @Get('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getExhibitionLeads(@Param('id') id: string) {
     const data = rows(await db.execute(sql`
-      SELECT * FROM exhibition_leads WHERE exhibition_id::text=${id} ORDER BY created_at DESC
+      SELECT * FROM exhibition_leads WHERE exhibition_id=${parseInt(id, 10)} ORDER BY created_at DESC
     `));
     return { items: data, total: data.length };
   }
 
-  @Get('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getExhibitionQr(@Param('id') id: string) {
     const row = first(await db.execute(sql`
-      SELECT id, name, qr_code FROM exhibitions WHERE id=${id} AND deleted_at IS NULL LIMIT 1
+      SELECT id, name, qr_code FROM exhibitions WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
     `));
-    if (!row) throw new NotFoundException(`Exposition #${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.exhibitionNotFoundWithId', { args: { id } }));
     return { data: row };
   }
 
-  @Post('exhibitions') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
+  @Post('exhibitions') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.CREATED)
   async createExhibition(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = ExhibitionSchema.parse(body ?? {});
     const r = await db.execute(sql`
-      INSERT INTO exhibitions (id, name, location, country, start_date, end_date, budget, description, status, created_at, updated_at)
+      INSERT INTO exhibitions (name, location, country, start_date, end_date, budget, description, status, created_at, updated_at)
       VALUES (
-        gen_random_uuid()::text,
         ${dto.name ?? 'Unnamed'},
         ${dto.location ?? null},
         ${dto.country ?? null},
@@ -437,7 +500,7 @@ export class MarketingAnalyticsStubsController {
     return { data: first(r) };
   }
 
-  @Post('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director') @HttpCode(HttpStatus.CREATED)
+  @Post('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'manager', 'director') @HttpCode(HttpStatus.CREATED)
   async createExhibitionLead(@Param('id') id: string, @Body() body: unknown) {
     const dto = ExhibitionLeadSchema.parse(body ?? {});
     const r = await db.execute(sql`
@@ -459,16 +522,16 @@ export class MarketingAnalyticsStubsController {
     return { data: first(r) };
   }
 
-  @Post('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
+  @Post('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.OK)
   async generateExhibitionQr(@Param('id') id: string) {
     const code = `EXH-${id}-${Date.now()}`;
     await db.execute(sql`
-      UPDATE exhibitions SET qr_code=${code}, updated_at=NOW() WHERE id=${id} AND deleted_at IS NULL
+      UPDATE exhibitions SET qr_code=${code}, updated_at=NOW() WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL
     `);
     return { data: { exhibition_id: id, qr_code: code } };
   }
 
-  @Patch('exhibitions/:id') @Roles('super_admin', 'marketing_manager')
+  @Patch('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async updateExhibition(@Param('id') id: string, @Body() body: unknown) {
     const dto = z.object({
       name:        z.string().max(500).optional(),
@@ -491,24 +554,24 @@ export class MarketingAnalyticsStubsController {
         description = COALESCE(${dto.description ?? null}, description),
         status      = COALESCE(${dto.status      ?? null}, status),
         updated_at  = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
+      WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
       RETURNING *
     `);
     const row = rows(r)[0] ?? null;
-    if (!row) throw new NotFoundException('Ko\'rgazma topilmadi');
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.exhibitionNotFoundWithId', { args: { id } }));
     return { data: row };
   }
 
-  @Delete('exhibitions/:id') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
+  @Delete('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.OK)
   async deleteExhibition(@Param('id') id: string) {
     await db.execute(sql`
-      UPDATE exhibitions SET deleted_at = NOW() WHERE id = ${id} AND deleted_at IS NULL
+      UPDATE exhibitions SET deleted_at = NOW() WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
     `);
     return { id, deleted: true };
   }
 
   // -- PR (pr_activities table) ---------------------------------------------
-  @Get('pr') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('pr') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getPr(@Query('limit') limit?: string) {
     const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
     const data = rows(await db.execute(sql`
@@ -517,16 +580,16 @@ export class MarketingAnalyticsStubsController {
     return { items: data, total: data.length };
   }
 
-  @Get('pr/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('pr/:id') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getPrById(@Param('id') id: string) {
     const row = first(await db.execute(sql`
       SELECT * FROM pr_activities WHERE id=${id} AND deleted_at IS NULL LIMIT 1
     `));
-    if (!row) throw new NotFoundException(`PR activity #${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.prActivityNotFoundWithId', { args: { id } }));
     return { data: row };
   }
 
-  @Post('pr') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
+  @Post('pr') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.CREATED)
   async createPr(@Body() body: unknown) {
     const dto = PrActivitySchema.parse(body ?? {});
     const id = `PR-${Date.now()}`;
@@ -542,7 +605,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row };
   }
 
-  @Patch('pr/:id') @Roles('super_admin', 'marketing_manager')
+  @Patch('pr/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async updatePr(@Param('id') id: string, @Body() body: unknown) {
     const dto = PrActivitySchema.parse(body ?? {});
     await db.execute(sql`
@@ -562,7 +625,7 @@ export class MarketingAnalyticsStubsController {
     return { id, updated: true };
   }
 
-  @Delete('pr/:id') @Roles('super_admin', 'marketing_manager')
+  @Delete('pr/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async deletePr(@Param('id') id: string) {
     await db.execute(sql`
       UPDATE pr_activities SET deleted_at=NOW() WHERE id=${id} AND deleted_at IS NULL
@@ -571,18 +634,18 @@ export class MarketingAnalyticsStubsController {
   }
 
   // -- Settings (marketing_settings + social_api_configs EXIST) -------------
-  @Get('settings') @Roles('super_admin', 'marketing_manager')
+  @Get('settings') @Roles('super_admin', 'marketing_manager', 'manager')
   async getSettings() {
     return { items: rows(await db.execute(sql`SELECT id, key, value, category, description, updated_at FROM marketing_settings ORDER BY category, key`)) };
   }
 
-  @Get('settings/social-api') @Roles('super_admin', 'marketing_manager')
+  @Get('settings/social-api') @Roles('super_admin', 'marketing_manager', 'manager')
   async getSocialApiSettings() {
     // exclude access_token, bot_token, webhook_secret for security
     return { items: rows(await db.execute(sql`SELECT id, platform, page_id, account_id, is_active, last_sync_at, settings, updated_at FROM social_api_configs ORDER BY platform`)) };
   }
 
-  @Post('settings') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
+  @Post('settings') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.OK)
   async saveSettings(@Body() body: unknown) {
     const dto = (z.record(z.string())).parse(body ?? {});
     for (const [key, value] of Object.entries(dto)) {
@@ -595,7 +658,7 @@ export class MarketingAnalyticsStubsController {
     return { updated: Object.keys(dto).length };
   }
 
-  @Post('settings/social-api') @Roles('super_admin', 'marketing_manager')
+  @Post('settings/social-api') @Roles('super_admin', 'marketing_manager', 'manager')
   async createSocialApiSetting(@Body() body: unknown) {
     const dto = SocialApiSchema.parse(body ?? {});
     const r = await db.execute(sql`
@@ -613,13 +676,13 @@ export class MarketingAnalyticsStubsController {
     return { data: first(r) };
   }
 
-  @Delete('settings/social-api/:id') @Roles('super_admin', 'marketing_manager')
+  @Delete('settings/social-api/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async deleteSocialApiSetting(@Param('id') id: string) {
     await db.execute(sql`DELETE FROM social_api_configs WHERE id=${id}`);
     return { id, deleted: true };
   }
 
-  @Patch('settings/social-api/:id') @Roles('super_admin', 'marketing_manager')
+  @Patch('settings/social-api/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async patchSocialApiSetting(@Param('id') id: string, @Body() body: unknown) {
     const dto = SocialApiSchema.partial().parse(body ?? {});
     await db.execute(sql`
@@ -633,7 +696,7 @@ export class MarketingAnalyticsStubsController {
     return { id, updated: true };
   }
 
-  @Post('settings/setup-telegram-webhook') @Roles('super_admin', 'marketing_manager')
+  @Post('settings/setup-telegram-webhook') @Roles('super_admin', 'marketing_manager', 'manager')
   async setupTelegramWebhook(@Body() body: unknown) {
     const dto = TelegramWebhookSchema.parse(body ?? {});
     await db.execute(sql`
@@ -646,7 +709,7 @@ export class MarketingAnalyticsStubsController {
     return { configured: true, platform: 'telegram' };
   }
 
-  @Patch('settings/:id') @Roles('super_admin', 'marketing_manager')
+  @Patch('settings/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async patchSettingById(@Param('id') id: string, @Body() body: unknown) {
     const dto = SettingsPatchSchema.parse(body ?? {});
     await db.execute(sql`
@@ -656,7 +719,7 @@ export class MarketingAnalyticsStubsController {
   }
 
   // -- Website / Blog (blog_posts EXISTS) ------------------------------------
-  @Patch('website/blog/:id/publish') @Roles('super_admin', 'marketing_manager')
+  @Patch('website/blog/:id/publish') @Roles('super_admin', 'marketing_manager', 'manager')
   async patchPublishBlogPost(@Param('id') id: string) {
     await db.execute(sql`
       UPDATE blog_posts SET is_published=true, published_at=COALESCE(published_at, NOW()), updated_at=NOW() WHERE id=${id}
@@ -664,17 +727,18 @@ export class MarketingAnalyticsStubsController {
     return { id, published: true };
   }
 
-  @Post('website/blog/ai-generate') @Roles('super_admin', 'marketing_manager')
+  @Post('website/blog/ai-generate') @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.CREATED)
   async aiGenerateBlogPost(@Body() body: unknown) {
     // AI provider not wired — create draft blog post so FE round-trip succeeds.
     const dto = StubBodySchema.parse(body ?? {});
     const titleUz = String(dto['title_uz'] ?? dto['title'] ?? dto['topic'] ?? 'AI-generated maqola');
     const slug = titleUz.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 100) + '-' + Date.now();
+    // blog_posts.id is varchar with NO default — supply one (insert omitted it -> 23502).
     const row = first(await db.execute(sql`
-      INSERT INTO blog_posts (slug, title_uz, title_ru, body_uz, body_ru, is_published, created_at, updated_at)
+      INSERT INTO blog_posts (id, slug, title_uz, title_ru, body_uz, body_ru, is_published, created_at, updated_at)
       VALUES (
-        ${slug}, ${titleUz}, ${String(dto['title_ru'] ?? titleUz)},
+        gen_random_uuid()::text, ${slug}, ${titleUz}, ${String(dto['title_ru'] ?? titleUz)},
         ${String(dto['body_uz'] ?? dto['content'] ?? '')},
         ${String(dto['body_ru'] ?? '')},
         FALSE, NOW(), NOW()

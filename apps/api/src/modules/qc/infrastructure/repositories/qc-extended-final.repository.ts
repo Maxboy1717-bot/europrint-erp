@@ -35,14 +35,42 @@ export class QcExtendedFinalRepository {
     }
   }
 
-  async createFinalInspection(order_id: number | null, inspector_id: number | null, status: string | null, notes: string | null, passed: boolean | null): Promise<Result<Row>>  {
+  async createFinalInspection(
+    order_id: number | null,
+    inspector_id: number | null,
+    status: string | null,
+    notes: string | null,
+    passed: boolean | null,
+    sampleSize: number,
+    defectCount: number,
+    passedCount: number,
+    defectRate: number | null,
+  ): Promise<Result<Row>>  {
     try {
+      // qc_final_inspections.papka_order_id is NOT NULL (no default) → must be supplied; the legacy
+      // order_id/inspector_id/status columns are optional. Map to canonical cols (result is read by the
+      // list query, status by update/complete — set both for consistency). inspected_by = FK to users.
+      // sample_size / passed_count / defect_count / defect_rate — all exist in DB (verified info_schema).
+      const resolvedStatus = status ?? 'pending';
       const rows = await runQuery<Row>(sql`
-        INSERT INTO qc_final_inspections (order_id, inspector_id, status, notes, passed)
-        VALUES (${order_id ?? null}, ${inspector_id ?? null}, ${status ?? 'pending'}, ${notes ?? null}, ${passed ?? false})
+        INSERT INTO qc_final_inspections
+          (papka_order_id, inspected_by, result, status, notes, passed,
+           sample_size, passed_count, defect_count, defect_rate)
+        VALUES
+          (${order_id ?? null}, ${inspector_id ?? null},
+           ${resolvedStatus}, ${resolvedStatus}, ${notes ?? null}, ${passed ?? false},
+           ${sampleSize}, ${passedCount}, ${defectCount}, ${defectRate})
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);
+      const row = rows.rows[0] as Row;
+      // Wrap in shape FE expects: { inspection: { ...row, status, defectRate } }
+      return Ok({
+        inspection: {
+          ...row,
+          status: (row['result'] ?? row['status']) as string,
+          defectRate: Number(row['defect_rate'] ?? 0),
+        },
+      } as Row);
     } catch (_e) {
       return Err(String(_e));
     }
@@ -72,7 +100,7 @@ export class QcExtendedFinalRepository {
       // join is best-effort and may be null until orders cross to papka workflow.
       const rows = await runQuery<Row>(sql`
         SELECT so.id, so.document_number AS order_number, so.master_status AS status,
-               COALESCE(cc.name, so.sold_to_party) AS customer_name,
+               COALESCE(cc.title, so.sold_to_party) AS customer_name,
                NULL::text AS inspection_status, NULL::int AS inspection_id
         FROM sales_orders so
         LEFT JOIN crm_companies cc ON cc.id = so.customer_id
@@ -85,13 +113,29 @@ export class QcExtendedFinalRepository {
     }
   }
 
-  async completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean): Promise<Result<Row[]>>  {
+  // T11-06 (rework link + cost): `parent_order_id`/`rework_cost` are additive columns
+  // that only make sense when this decision IS a rework (result IN ('rework','rework_required')
+  // — matches the DB CHECK constraint's allowed values). parent_order_id defaults to the row's
+  // OWN papka_order_id (the order actually being reworked) unless the caller supplies an explicit
+  // override — no fabricated FK, only real order ids already known to the system. rework_cost is
+  // caller-supplied (no auto Cost-of-Quality calculator exists yet — Q-40, no invented numbers);
+  // COALESCE preserves a previously-set value across repeated completes of the same row.
+  async completeFinalInspection(
+    id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean,
+    parentOrderId: number | null = null, reworkCost: number | null = null,
+  ): Promise<Result<Row[]>>  {
     try {
       const status = passed ? 'passed' : 'failed';
       const rows = await runQuery<Row>(sql`
         UPDATE qc_final_inspections
         SET status = ${status}, result = ${inspResult ?? null},
             notes = COALESCE(${notes ?? null}, notes), defect_count = ${defect_count},
+            parent_order_id = CASE WHEN ${inspResult ?? null} IN ('rework','rework_required')
+                                    THEN COALESCE(${parentOrderId ?? null}, parent_order_id, papka_order_id)
+                                    ELSE parent_order_id END,
+            rework_cost = CASE WHEN ${inspResult ?? null} IN ('rework','rework_required')
+                                THEN COALESCE(${reworkCost ?? null}, rework_cost)
+                                ELSE rework_cost END,
             completed_at = NOW(), updated_at = NOW()
         WHERE id = ${id} RETURNING *
       `);

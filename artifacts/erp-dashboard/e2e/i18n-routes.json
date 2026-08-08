@@ -250,7 +250,6 @@
     "/mro/uniforms",
     "/mro/utilities",
     "/order-create",
-    "/order-workflow",
     "/org-chart",
     "/org-structure/builder",
     "/org-structure/hierarchy",

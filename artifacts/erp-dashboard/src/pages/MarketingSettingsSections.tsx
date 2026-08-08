@@ -28,9 +28,9 @@ export function TelegramWebhookActivation() {
     try {
       const webhookUrl = `${window.location.origin}/api/marketing/webhook/telegram-customer`;
       const data = (await apiRequest('POST', "/api/marketing/settings/setup-telegram-webhook", { webhookUrl })) as { message?: string };
-      toast({ title: "Muvaffaqiyat", description: String(data.message) || "Telegram webhook faollashtirildi" });
+      toast({ title: t("muvaffaqiyatToast"), description: String(data.message) || t("telegramWebhookFaollashtirildi") });
     } catch {
-      toast({ title: "Xatolik", description: "Serverga ulanishda xatolik", variant: "destructive" });
+      toast({ title: t("xatolik"), description: t("servergaUlanishdaXatolik"), variant: "destructive" });
     } finally {
       setIsActivating(false);
     }
@@ -46,8 +46,7 @@ export function TelegramWebhookActivation() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Telegram botingiz uchun webhook manzilini avtomatik o'rnating. Bu tugma bosilganda
-          tizim Telegram API ga bog'lanib, kiruvchi xabarlarni qabul qilish uchun webhook ni faollashtiradi.
+          {t("telegramWebhookTavsif")}
         </p>
         <Button
           onClick={handleActivate}
@@ -55,7 +54,7 @@ export function TelegramWebhookActivation() {
           data-testid="button-activate-telegram-webhook"
         >
           <CheckCircle2 className="h-4 w-4 mr-2" />
-          {isActivating ? "Sozlanmoqda..." : "Telegram Webhook ni faollashtirish"}
+          {isActivating ? t("sozlanmoqda") : t("telegramWebhookniFaollashtirish")}
         </Button>
       </CardContent>
     </Card>
@@ -81,14 +80,14 @@ export function WebhookUrlsSection({ webhookUrl }: WebhookUrlsSectionProps) {
           <Label className="text-sm text-muted-foreground font-bold">{t("metaInstagramFacebook")}</Label>
             <div className="flex gap-3">
               <Input readOnly value={`${webhookUrl}/meta`} className="bg-background border-border font-mono text-xs h-11" data-testid="input-webhook-meta" />
-              <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/meta`); toast({ title: "Nusxalandi" }); }}>{t("nusxa")}</Button>
+              <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/meta`); toast({ title: t("nusxalandiToast") }); }}>{t("nusxa")}</Button>
             </div>
           </div>
           <div className="space-y-1">
           <Label className="text-sm text-muted-foreground font-bold">{t("telegram")}</Label>
             <div className="flex gap-3">
               <Input readOnly value={`${webhookUrl}/telegram`} className="bg-background border-border font-mono text-xs h-11" data-testid="input-webhook-telegram" />
-              <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/telegram`); toast({ title: "Nusxalandi" }); }}>{t("nusxa")}</Button>
+              <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/telegram`); toast({ title: t("nusxalandiToast") }); }}>{t("nusxa")}</Button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">

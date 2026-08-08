@@ -7,28 +7,8 @@ import { sql } from "drizzle-orm";
 import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { Admin, User, departments, goals, positions, users } from "./core-schema";
+import { Admin, User, departments, goals, orgDepartments, positions, users } from "./core-schema";
 import { attendance } from "./hr-schema";
-
-
-// Guidelines (lavozim yo'riqnomalari)
-export const guidelines = pgTable("guidelines", {
-  id: serial("id").primaryKey(),
-  positionId: integer("position_id").references(() => positions.id, { onDelete: 'set null' }),
-  filePath: text("file_path").notNull(),
-  version: varchar("version", { length: 20 }).notNull().default("1.0"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-  // ── Live-DB superset columns (ADD-ONLY convergence) ──
-  orgFunctionId: integer("org_function_id"),
-  title: text("title"),
-  content: text("content"),
-  category: varchar("category", { length: 100 }),
-  isActive: boolean("is_active").default(true),
-  createdBy: integer("created_by"),
-});
 
 
 // Mentors (kurs mentorlari)
@@ -41,6 +21,9 @@ export const mentors = pgTable("mentors", {
   experience: text("experience"), // Tajriba (yillar, loyihalar)
   expertise: text("expertise"), // Mutaxassislik sohalari
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }), // Agar bizning xodimimiz bo'lsa
+  // SB0071 (hr-card-links-2026-07-04.sql): karta bog'lanishi — mentor qaysi KARTA bo'yicha
+  // xodimni yo'naltiradi (org_departments = kanonik karta jadvali, card.repository.ts).
+  cardId: integer("card_id").references(() => orgDepartments.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
@@ -86,9 +69,16 @@ export const courses = pgTable("courses", {
   status: varchar("status", { length: 20 }),
   instructorId: integer("instructor_id"),
   coverUrl: text("cover_url"),
+  // T11-04: 3-bosqich kurs-tasdiq workflow (draft->review->approved). 2-imzo: submit + approve.
+  approvalStatus: varchar("approval_status", { length: 20 }).notNull().default("draft"),
+  submittedBy: integer("submitted_by"),
+  submittedAt: timestamp("submitted_at"),
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
 }, (t) => [
   check("courses_level_chk", sql`${t.level} IN ('beginner','intermediate','advanced')`),
   check("courses_duration_chk", sql`${t.duration} IS NULL OR ${t.duration} > 0`),
+  check("chk_courses_approval_status", sql`${t.approvalStatus} IN ('draft','review','approved')`),
   index("idx_courses_department_id").on(t.departmentId),
   index("idx_courses_is_required").on(t.isRequired),
   index("idx_courses_level").on(t.level),

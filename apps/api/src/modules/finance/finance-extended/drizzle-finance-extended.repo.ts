@@ -70,20 +70,63 @@ export class DrizzleFinanceExtendedRepository implements IFinanceExtendedReposit
 
   async findIncomeExpenseSummary(): Promise<Result<Row>> {
     try {
-      const [income, expense] = await Promise.all([
-        db.select({ total: sum(incomeExpenseTransactions.amount) }).from(incomeExpenseTransactions).where(sql`${incomeExpenseTransactions.transactionType} = 'income'`),
-        db.select({ total: sum(incomeExpenseTransactions.amount) }).from(incomeExpenseTransactions).where(sql`${incomeExpenseTransactions.transactionType} = 'expense'`),
-      ]);
-      const totalIncome = Number(income[0]?.total || 0);
-      const totalExpense = Number(expense[0]?.total || 0);
-      return Ok({ totalIncome, totalExpense, netBalance: totalIncome - totalExpense });
+      // Single-pass aggregate: income/expense sums + row count + current-month period.
+      // FE Summary type expects: totalIncome, totalExpense, netAmount, transactionCount, period{from,to}.
+      const r = await runQuery<{
+        totalIncome: string;
+        totalExpense: string;
+        netAmount: string;
+        transactionCount: string;
+        periodFrom: string;
+        periodTo: string;
+      }>(sql`
+        SELECT
+          COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'income'),  0) AS "totalIncome",
+          COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'expense'), 0) AS "totalExpense",
+          COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'income'),  0)
+            - COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'expense'), 0) AS "netAmount",
+          COUNT(*)                                                              AS "transactionCount",
+          date_trunc('month', NOW())::date                                      AS "periodFrom",
+          NOW()::date                                                            AS "periodTo"
+        FROM income_expense_transactions
+      `);
+      const row = r.rows[0];
+      return Ok({
+        totalIncome:      Number(row?.totalIncome      ?? 0),
+        totalExpense:     Number(row?.totalExpense     ?? 0),
+        netAmount:        Number(row?.netAmount        ?? 0),
+        transactionCount: Number(row?.transactionCount ?? 0),
+        period: {
+          from: String(row?.periodFrom ?? ''),
+          to:   String(row?.periodTo   ?? ''),
+        },
+      });
     } catch (e: unknown) { return Err((e as Error).message || 'Xulosa topilmadi'); }
   }
 
   async createIncomeExpense(dto: Row): Promise<Result<Row>> {
     try {
-      const result = await db.insert(incomeExpenseTransactions).values(dto as typeof incomeExpenseTransactions.$inferInsert).returning();
-      return Ok(result[0]);
+      const transactionDate  = dto.transactionDate  != null ? String(dto.transactionDate)  : null;
+      const transactionType  = dto.transactionType  != null ? String(dto.transactionType)  : 'income';
+      const amount           = dto.amount           != null ? Number(dto.amount)           : null;
+      const categoryId       = dto.categoryId       != null ? Number(dto.categoryId)       : null;
+      const description      = dto.description      != null ? String(dto.description)      : null;
+      // income_expense_transactions.transaction_number is NOT NULL with no DB default;
+      // generate deterministically (same pattern as createInventoryCount → INV-...).
+      const r = await runQuery<Row>(sql`
+        INSERT INTO income_expense_transactions
+          (transaction_number, transaction_date, transaction_type, amount, category_id, description)
+        VALUES (
+          'TXN-' || to_char(NOW(), 'YYYYMMDDHH24MISS'),
+          ${transactionDate},
+          ${transactionType},
+          ${amount},
+          ${categoryId},
+          ${description}
+        )
+        RETURNING *
+      `);
+      return Ok((r.rows[0] ?? {}) as Row);
     } catch (e: unknown) { return Err((e as Error).message || 'Yaratishda xatolik'); }
   }
 
@@ -219,6 +262,29 @@ export class DrizzleFinanceExtendedRepository implements IFinanceExtendedReposit
     } catch (e: unknown) {
       this.logger.warn(`findCustoms (customs_declarations not migrated): ${(e as Error).message}`);
       return Err((e as Error).message);
+    }
+  }
+
+  async findAssetInventorySummary(): Promise<Result<Row>> {
+    try {
+      const r = await runQuery<{ total: string; active: string; depreciated: string; total_value: string }>(sql`
+        SELECT
+          COUNT(*) AS total,
+          COUNT(*) FILTER (WHERE status = 'active') AS active,
+          COUNT(*) FILTER (WHERE status = 'depreciated') AS depreciated,
+          COALESCE(SUM(current_value), 0) AS total_value
+        FROM asset_items
+      `);
+      const row = r.rows[0] ?? { total: '0', active: '0', depreciated: '0', total_value: '0' };
+      return Ok({
+        total:      Number(row.total),
+        active:     Number(row.active),
+        depreciated: Number(row.depreciated),
+        totalValue: Number(row.total_value),
+      });
+    } catch (e: unknown) {
+      this.logger.warn(`findAssetInventorySummary: ${(e as Error).message}`);
+      return Err((e as Error).message || 'Asset summary topilmadi');
     }
   }
 

@@ -22,7 +22,9 @@ export interface ICrmBitrixCompatRepo {
   toggleRobot(id: number): Promise<Result<Row | null>>;
   deleteRobot(id: number): Promise<void>;
   deleteProposal(id: number): Promise<void>;
-  deleteInvoice(id: number): Promise<void>;
+  deleteInvoice(id: string): Promise<void>;
   updateProposalStage(id: number, status: string): Promise<Result<Row | null>>;
-  updateInvoiceStage(id: number, status: string): Promise<Result<Row | null>>;
+  updateInvoiceStage(id: string, status: string): Promise<Result<Row | null>>;
+  /** CRM-13#5: idempotent first-view stamp for the KP email pixel (mirrors CC #47 markViewed). */
+  markProposalViewed(id: number): Promise<Result<void>>;
 }

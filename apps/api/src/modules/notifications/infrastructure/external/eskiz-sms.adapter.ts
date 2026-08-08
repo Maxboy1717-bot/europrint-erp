@@ -2,8 +2,9 @@
  * @module eskiz-sms.adapter
  * @description Infrastructure adapter for SMS delivery. Implements the domain
  *   `ISmsSender` port using the Eskiz (https://notify.eskiz.uz) and Infobip
- *   HTTP APIs. When neither token is configured `send()` becomes a no-op
- *   (logs + returns Ok) so business workflows degrade gracefully in dev/test.
+ *   HTTP APIs. When neither token is configured `send()` returns an
+ *   `Err(EXTERNAL_SERVICE)` — the caller must see delivery as failed
+ *   (`sent:false`), not a fabricated success (Q-40 fake-success ban).
  *
  *   Each HTTP call is wrapped in `withRetry` (P2-23): 3 attempts with
  *   exponential backoff 100ms / 300ms / 1000ms and a 30s timeout per
@@ -56,7 +57,7 @@ export class EskizSmsAdapter implements ISmsSender {
       return this.sendViaInfobip(normalized, message);
     } else {
       this.logger.warn('SMS: ESKIZ_TOKEN yoki INFOBIP_API_KEY o\'rnatilmagan — SMS yuborilmadi');
-      return Ok(undefined);
+      return Err(AppErr('EXTERNAL_SERVICE', 'SMS provider sozlanmagan (ESKIZ_TOKEN yoki INFOBIP_API_KEY yo\'q)'));
     }
   }
 

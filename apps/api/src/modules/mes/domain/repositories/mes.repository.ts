@@ -3,7 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
-import { ProductionSession } from '../aggregates/production-session.aggregate';
+import { ProductionSession, ChecklistStatus } from '../aggregates/production-session.aggregate';
 import { Result, Ok, Err } from '@common/result';
 import type { DrizzleExecutor } from '../../../../common/types/drizzle.types';
 export type { DrizzleExecutor };
@@ -16,12 +16,80 @@ export interface IMesRepository {
   checkOperatorCertification(operatorId: number, courseId: number): Promise<Result<Record<string, unknown>>>;
 
   /**
+   * Operator × mashina (work_center) ruxsat-matritsasi — HARD BLOCK.
+   *
+   * `work_centers.required_skill_name` (mavjud, oldin yozilmagan ustun) shu ish
+   * markazida ishlash uchun talab qilinadigan ko'nikma nomini belgilaydi (masalan
+   * "Flekso operator", "Ofset operator"). NULL = bu mashina uchun cheklov yo'q —
+   * har qanday operator ruxsat etiladi (regressiyasiz, mavjud sessiyalar buzilmaydi).
+   *
+   * Belgilangan bo'lsa: operator `employee_skills`da SHU nom bilan (muddati
+   * o'tmagan) ko'nikma qatoriga ega bo'lishi SHART — aks holda start BLOCKED.
+   * LMS kurs-sertifikatidan (checkOperatorCertification) MUSTAQIL gate: kurs
+   * sertifikati "nazariyani bilasizmi", bu esa "shu KONKRET mashinaga ruxsatingiz
+   * bormi" — ikkalasi ham HARD BLOCK, biri ikkinchisini almashtirmaydi.
+   */
+  checkOperatorMachineSkill(
+    operatorId: number,
+    workCenterId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<{ permitted: boolean; requiredSkill: string | null; machineType: string | null }>>;
+
+  /**
+   * Ikki-imzoli material-akt gate — HARD BLOCK (08-mes vizyon #49: "Akt 2 imzosiz
+   * material WMS'dan chiqmaydi + MES sessiyaga kirmaydi").
+   *
+   * Reuses the EXISTING `material_kits` table as the "akt": `prepared_by` = 1-imzo
+   * (omborchi), `confirmed_by` = 2-imzo (ishlab-chiqarish ustasi qabul-tasdiq).
+   * `material_kits.order_id` keys off `production_orders.id` (same id-space as
+   * this session's `ppId` — see drizzle-mes.repo.ts implementation for the
+   * pg_constraint evidence), so no new table/bridge is needed.
+   *
+   * Regressiyasiz: buyurtma uchun kit qatori umuman bo'lmasa (akt hali ochilmagan)
+   * — bloklanmaydi (NULL-o'tkazish naqshi, checkOperatorMachineSkill bilan bir xil).
+   * Kit(lar) bor-yu, kamida bittasi 'confirmed' bosqichiga yetmagan bo'lsa — BLOCK.
+   */
+  checkMaterialActSignatures(
+    productionOrderId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<{ blocked: boolean; pendingKits: string[] }>>;
+
+  /**
+   * 08-mes #4 — Sessiya BOSHLANGANDAGI norma versiyasini production_sessions.norma_version
+   * ga snapshot qiladi (retro-buzilmaslik): started_at sanasida amalda bo'lgan
+   * (material_norms.effective_date <= started_at) eng yuqori aktiv norma versiyasi.
+   * Bir marta yozilgach qayta yozilmaydi (first-write-wins). Amaldagi norma yo'q bo'lsa
+   * (0 qator yoki hammasi kelajakda amalga kiradi) NULL qaytadi — mavjud sessiyalar regressiyasiz.
+   */
+  snapshotNormaVersion(sessionId: number, tx?: DrizzleExecutor): Promise<Result<number | null>>;
+
+  /**
+   * Loads the TB-safety / smena-readiness checklist status for a session from the
+   * canonical `setup_checklists` + `checklist_items` tables (required items only).
+   * Feeds {@link ProductionSession.passChecklist} so the start gate is real (Q-40).
+   */
+  getChecklistStatus(sessionId: number, tx?: DrizzleExecutor): Promise<Result<ChecklistStatus>>;
+
+  /**
    * Runs the supplied work inside a Drizzle transaction. Lets callers keep the
    * transaction boundary inside the repo layer (handlers don't need `db`).
    */
   withTransaction<T>(
     work: (tx: DrizzleExecutor) => Promise<Result<T>>,
   ): Promise<Result<T>>;
+
+  /**
+   * PP#3 — bitta stanokda (work_center) parallel sessiya to'qnashuvini oldini olish.
+   * Berilgan tranzaksiya ichida work_center bo'yicha advisory xact-lock oladi (parallel
+   * start'lar shu stanok bo'yicha serializatsiya qilinadi; qulf tranzaksiya tugashida
+   * avto-bo'shaydi), so'ng shu stanokda FAOL (in_progress/running) boshqa sessiyalar sonini
+   * qaytaradi (joriy sessiya `excludeSessionId` chiqarib tashlanadi). > 0 => stanok band.
+   */
+  lockWorkCenterAndCountActive(
+    workCenterId: number,
+    excludeSessionId: number,
+    tx: DrizzleExecutor,
+  ): Promise<Result<number>>;
 }
 
 /**

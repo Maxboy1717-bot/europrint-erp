@@ -22,7 +22,7 @@ while IFS= read -r file; do
     #   - safeCall(...) wrapper
     #   - Result.fromPromise / err()/ok() pattern
     # These all produce a Result<T> outcome without throwing.
-    if grep -qE 'try\s*\{|}\s*catch\s*\(|safeCall\(|safeAsync\(|Result\.from|return\s+Err\(' "$file" 2>/dev/null; then
+    if grep -qE 'try\s*\{|}\s*catch\s*\(|safeCall[<(]|safeAsync[<(]|Result\.from|return\s+Err\(' "$file" 2>/dev/null; then
       continue
     fi
     rel="${file#$ROOT_DIR/}"

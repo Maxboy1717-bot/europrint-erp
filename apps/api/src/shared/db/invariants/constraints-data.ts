@@ -104,6 +104,12 @@ export const DB_CONSTRAINTS: Array<ConstraintDef> = [
     table: 'sensor_devices',
     check: "longitude IS NULL OR (longitude::numeric BETWEEN -180 AND 180)",
   },
+  {
+    // CAPEX o'qi (Batch 5 Item 2) — needed/planned/installed; `status` (online/offline) dan alohida.
+    name: 'chk_sensor_devices_install_status',
+    table: 'sensor_devices',
+    check: "install_status IN ('needed','planned','installed')",
+  },
   // ── HR ta'til (HR) ───────────────────────────────────────────
   {
     name: 'chk_leave_requests_end_gte_start',

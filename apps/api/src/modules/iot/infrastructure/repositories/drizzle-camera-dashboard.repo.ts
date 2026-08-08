@@ -45,7 +45,7 @@ export class DrizzleCameraDashboardRepo {
         description: camera_events.description, severity: camera_events.severity, status: camera_events.status,
         created_at: camera_events.created_at, camera_name: cameras.name, location: cameras.location,
       }).from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .where(and(eq(camera_events.status, 'new'), inArray(camera_events.severity, ['high', 'critical'])))
         .orderBy(desc(camera_events.created_at)).limit(limit);
       return Ok(rows);
@@ -60,7 +60,7 @@ export class DrizzleCameraDashboardRepo {
         description: camera_events.description, severity: camera_events.severity, status: camera_events.status,
         created_at: camera_events.created_at, camera_name: cameras.name, location: cameras.location,
       }).from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .where(cond).orderBy(desc(camera_events.created_at)).limit(limit);
       return Ok(rows);
     } catch (e) { return Err((e as Error).message); }
@@ -153,7 +153,7 @@ export class DrizzleCameraDashboardRepo {
         total: count(camera_events.id),
         in_last_24h: sql<number>`COUNT(*) FILTER (WHERE ${camera_events.created_at} >= ${since24h})`,
       }).from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .groupBy(camera_events.event_type, cameras.name, cameras.location)
         .orderBy(sql`4 DESC`).limit(50);
       return Ok(rows);
@@ -172,7 +172,7 @@ export class DrizzleCameraDashboardRepo {
         event_count: count(camera_events.id),
         recognition_count: sql<number>`COUNT(*) FILTER (WHERE ${camera_events.event_type} = 'face_recognition')`,
       }).from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .leftJoin(camera_zones, eq(camera_zones.camera_id, cameras.id))
         .where(and(...conds))
         .groupBy(sql`EXTRACT(HOUR FROM ${camera_events.created_at})`, camera_zones.zone_name)
@@ -212,7 +212,7 @@ export class DrizzleCameraDashboardRepo {
         severity: camera_events.severity, created_at: camera_events.created_at,
         camera_name: cameras.name, location: cameras.location,
       }).from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .where(and(
           eq(camera_events.event_type, 'face_recognition'),
           sql`${camera_events.description} = ${emp.id}::text`,
@@ -234,7 +234,7 @@ export class DrizzleCameraDashboardRepo {
         defects: sql<number>`COUNT(DISTINCT ${camera_quality_defects.id})`,
       }).from(cameras)
         .leftJoin(camera_events, and(
-          sql`${cameras.id}::text = ${camera_events.camera_id}`,
+          eq(cameras.id, camera_events.camera_id),
           gte(camera_events.created_at, fromDate), lte(camera_events.created_at, toDate),
         ))
         .leftJoin(camera_safety_violations, and(

@@ -5,8 +5,25 @@
  *   DRAFT → KARANTIN → QC_REVIEW → APPROVED → COMPLETED
  */
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, Ok, Err, AppError } from '@common/result';
+import { getConfigString } from '@common/config/business-config.helper';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 import { QuarantineWorkflowRepository } from '../../infrastructure/repositories/quarantine-workflow.repository';
+import { StockLedgerService } from './stock-ledger.service';
+
+// MN-1 (Magic-Numbers Independent Verification 2026-07-07, M6 2/4 gap): quarantine
+// routing warehouse codes are now settings-table-tunable -- fall back to the prior
+// hardcoded codes when unset. NOTE: 'raw_material' type currently has 2 active
+// warehouses (RM-MAIN + RM-ROLLS) live, so a type-based lookup would be ambiguous;
+// the code itself (not the type) remains the correct, owner-tunable identifier.
+const QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT = 'QC-HOLD';
+const QUARANTINE_SOURCE_WAREHOUSE_CODE_DEFAULT = 'RM-MAIN';
+
+// M6 remaining gap (memory: "quarantine still hardcoded", flagged 2026-07-07): the
+// 48h auto-escalation (karantin -> qc_review) interval was a raw SQL literal —
+// business_settings CRUD-tunable now, same pattern as director/cc escalation hours.
+const QUARANTINE_ESCALATION_HOURS_DEFAULT = 48;
 
 export type MovementStatus =
   | 'draft' | 'pending' | 'karantin' | 'qc_review'
@@ -27,11 +44,16 @@ export const STATUS_FLOW: Record<string, MovementStatus[]> = {
 export class QuarantineWorkflowService {
   private readonly logger = new Logger(QuarantineWorkflowService.name);
 
-  constructor(private readonly repo: QuarantineWorkflowRepository) {}
+  constructor(
+    private readonly repo: QuarantineWorkflowRepository,
+    private readonly stockLedger: StockLedgerService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async moveToQuarantine(movementId: number): Promise<Result<void, AppError>> {
     try {
-      const qcWh = await this.repo.findQcHoldWarehouse();
+      const qcCode = await getConfigString('quarantine_hold_warehouse_code', QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT);
+      const qcWh = await this.repo.findQcHoldWarehouse(qcCode);
       if (!qcWh) {
         this.logger.warn('[Quarantine] QC-HOLD ombor topilmadi');
         return Err({ message: 'QC-HOLD ombor topilmadi', code: 'NOT_FOUND' });
@@ -62,7 +84,8 @@ export class QuarantineWorkflowService {
 
   async escalateExpiredQuarantine(): Promise<Result<{ moved: number }, AppError>> {
     try {
-      const rows = await this.repo.escalateExpiredQuarantine();
+      const escalationHours = await getBusinessSettingNumber('pos.quarantine_escalation_hours', QUARANTINE_ESCALATION_HOURS_DEFAULT);
+      const rows = await this.repo.escalateExpiredQuarantine(escalationHours);
       if (rows.length > 0) {
         this.logger.log(`[Quarantine Cron] ${rows.length} ta movement → 'qc_review' ga ko'chirildi`);
         for (const row of rows) {
@@ -88,6 +111,8 @@ export class QuarantineWorkflowService {
         decision === 'REWORK' ? 'approved' :
         'rejected';
 
+      const movBefore = await this.repo.findMovementBasic(movementId);
+
       await this.repo.updateInventoryPassport(movementId, decision, qcNote ?? null);
       await this.repo.updateMovementStatus(movementId, targetStatus, {
         qcStatus: decision, qcCompletedAt: true, qcCompletedBy: inspectorId,
@@ -95,9 +120,11 @@ export class QuarantineWorkflowService {
       this.logger.log(`[QC] Movement ${movementId}: ${decision} → status='${targetStatus}'`);
 
       if (decision === 'QABUL') {
-        const whs = await this.repo.findWarehousesByCode(['RM-MAIN', 'QC-HOLD']);
-        const mainWh = whs.find(w => w.code === 'RM-MAIN');
-        const qcWh   = whs.find(w => w.code === 'QC-HOLD');
+        const sourceCode = await getConfigString('quarantine_source_warehouse_code', QUARANTINE_SOURCE_WAREHOUSE_CODE_DEFAULT);
+        const qcCode = await getConfigString('quarantine_hold_warehouse_code', QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT);
+        const whs = await this.repo.findWarehousesByCode([sourceCode, qcCode]);
+        const mainWh = whs.find(w => w.code === sourceCode);
+        const qcWh   = whs.find(w => w.code === qcCode);
 
         if (mainWh && qcWh) {
           await this.repo.updateMovementStatus(movementId, targetStatus, { toWarehouseId: mainWh.id });
@@ -106,7 +133,13 @@ export class QuarantineWorkflowService {
           for (const line of lines) {
             const qty = Number(line.quantity);
             if (!Number.isFinite(qty) || qty <= 0) continue;
-            await this.repo.reduceWarehouseStock(qcWh.id, line.material_card_id, qty);
+            // C1.6: a guard failure means QC-HOLD doesn't actually have this much stock to move —
+            // do not credit RM-MAIN with quantity that was never actually debited from QC-HOLD.
+            const reduced = await this.repo.reduceWarehouseStock(qcWh.id, line.material_card_id, qty);
+            if (!reduced) {
+              this.logger.warn(`[QC] Movement ${movementId}: QC-HOLD'da material #${line.material_card_id} uchun yetarli qoldiq yo'q (so'ralgan ${qty}) — bu qator o'tkazib yuborildi`);
+              continue;
+            }
             await this.repo.upsertWarehouseStock(mainWh.id, line.material_card_id, qty, line.unit);
             moved++;
           }
@@ -115,15 +148,43 @@ export class QuarantineWorkflowService {
       }
 
       if (decision === 'CHIQARISH') {
-        const qcWh = await this.repo.findQcHoldWarehouse();
+        const qcCode = await getConfigString('quarantine_hold_warehouse_code', QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT);
+        const qcWh = await this.repo.findQcHoldWarehouse(qcCode);
         if (qcWh) {
           const lines = await this.repo.findMovementLines(movementId);
           for (const line of lines) {
             const qty = Number(line.quantity);
-            if (qty > 0) await this.repo.reduceWarehouseStock(qcWh.id, line.material_card_id, qty);
+            if (qty <= 0) continue;
+            // C1.6: same guard as the QABUL branch above — log rather than silently clamp.
+            const reduced = await this.repo.reduceWarehouseStock(qcWh.id, line.material_card_id, qty);
+            if (!reduced) {
+              this.logger.warn(`[QC] Movement ${movementId}: QC-HOLD'da material #${line.material_card_id} uchun yetarli qoldiq yo'q (so'ralgan ${qty}) — bu qator o'tkazib yuborildi`);
+            }
           }
           this.logger.log(`[QC] Movement ${movementId}: CHIQARISH — QC-HOLD dan stok qaytarildi`);
         }
+      }
+
+      // Audit-trail: 'karantin'/'qc_review' bosqichida qilingan QC qarorini ham
+      // "Tasdiqlash Bosqichlari" (movement_confirmations) jadvaliga yozamiz — avval
+      // faqat rasmiy qc_pending yo'li orqali kelgan qarorlar yozilardi (World-1),
+      // karantin-QC (World-2) qarori umuman ro'yxatga olinmasdi.
+      const confirmDecision = decision === 'CHIQARISH' ? 'REJECTED' : decision === 'REWORK' ? 'REWORK' : 'APPROVED';
+      await this.stockLedger.recordConfirmation(movementId, 'QC', inspectorId, confirmDecision, qcNote);
+
+      // KARANTIN→QC qabul qilingan kirimni OMBOR_MENEJER + AI_GL bosqichlariga ulash:
+      // bu ikki bosqich allaqachon 'pos.movement.data.approved' hodisa-tinglovchisi orqali
+      // qurilgan (AutoGL posting, 3-way match, MES signali, ai_processing belgisi) — lekin
+      // karantin oqimi (bu servis) hech qachon shu hodisani chiqarmagani uchun ular hech qachon
+      // ishga tushmagan edi. Faqat qo'shildi — mavjud QC qarori (targetStatus) o'zgarmadi (Q-39).
+      if (targetStatus === 'approved' && movBefore) {
+        this.eventEmitter.emit('pos.movement.data.approved', {
+          movementId,
+          movementNumber: movBefore.movement_number,
+          oldStatus: movBefore.status,
+          newStatus: targetStatus,
+          updatedById: inspectorId,
+        });
       }
 
       return Ok(undefined);

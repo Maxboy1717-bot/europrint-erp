@@ -106,7 +106,7 @@ export class CrmActivitiesRepository implements ICrmActivitiesRepo {
       }, 'DB_ERROR');
   }
 
-  async create(type: unknown, subject: unknown, lead_id: unknown, deal_id: unknown, assigned_to: unknown, due_date: unknown, notes: unknown, status: unknown): Promise<Result<Row>> {
+  async create(type: unknown, subject: unknown, lead_id: unknown, deal_id: unknown, assigned_to: unknown, due_date: unknown, notes: unknown, status: unknown, communication_data: unknown, scheduled_at: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(crm_activities).values({
         type:        type as string,
@@ -117,6 +117,8 @@ export class CrmActivitiesRepository implements ICrmActivitiesRepo {
         due_date:    due_date ? new Date(due_date as string) : undefined,
         notes:       notes as string ?? undefined,
         status:      (status as string) ?? 'pending',
+        communication_data: (communication_data as Record<string, unknown>) ?? undefined,
+        scheduled_at:       scheduled_at ? new Date(scheduled_at as string) : undefined,
       }).returning();
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');

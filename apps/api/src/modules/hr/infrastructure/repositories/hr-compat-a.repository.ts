@@ -17,6 +17,8 @@ import {
 import { safeInt } from '../../common/db-rows';
 import { safeCall, Result } from '@common/result';
 import type { IHrCompatARepo } from '../../domain/repositories/i-hr-compat-a.repo';
+import { computeDisciplineEscalation, escalationFlags } from '../../attendance/discipline-escalation.helper';
+import { SYSTEM_USER_ID } from '@common/constants/app.constants';
 
 type Row = Record<string, unknown>;
 
@@ -76,33 +78,36 @@ export class HrCompatARepository implements IHrCompatARepo {
 
   async getConflictReports(status?: string): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      const rows = await db.select({
-        id:          hr_conflict_reports.id,
-        party1:      hr_conflict_reports.party1,
-        party2:      hr_conflict_reports.party2,
-        description: hr_conflict_reports.description,
-        severity:    hr_conflict_reports.severity,
-        status:      hr_conflict_reports.status,
-        created_at:  hr_conflict_reports.created_at,
-      })
-        .from(hr_conflict_reports)
-        .where(sql`${status ?? null}::text IS NULL OR ${hr_conflict_reports.status} = ${status ?? null}`)
-        .orderBy(sql`${hr_conflict_reports.created_at} DESC`)
-        .limit(100);
-      return castTo<Row[]>(rows);
+      const rows = await runQuery<Row>(sql`
+        SELECT cr.id, cr.party1, cr.party2, cr.description, cr.severity, cr.status, cr.created_at,
+               COALESCE(e1.first_name || ' ' || e1.last_name, cr.party1) AS party1_name,
+               COALESCE(e2.first_name || ' ' || e2.last_name, cr.party2) AS party2_name
+        FROM hr_conflict_reports cr
+        LEFT JOIN employees e1 ON e1.id::text = cr.party1
+        LEFT JOIN employees e2 ON e2.id::text = cr.party2
+        WHERE ${status ?? null}::text IS NULL OR cr.status = ${status ?? null}
+        ORDER BY cr.created_at DESC
+        LIMIT 100
+      `);
+      return rows.rows as Row[];
       }, 'DB_ERROR');
   }
 
   async createConflictReport(party1: unknown, party2: unknown, description: unknown, severity: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.insert(hr_conflict_reports).values({
-        party1:      (party1 ?? '') as string,
-        party2:      (party2 ?? '') as string,
-        description: (description ?? null) as string,
-        severity:    (severity ?? 'medium') as string,
-        status:      'open',
-      }).returning();
-      return castTo<Row>((rows[0] ?? {}));
+      const rows = await runQuery<Row>(sql`
+        INSERT INTO hr_conflict_reports (id, party1, party2, description, severity, status)
+        VALUES (
+          'CR-' || LPAD(CAST((SELECT COUNT(*)+1 FROM hr_conflict_reports) AS TEXT), 3, '0'),
+          ${String(party1 ?? '')},
+          ${String(party2 ?? '')},
+          ${String(description ?? '')},
+          ${String(severity ?? 'medium')},
+          'open'
+        )
+        RETURNING *
+      `);
+      return castTo<Row>((rows.rows[0] ?? {}));
       }, 'DB_ERROR');
   }
 
@@ -123,14 +128,16 @@ export class HrCompatARepository implements IHrCompatARepo {
       }, 'DB_ERROR');
   }
 
-  async createEmployeeSkill(employeeId: unknown, skillName: unknown, proficiencyLevel: unknown, proficiencyScore: unknown, certifiedDate: unknown): Promise<Result<Row>> {
+  async createEmployeeSkill(employeeId: unknown, skillName: unknown, skillCategory: unknown, proficiencyLevel: unknown, proficiencyScore: unknown, certifiedDate: unknown, notes?: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(employee_skills).values({
         employeeId:       (employeeId ?? null) as number,
         skillName:        (skillName ?? '') as string,
+        skillCategory:    (skillCategory ?? null) as string,
         proficiencyLevel: (proficiencyLevel ?? 'beginner') as string,
         proficiencyScore: proficiencyScore != null ? String(proficiencyScore) : null,
         certifiedDate:    (certifiedDate ?? null) as string,
+        notes:            (notes ?? null) as string,
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -221,8 +228,20 @@ export class HrCompatARepository implements IHrCompatARepo {
       }, 'DB_ERROR');
   }
 
-  async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown): Promise<Result<Row>> {
+  async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown, issuedBy?: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
+      const empId = safeInt(employeeId, 0);
+      // Owner directive 2026-07-13 (HR Nazorat fix): stamp cumulative escalation stage
+      // (verbal/written/fine/dismissal) — business_settings-driven, discipline-escalation.helper.ts.
+      const { stage, cumulativeCount, previousRecordId } = await computeDisciplineEscalation(empId);
+      const flags = escalationFlags(stage);
+      // HR Nazorat fix (2026-07-13, verified live): reason/given_by are NOT NULL on the
+      // live DB (see lib/db/src/schema/discipline.ts doc-comment) but were never written
+      // here — every create from the real Discipline.tsx page 500'd. reason mirrors the
+      // required description; given_by falls back to SYSTEM_USER_ID only if the request
+      // somehow has no authenticated user (should not normally happen — controller passes
+      // the current HR user's id).
+      const issuedById = safeInt(issuedBy, SYSTEM_USER_ID) || SYSTEM_USER_ID;
       const rows = await db.insert(discipline_records).values({
         employeeId:    (employeeId ?? null) as number,
         violationType: (violationType ?? null) as string,
@@ -231,8 +250,15 @@ export class HrCompatARepository implements IHrCompatARepo {
         violationDate: (violationDate ?? null) as string,
         issuedDate:    sql`NOW()::date`,
         description:    (description ?? null) as string,
+        reason:         (description ?? 'Sabab ko\'rsatilmagan') as string,
+        givenBy:        issuedById,
+        issuedBy:       issuedById,
         fineAmount:    fineAmount != null ? String(fineAmount) : null,
         status:         'issued',
+        escalationStage: stage,
+        violationCountThisCategory: cumulativeCount,
+        previousWarningId: previousRecordId,
+        ...flags,
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');

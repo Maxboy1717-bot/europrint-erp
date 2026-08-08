@@ -6,7 +6,11 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Ok } from '@common/result';
-import { db, vendors } from '@shared/db';
+import { db } from '@shared/db';
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — live `vendors`.id is INTEGER
+// (serial), not the uuid PK schema-wms.ts declares. schema-compat-2.ts's `vendors`
+// already has the correct integer id + the tin/paymentTerms/rating columns needed here.
+import { vendors } from '@shared/db/schema-compat-2';
 import { eq, count } from 'drizzle-orm';
 import { GetVendorsQuery } from './get-vendors.query';
 
@@ -22,7 +26,7 @@ export class GetVendorsHandler implements IQueryHandler<GetVendorsQuery> {
       const limit = query.limit || 20;
       const offset = (page - 1) * limit;
 
-      const whereClause = query.isActive !== undefined ? eq(vendors.is_active, query.isActive) : undefined;
+      const whereClause = query.isActive !== undefined ? eq(vendors.isActive, query.isActive) : undefined;
 
       const items = await db
         .select({
@@ -32,10 +36,10 @@ export class GetVendorsHandler implements IQueryHandler<GetVendorsQuery> {
           phone: vendors.phone,
           email: vendors.email,
           address: vendors.address,
-          payment_terms: vendors.payment_terms,
+          payment_terms: vendors.paymentTerms,
           rating: vendors.rating,
-          is_active: vendors.is_active,
-          created_at: vendors.created_at,
+          is_active: vendors.isActive,
+          created_at: vendors.createdAt,
         })
         .from(vendors)
         .where(whereClause)

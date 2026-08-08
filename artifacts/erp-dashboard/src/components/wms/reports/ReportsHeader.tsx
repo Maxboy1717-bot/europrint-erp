@@ -33,6 +33,14 @@ export function ReportsHeader({ t, lang, setLang, onExport }: ReportsHeaderProps
           </Button>
           <Button
             size="sm"
+            variant={lang === "uz-cyr" ? "default" : "ghost"}
+            onClick={() => setLang("uz-cyr")}
+            data-testid="button-lang-uz-cyr"
+          >
+            ЎЗ
+          </Button>
+          <Button
+            size="sm"
             variant={lang === "ru" ? "default" : "ghost"}
             onClick={() => setLang("ru")}
             data-testid="button-lang-ru"

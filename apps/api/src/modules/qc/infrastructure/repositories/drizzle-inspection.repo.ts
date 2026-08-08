@@ -4,9 +4,8 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, SQL } from 'drizzle-orm';
 import { db, qc_inspections } from '@shared/db';
-import { execQcInspectionUpsert } from '@common/database/queries-remaining';
 import { AppErr, Err, Result } from '@common/result';
 import { Inspection } from '../../domain/aggregates/inspection.aggregate';
 import { IQcRepository, DrizzleExecutor } from '../../application/repositories/qc.repository';
@@ -29,39 +28,54 @@ const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as Exec
 export class DrizzleQcInspectionRepository implements IQcRepository {
   private readonly logger = new Logger(DrizzleQcInspectionRepository.name);
 
+  /**
+   * Persist a submitted inspection's result. submit-inspection always loads the row first
+   * (findById), so this UPDATEs by id. Live qc_inspections.id / inspector_id are INTEGER while the
+   * Drizzle schema drifted to uuid — the old Drizzle insert cast the aggregate uuid id + the uuid
+   * inspector fallback into integer columns and a numeric orderId into the uuid reference_id, so it
+   * crashed (22P02). Raw UPDATE on the existing integer id avoids every cast (same approach as
+   * create-inspection.handler).
+   */
   async save(inspection: Inspection, tx?: DrizzleExecutor): Promise<void> {
+    const checked = Number(inspection.sampleSize) || 0;
+    const failed = Number(inspection.defectsFoundCount) || 0;
+    const passed = Math.max(0, checked - failed);
+    // 'rework' is the inspector's third QC decision (Qabul/Rad/REWORK). The
+    // live qc_inspections.status is varchar(50) with no CHECK constraint, so it
+    // persists verbatim — see DB-proof. Mirror the decision into `result` so
+    // downstream readers (dashboard, golden-thread) can distinguish rework.
+    const validStatus = ['pending', 'in_progress', 'on_hold', 'passed', 'failed', 'rework'].includes(inspection.status)
+      ? inspection.status
+      : 'pending';
+    const resultValue =
+      validStatus === 'passed' ? 'pass' :
+      validStatus === 'failed' ? 'fail' :
+      validStatus === 'rework' ? 'rework' :
+      null;
+    // A56/T12-03 (2026-06-26) QC card-linkage WRITER-WIRE: on submit, stamp WHO inspected
+    // (inspector's card) onto the inspection. inspector_card_id (FK -> org_departments) is
+    // resolved from the row's EXISTING inspector_id via users.card_id — the inspector's primary
+    // card. NO fabrication (Q-40): only fill it when it is still NULL and the inspector actually
+    // has a card; otherwise COALESCE leaves it untouched / NULL (inspector has no card = owner
+    // data). Self-contained scalar sub-select keeps the same raw-UPDATE-by-id pattern this repo
+    // already uses (qc_inspections.id is INTEGER drift). Idempotent: a re-submit re-resolves the
+    // same card and COALESCE never overwrites an already-stamped value.
+    const q = sql`
+      UPDATE qc_inspections
+      SET status = ${validStatus}, result = COALESCE(${resultValue}, result),
+          items_checked = ${checked}, items_passed = ${passed},
+          items_failed = ${failed},
+          inspector_card_id = COALESCE(
+            inspector_card_id,
+            (SELECT u.card_id FROM users u WHERE u.id = qc_inspections.inspector_id)
+          ),
+          updated_at = NOW()
+      WHERE id = ${Number(inspection.id)}`;
     if (tx) {
-      // In-transaction path: inline upsert against the supplied tx executor.
-      const exec = asExec(tx);
-      const checked = Number(inspection.sampleSize) || 0;
-      const failed = Number(inspection.defectsFoundCount) || 0;
-      const passed = Math.max(0, checked - failed);
-      const validStatus = ['pending', 'in_progress', 'on_hold', 'passed', 'failed'].includes(inspection.status)
-        ? (inspection.status as 'pending' | 'in_progress' | 'on_hold' | 'passed' | 'failed')
-        : 'pending';
-      const inspectorId = String(inspection.inspectorId || '00000000-0000-0000-0000-000000000000');
-      const referenceId = String(inspection.orderId ?? inspection.id);
-      await exec.insert(qc_inspections).values({
-        id: inspection.id,
-        reference_id: referenceId,
-        reference_type: inspection.batchId ? 'batch' : 'order',
-        inspector_id: inspectorId,
-        status: validStatus,
-        items_checked: checked,
-        items_passed: passed,
-        items_failed: failed,
-      }).onConflictDoUpdate({
-        target: qc_inspections.id,
-        set: {
-          status: validStatus,
-          items_failed: failed,
-          items_passed: passed,
-          updated_at: sql`NOW()`,
-        },
-      });
-      return;
+      await (tx as unknown as { execute: (q: SQL) => Promise<unknown> }).execute(q);
+    } else {
+      await db.execute(q);
     }
-    await execQcInspectionUpsert(inspection);
   }
 
   async findById(id: string, tx?: DrizzleExecutor): Promise<Inspection | null> {

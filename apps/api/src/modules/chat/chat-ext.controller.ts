@@ -111,6 +111,7 @@ export class ChatExtController {
     const result = await this.chatNotifSvc.createMessageTask(
       user.id, dto.roomId, dto.messageId, dto.title,
       dto.assignedTo ?? null, dto.dueDate ?? null, dto.priority,
+      dto.kanbanCardId ?? null,
     );
     assertOk(result);
     return result.data;
@@ -193,8 +194,11 @@ export class ChatExtController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('admin/audit-logs')
   @Roles('admin', 'director')
-  async getAdminAuditLogs(@Query('limit') limit?: string) {
-    const result = await this.chatAdminSvc.getAuditLogs(Number(limit) || 100);
+  async getAdminAuditLogs(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const result = await this.chatAdminSvc.getAuditLogs(
+      Number(page) || 1,
+      Number(limit) || 50,
+    );
     assertOk(result);
     return result.data;
   }
@@ -235,6 +239,15 @@ export class ChatExtController {
     const result = await this.chatService.pinMessage(id, user.id, body.pin ?? true);
     const isPinned = (result as Record<string, unknown> | null)?.isPinned ?? false;
     return { pinned: isPinned };
+  }
+
+  @ApiOperation({ summary: 'Get starred messages for current user' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('starred-messages')
+  async getStarredMessages(@CurrentUser() user: AuthenticatedUser) {
+    const result = await this.chatMessageSvc.getStarredMessages(String(user.id));
+    assertOk(result);
+    return result.data;
   }
 
   @ApiOperation({ summary: 'Star message' })

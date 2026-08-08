@@ -210,24 +210,35 @@ export class Material360Service {
   private async _fetchMaterial(
     materialId: number,
   ): Promise<Material360Profile['material'][]> {
+    // NOTE: currentStock bitta haqiqat manbaidan (warehouse_stock) hisoblanadi —
+    // material_cards.current_stock ustuniga qaramaydi, chunki u boshqa yozuvchilar
+    // (procurement-request.service.ts, warehouse-config.service.ts) orqali
+    // warehouse_stock'dan mustaqil yangilanadi va vaqt o'tishi bilan uzoqlashadi.
+    // Xuddi shu SUM pattern _fetchStockByWarehouse va wms-catalog/dashboard.service.ts'da ishlatiladi.
     return typedExecute<Material360Profile['material']>(sql`
       SELECT
-        id, kod                AS code,
-        xom_ashyo              AS name,
-        xom_ashyo_ru           AS "nameRu",
-        category, material_type AS "materialType",
-        unit_of_measure        AS unit,
-        COALESCE(unit_price, 0)  AS "unitPrice",
-        COALESCE(currency, 'UZS') AS currency,
-        COALESCE(current_stock, 0) AS "currentStock",
-        COALESCE(min_stock, 0)   AS "minStock",
-        max_stock              AS "maxStock",
-        description,
-        supplier_name          AS "supplierName",
-        is_active              AS "isActive",
-        created_at             AS "createdAt"
-      FROM material_cards
-      WHERE id = ${materialId}
+        mc.id, mc.kod                AS code,
+        mc.xom_ashyo              AS name,
+        mc.xom_ashyo_ru           AS "nameRu",
+        mc.category, mc.material_type AS "materialType",
+        mc.unit_of_measure        AS unit,
+        COALESCE(mc.unit_price, 0)  AS "unitPrice",
+        COALESCE(mc.currency, 'UZS') AS currency,
+        COALESCE(ws.total_stock, 0) AS "currentStock",
+        COALESCE(mc.min_stock, 0)   AS "minStock",
+        mc.max_stock              AS "maxStock",
+        mc.description,
+        mc.supplier_name          AS "supplierName",
+        mc.is_active              AS "isActive",
+        mc.created_at             AS "createdAt"
+      FROM material_cards mc
+      LEFT JOIN (
+        SELECT material_id, SUM(COALESCE(available_quantity,0) + COALESCE(reserved_quantity,0)) AS total_stock
+        FROM warehouse_stock
+        WHERE material_id = ${materialId}
+        GROUP BY material_id
+      ) ws ON ws.material_id = mc.id
+      WHERE mc.id = ${materialId}
       LIMIT 1
     `);
   }

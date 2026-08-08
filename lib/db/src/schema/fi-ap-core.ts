@@ -9,15 +9,17 @@ import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, num
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
-import { crmCompanies, crmContacts } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): unused import of crmCompanies/crmContacts from
+// "./crm-schema" removed — those pgTable declarations were deleted (dead
+// lib/db duplicates, Q-29 verified: never used in this file).
 import { Attendance } from "./hr-schema";
-import { materialCards, purchaseInvoices, purchaseOrders, vendors } from "./mm-schema";
+import { materialCards, vendors } from "./mm-schema";
 import { Order, orders, productMasters, productionOrders } from "./pp-schema";
 import { salesInvoices, salesOrders } from "./sd-schema";
 import { warehouses } from "./wms-schema";
-import { accounts, costCenters, glDocuments, payrollPeriods, profitCenters, glLines, accountingPeriods, payrollRows, insertPayrollRowSchema } from "./fi-gl";
-
-export type InsertPayrollRow = z.infer<typeof insertPayrollRowSchema>;
+import { accounts, glDocuments, payrollPeriods, glLines, accountingPeriods } from "./fi-gl";
+// ORFAN CLEANUP (2026-07-02): payrollRows/insertPayrollRowSchema import removed —
+// underlying pgTable deleted from fi-gl.ts (dead lib/db duplicate, Q-29 verified).
 
 
 // ========== SAP ERP EXTENDED MODULES ==========
@@ -30,7 +32,9 @@ export const invoicePayments = pgTable("invoice_payments", {
   paymentNumber: varchar("payment_number", { length: 50 }).notNull().unique(),
   paymentDate: varchar("payment_date", { length: 10 }).notNull(), // YYYY-MM-DD
   vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
-  purchaseInvoiceId: varchar("purchase_invoice_id").references(() => purchaseInvoices.id, { onDelete: "set null" }),
+  // NOTE: purchase_invoices pgTable removed (orphan, lib/db-only — see chore(schema)
+  // cleanup 2026-07-02). Column kept plain (no cross-table FK type).
+  purchaseInvoiceId: varchar("purchase_invoice_id"),
   paymentMethod: varchar("payment_method", { length: 30 }).notNull(), // bank_transfer, cash, check, letter_of_credit
   bankAccount: varchar("bank_account", { length: 50 }),
   amount: numericMoney("amount").notNull(),

@@ -22,6 +22,7 @@ export { SdModule } from './modules/sd/sd.module';
 export { PpModule } from './modules/pp/pp.module';
 export { MesModule } from './modules/mes/mes.module';
 export { WmsModule } from './modules/wms/wms.module';
+export { KnowledgeGraphModule } from './modules/knowledge-graph/knowledge-graph.module';
 export { QcModule } from './modules/qc/qc.module';
 export { HrModule } from './modules/hr/hr.module';
 export { LmsModule } from './modules/lms/lms.module';
@@ -36,6 +37,7 @@ export { MroModule } from './modules/mro/mro.module';
 export { SecurityModule } from './modules/security/security.module';
 export { KanbanModule } from './modules/kanban/kanban.module';
 export { AiModule } from './modules/ai/ai.module';
+export { AiFitModule } from './modules/ai/ai-fit.module';
 export { AiAgentsModule } from './modules/ai-agents/ai-agents.module';
 export { BotGatewayModule } from './modules/bot-gateway/bot-gateway.module';
 export { DirectorModule } from './modules/director/director.module';
@@ -43,7 +45,6 @@ export { AishaModule } from './modules/aisha/aisha.module';
 export { CommunicationCenterModule } from './modules/communication-center/communication-center.module';
 export { AgentsModule } from './modules/agents/agents.module';
 export { PosModule } from './modules/pos/pos.module';
-export { PosV2Module } from './modules/pos-v2/pos-v2.module';
 export { CoreModule } from './modules/core/core.module';
 export { OrgStructureModule } from './modules/org-structure/org-structure.module';
 export { ChatModule } from './modules/chat/chat.module';
@@ -73,8 +74,10 @@ export { ErpModule } from './modules/erp/erp.module';
 // PA3-17 Wave 6: AnalyticsModule merged into DirectorModule
 export { ExportModule } from './modules/export/export.module';
 
-// ── Sprint 4 — Order-to-Cash Workflow ───────────────────────────────────────
-export { OrderWorkflowModule } from './modules/order-workflow/order-workflow.module';
+// NOTE: OrderWorkflowModule deregistered 2026-07-02 — DB table `ow_orders`
+// does not exist; every route under /order-workflow/* returned 500 (Q-46
+// dead/broken code). Not exported/imported anywhere. Files left in place
+// under modules/order-workflow/ (rebuild scope not yet defined by vizyon).
 
 // ── PA0 event bridge (CQRS → EventEmitter2) ─────────────────────────────────
 export { SharedEventsModule } from './modules/shared/events/shared-events.module';

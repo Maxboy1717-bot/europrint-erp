@@ -20,6 +20,7 @@ import { provSource, provResult, rowsOf } from './_helpers';
 
 export interface CameraInfo {
   id: string; name: string; location: string; streamUrl: string;
+  /** `cameras.is_active` proxy — jadvalda haqiqiy online/heartbeat ustuni yo'q (Q-40: fabrikatsiya yo'q). */
   isOnline: boolean; lastHeartbeat: string | null;
 }
 
@@ -38,19 +39,25 @@ export class ListAvailableCamerasTool implements IAishaTool {
     const zone = String(input['zone'] ?? '');
     return safeCall<ToolResult<CameraInfo[]>>(async () => {
       const start = Date.now();
+      // FIX (FAZA Q): jadval nomi `iot_cameras` emas — haqiqiy nomi `cameras` (Drizzle:
+      // shared/db/schema-misc-iot.ts). `is_online`/`last_heartbeat` ustunlari umuman
+      // mavjud emas — bu tool ishga tushirilsa xato berardi (buzuq/eskirgan kod, Q-46).
+      // `is_active` haqiqiy "onlayn" proksi sifatida ishlatiladi; heartbeat ma'lumoti
+      // yo'qligi sababli har doim null qaytariladi (soxta qiymat o'ylab topilmaydi).
       const rows = rowsOf<{
-        id: string; name: string; location: string; stream_url: string;
-        is_online: boolean; last_heartbeat: string | null;
+        id: string; name: string; location: string | null; stream_url: string | null;
+        is_active: boolean;
       }>(await db.execute(sql`
-        SELECT id::text, name, location, stream_url, is_online, last_heartbeat::text
-        FROM iot_cameras
-        WHERE is_online = true
+        SELECT id::text, name, location, stream_url, is_active
+        FROM cameras
+        WHERE is_active = true
+          AND deleted_at IS NULL
           AND (${zone} = '' OR location ILIKE '%' || ${zone} || '%')
         ORDER BY name
       `));
       const data = rows.map(r => ({
-        id: r.id, name: r.name, location: r.location, streamUrl: r.stream_url,
-        isOnline: r.is_online, lastHeartbeat: r.last_heartbeat,
+        id: r.id, name: r.name, location: r.location ?? '', streamUrl: r.stream_url ?? '',
+        isOnline: r.is_active, lastHeartbeat: null,
       }));
       return provResult<CameraInfo[]>({
         data,

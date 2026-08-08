@@ -4,12 +4,22 @@
  */
 
 import { Module } from '@nestjs/common';
+// Vision 10-warehouse #6 — IoT-signal zone at-risk flag + QC review queue (Q-35 approved 2026-07-11).
+import { ZoneRiskController } from './presentation/zone-risk.controller';
+import { ZoneRiskService } from './application/zone-risk.service';
+import { ZoneRiskRepository } from './infrastructure/repositories/zone-risk.repository';
+import { ZONE_RISK_REPO } from './domain/repositories/i-zone-risk.repo';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bullmq';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 import { AuthModule } from '../auth/auth.module';
 import { WmsStockController } from './presentation/wms-stock.controller';
+// 10-wms #17 — bir paletda 2 partiya "Aralash" ogohlantirish (blok emas).
+import { WmsPalletMixingController } from './presentation/wms-pallet-mixing.controller';
+import { PalletMixingService } from './application/pallet-mixing.service';
+import { PalletMixingRepository } from './infrastructure/repositories/pallet-mixing.repository';
+import { PALLET_MIXING_REPO } from './domain/repositories/i-pallet-mixing.repo';
 import { WmsGoodsIssueController } from './presentation/wms-goods-issue.controller';
 import { WmsRentalController } from './presentation/wms-rental.controller';
 import { WmsEoqController } from './presentation/wms-eoq.controller';
@@ -21,6 +31,9 @@ import { SafetyStockService } from './domain/services/safety-stock.service';
 import { RopService } from './domain/services/rop.service';
 import { InventoryTurnoverService } from './domain/services/inventory-turnover.service';
 import { RopTriggerHandler } from './infrastructure/event-handlers/rop-trigger.handler';
+import { LeadTimeReorderController } from './presentation/lead-time-reorder.controller';
+import { LeadTimeReorderService } from './application/lead-time-reorder.service';
+import { LeadTimeReorderRepository } from './infrastructure/repositories/lead-time-reorder.repository';
 import { WmsWarehousesController } from './presentation/wms-warehouses.controller';
 import { WmsInventoryController } from './presentation/wms-inventory.controller';
 import { WmsExtendedController } from './presentation/wms-extended.controller';
@@ -52,6 +65,10 @@ import { WmsExtendedService } from './application/wms-extended.service';
 import { WmsExtendedRepository } from './infrastructure/repositories/wms-extended.repository';
 import { WmsWarehouseGatewayService } from './application/wms-warehouse-gateway.service';
 import { WmsWarehouseGatewayRepo } from './infrastructure/wms-warehouse-gateway.repo';
+import { QuarantineGateService } from './domain/services/quarantine-gate.service';
+import { WmsQuarantineGateService } from './application/wms-quarantine-gate.service';
+import { WmsQuarantineRepository } from './infrastructure/repositories/wms-quarantine.repository';
+import { WMS_QUARANTINE_REPO } from './domain/repositories/i-wms-quarantine.repo';
 import { InventoryMaterialsService } from './application/inventory-materials.service';
 import { InventoryMaterialsRepository } from './infrastructure/repositories/inventory-materials.repository';
 import { IotEnhancedService } from './application/iot-enhanced.service';
@@ -79,6 +96,9 @@ import { GetLowStockHandler } from './application/queries/get-low-stock.handler'
 import { DrizzleWmsRepository } from './infrastructure/repositories/drizzle-wms.repo';
 import { WMS_REPO } from './domain/repositories/wms.repository';
 import { QcPassedListener } from './infrastructure/event-handlers/qc-passed.listener';
+import { QcFailedFgListener } from './infrastructure/event-handlers/qc-failed-fg.listener';
+import { MesCompletedFgListener } from './infrastructure/event-handlers/mes-completed-fg.listener';
+import { DeliveryGoodsIssuedListener } from './infrastructure/event-handlers/delivery-goods-issued.listener';
 import { WMS_INVENTORY_REPO } from './inventory/i-wms-inventory.repo';
 import { DrizzleWmsInventoryRepository } from './inventory/drizzle-wms-inventory.repo';
 import { InventoryService } from './inventory/inventory.service';
@@ -88,6 +108,78 @@ import { MovementsService } from './movements/movements.service';
 import { WMS_WAREHOUSES_REPO } from './warehouses/i-wms-warehouses.repo';
 import { DrizzleWmsWarehousesRepository } from './warehouses/drizzle-wms-warehouses.repo';
 import { WarehousesService } from './warehouses/warehouses.service';
+import { RulonCardController } from './presentation/rulon-card.controller';
+import { RulonCardService } from './application/rulon-card.service';
+import { DrizzleRulonCardRepository } from './infrastructure/repositories/drizzle-rulon-card.repo';
+import { RULON_CARD_REPO } from './domain/repositories/i-rulon-card.repo';
+import { WmsRollCalcService } from './domain/services/wms-roll-calc.service';
+import { WmsOverflowService } from './application/wms-overflow.service';
+import { OutboundEnforcementService } from './application/outbound-enforcement.service';
+// W3-COUNT — inventarizatsiya kuchaytirish (ko'r-sanoq, og'ish-sabab, zona-muzlatish).
+import { InventoryFreezeService } from './application/inventory-freeze.service';
+import { InventoryFreezeRepository } from './infrastructure/repositories/inventory-freeze.repository';
+import { INVENTORY_FREEZE_REPO } from './domain/repositories/i-inventory-freeze.repo';
+import { WmsOverflowController } from './presentation/wms-overflow.controller';
+// W1-INTRANSIT — import xom-ashyo YO'LDA kuzatuvi + bojxona/import hujjatlari.
+import { WmsInTransitController } from './presentation/wms-in-transit.controller';
+import { WmsInTransitService } from './application/wms-in-transit.service';
+import { WmsInTransitRepository } from './infrastructure/repositories/wms-in-transit.repository';
+import { WMS_IN_TRANSIT_REPO } from './domain/repositories/i-wms-in-transit.repo';
+// Owner interview 2026-07-13 (chat) item (4): in-transit arrival now posts a real GL entry
+// (Yo'lda tovar → Materiallar) via GlPostingService — FinanceModule import mirrors sd.module.ts /
+// pos.module.ts's own "GlPostingService" import (FinanceModule does not import WmsModule, no cycle).
+import { FinanceModule } from '@modules/finance/finance.module';
+// W2-SUPPLIER-RATING — ta'minotchi ishonchlilik reytingi (EP-WMS-094/022).
+import { SupplierRatingService } from './application/supplier-rating.service';
+import { SupplierRatingRepository } from './infrastructure/repositories/supplier-rating.repository';
+import { SUPPLIER_RATING_REPO } from './domain/repositories/i-supplier-rating.repo';
+import { SupplierRatingListener } from './infrastructure/event-handlers/supplier-rating.listener';
+import { WmsSupplierRatingController } from './presentation/wms-supplier-rating.controller';
+// W4-MATERIAL-LIFE — material hayot-tsikli atributlari + analog (EP-WMS-101/123/125/126/128/130/086).
+import { MaterialLifeController } from './presentation/material-life.controller';
+import { MaterialLifeService } from './application/material-life.service';
+import { MaterialLifeRepository } from './infrastructure/repositories/material-life.repository';
+import { MATERIAL_LIFE_REPO } from './domain/repositories/i-material-life.repo';
+// FAZA E (Inventarizatsiya, 2026-07-01) — "Davriy (rejalashtirilgan)" cycle-count avto-generatsiya.
+import { WmsCycleCountGeneratorCron } from './infrastructure/cron/wms-cycle-count-generator.cron';
+// Vizyon 10-warehouse #28 — sanoq aniqlik% <95% darhol signal (Direktorga RBAC marshrut).
+import { CountAccuracyAlertCron } from './infrastructure/cron/count-accuracy-alert.cron';
+import { NotificationRoutingRepository } from '../notifications/infrastructure/notification-routing.repository';
+// Vizyon 10-warehouse#47 — kunlik ombor hisoboti (barcha turlar, bo'sh=0) CRON (NotificationRoutingRepository allaqachon provider).
+import { DailyWarehouseReportCron } from './infrastructure/cron/daily-warehouse-report.cron';
+// G9-1 (Taksonomiya, 2026-07-02) — bo'lim ichki omborlari org-sxemadan avto-derivatsiya (boot + kunlik cron).
+import { DepartmentWarehouseSyncService } from './infrastructure/cron/department-warehouse-sync.service';
+// FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub (SD/Marketing/QC pattern reuse).
+import { WmsSettingsController } from './presentation/wms-settings.controller';
+import { WmsSettingsService } from './application/wms-settings.service';
+import { WmsSettingsRepository } from './infrastructure/repositories/wms-settings.repository';
+import { WMS_SETTINGS_REPO } from './domain/repositories/i-wms-settings.repo';
+// Vision 10-warehouse #65 (TASDIQ-2146 §10 #65) — avans↔yetkazish bog'lanishi (yopilmagan avanslar), kross-modul READ-model.
+import { AdvanceLinkageController } from './presentation/advance-linkage.controller';
+import { AdvanceLinkageService } from './application/advance-linkage.service';
+import { AdvanceLinkageRepository } from './infrastructure/repositories/advance-linkage.repository';
+// Vision 10-warehouse #30 - off-hours (outside-shift) warehouse-movement flag + weekly HR/Director report.
+import { NotificationsModule } from '../notifications/notifications.module';
+import { OffHoursAuditRepository } from './infrastructure/repositories/off-hours-audit.repository';
+import { OffHoursAuditService } from './application/off-hours-audit.service';
+import { OffHoursReportCron } from './infrastructure/cron/off-hours-report.cron';
+// WMS #32 (vizyon 10-warehouse.md #32) — "Rohler chaqiruv" 15/30/60 daqiqa eskalatsiya (cron→service→repo).
+import { InternalRequestEscalationCron } from './infrastructure/cron/internal-request-escalation.cron';
+import { InternalRequestEscalationService } from './application/internal-request-escalation.service';
+import { InternalRequestEscalationRepository } from './infrastructure/repositories/internal-request-escalation.repository';
+// Vision 10-warehouse#10 — GTD (bojxona) yetishmovchilik bayrog'i + 14-kunlik eskalatsiya (blok emas).
+import { WmsGtdController } from './presentation/wms-gtd.controller';
+import { GtdFlagService } from './application/gtd-flag.service';
+import { GtdFlagRepository } from './infrastructure/repositories/gtd-flag.repository';
+import { GtdMissingEscalationCron } from './infrastructure/cron/gtd-missing-escalation.cron';
+// Vision 10-warehouse #29 — namuna/probnik chiqim 'NAMUNA' kod bilan hisobotda (sample-issue tagging) READ-model.
+import { SampleIssueReportRepository } from './infrastructure/repositories/sample-issue-report.repository';
+import { SampleIssueReportService } from './application/sample-issue-report.service';
+import { SampleIssueReportController } from './presentation/sample-issue-report.controller';
+// Vision 10-warehouse #4 — Ochiq PR miqdori ogohlantirish bayrog'i (open-PR-quantity warning flag).
+import { OpenPrWarningController } from './presentation/open-pr-warning.controller';
+import { OpenPrWarningService } from './application/open-pr-warning.service';
+import { OpenPrWarningRepository } from './infrastructure/repositories/open-pr-warning.repository';
 
 const handlers = [
   GoodsIssueHandler,
@@ -102,7 +194,7 @@ const handlers = [
   DeleteRentalHandler,
 ];
 
-const listeners = [QcPassedListener, RopTriggerHandler];
+const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener, DeliveryGoodsIssuedListener, RopTriggerHandler, SupplierRatingListener];
 
 @Module({
   imports: [
@@ -110,8 +202,15 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     CqrsModule,
     EventEmitterModule.forRoot(),
     BullModule.registerQueue({ name: QUEUE_NAMES.MRP_RUN }),
+    NotificationsModule,
+    // W1-INTRANSIT GL wiring (owner 2026-07-13): WmsInTransitService injects GlPostingService.
+    FinanceModule,
   ],
   controllers: [
+    // 10-wms #17 — bir paletda 2 partiya "Aralash" ogohlantirish (blok emas).
+    WmsPalletMixingController,
+    // Vision 10-warehouse #6 — IoT-signal zone at-risk flag + QC review queue (Q-35 approved 2026-07-11).
+    ZoneRiskController,
     WmsStockController,
     WmsGoodsIssueController,
     WmsRentalController,
@@ -134,8 +233,27 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     InventoryAdvancedController,
     WmsEoqController,
     WmsAnalyticsController,
+    LeadTimeReorderController,
+    RulonCardController,
+    WmsOverflowController,
+    WmsInTransitController,
+    MaterialLifeController,
+    WmsSupplierRatingController,
+    WmsSettingsController,
+    AdvanceLinkageController,
+    SampleIssueReportController,
+    OpenPrWarningController,
+    WmsGtdController,
   ],
   providers: [
+    // 10-wms #17 — bir paletda 2 partiya "Aralash" ogohlantirish (blok emas).
+    PalletMixingRepository,
+    { provide: PALLET_MIXING_REPO, useClass: PalletMixingRepository },
+    PalletMixingService,
+    // Vision 10-warehouse #6 — IoT-signal zone at-risk flag + QC review queue (Q-35 approved 2026-07-11).
+    ZoneRiskRepository,
+    { provide: ZONE_RISK_REPO, useClass: ZoneRiskRepository },
+    ZoneRiskService,
     ...handlers,
     ...listeners,
     { provide: WMS_REPO, useClass: DrizzleWmsRepository },
@@ -153,6 +271,10 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     WmsExtendedService,
     WmsWarehouseGatewayRepo,
     WmsWarehouseGatewayService,
+    QuarantineGateService,
+    WmsQuarantineGateService,
+    WmsQuarantineRepository,
+    { provide: WMS_QUARANTINE_REPO, useClass: WmsQuarantineRepository },
     InventoryMaterialsRepository,
     { provide: INVENTORY_MATERIALS_REPO, useClass: InventoryMaterialsRepository },
     InventoryMaterialsService,
@@ -177,6 +299,66 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     InventoryTurnoverService,
     WmsEoqService,
     WmsAnalyticsService,
+    LeadTimeReorderRepository,
+    LeadTimeReorderService,
+    // Rulon qog'oz karta (paper-roll card) — WMS core (PROMT-08 §PHASE 3).
+    WmsRollCalcService,
+    DrizzleRulonCardRepository,
+    { provide: RULON_CARD_REPO, useClass: DrizzleRulonCardRepository },
+    RulonCardService,
+    // WMS overflow (idish-yaxlitlash, OMBOR-INTERVYU §2) + chiqim hard-gate'lar (EP-WMS-084/085).
+    WmsOverflowService,
+    OutboundEnforcementService,
+    // W3-COUNT — inventarizatsiya muzlatish + og'ish-sabab; chiqim-gate (GoodsIssueHandler) tekshiradi.
+    InventoryFreezeRepository,
+    { provide: INVENTORY_FREEZE_REPO, useClass: InventoryFreezeRepository },
+    InventoryFreezeService,
+    // W1-INTRANSIT — import yo'lda kuzatuvi (arrived → mavjud karantin darvozasi).
+    WmsInTransitRepository,
+    { provide: WMS_IN_TRANSIT_REPO, useClass: WmsInTransitRepository },
+    WmsInTransitService,
+    // W2-SUPPLIER-RATING — 4-faktor reyting (oxirgi oyna) + QC-fail tetiklagich.
+    SupplierRatingRepository,
+    { provide: SUPPLIER_RATING_REPO, useClass: SupplierRatingRepository },
+    SupplierRatingService,
+    // W4-MATERIAL-LIFE — material hayot-tsikli atributlari + analog (substitute).
+    MaterialLifeRepository,
+    { provide: MATERIAL_LIFE_REPO, useClass: MaterialLifeRepository },
+    MaterialLifeService,
+    // FAZA E (Inventarizatsiya, 2026-07-01) — davriy (rejalashtirilgan) cycle-count avto-generatsiya.
+    WmsCycleCountGeneratorCron,
+    // Vizyon 10-warehouse #28 — sanoq aniqlik% <95% darhol signal (RBAC marshrut → Direktor).
+    // NotificationRoutingRepository — standalone provider (faqat runQuery), pos.module.ts namunasi.
+    NotificationRoutingRepository,
+    CountAccuracyAlertCron,
+    // Vizyon 10-warehouse#47 — kunlik ombor hisoboti CRON (WmsCatalogDashboardService + config-driven routing).
+    DailyWarehouseReportCron,
+    // G9-1 (Taksonomiya, 2026-07-02) — bo'lim ichki omborlari avto-sinxron (vizyon CHAT-TARIXI:52).
+    DepartmentWarehouseSyncService,
+    // FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub.
+    { provide: WMS_SETTINGS_REPO, useClass: WmsSettingsRepository },
+    WmsSettingsService,
+    // Vision 10-warehouse #65 (TASDIQ-2146 §10 #65) — avans↔yetkazish (yopilmagan avanslar) READ-model.
+    AdvanceLinkageRepository,
+    AdvanceLinkageService,
+    // Vision 10-warehouse #30 - off-hours (outside-shift) warehouse-movement flag + weekly HR/Director report.
+    OffHoursAuditRepository,
+    OffHoursAuditService,
+    OffHoursReportCron,
+    // WMS #32 (vizyon 10-warehouse.md #32) — "Rohler chaqiruv" 15/30/60 daqiqa eskalatsiya.
+    InternalRequestEscalationRepository,
+    InternalRequestEscalationService,
+    InternalRequestEscalationCron,
+    // Vision 10-warehouse #29 — namuna/probnik chiqim hisobot READ-model (sample-issue tagging).
+    SampleIssueReportRepository,
+    SampleIssueReportService,
+    // Vision 10-warehouse #4 — open-PR-quantity warning (recompute comparison job + read model).
+    OpenPrWarningRepository,
+    OpenPrWarningService,
+    // Vision 10-warehouse#10 — GTD (bojxona) yetishmovchilik bayrogi + 14-kunlik eskalatsiya cron.
+    GtdFlagRepository,
+    GtdFlagService,
+    GtdMissingEscalationCron,
   ],
   exports: [WMS_REPO],
 })

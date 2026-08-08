@@ -80,7 +80,7 @@ export function registerBasicCommands(bot: Telegraf<Context>, sessions: Sessions
       ? '✅ Bugun topshirilgan'
       : status === 'absent'
         ? '❌ O\'tkazib yuborilgan (auto-absent)'
-        : '⏳ Hali topshirilmagan (20:00 gacha)';
+        : '⏳ Hali topshirilmagan (16:00 gacha)';
     await ctx.reply(
       `📊 <b>Kunlik hisobot holati</b>\n\n` +
       `📅 Sana: ${today}\n${statusText}\n\n` +

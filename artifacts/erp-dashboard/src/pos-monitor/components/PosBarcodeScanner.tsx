@@ -40,6 +40,12 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const detectorRef = useRef<BarcodeDetector | null>(null);
   const rafRef = useRef<number>(0);
+  // G2-4 ZXING FALLBACK (2026-07-04, SB0574): native BarcodeDetector faqat
+  // Chrome/Edge'da bor (Firefox/Safari'da yo'q) — @zxing/library allaqachon
+  // dependency (package.json), TelegramMiniApp.tsx da ishlatilgan xuddi shu
+  // naqsh bu yerga ham qo'llanildi (Q-46, mavjud BarcodeDetector yo'li
+  // o'zgarmaydi — faqat "qo'llab-quvvatlanmaydi" holatida fallback ishga tushadi).
+  const zxingControlsRef = useRef<{ stop(): void } | null>(null);
 
   const playPing = useCallback(() => {
     try {
@@ -83,15 +89,50 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
 
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
+    zxingControlsRef.current?.stop();
+    zxingControlsRef.current = null;
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
     setCameraActive(false);
   }, []);
 
+  /** ZXing fallback — BarcodeDetector yo'q brauzerlarda (Firefox/Safari) ishlaydi. */
+  const startCameraZxing = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      const { BrowserMultiFormatReader } = await import("@zxing/library").catch(() => ({ BrowserMultiFormatReader: null }));
+      if (!BrowserMultiFormatReader || !videoRef.current) {
+        setCameraError(t("barcode.cameraUnsupported") || "Bu brauzer kamera skanerni qo'llab-quvvatlamaydi.");
+        return;
+      }
+      setCameraActive(true);
+      const reader = new BrowserMultiFormatReader();
+      type Cb = (result: { getText(): string } | null, err?: unknown) => void;
+      const controls = (reader as unknown as {
+        decodeFromVideoElement(el: HTMLVideoElement, cb: Cb): { stop(): void } | void;
+      }).decodeFromVideoElement(videoRef.current, (result) => {
+        if (result) {
+          const code = result.getText();
+          stopCamera();
+          void doScan(code);
+        }
+      });
+      if (controls) zxingControlsRef.current = controls;
+    } catch (err) {
+      setCameraError(err instanceof Error ? err.message : String(err));
+    }
+  }, [doScan, stopCamera, t]);
+
   const startCamera = useCallback(async () => {
     setCameraError(null);
     if (!("BarcodeDetector" in window)) {
-      setCameraError(t("barcode.cameraUnsupported") || "Bu brauzer kamera skanerni qo'llab-quvvatlamaydi.");
+      // Native API yo'q — ZXing (@zxing/library) fallback bilan davom etamiz.
+      void startCameraZxing();
       return;
     }
     try {
@@ -120,7 +161,7 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
     } catch (err) {
       setCameraError(err instanceof Error ? err.message : String(err));
     }
-  }, [doScan, stopCamera, t]);
+  }, [doScan, stopCamera, startCameraZxing, t]);
 
   useEffect(() => {
     if (mode !== "camera") { stopCamera(); }

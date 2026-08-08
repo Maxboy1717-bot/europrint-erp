@@ -12,6 +12,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MAX_QUERY_LIMIT, MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db, rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -34,6 +35,8 @@ export type { Row } from './employees-compat.helpers';
 
 @Injectable()
 export class EmployeesCompatService {
+  constructor(private readonly i18n: I18nService) {}
+
   async listEmployees(status?: string, departmentId?: string, search?: string, limit = '50', offset = '0'): Promise<Result<Row[], AppError>> {
     return safeCall(async () => {
       const lim = Math.min(si(limit, 50), MAX_QUERY_LIMIT);
@@ -90,7 +93,7 @@ export class EmployeesCompatService {
         WHERE e.id = ${si(id)}
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new NotFoundException(`Employee ${id} not found`);
+      if (!item) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
       return item;
     });
   }
@@ -103,7 +106,7 @@ export class EmployeesCompatService {
         RETURNING id, photo_url, updated_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new NotFoundException(`Employee ${id} not found`);
+      if (!item) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
       return { ...item, updatedBy: userId };
     });
   }
@@ -134,13 +137,13 @@ export class EmployeesCompatService {
     body: { orgDepartmentIds?: Array<number | string>; org_department_ids?: Array<number | string> },
   ): Promise<Row> {
     const orgIds = parseOrgDepartmentIds(body as Record<string, unknown>);
-    await validateOrgDepartmentsExist(orgIds);
+    await validateOrgDepartmentsExist(orgIds, this.i18n);
 
     return await db.transaction(async (tx) => {
       const empCheck = await tx.execute(sql`SELECT id FROM employees WHERE id = ${empId} LIMIT 1`);
-      if (dbRows(empCheck).length === 0) throw new NotFoundException(`Employee ${id} not found`);
+      if (dbRows(empCheck).length === 0) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
 
-      const userId = await resolveOrCreateUserForEmployee(tx, empId);
+      const userId = await resolveOrCreateUserForEmployee(tx, empId, this.i18n);
       await syncEmployeeOrgAssignments(tx, userId, orgIds);
 
       return {
@@ -166,7 +169,7 @@ export class EmployeesCompatService {
       RETURNING id, department_id, position_id, updated_at
     `);
     const item = dbRows(r)[0] as Row | undefined;
-    if (!item) throw new NotFoundException(`Employee ${id} not found`);
+    if (!item) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
     return item;
   }
 
@@ -174,14 +177,14 @@ export class EmployeesCompatService {
     return safeCall(async () => {
       const a = adaptEmployeePayload(body);
       if (!a.firstName || !a.lastName) {
-        throw new BadRequestException('first_name/fullName va last_name majburiy');
+        throw new BadRequestException(await this.i18n.t('validation.firstNameAndLastNameRequired'));
       }
       const orgIds = parseOrgDepartmentIds(body);
-      await validateOrgDepartmentsExist(orgIds);
-      await validateEmployeeFks(a);
+      await validateOrgDepartmentsExist(orgIds, this.i18n);
+      await validateEmployeeFks(a, this.i18n);
 
       return await db.transaction(async (tx) => {
-        const emp = await insertEmployeeRow(tx, a);
+        const emp = await insertEmployeeRow(tx, a, this.i18n);
         const empNumId = Number(emp['num_id']);
         const userId = await ensureUserForEmployee(tx, {
           employeeId: empNumId,
@@ -192,7 +195,7 @@ export class EmployeesCompatService {
           hireDate: a.hireDate,
           positionId: a.positionId,
           departmentId: a.departmentId,
-        });
+        }, this.i18n);
         await syncEmployeeOrgAssignments(tx, userId, orgIds);
         delete emp['num_id'];
         return emp;
@@ -203,17 +206,17 @@ export class EmployeesCompatService {
   async updateEmployee(id: string, body: Record<string, unknown>): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const a = adaptEmployeePayload(body);
-      await validateEmployeeFks(a, si(id));
+      await validateEmployeeFks(a, this.i18n, si(id));
 
       const orgIdsRaw = body['orgDepartmentIds'] ?? body['org_department_ids'];
       const willUpdateOrg = Array.isArray(orgIdsRaw);
       const orgIds = willUpdateOrg ? parseOrgDepartmentIds(body) : [];
       if (willUpdateOrg) {
-        await validateOrgDepartmentsExist(orgIds);
+        await validateOrgDepartmentsExist(orgIds, this.i18n);
       }
 
       return await db.transaction(async (tx) => {
-        const found = await updateEmployeeRow(tx, id, a);
+        const found = await updateEmployeeRow(tx, id, a, this.i18n);
         if (willUpdateOrg) await syncOrgAssignmentsIfUserExists(tx, id, orgIds);
         return found;
       });

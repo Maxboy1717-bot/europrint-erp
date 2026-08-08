@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatDateTime } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { AIInterview, InterviewsResponse, InterviewQuestion2, InterviewFormData, interviewSchema, getStatusBadge, getProviderBadge, formatDuration, InterviewCardSkeleton } from "./AIInterviewPageTypes";
+import { AIInterview, InterviewQuestion2, InterviewFormData, interviewSchema, getStatusBadge, getProviderBadge, formatDuration, InterviewCardSkeleton } from "./AIInterviewPageTypes";
 import { InterviewDetailView, AddQuestionForm, QuestionBankList, CreateInterviewForm } from "./AIInterviewPageSections";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -42,10 +42,13 @@ export default function AIInterviewPage() {
 
   const interviewForm = useForm<InterviewFormData>({
     resolver: zodResolver(interviewSchema),
-    defaultValues: { candidateId: "", jobTitle: "", language: "uz", scheduledAt: "" },
+    defaultValues: { candidateId: "", positionTitle: "", language: "uz", scheduledAt: "" },
   });
 
-  const { data, isLoading, isError, error, refetch } = useQuery<InterviewsResponse>({
+  // Audit 2026-08-08: BE (drizzle-ai-hr-new.repo.ts findInterviews) real qatorlar massivini
+  // qaytaradi — {interviews,total,page,limit} o'ramasi hech qachon bo'lmagan, shuning uchun
+  // `data?.interviews` doim undefined edi (ro'yxat hech qachon ko'rinmagan).
+  const { data, isLoading, isError, error, refetch } = useQuery<AIInterview[]>({
     queryKey: ["/api/ai-hr/interviews?page=1&limit=20"],
   });
 
@@ -81,11 +84,16 @@ export default function AIInterviewPage() {
     },
   });
 
-  const interviews = data?.interviews || [];
+  const interviews = Array.isArray(data) ? data : [];
 
   const createMutation = useMutation({
     mutationFn: (newInterview: InterviewFormData) =>
-      apiRequest("POST", "/api/ai-hr/interviews", newInterview),
+      apiRequest("POST", "/api/ai-hr/interviews", {
+        ...newInterview,
+        // datetime-local qiymati (YYYY-MM-DDTHH:mm) BE CreateAiInterviewDtoSchema'ning
+        // z.string().datetime() talabiga mos emas — to'liq ISO-8601'ga o'giriladi.
+        scheduledAt: newInterview.scheduledAt ? new Date(newInterview.scheduledAt).toISOString() : undefined,
+      }),
     onSuccess: () => {
       toast({ title: "Muvaffaqiyat", description: tLabel('common.yangiIntervyuMuvaffaqiyatliYaratildi', "Yangi intervyu muvaffaqiyatli yaratildi") });
       setShowCreateForm(false);
@@ -105,7 +113,7 @@ export default function AIInterviewPage() {
         interview.sessionId?.toLowerCase().includes(query) ||
         interview.candidateId?.toLowerCase().includes(query) ||
         interview.candidateName?.toLowerCase().includes(query) ||
-        interview.jobTitle?.toLowerCase().includes(query)
+        interview.positionTitle?.toLowerCase().includes(query)
       );
     }
     return true;
@@ -273,9 +281,9 @@ export default function AIInterviewPage() {
                         {interview.candidateName || interview.candidateId}
                       </span>
                     </div>
-                    {interview.jobTitle && (
+                    {interview.positionTitle && (
                       <p className="text-sm font-medium" data-testid={`text-job-${interview.id}`}>
-                        {interview.jobTitle}
+                        {interview.positionTitle}
                       </p>
                     )}
                     <div className="flex items-center gap-2 flex-wrap">

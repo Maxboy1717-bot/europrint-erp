@@ -26,6 +26,7 @@ export type CreateArEntryDto = {
   amount: number;
   dueDate?: string | null;
   description?: string | null;
+  createdBy?: number | null;
 };
 
 export interface IFinanceArRepo {

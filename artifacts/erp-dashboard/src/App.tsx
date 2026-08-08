@@ -5,6 +5,7 @@
 
 import { useState, useEffect, lazy, Suspense } from "react";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { IdleLogoutProvider } from "@/components/IdleLogoutProvider";
 import { ChatSocketProvider } from "@/hooks/chat/ChatSocketProvider";
 import { Router as WouterRouter, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
@@ -30,6 +31,7 @@ const HRCapitalPublicTest = lazy(() => import("@/pages/HRCapitalPublicTest"));
 const TelegramMiniApp = lazy(() => import("@/pages/mini-app/TelegramMiniApp"));
 const PosMonitorApp   = lazy(() => import("./pos-monitor/PosMonitorApp"));
 const ChatPageFull    = lazy(() => import("@/pages/chat/ChatPage"));
+const DocumentPrintView = lazy(() => import("@/pages/documents/DocumentPrintView"));
 
 function MainApp() {
   const [location, setLocation] = useLocation();
@@ -96,7 +98,17 @@ function MainApp() {
     return <Suspense fallback={<PageLoader />}><PosMonitorApp /></Suspense>;
   }
 
-  if (location === "/chat" || location.startsWith("/chat/")) {
+  // P1-11 clean print/PDF view — rendered OUTSIDE the AppShell so window.print() produces a
+  // proper document (no sidebar/toolbar chrome). Auth-gated; the page itself is leadership-gated.
+  if (/^\/(documents|spreadsheets)\/[^/]+\/print$/.test(location)) {
+    return <PrivateRoute><Suspense fallback={<PageLoader />}><DocumentPrintView /></Suspense></PrivateRoute>;
+  }
+
+  // Item #17 (CHAT-COMPLETE-FRESH-ANALYSIS-2026-07-10-v1.md:270): "/chat/*" used to swallow
+  // "/chat/admin" too, so the dedicated admin/director-gated route in AppRouter.tsx (:204,
+  // wrapped in the normal AppShellModern — a moderation dashboard, not the messenger) never
+  // ran; ChatAdminPage was unreachable by URL. "/chat/admin" now falls through to AppRouter.
+  if (location === "/chat" || (location.startsWith("/chat/") && !location.startsWith("/chat/admin"))) {
     return (
       <PrivateRoute>
         <ChatSocketProvider>
@@ -139,7 +151,9 @@ export default function App() {
             <LanguageProvider>
               <ErpThemeProvider>
                 <TooltipProvider>
-                  <MainApp />
+                  <IdleLogoutProvider>
+                    <MainApp />
+                  </IdleLogoutProvider>
                   <Toaster />
                 </TooltipProvider>
               </ErpThemeProvider>

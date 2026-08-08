@@ -19,6 +19,11 @@ import { safeInt } from '@common/db/db-rows';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@common/types/user.types';
 
+// Marketing-14 #59/#67 — vision-approved lead product categories (TASDIQ-2146 §14
+// #59/#67, EP-MKT-089). Kept as its own const so LeadCreateSchema and any future
+// lead-update schema can share the exact same 5 values.
+const LEAD_PRODUCT_TYPES = ['ofset', 'gofra', 'etiketka', 'flekso', 'blanka'] as const;
+
 const LeadCreateSchema = z.object({
   firstName: z.string().max(200).optional(),
   lastName: z.string().max(200).optional(),
@@ -37,6 +42,18 @@ const LeadCreateSchema = z.object({
   assignedById: z.union([z.string(), z.number()]).optional(),
   phones: z.array(z.record(z.string(), z.string())).optional(),
   emails: z.array(z.record(z.string(), z.string())).optional(),
+  // NOTE on "majburiy" (required): vision text calls this field mandatory, but the
+  // only live lead-create caller today — QuickCreateModal (FE) posting to this same
+  // endpoint — has no product-type input yet (artifacts/erp-dashboard/src/pages/crm/
+  // QuickCreateModalTypes.ts). Hard-requiring it here would 400 every existing lead
+  // creation, breaking a working caller (STANDARTLAR §15 / "never break an existing
+  // caller"). Left `.optional()` so it validates-when-present today; flip to
+  // non-optional once the FE form grows a product-type selector (tracked, not done
+  // in this change — see migration crm-leads-product-type-2026-07-11.sql).
+  productType: z.enum(LEAD_PRODUCT_TYPES).optional(),
+  // EP-MKT-102 (Marketing #80, Hudud+eksport belgisi): lid hududi + eksport/ichki belgisi.
+  region: z.string().max(200).optional(),
+  isExport: z.boolean().optional(),
 }).passthrough();
 
 const UpdateLeadStageSchema = z.object({
@@ -49,6 +66,12 @@ const UpdateLeadStageSchema = z.object({
 const QualifyLeadSchema = z.object({
   expectedDealAmount: z.union([z.string(), z.number()]).optional(),
 }).passthrough();
+
+// Item A: reassign a lead to another manager. The owning manager (or a privileged role) hands the
+// lead to a different manager; assignedTo is the new owner's user id.
+const ReassignLeadSchema = z.object({
+  assignedTo: z.coerce.number().int().positive(),
+});
 
 const SendLeadEmailSchema = z.object({
   subject: z.string().max(500).optional(),
@@ -75,10 +98,15 @@ function normalizeLeadDto(dto: Record<string, unknown>): Record<string, unknown>
     notes:      dto.notes      ?? dto.comments,
     companyId:  dto.companyId,
     assignedTo: dto.assignedTo ?? dto.assignedById,
+    productType: dto.productType,
+    // EP-MKT-102 (Marketing #80, Hudud+eksport belgisi): lid hududi + eksport/ichki belgisi.
+    region:     dto.region,
+    isExport:   dto.isExport,
   };
 }
 
-const CRM_READ_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_READ_ROLES = ['sales_manager', 'manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
 
 @ApiTags('Crm Leads')
 @ApiBearerAuth()
@@ -99,6 +127,7 @@ export class CrmLeadsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
+    @CurrentUser() user: AuthenticatedUser,
     @Query('limit') limit?: string,
     @Query('page') page?: string,
     @Query('status') _status?: string,
@@ -106,15 +135,15 @@ export class CrmLeadsController {
     const res = await this.leadsService.findAll({
       limit: safeInt(limit, 20),
       page: safeInt(page, 1),
-    });
+    }, user);
     return unwrapOrThrow(res);
   }
 
   @ApiOperation({ summary: 'Quick leads' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('quick')
-  async quickLeads(@Query('limit') _limit?: string) {
-    const res = await this.leadsService.findAll({ limit: safeInt(_limit, 10) });
+  async quickLeads(@CurrentUser() user: AuthenticatedUser, @Query('limit') _limit?: string) {
+    const res = await this.leadsService.findAll({ limit: safeInt(_limit, 10) }, user);
     return unwrapOrThrow(res);
   }
 
@@ -122,20 +151,22 @@ export class CrmLeadsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  async getById(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     // findOne already unwraps (returns the row or throws NotFound/500). It is NOT a Result
     // envelope, so it must NOT be passed through unwrapOrThrow again — doing so read
     // `.error.message` on a plain row → "Cannot read properties of undefined" → 500/503.
-    return await this.leadsService.findOne(safeInt(id, 0));
+    // Item A: pass the caller so a non-privileged manager gets 404 for a lead they don't own.
+    return await this.leadsService.findOne(safeInt(id, 0), user);
   }
 
   @ApiOperation({ summary: 'Get lead emails' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/emails')
-  async getLeadEmails(@Param('id') id: string) {
+  async getLeadEmails(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     // findOne already unwraps (row or throws) — do not double-unwrap (see getById).
-    const lead = await this.leadsService.findOne(safeInt(id, 0));
+    // Item A: ownership-scoped (404 if a non-privileged manager doesn't own the lead).
+    const lead = await this.leadsService.findOne(safeInt(id, 0), user);
     const emails = Array.isArray((lead as Record<string, unknown>).emails)
       ? ((lead as Record<string, unknown>).emails as { value: string; type: string }[])
       : [];
@@ -146,9 +177,11 @@ export class CrmLeadsController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
-  async create(@Body() dto: unknown) {
+  async create(@Body() dto: unknown, @CurrentUser() user: AuthenticatedUser) {
     const parsed = LeadCreateSchema.parse(dto);
-    const res = await this.leadsService.create(normalizeLeadDto(parsed as Record<string, unknown>));
+    // Item A (CRM ownership convergence): default assigned_to to the creating user when no explicit
+    // assignee is given; an explicit assignedTo/assignedById in the body still wins (repo COALESCE order).
+    const res = await this.leadsService.create(normalizeLeadDto(parsed as Record<string, unknown>), user?.id);
     return unwrapOrThrow(res);
   }
 
@@ -178,6 +211,20 @@ export class CrmLeadsController {
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 
+  @ApiOperation({ summary: 'Reassign lead to another manager' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found or not owned' })
+  @Patch(':id/assign')
+  async reassign(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = ReassignLeadSchema.parse(body);
+    // Item A: ownership gate reuses findOne's row-scoping — a non-privileged manager may reassign
+    // only a lead they currently own (findOne throws 404 otherwise); privileged roles may reassign
+    // any. Then the update converges the new owner onto assigned_to (via the manager_id property).
+    await this.leadsService.findOne(safeInt(id, 0), user);
+    const res = await this.leadsService.update(safeInt(id, 0), { assignedTo: dto.assignedTo });
+    return unwrapOrThrow(res);
+  }
+
   @ApiOperation({ summary: 'Send lead email' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -196,9 +243,10 @@ export class CrmLeadsController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('quick')
-  async createQuickLead(@Body() body: unknown) {
+  async createQuickLead(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const parsed = LeadCreateSchema.parse(body);
-    const res = await this.leadsService.create(normalizeLeadDto(parsed as Record<string, unknown>));
+    // Item A: same default-to-creator ownership as create() above.
+    const res = await this.leadsService.create(normalizeLeadDto(parsed as Record<string, unknown>), user?.id);
     return unwrapOrThrow(res);
   }
 }

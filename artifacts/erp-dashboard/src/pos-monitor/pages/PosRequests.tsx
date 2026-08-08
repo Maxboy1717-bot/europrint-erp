@@ -8,25 +8,36 @@ import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { requestsApi } from "../api/pos-monitor.api";
 
+/** Maps FE display priority → BE Zod enum value (low/normal/high/urgent) */
+const FE_TO_BE_PRIORITY: Record<string, string> = {
+  LOW:    "low",
+  MEDIUM: "normal",
+  HIGH:   "high",
+  URGENT: "urgent",
+};
+
 function NewRequestModal({ onClose, onCreated, t }: { onClose: () => void; onCreated: () => void; t: (k: string) => string }) {
-  const [justification, setJustification] = useState("");
-  const [priority, setPriority]           = useState("MEDIUM");
-  const [materialId, setMaterialId]       = useState("");
-  const [qty, setQty]                     = useState("");
-  const [saving, setSaving]               = useState(false);
-  const [error, setError]                 = useState("");
+  const [departmentCode, setDepartmentCode] = useState("");
+  const [notes, setNotes]                   = useState("");
+  const [priority, setPriority]             = useState("MEDIUM");
+  const [materialId, setMaterialId]         = useState("");
+  const [qty, setQty]                       = useState("");
+  const [saving, setSaving]                 = useState(false);
+  const [error, setError]                   = useState("");
 
   async function submit() {
-    if (!materialId || !qty) { setError("Material ID va miqdor majburiy"); return; }
+    if (!departmentCode.trim()) { setError("Bo'lim kodi majburiy"); return; }
+    if (!materialId || !qty)    { setError("Material ID va miqdor majburiy"); return; }
     setSaving(true); setError("");
     try {
       await requestsApi.create({
-        justification: justification || undefined,
-        priority,
+        departmentCode: departmentCode.trim(),
+        notes:          notes || undefined,
+        priority:       FE_TO_BE_PRIORITY[priority] ?? "normal",
         lines: [{ materialCardId: parseInt(materialId, 10), requestedQty: parseFloat(qty) }],
       });
       onCreated();
-    } catch { setError("Xatolik yuz berdi"); } finally { setSaving(false); }
+    } catch (e) { setError(e instanceof Error ? e.message : "Xatolik yuz berdi"); } finally { setSaving(false); }
   }
 
   return (
@@ -34,6 +45,15 @@ function NewRequestModal({ onClose, onCreated, t }: { onClose: () => void; onCre
       <div className="pos-modal" style={{ maxWidth: 520 }}>
         <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 16 }}>📋 {t("requests.newRequest")}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+          <div>
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("bolimKodi")}</label>
+            <input
+              className="pos-input"
+              placeholder="Masalan: OFSET, FLEXO, HR ..."
+              value={departmentCode}
+              onChange={e => setDepartmentCode(e.target.value)}
+            />
+          </div>
           <div>
             <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("ustuvorlik")}</label>
             <select className="pos-input" value={priority} onChange={e => setPriority(e.target.value)}>
@@ -50,7 +70,7 @@ function NewRequestModal({ onClose, onCreated, t }: { onClose: () => void; onCre
           </div>
           <div>
             <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("asoslama")}</label>
-            <textarea className="pos-input" rows={2} placeholder={t("izoh1")} value={justification} onChange={e => setJustification(e.target.value)} style={{ resize: "vertical" }} />
+            <textarea className="pos-input" rows={2} placeholder={t("izoh1")} value={notes} onChange={e => setNotes(e.target.value)} style={{ resize: "vertical" }} />
           </div>
           {error && <div style={{ color: "var(--pos-danger)", fontSize: 12 }}>{error}</div>}
         </div>

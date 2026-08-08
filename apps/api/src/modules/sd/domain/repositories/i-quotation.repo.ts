@@ -23,6 +23,8 @@ export interface QuotationUpdatePatch {
 }
 
 export interface KpiTargetPatch {
+  /** Canonical DB column — maps FE revenueTarget / quota_amount / target_value. */
+  quota_amount?: unknown;
   target_value?: unknown;
   period?: unknown;
 }
@@ -44,6 +46,8 @@ export interface PriceFormulaPatch {
   dieCostNew?: unknown;
   laminationPrice?: unknown;
   embossingPrice?: unknown;
+  // 06-sd #142: kashirovka (ofset+gofra yelimlash) alohida operatsiya narxi.
+  kashirovkaPrice?: unknown;
   perforationPrice?: unknown;
   deliveryBaseCost?: unknown;
   storageFreedays?: unknown;
@@ -55,7 +59,7 @@ export interface PriceFormulaPatch {
 export interface IQuotationRepo {
   // Quotation status transitions
   sendQuotation(id: string): Promise<Result<MutationRow | null, AppError>>;
-  approveQuotation(id: string): Promise<Result<MutationRow | null, AppError>>;
+  approveQuotation(id: string, approvedBy?: number): Promise<Result<MutationRow | null, AppError>>;
 
   // Quotation partial update + soft delete
   updateQuotation(id: string, patch: QuotationUpdatePatch): Promise<Result<MutationRow | null, AppError>>;

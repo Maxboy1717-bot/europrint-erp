@@ -10,18 +10,32 @@ import { Result } from '@common/result';
 
 export const EMAIL_SENDER = Symbol('EMAIL_SENDER');
 
+/**
+ * Binary file attached to an outgoing email (e.g. a generated PDF — Karta
+ * Portret export). `content` is the raw file bytes; `contentType` defaults
+ * to the adapter's best guess from `filename` when omitted.
+ */
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+}
+
 export interface EmailOptions {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  /** Optional file attachments (e.g. PDF exports). Empty/omitted = no attachment. */
+  attachments?: EmailAttachment[];
 }
 
 export interface IEmailSender {
   /**
    * Send an email with rendered HTML body (and optional plain-text fallback).
-   * When SMTP credentials are missing the adapter logs and returns Ok — the
-   * absence of credentials is treated as a no-op, not an error.
+   * When SMTP credentials are missing the adapter logs and returns
+   * `Err(EXTERNAL_SERVICE)` — missing required config is a delivery failure,
+   * not a silent no-op (Q-40 fake-success ban).
    */
   send(options: EmailOptions): Promise<Result<void>>;
 

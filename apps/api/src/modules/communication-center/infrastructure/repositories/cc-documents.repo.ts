@@ -14,6 +14,7 @@ import { CcDocumentsWriteRepo } from './cc-documents/cc-documents-write.repo';
 
 export type {
   DocumentRow, TemplateRow, WorkflowStepRow, CreateDraftInput,
+  CcTemplateAdminRow, CreateTemplateInput, UpdateTemplateInput,
 } from './cc-documents/types';
 export { CcDocumentsReadRepo, CcDocumentsWriteRepo };
 
@@ -26,12 +27,18 @@ export class CcDocumentsRepository {
 
   // ─── Read ────────────────────────────────────────────────────────────────
   getTemplate = (id: string) => this.reader.getTemplate(id);
+  getTemplateAdmin = (id: string) => this.reader.getTemplateAdmin(id);
+  listActiveTemplates = () => this.reader.listActiveTemplates();
+  listRejectionReasons = (docId: string) => this.reader.listRejectionReasons(docId);
   getStepsForTemplate = (id: string, v: number) => this.reader.getStepsForTemplate(id, v);
   getById = (id: string) => this.reader.getById(id);
   getPendingApprovalsAtStep = (id: string, step: number) => this.reader.getPendingApprovalsAtStep(id, step);
 
   // ─── Write ───────────────────────────────────────────────────────────────
   createDraft = (input: Parameters<CcDocumentsWriteRepo['createDraft']>[0]) => this.writer.createDraft(input);
+  createTemplate = (input: Parameters<CcDocumentsWriteRepo['createTemplate']>[0]) => this.writer.createTemplate(input);
+  updateTemplate = (id: string, patch: Parameters<CcDocumentsWriteRepo['updateTemplate']>[1]) => this.writer.updateTemplate(id, patch);
+  deleteTemplate = (id: string) => this.writer.deleteTemplate(id);
   transition = (args: Parameters<CcDocumentsWriteRepo['transition']>[0]) => this.writer.transition(args);
   createApproval = (args: Parameters<CcDocumentsWriteRepo['createApproval']>[0]) => this.writer.createApproval(args);
   signApproval = (args: Parameters<CcDocumentsWriteRepo['signApproval']>[0]) => this.writer.signApproval(args);
@@ -40,4 +47,7 @@ export class CcDocumentsRepository {
   updateBody = (args: Parameters<CcDocumentsWriteRepo['updateBody']>[0]) => this.writer.updateBody(args);
   createComplaint = (args: Parameters<CcDocumentsWriteRepo['createComplaint']>[0]) => this.writer.createComplaint(args);
   logPrint = (args: Parameters<CcDocumentsWriteRepo['logPrint']>[0]) => this.writer.logPrint(args);
+  logAudit = (args: Parameters<CcDocumentsWriteRepo['logAudit']>[0]) => this.writer.logAudit(args);
+  markViewed = (documentId: string, via: string) => this.writer.markViewed(documentId, via);
+  notifyUser = (args: Parameters<CcDocumentsWriteRepo['notifyUser']>[0]) => this.writer.notifyUser(args);
 }

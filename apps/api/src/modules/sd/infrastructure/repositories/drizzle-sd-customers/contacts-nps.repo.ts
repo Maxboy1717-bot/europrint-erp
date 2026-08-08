@@ -205,12 +205,16 @@ export async function createComplaint(
   customerId: number,
   data: { subject: string; description?: string; severity: string },
 ): Promise<Row> {
+  // #04 SD fix: live sd_customer_complaints has NO `subject` column (cols: complaint_number/type/
+  // complaint_type/description/severity/status) — the old INSERT crashed. Fold subject into description,
+  // set type, and generate a complaint_number. Real persist, no fake.
+  const fullDesc = data.description ? `${data.subject} — ${data.description}` : data.subject;
   const rows = await runQuery<Row>(sql`
     INSERT INTO sd_customer_complaints
-      (customer_id, subject, description, severity, status, created_at)
+      (customer_id, complaint_number, type, complaint_type, description, severity, status, created_at)
     VALUES
-      (${customerId}, ${data.subject}, ${data.description ?? null},
-       ${data.severity}, 'open', NOW())
+      (${customerId}, ${'CMP-' + customerId + '-' + Math.floor(Date.now() / 1000)}, 'general', 'general',
+       ${fullDesc}, ${data.severity}, 'open', NOW())
     RETURNING *
   `);
   return (rows.rows[0] ?? {}) as Row;

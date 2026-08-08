@@ -65,7 +65,7 @@ ERP-standard codes are used:
 | Module                       | Purpose                                                                  |
 |------------------------------|--------------------------------------------------------------------------|
 | `wms/`                       | Full WMS: catalog, ABC analysis, EOQ, expiry, turnover, valuation        |
-| `pos/`, `pos-v2/`            | POS terminals on the floor — kirim/chiqim, 3-way match, GL posting       |
+| `pos/`                       | POS terminals on the floor — kirim/chiqim, 3-way match, GL posting       |
 | `logistics/`                 | Route planning, geo, shipment tracking                                   |
 
 ### Finance

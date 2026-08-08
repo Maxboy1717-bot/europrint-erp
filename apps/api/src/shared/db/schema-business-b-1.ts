@@ -132,18 +132,10 @@ export const gl_account_mappings = pgTable('gl_account_mappings', {
   updated_at:       timestamp('updated_at').defaultNow(),
 });
 
-export const gl_journal_entries = pgTable('gl_journal_entries', {
-  id:              serial('id').primaryKey(),
-  document_id:     integer('document_id'),
-  document_type:   text('document_type'),
-  debit_account:   text('debit_account'),
-  credit_account:  text('credit_account'),
-  amount:          numeric('amount', { precision: 15, scale: 2 }),
-  currency:        text('currency').default('UZS'),
-  description:     text('description'),
-  posted_at:       timestamp('posted_at').defaultNow(),
-  created_at:      timestamp('created_at').defaultNow(),
-});
+// NOTE: gl_journal_entries pgTable declaration removed 2026-07-02 — orphan
+// (0 rows, never queried/inserted anywhere in code). Canonical GL ledger is
+// `entries` (ADR-003). DB table itself is left untouched (no DROP, per rule);
+// only the unused Drizzle-level declaration was removed. See gl-posting.service.ts.
 
 export const accounting_periods = pgTable('accounting_periods', {
   id:         serial('id').primaryKey(),
@@ -169,6 +161,9 @@ export const mm_purchase_orders = pgTable('mm_purchase_orders', {
   created_by:      integer('created_by'),
   created_at:      timestamp('created_at').defaultNow(),
   updated_at:      timestamp('updated_at').defaultNow(),
+  // MM-11 #11.25 — Incoterms/delivery-terms free-text note (additive; see
+  // migrations/mm-11-po-delivery-terms-2026-07-11.sql).
+  delivery_terms:  text('delivery_terms'),
 });
 
 export const mm_purchase_requisitions = pgTable('mm_purchase_requisitions', {
@@ -228,15 +223,39 @@ export const offboarding_cases = pgTable('offboarding_cases', {
   completed_items:      integer('completed_items').default(0),
   created_at:           timestamp('created_at').defaultNow(),
   updated_at:           timestamp('updated_at').defaultNow(),
+  // Columns physically present on the live table (added by the
+  // migrations-drift.ts healer) but previously unmapped here — the
+  // repository silently discarded writes to them. Wired up 2026-07-13
+  // (HR Offboarding page completion): exit-interview persistence,
+  // turnover "reason" category, and the case-level status badges the
+  // frontend (HROffboardingDialogs/OffboardingTab) already renders.
+  reason:               text('reason'),
+  initiated_by:         integer('initiated_by'),
+  exit_interview_notes: text('exit_interview_notes'),
+  exit_interview_done:  boolean('exit_interview_done').default(false),
+  blocks_settlement:    boolean('blocks_settlement').default(false),
+  settlement_done:      boolean('settlement_done').default(false),
+  equipment_returned:   boolean('equipment_returned').default(false),
+  nda_signed:           boolean('nda_signed').default(false),
+  access_revoked:       boolean('access_revoked').default(false),
 });
 
 export const offboarding_checklist_items = pgTable('offboarding_checklist_items', {
-  id:        serial('id').primaryKey(),
-  case_id:   integer('case_id').notNull(),
-  item_key:  text('item_key'),
-  label:     text('label'),
-  done:      boolean('done').default(false),
-  order_num: integer('order_num').default(0),
+  id:            serial('id').primaryKey(),
+  case_id:       integer('case_id').notNull(),
+  item_key:      text('item_key'),
+  label:         text('label'),
+  done:          boolean('done').default(false),
+  order_num:     integer('order_num').default(0),
+  // Columns physically present on the live table (migrations-drift.ts
+  // healer) but previously unmapped — wired up 2026-07-13 (HR Offboarding
+  // page completion) so `done_at`/`notes`/`return_status` (rendered by
+  // HROffboardingSteps.tsx and employee-profile OffboardingTab.tsx) persist.
+  done_by:       integer('done_by'),
+  done_at:       timestamp('done_at'),
+  notes:         text('notes'),
+  return_status: varchar('return_status', { length: 20 }),
+  created_at:    timestamp('created_at').defaultNow(),
 });
 
 // ─── Shifts ────────────────────────────────────────────────────────────────

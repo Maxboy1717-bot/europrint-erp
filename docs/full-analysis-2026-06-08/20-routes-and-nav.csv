@@ -1,0 +1,763 @@
+type,label_or_comp,url_or_path,kind,file_line
+nav,"SD Dashboard",sd/dashboard,route-yes,constants.ts:114
+nav,"Mijozlar",sd/customers,route-yes,constants.ts:115
+nav,"Lidlar",crm-workspace,route-yes,constants.ts:116
+nav,"Sotish Paneli",sales,route-yes,constants.ts:118
+nav,"AI CRM",ai/crm,route-yes,constants.ts:119
+nav,"Taklifnomalar",sd/sales-quotes,route-yes,constants.ts:120
+nav,"Buyurtmalar",sd/sales-orders,route-yes,constants.ts:121
+nav,"Papka Buyurtmalari",papka-orders,route-yes,constants.ts:122
+nav,"Shartnomalar",sd/contracts,route-yes,constants.ts:123
+nav,"Buyurtma Yaratish",order-create,route-yes,constants.ts:124
+nav,"Buyurtma Workflow",order-workflow,route-yes,constants.ts:125
+nav,"Ombor Ijara",sd/warehouse-rental,route-yes,constants.ts:129
+nav,"70% Avans Nazorat",sd/advance-control,route-yes,constants.ts:132
+nav,"KPI",sd/kpi,route-yes,constants.ts:134
+nav,"Sozlamalar",sd/settings,route-yes,constants.ts:135
+nav,"Dashboard",marketing/dashboard,route-yes,constants.ts:144
+nav,"Lidlar",marketing/leads,route-yes,constants.ts:145
+nav,"Kampaniyalar",marketing/campaigns,route-yes,constants.ts:146
+nav,"Kontent",marketing/content,route-yes,constants.ts:148
+nav,"Social Inbox",marketing/social-inbox,route-yes,constants.ts:149
+nav,"Taqvim",marketing/calendar,route-yes,constants.ts:150
+nav,"PR Faoliyat",marketing/pr,route-yes,constants.ts:153
+nav,"Tahlil (ROI/ROAS)",marketing/analytics,route-yes,constants.ts:155
+nav,"SEO Monitoring",marketing/seo,route-yes,constants.ts:156
+nav,"A/B Testing",marketing/ab-testing,route-yes,constants.ts:157
+nav,"Raqobatchilar",marketing/competitors,route-yes,constants.ts:158
+nav,"NPS va Churn",marketing/nps-churn,route-yes,constants.ts:159
+nav,"Web sayt CMS",marketing/website-cms,route-yes,constants.ts:161
+nav,"Byudjet",marketing/budget,route-yes,constants.ts:162
+nav,"Sozlamalar",marketing/settings,route-yes,constants.ts:163
+nav,"Dizayn Dashboard",design/dashboard,route-yes,constants.ts:172
+nav,"Dizayn Buyurtmalar",design/orders,route-yes,constants.ts:173
+nav,"Dizayn Tasdiqlash",design/approval,route-yes,constants.ts:174
+nav,"AI Generator",design/generator,route-yes,constants.ts:176
+nav,"AI Dizayn Tekshiruvi",design/ai-review,route-yes,constants.ts:177
+nav,"3D Mockup",design/3d-mockup,route-yes,constants.ts:178
+nav,"Dizayn Taqqoslash",design/comparison,route-yes,constants.ts:179
+nav,"Dizayn Kutubxona",design/library,route-yes,constants.ts:181
+nav,"Brend Guidelines",design/brand-guidelines,route-yes,constants.ts:182
+nav,"Qoliplar Boshqaruvi",design/templates,route-yes,constants.ts:184
+nav,"Asboblar va Plastinalar",design/tools,route-yes,constants.ts:185
+nav,"Dizayn Tannarxi",design/costing,route-yes,constants.ts:187
+nav,"QC Dashboard",qc/dashboard,route-yes,constants.ts:196
+nav,"Material Testlari",qc/tests,route-yes,constants.ts:198
+nav,"Parametrlar",qc/parameters,route-yes,constants.ts:199
+nav,"Normalar",qc/standards,route-yes,constants.ts:200
+nav,"Inline QC",qc/approval,route-yes,constants.ts:202
+nav,"Yakuniy Tekshiruv",qc/final,route-yes,constants.ts:203
+nav,"Yetkazuvchi Sifati",qc/vendor-quality,route-yes,constants.ts:204
+nav,"Brak Boshqaruvi",qc/defect-management,route-yes,constants.ts:206
+nav,"Reklamatsiya",qc/complaints,route-yes,constants.ts:207
+nav,"Sifat Sertifikatlari",qc/certificates,route-yes,constants.ts:209
+nav,"ISO Hujjatlari",qc/iso,route-yes,constants.ts:210
+nav,"Sifat Trendi",qc/trends,route-yes,constants.ts:212
+nav,"AI Tahlil",qc/ai-analysis,route-yes,constants.ts:213
+nav,"Hisobotlar",qc/reports,route-yes,constants.ts:214
+nav,"Sozlamalar",qc/settings,route-yes,constants.ts:215
+nav,"Texnik Tasdiqlash",tech/approval,route-yes,constants.ts:224
+nav,"Texnik Kartalar",tech/cards,route-yes,constants.ts:225
+nav,"BOM Tarkib",erp/pp/bom,route-yes,constants.ts:227
+nav,"Material Muqobili",tech/material-alternatives,route-yes,constants.ts:228
+nav,"Marshrutlar",erp/pp/routing,route-yes,constants.ts:230
+nav,"Stanoq Tanlash",tech/machine-selection,route-yes,constants.ts:231
+nav,"Vaqt va Tannarx",tech/time-cost,route-yes,constants.ts:233
+nav,"Xarajat Optimizatsiya",tech/cost-optimization,route-yes,constants.ts:234
+nav,"Mijoz Maxsus Talablar",tech/client-requirements,route-yes,constants.ts:236
+nav,"Parallel Buyurtmalar",tech/parallel-orders,route-yes,constants.ts:239
+nav,"AI Rejalashtirish",ai-production-planning,route-yes,constants.ts:248
+nav,"AI Rezervatsiya",pp/ai-reservation,route-yes,constants.ts:249
+nav,"PP Dashboard",pp/dashboard,route-yes,constants.ts:250
+nav,"Rejalashtirish",planning,route-yes,constants.ts:252
+nav,"Smena Boshqaruvi",pp/shift-management,route-yes,constants.ts:253
+nav,"Parallel Jarayonlar",pp/parallel-processes,route-yes,constants.ts:254
+nav,"Quvvat Rejasi",erp/pp/capacity,route-yes,constants.ts:256
+nav,"Rush Order",pp/rush-orders,route-yes,constants.ts:257
+nav,"Bottleneck Tahlili",pp/bottleneck,route-yes,constants.ts:259
+nav,"Demand Forecasting",pp/demand-forecast,route-yes,constants.ts:260
+nav,"What-if Tahlil",pp/what-if,route-yes,constants.ts:261
+nav,"Yetkazish Kalkulyator",pp/delivery-calculator,route-yes,constants.ts:262
+nav,"Energiya Optimizatsiya",pp/energy-optimization,route-yes,constants.ts:263
+nav,"OEE Monitor",pp/oee-monitor,route-yes,constants.ts:265
+nav,"Real-time Progress",pp/realtime-progress,route-yes,constants.ts:267
+nav,"MES Dashboard",mes/dashboard-home,route-yes,constants.ts:276
+nav,"IoT Planshet",iot/tablet,route-yes,constants.ts:278
+nav,"Kunlik Reja",iot/daily-view,route-yes,constants.ts:279
+nav,"Ish Markazlari",mes/work-centers,route-yes,constants.ts:281
+nav,"Mahsulotlar",mes/products,route-yes,constants.ts:282
+nav,"Buyurtmalar",production/orders,route-yes,constants.ts:283
+nav,"Xodim Tayinlashlari",mes/workers,route-yes,constants.ts:285
+nav,"OEE Monitoring",mes/oee-monitor,route-yes,constants.ts:286
+nav,"Sabablar Logi",mes/reason-log,route-yes,constants.ts:287
+nav,"Ishlab Chiqarish Monitor",iot/dashboard,route-yes,constants.ts:289
+nav,"Zona Boshqaruvi",mes/zone-management,route-yes,constants.ts:290
+nav,"Gamifikatsiya",mes/gamification,route-yes,constants.ts:294
+nav,"Uskuna Normalari",mes/machine-norms,route-yes,constants.ts:295
+nav,"Smena Topshirish",mes/smena-handover,route-yes,constants.ts:296
+nav,"Kaizen Boshqaruvi",kaizen,route-yes,constants.ts:298
+nav,"Moliya nazorati",wms/overview,route-yes,constants.ts:309
+nav,"Omborlar",wms/warehouses,route-yes,constants.ts:310
+nav,"POS Monitor (kirim/chiqim)",pos-monitor,special-mount,constants.ts:313
+nav,"Inventarizatsiya",wms/inventory,route-yes,constants.ts:315
+nav,"Qabul Akti (GRN)",wms/grn,route-yes,constants.ts:316
+nav,"Reservation Panel",wms/reservation,route-yes,constants.ts:317
+nav,"Material 360°",inventory/materials,route-yes,constants.ts:318
+nav,"Tayyor Mahsulot Ijara",wms/rental,route-yes,constants.ts:319
+nav,"MM Dashboard",mm/dashboard,route-yes,constants.ts:328
+nav,"Yetkazuvchilar",mm/vendors,route-yes,constants.ts:329
+nav,"Xarid Buyurtmalari",mm/purchase-orders,route-yes,constants.ts:330
+nav,"Xarajat Nazorati",integration/expense-management,route-yes,constants.ts:332
+nav,"Chek Bot",mm/check-bot,route-yes,constants.ts:333
+nav,"Kreditor Qarzlar",mm/creditor-debts,route-yes,constants.ts:334
+nav,"Yetkazuvchi Baho",integration/vendor-performance,route-yes,constants.ts:336
+nav,"Supplier Portal",mm/supplier-portal,route-yes,constants.ts:337
+nav,"Transport Parki",logistics/transport,route-yes,constants.ts:339
+nav,"Marshrut Rejalashtirish",logistics/route-planning,route-yes,constants.ts:340
+nav,"GPS Monitoring",logistics/gps,route-yes,constants.ts:341
+nav,"Haydovchi Boshqaruvi",logistics/drivers,route-yes,constants.ts:344
+nav,"Mashina Jadvali",logistics/vehicle-schedule,route-yes,constants.ts:345
+nav,"CFO",cfo,route-yes,constants.ts:354
+nav,"CFO Dashboard",cfo-dashboard,route-yes,constants.ts:355
+nav,"AI Moliya",ai/finance,route-yes,constants.ts:356
+nav,"Bosh Buxgalter",finance-dashboard,route-yes,constants.ts:357
+nav,"GL Hujjatlar",accounting/gl-documents,route-yes,constants.ts:358
+nav,"Hisoblar Rejasi",accounting/chart-of-accounts,route-yes,constants.ts:359
+nav,"Davr Yopish",accounting/period-closing,route-yes,constants.ts:360
+nav,"Pul Oqimi",finance/cashflow,route-yes,constants.ts:362
+nav,"Byudjet",finance/budgets,route-yes,constants.ts:363
+nav,"Foyda Tahlili",finance/profitability,route-yes,constants.ts:364
+nav,"Hisobotlar",finance/reports,route-yes,constants.ts:365
+nav,"Debitorlar",accounting/ar,route-yes,constants.ts:367
+nav,"Kreditorlar",accounting/ap,route-yes,constants.ts:368
+nav,"Moliya Tasdiqlash",finance/approval,route-yes,constants.ts:369
+nav,"Kassa",accounting/cash-register,route-yes,constants.ts:371
+nav,"Kirim/Chiqim",accounting/income-expense,route-yes,constants.ts:372
+nav,"POS Monitor",pos-monitor,special-mount,constants.ts:377
+nav,"Ish Haqi",accounting/payroll-automation,route-yes,constants.ts:378
+nav,"Buyurtma Tannarxi",finance/order-costing,route-yes,constants.ts:380
+nav,"Ombor Hisobi",accounting/materials,route-yes,constants.ts:381
+nav,"Inventarizatsiya",accounting/inventory-valuation,route-yes,constants.ts:382
+nav,"Asosiy Vositalar",accounting/asset-management,route-yes,constants.ts:383
+nav,"Xarajat Markazlari",fi/cost-centers,route-yes,constants.ts:384
+nav,"Transfer Pricing",fi/transfer-pricing,route-yes,constants.ts:385
+nav,"Ichki Soliqlar",fi/tax-management,route-yes,constants.ts:387
+nav,"Soliq Kalendari",fi/tax-calendar,route-yes,constants.ts:388
+nav,"Audit Log",fi/audit-log,route-yes,constants.ts:390
+nav,"Moliyaviy Risk AI",fi/risk-ai,route-yes,constants.ts:391
+nav,"HR Dashboard",hr-dashboard,route-yes,constants.ts:400
+nav,"Org Tuzilma",org-structure/hierarchy,route-yes,constants.ts:401
+nav,"HR Xarita",hr-map,route-yes,constants.ts:402
+nav,"Rekruting Voronka",hr/recruiting,route-yes,constants.ts:404
+nav,"AI Intervyu",ai-hr/interviews,route-yes,constants.ts:405
+nav,"Xodimlar",employees,route-yes,constants.ts:407
+nav,"AI HR Dashboard",ai-hr/dashboard,route-yes,constants.ts:408
+nav,"Maqsadlar",goals,route-yes,constants.ts:409
+nav,"Smena Jadvali",shift-schedule,route-yes,constants.ts:411
+nav,"Bildirishnomalar",notifications,route-yes,constants.ts:412
+nav,"Aktivlar",assets,route-yes,constants.ts:413
+nav,"Xodim Baholash",integration/employee-rating,route-yes,constants.ts:416
+nav,"Mentorlik",mentorship,route-yes,constants.ts:418
+nav,"Succession Planning",hr/succession,route-yes,constants.ts:419
+nav,"Onboarding",hr/onboarding,route-yes,constants.ts:421
+nav,"Offboarding",hr/offboarding,route-yes,constants.ts:423
+nav,"Intizom",discipline,route-yes,constants.ts:425
+nav,"Xavfsizlik",hr/safety,route-yes,constants.ts:428
+nav,"Kunlik Hisobot",hr/daily-reports,route-yes,constants.ts:430
+nav,"Reception",hr/reception,route-yes,constants.ts:431
+nav,"Referral Tizimi",hr/referrals,route-yes,constants.ts:433
+nav,"HR Brend Boshqaruv",hr/brand,route-yes,constants.ts:435
+nav,"Haftalik Reja",weekly-plan,route-yes,constants.ts:437
+nav,"LMS Dashboard",lms-dashboard,route-yes,constants.ts:446
+nav,"Kurslar",courses,route-yes,constants.ts:447
+nav,"Darslar",lessons,route-yes,constants.ts:448
+nav,"HR Capital Testlar",hr-capital/tests,route-yes,constants.ts:449
+nav,"Kurs Muallifi",lms/course-author,route-yes,constants.ts:450
+nav,"Testlar",tests,route-yes,constants.ts:452
+nav,"Imtihonlar",all-exams,route-yes,constants.ts:453
+nav,"AI Imtihonlar",ai-exams,route-yes,constants.ts:454
+nav,"Sertifikatlar",certificates,route-yes,constants.ts:456
+nav,"Operator Sertifikatsiyasi",lms/operator-certification,route-yes,constants.ts:457
+nav,"Test Boshqaruvi",lms/test-management,route-yes,constants.ts:458
+nav,"Mentorlik",mentorship,route-yes,constants.ts:460
+nav,"Leaderboard",lms/leaderboard,route-yes,constants.ts:463
+nav,"Tadbirlar",events-calendar,route-yes,constants.ts:465
+nav,"Bilim Bazasi",lms/knowledge-base,route-yes,constants.ts:466
+nav,"Micro-learning",lms/micro-learning,route-yes,constants.ts:467
+nav,"HR ↔ LMS",integration/hr-lms,route-yes,constants.ts:469
+nav,"Statistika",analytics,route-yes,constants.ts:471
+nav,"Xavfsizlik Holati",camera-safety,route-yes,constants.ts:480
+nav,"Yuz Tanish Kuzatuv",camera/monitoring,route-yes,constants.ts:481
+nav,"Davomat",security/attendance,route-yes,constants.ts:483
+nav,"Zona Ruxsatlari",security/zone-access,route-yes,constants.ts:484
+nav,"Jonli Monitoring",camera-live-monitoring,route-yes,constants.ts:486
+nav,"Kameralar",cameras,route-yes,constants.ts:487
+nav,"Hodisalar",camera-alerts,route-yes,constants.ts:488
+nav,"PPE Nazorati",security/ppe,route-yes,constants.ts:490
+nav,"Xavfli Material",security/hazmat,route-yes,constants.ts:491
+nav,"Evakuatsiya Rejasi",security/evacuation,route-yes,constants.ts:492
+nav,"Tashrif Nazorati",security/visitors,route-yes,constants.ts:494
+nav,"Xavfsizlik Reytingi",security/rating,route-yes,constants.ts:495
+nav,"MRO Dashboard",mro/dashboard,route-yes,constants.ts:504
+nav,"Preventive Maintenance",mro/preventive,route-yes,constants.ts:506
+nav,"MRO Ehtiyot Qismlar",mro/spare-parts,route-yes,constants.ts:507
+nav,"Elektr/Gaz/Suv",mro/utilities,route-yes,constants.ts:509
+nav,"Xarajat Nazorati",mro/expense-control,route-yes,constants.ts:510
+nav,"Oshxona va Ovqat",mro/kitchen,route-yes,constants.ts:512
+nav,"Forma Boshqaruvi",mro/uniforms,route-yes,constants.ts:513
+nav,"Ofis Inventari",mro/office-inventory,route-yes,constants.ts:514
+nav,"Tozalash Xizmati",mro/cleaning,route-yes,constants.ts:516
+nav,"Chiqindi Nazorati",europrint/waste-tracking,route-yes,constants.ts:517
+nav,"Sanitariya",mro/sanitation,route-yes,constants.ts:518
+nav,"Bino Inventari",mro/building-inventory,route-yes,constants.ts:519
+nav,"IoT Dashboard",iot/dashboard,route-yes,constants.ts:528
+nav,"Sensor Monitoring",iot/sensor-monitoring,route-yes,constants.ts:529
+nav,"Mashina Holati",camera-machines,route-yes,constants.ts:530
+nav,"Kamera Dashboard",camera-dashboard,route-yes,constants.ts:532
+nav,"Kameralar",cameras,route-yes,constants.ts:533
+nav,"Issiqlik Xaritasi",camera-heatmap,route-yes,constants.ts:534
+nav,"AI Nazorat Hub",camera-ai,route-yes,constants.ts:536
+nav,"Sifat Nazorati",camera-quality,route-yes,constants.ts:537
+nav,"Xodim Monitoring",camera-employees,route-yes,constants.ts:538
+nav,"Xodim Reytingi",camera-employee-ratings,route-yes,constants.ts:539
+nav,"AI Sozlamalar",camera-settings,route-yes,constants.ts:540
+nav,"Predictive Maintenance",iot/predictive-maintenance,route-yes,constants.ts:542
+nav,"OEE Live",iot/oee-live,route-yes,constants.ts:543
+nav,"Digital Twin",iot/digital-twin,route-yes,constants.ts:544
+nav,"Ogohlantirishlar",iot/alerts,route-yes,constants.ts:545
+nav,"Hisobotlar",camera-reports,route-yes,constants.ts:546
+nav,"Direktor Dashboard",europrint/director,route-yes,constants.ts:555
+nav,"Nazorat Markazi",europrint/control,route-yes,constants.ts:556
+nav,"Auditor Panel",europrint/auditor,route-yes,constants.ts:558
+nav,"Kunlik KPI",finance/daily-kpi,route-yes,constants.ts:560
+nav,"Kunlik KPI Baholash",europrint/employee-kpi,route-yes,constants.ts:561
+nav,"Strategik Rejalashtirish",europrint/strategic,route-yes,constants.ts:563
+nav,"Hisobotlar Markazi",europrint/reports-hub,route-yes,constants.ts:564
+nav,"AI Xulosa",director/ai-summary,route-yes,constants.ts:565
+nav,"Muammoli Nuqtalar",director/problem-points,route-yes,constants.ts:566
+nav,"14 AI Agent Hub",agents,route-yes,constants.ts:568
+nav,"Ishlab Chiqarish Agent",agents/production,route-yes,constants.ts:569
+nav,"HR Agent",agents/hr-performance,route-yes,constants.ts:570
+nav,"Sifat Agent",agents/quality,route-yes,constants.ts:571
+nav,"Strategik Agent",agents/strategic,route-yes,constants.ts:572
+nav,"Ideal Rasm",ideal-rasm,route-yes,constants.ts:575
+nav,"Super Admin Panel",super-admin,route-yes,constants.ts:584
+nav,"Tenant Boshqaruvi",saas/tenant-management,route-yes,constants.ts:585
+nav,"Yangi Zavod Onboarding",saas/onboarding,route-yes,constants.ts:586
+nav,"Litsenziya va Tariflar",saas/licensing,route-yes,constants.ts:588
+nav,"Monitoring",saas/monitoring,route-yes,constants.ts:591
+nav,"Xatolar Logi",saas/error-log,route-yes,constants.ts:592
+nav,"Istisno Holatlar",admin/exceptions,route-yes,constants.ts:593
+nav,"Navbat Monitori",admin/queues,route-yes,constants.ts:594
+nav,"Arizalar",applications,route-yes,constants.ts:595
+nav,"Sozlamalar",settings,route-yes,constants.ts:596
+nav,"Telegram Admin",telegram/admin,route-yes,constants.ts:598
+nav,"Buyurtmalar Kanbani",kanban,route-yes,constants.ts:607
+nav,"Rekruting Kanbani",hr/recruiting-kanban,route-yes,constants.ts:608
+nav,"Strategik Vazifalar",strategic-tasks,route-yes,constants.ts:609
+nav,"Ilovalar",applications,route-yes,constants.ts:610
+nav,"Kommunikatsiya Markazi",coordination?tab=baskets,route-yes,constants.ts:619
+nav,"5 Kengash Tizimi",coordination?tab=councils,route-yes,constants.ts:620
+nav,"Hisobot Yuborish",coordination?tab=dokla,route-yes,constants.ts:621
+nav,"AI Agentlar (14 ta)",agents,route-yes,constants.ts:624
+nav,"Production AI",agents/production,route-yes,constants.ts:625
+nav,"HR AI",agents/hr-performance,route-yes,constants.ts:626
+nav,"Quality AI",agents/quality,route-yes,constants.ts:627
+nav,"Strategic AI",agents/strategic,route-yes,constants.ts:628
+nav,"Facilities AI",agents/facilities,route-yes,constants.ts:629
+nav,"Procurement AI",agents/procurement,route-yes,constants.ts:630
+nav,"Xabarlar",chat,route-yes,constants.ts:639
+nav,"Guruhlar",chat,route-yes,constants.ts:641
+nav,"Kanallar",chat,route-yes,constants.ts:642
+route,Settings,/settings,tuple,routes/AdminRoutes.tsx:39
+route,NotificationSettings,/settings/notifications,tuple,routes/AdminRoutes.tsx:40
+route,SuperAdminPanel,/super-admin,tuple,routes/AdminRoutes.tsx:41
+route,SystemMonitor,/system-monitor,tuple,routes/AdminRoutes.tsx:42
+route,TelegramBotAdmin,/telegram-bot,tuple,routes/AdminRoutes.tsx:43
+route,TelegramBotAdmin,/telegram/admin,tuple,routes/AdminRoutes.tsx:44
+route,ApprovalHub,/approvals,tuple,routes/AdminRoutes.tsx:45
+route,IntegrationManagement,/integrations,tuple,routes/AdminRoutes.tsx:46
+route,CustomerPortalConfig,/customer-portal,tuple,routes/AdminRoutes.tsx:47
+route,ExceptionLog,/admin/exceptions,tuple,routes/AdminRoutes.tsx:48
+route,QueueMonitor,/admin/queues,tuple,routes/AdminRoutes.tsx:49
+route,AuditLogPage,/admin/audit-log,tuple,routes/AdminRoutes.tsx:50
+route,GLPostingMonitor,/integration/gl-posting,tuple,routes/AdminRoutes.tsx:54
+route,InvoiceVerification,/integration/invoice-verification,tuple,routes/AdminRoutes.tsx:55
+route,ExpenseManagement,/integration/expense-management,tuple,routes/AdminRoutes.tsx:56
+route,MRODashboard,/integration/mro,tuple,routes/AdminRoutes.tsx:57
+route,VendorPerformance,/integration/vendor-performance,tuple,routes/AdminRoutes.tsx:58
+route,EmployeeRating,/integration/employee-rating,tuple,routes/AdminRoutes.tsx:59
+route,HRLMSSkills,/integration/hr-lms,tuple,routes/AdminRoutes.tsx:60
+route,SaaSExtended,/saas/tenant-management,tuple,routes/AdminRoutes.tsx:64
+route,SaaSExtended,/saas/onboarding,tuple,routes/AdminRoutes.tsx:65
+route,SaaSExtended,/saas/licensing,tuple,routes/AdminRoutes.tsx:66
+route,SaaSExtended,/saas/module-control,tuple,routes/AdminRoutes.tsx:67
+route,SaaSExtended,/saas/monitoring,tuple,routes/AdminRoutes.tsx:68
+route,SaaSExtended,/saas/error-log,tuple,routes/AdminRoutes.tsx:69
+route,LMSExtended,/lms/test-management,tuple,routes/AdminRoutes.tsx:73
+route,LMSExtended,/lms/course-author,tuple,routes/AdminRoutes.tsx:74
+route,LMSExtended,/lms/operator-certification,tuple,routes/AdminRoutes.tsx:75
+route,LMSExtended,/lms/learning-budget,tuple,routes/AdminRoutes.tsx:76
+route,LMSExtended,/lms/leaderboard,tuple,routes/AdminRoutes.tsx:80
+route,KnowledgeBase,/lms/knowledge-base,tuple,routes/AdminRoutes.tsx:81
+route,LMSExtended,/lms/micro-learning,tuple,routes/AdminRoutes.tsx:82
+route,LMSExtended,/lms/gamification,tuple,routes/AdminRoutes.tsx:83
+route,LMSSupport,/lms/support,tuple,routes/AdminRoutes.tsx:84
+route,KaizenPage,/kaizen,tuple,routes/AdminRoutes.tsx:88
+route,OrdersRegistry,/orders-registry,tuple,routes/AdminRoutes.tsx:92
+route,AIAgentsPage,/ai/agents,tuple,routes/AdminRoutes.tsx:97
+route,ValidatePage,/admin/validate,tuple,routes/AdminRoutes.tsx:98
+route,ProgressPage,/dashboard/progress,tuple,routes/AdminRoutes.tsx:99
+route,EmployeesForFacePage,/hr/face-employees,tuple,routes/AdminRoutes.tsx:100
+route,Analytics,/analytics,tuple,routes/AnalyticsRoutes.tsx:26
+route,NotificationCenter,/notifications,tuple,routes/AnalyticsRoutes.tsx:27
+route,ForecastAnalytics,/ai/forecast,tuple,routes/AnalyticsRoutes.tsx:28
+route,LMSDashboard,/lms-dashboard,tuple,routes/AnalyticsRoutes.tsx:29
+route,Courses,/courses,tuple,routes/AnalyticsRoutes.tsx:30
+route,Courses,/lessons,tuple,routes/AnalyticsRoutes.tsx:31
+route,CourseDetail,/courses/:id,tuple,routes/AnalyticsRoutes.tsx:32
+route,LessonPlayer,/courses/:id/lessons,tuple,routes/AnalyticsRoutes.tsx:33
+route,LessonPlayer,/courses/:id/lessons/:lessonId,tuple,routes/AnalyticsRoutes.tsx:34
+route,Tests,/tests,tuple,routes/AnalyticsRoutes.tsx:35
+route,TestDetail,/tests/:id,tuple,routes/AnalyticsRoutes.tsx:36
+route,AIExams,/ai-exams,tuple,routes/AnalyticsRoutes.tsx:37
+route,AllExams,/all-exams,tuple,routes/AnalyticsRoutes.tsx:38
+route,Certificates,/certificates,tuple,routes/AnalyticsRoutes.tsx:39
+route,GoalsKPI,/goals,tuple,routes/AnalyticsRoutes.tsx:40
+route,KnowledgeBase,/knowledge-base,tuple,routes/AnalyticsRoutes.tsx:41
+route,KanbanBoard,/kanban,tuple,routes/AnalyticsRoutes.tsx:42
+route,RecruitingKanban,/hr/recruiting-kanban,tuple,routes/AnalyticsRoutes.tsx:43
+route,?,/,jsx,routes/AppRouter.tsx:91
+route,<Redirect>,/orgstructure,redirect,routes/AppRouter.tsx:125
+route,<Redirect>,/org-structure/builder,redirect,routes/AppRouter.tsx:126
+route,<Redirect>,/org-structure/view,redirect,routes/AppRouter.tsx:127
+route,<Redirect>,/erp-analytics,redirect,routes/AppRouter.tsx:128
+route,<Redirect>,/erp-roles,redirect,routes/AppRouter.tsx:129
+route,<Redirect>,/warehouse-management,redirect,routes/AppRouter.tsx:130
+route,<Redirect>,/warehouse/dashboard,redirect,routes/AppRouter.tsx:131
+route,<Redirect>,/logistics/dashboard,redirect,routes/AppRouter.tsx:132
+route,<Redirect>,/accounting-dashboard,redirect,routes/AppRouter.tsx:133
+route,<Redirect>,/fi-finance,redirect,routes/AppRouter.tsx:134
+route,<Redirect>,/erp-finance,redirect,routes/AppRouter.tsx:135
+route,<Redirect>,/fi/dashboard,redirect,routes/AppRouter.tsx:136
+route,<Redirect>,/cfo-dashboard,redirect,routes/AppRouter.tsx:137
+route,<Redirect>,/accounting/payroll,redirect,routes/AppRouter.tsx:138
+route,<Redirect>,/integration/shift-scheduling,redirect,routes/AppRouter.tsx:139
+route,<Redirect>,/erp-cameras,redirect,routes/AppRouter.tsx:140
+route,<Redirect>,/erp/cameras/reports,redirect,routes/AppRouter.tsx:141
+route,<Redirect>,/erp/cameras/heatmap,redirect,routes/AppRouter.tsx:142
+route,<Redirect>,/security/dashboard,redirect,routes/AppRouter.tsx:143
+route,<Redirect>,/sales,redirect,routes/AppRouter.tsx:144
+route,<Redirect>,/crm,redirect,routes/AppRouter.tsx:145
+route,<Redirect>,/crm/dashboard,redirect,routes/AppRouter.tsx:146
+route,<Redirect>,/crm/leads,redirect,routes/AppRouter.tsx:147
+route,<Redirect>,/crm/deals,redirect,routes/AppRouter.tsx:148
+route,<Redirect>,/crm/contacts,redirect,routes/AppRouter.tsx:149
+route,<Redirect>,/crm/companies,redirect,routes/AppRouter.tsx:150
+route,<Redirect>,/crm/proposals,redirect,routes/AppRouter.tsx:151
+route,<Redirect>,/crm/invoices,redirect,routes/AppRouter.tsx:152
+route,<Redirect>,/sd/quota-dashboard,redirect,routes/AppRouter.tsx:153
+route,<Redirect>,/erp/planning,redirect,routes/AppRouter.tsx:154
+route,<Redirect>,/erp/pp/mrp,redirect,routes/AppRouter.tsx:155
+route,<Redirect>,/tech/dashboard,redirect,routes/AppRouter.tsx:156
+route,<Redirect>,/tech/approval,redirect,routes/AppRouter.tsx:157
+route,<Redirect>,/tech/parameters,redirect,routes/AppRouter.tsx:158
+route,<Redirect>,/tech/standards,redirect,routes/AppRouter.tsx:159
+route,<Redirect>,/iot/live,redirect,routes/AppRouter.tsx:160
+route,<Redirect>,/europrint/director,redirect,routes/AppRouter.tsx:161
+route,<Redirect>,/qc/dashboard,redirect,routes/AppRouter.tsx:162
+route,<Redirect>,/qc/standards,redirect,routes/AppRouter.tsx:163
+route,<Redirect>,/qc/parameters,redirect,routes/AppRouter.tsx:164
+route,<Redirect>,/qc/tests,redirect,routes/AppRouter.tsx:165
+route,<Redirect>,/succession-planning,redirect,routes/AppRouter.tsx:166
+route,<Redirect>,/hr/succession-planning,redirect,routes/AppRouter.tsx:167
+route,<Redirect>,/hr/leave,redirect,routes/AppRouter.tsx:168
+route,<Redirect>,/feedback,redirect,routes/AppRouter.tsx:169
+route,<Redirect>,/logout,redirect,routes/AppRouter.tsx:170
+route,<Redirect>,/assets,redirect,routes/AppRouter.tsx:173
+route,<Redirect>,/hr/documents,redirect,routes/AppRouter.tsx:174
+route,<Redirect>,/cfo,redirect,routes/AppRouter.tsx:175
+route,<Redirect>,/org-chart,redirect,routes/AppRouter.tsx:176
+route,?,/order-workflow,jsx,routes/AppRouter.tsx:179
+route,?,/chat,jsx,routes/AppRouter.tsx:186
+route,?,/chat/admin,jsx,routes/AppRouter.tsx:191
+route,AiCrmPage,/ai/crm,tuple,routes/CRMRoutes.tsx:47
+route,AiCrmPage,/ai-crm,tuple,routes/CRMRoutes.tsx:48
+route,CRMWorkspace,/crm-workspace,tuple,routes/CRMRoutes.tsx:49
+route,CrmFunnelAnalytics,/crm/funnel,tuple,routes/CRMRoutes.tsx:50
+route,CrmRfmClusters,/crm/rfm,tuple,routes/CRMRoutes.tsx:51
+route,CrmCohortAnalysis,/crm/cohort,tuple,routes/CRMRoutes.tsx:52
+route,CRMActivities,/crm/activities,tuple,routes/CRMRoutes.tsx:53
+route,CRMSettings,/crm/settings,tuple,routes/CRMRoutes.tsx:54
+route,SalesOrders,/erp/sales,tuple,routes/CRMRoutes.tsx:55
+route,SDSalesQuotes,/sd/quotations,tuple,routes/CRMRoutes.tsx:58
+route,SDEuroprint,/sd/crm,tuple,routes/CRMRoutes.tsx:59
+route,SDDashboard,/sd/dashboard,tuple,routes/CRMRoutes.tsx:60
+route,SDCustomers,/sd/customers,tuple,routes/CRMRoutes.tsx:61
+route,Customer360Page,/sd/customers/:id,tuple,routes/CRMRoutes.tsx:62
+route,Customer360Page,/crm/customer/:id,tuple,routes/CRMRoutes.tsx:63
+route,SDSalesQuotes,/sd/sales-quotes,tuple,routes/CRMRoutes.tsx:64
+route,SDSalesOrders,/sd/sales-orders,tuple,routes/CRMRoutes.tsx:65
+route,SDSalesPayments,/sd/sales-payments,tuple,routes/CRMRoutes.tsx:66
+route,SDSalesManagement,/sd/sales-management,tuple,routes/CRMRoutes.tsx:67
+route,SDSalesManagement,/sd/invoices,tuple,routes/CRMRoutes.tsx:68
+route,SDSalesManagement,/sd/forecast,tuple,routes/CRMRoutes.tsx:69
+route,SDSalesManagement,/sd/analytics,tuple,routes/CRMRoutes.tsx:70
+route,SDSalesManagement,/sd/commission,tuple,routes/CRMRoutes.tsx:71
+route,SDKpi,/sd/kpi,tuple,routes/CRMRoutes.tsx:72
+route,SDContracts,/sd/contracts,tuple,routes/CRMRoutes.tsx:73
+route,SDSettings,/sd/settings,tuple,routes/CRMRoutes.tsx:74
+route,SDDebitors,/sd/debitors,tuple,routes/CRMRoutes.tsx:75
+route,SDOverviewDashboard,/sd/dashboard/overview,tuple,routes/CRMRoutes.tsx:76
+route,SDQuotaDashboard,/sd/dashboard/quota,tuple,routes/CRMRoutes.tsx:77
+route,SDExtended,/sd/manager-panel,tuple,routes/CRMRoutes.tsx:78
+route,SDExtended,/sd/warehouse-rental,tuple,routes/CRMRoutes.tsx:79
+route,SDExtended,/sd/advance-control,tuple,routes/CRMRoutes.tsx:80
+route,SDLeads,/sd/leads,tuple,routes/CRMRoutes.tsx:81
+route,SDDeliveries,/sd/deliveries,tuple,routes/CRMRoutes.tsx:82
+route,MarketingDashboard,/marketing/dashboard,tuple,routes/CRMRoutes.tsx:86
+route,MarketingCampaigns,/marketing/campaigns,tuple,routes/CRMRoutes.tsx:87
+route,MarketingContent,/marketing/content,tuple,routes/CRMRoutes.tsx:88
+route,MarketingLeads,/marketing/leads,tuple,routes/CRMRoutes.tsx:89
+route,MarketingCalendar,/marketing/calendar,tuple,routes/CRMRoutes.tsx:90
+route,MarketingExhibitions,/marketing/exhibitions,tuple,routes/CRMRoutes.tsx:91
+route,MarketingPR,/marketing/pr,tuple,routes/CRMRoutes.tsx:92
+route,MarketingBudget,/marketing/budget,tuple,routes/CRMRoutes.tsx:93
+route,MarketingSettings,/marketing/settings,tuple,routes/CRMRoutes.tsx:94
+route,MarketingSocialInbox,/marketing/social-inbox,tuple,routes/CRMRoutes.tsx:95
+route,MarketingWebsiteCMS,/marketing/website-cms,tuple,routes/CRMRoutes.tsx:96
+route,MarketingExtended,/marketing/analytics,tuple,routes/CRMRoutes.tsx:97
+route,MarketingExtended,/marketing/seo,tuple,routes/CRMRoutes.tsx:98
+route,MarketingExtended,/marketing/ab-testing,tuple,routes/CRMRoutes.tsx:99
+route,MarketingExtended,/marketing/competitors,tuple,routes/CRMRoutes.tsx:100
+route,MarketingExtended,/marketing/nps-churn,tuple,routes/CRMRoutes.tsx:101
+route,CameraDashboard,/camera-dashboard,tuple,routes/CameraRoutes.tsx:30
+route,CamerasManagement,/cameras,tuple,routes/CameraRoutes.tsx:31
+route,CameraSafety,/camera-safety,tuple,routes/CameraRoutes.tsx:32
+route,CameraQuality,/camera-quality,tuple,routes/CameraRoutes.tsx:33
+route,CameraEmployeesAI,/camera-employees,tuple,routes/CameraRoutes.tsx:34
+route,CameraMachines,/camera-machines,tuple,routes/CameraRoutes.tsx:35
+route,CameraAlertsPage,/camera-alerts,tuple,routes/CameraRoutes.tsx:36
+route,CameraReportsPage,/camera-reports,tuple,routes/CameraRoutes.tsx:37
+route,CameraSettingsPage,/camera-settings,tuple,routes/CameraRoutes.tsx:38
+route,CameraHeatmapPage,/camera-heatmap,tuple,routes/CameraRoutes.tsx:39
+route,CameraEmployeeRatingsPage,/camera-employee-ratings,tuple,routes/CameraRoutes.tsx:40
+route,CameraLiveMonitoring,/camera-live-monitoring,tuple,routes/CameraRoutes.tsx:41
+route,FaceRecognitionMonitoring,/camera/monitoring,tuple,routes/CameraRoutes.tsx:42
+route,FaceRegistration,/face-registration,tuple,routes/CameraRoutes.tsx:43
+route,AttendanceMonitorPage,/attendance-monitor,tuple,routes/CameraRoutes.tsx:44
+route,EmployeeTrackingReport,/employee-tracking,tuple,routes/CameraRoutes.tsx:45
+route,CameraAIAnalytics,/europrint/camera-ai-analytics,tuple,routes/CameraRoutes.tsx:46
+route,CameraAIModernHub,/camera-ai,tuple,routes/CameraRoutes.tsx:47
+route,SecurityDashboard,/security,tuple,routes/CameraRoutes.tsx:48
+route,SecurityExtended,/security/attendance,tuple,routes/CameraRoutes.tsx:49
+route,SecurityExtended,/security/zone-access,tuple,routes/CameraRoutes.tsx:50
+route,SecurityExtended,/security/ppe,tuple,routes/CameraRoutes.tsx:51
+route,SecurityExtended,/security/hazmat,tuple,routes/CameraRoutes.tsx:52
+route,SecurityExtended,/security/evacuation,tuple,routes/CameraRoutes.tsx:53
+route,SecurityExtended,/security/visitors,tuple,routes/CameraRoutes.tsx:54
+route,SecurityExtended,/security/rating,tuple,routes/CameraRoutes.tsx:55
+route,CoordinationPage,/coordination,tuple,routes/DirectorRoutes.tsx:34
+route,AgentsHub,/agents,tuple,routes/DirectorRoutes.tsx:35
+route,ProductionAgentDashboard,/agents/production,tuple,routes/DirectorRoutes.tsx:36
+route,HRPerformanceAgentDash,/agents/hr-performance,tuple,routes/DirectorRoutes.tsx:37
+route,QualityAgentDashboard,/agents/quality,tuple,routes/DirectorRoutes.tsx:38
+route,StrategicAgentDashboard,/agents/strategic,tuple,routes/DirectorRoutes.tsx:39
+route,FacilitiesAgentDashboard,/agents/facilities,tuple,routes/DirectorRoutes.tsx:40
+route,ProcurementAgentDashboard,/agents/procurement,tuple,routes/DirectorRoutes.tsx:41
+route,Customer360Page,/crm/customer/:id,tuple,routes/DirectorRoutes.tsx:42
+route,RollManagementPage,/warehouse/rolls,tuple,routes/DirectorRoutes.tsx:43
+route,AgentsHub,/agents/:id,tuple,routes/DirectorRoutes.tsx:44
+route,ERPDailyReports,/erp-daily-reports,tuple,routes/DirectorRoutes.tsx:45
+route,EmployeeProfile,/erp/employee/:id,tuple,routes/DirectorRoutes.tsx:46
+route,EuroprintControlCenter,/europrint/control,tuple,routes/DirectorRoutes.tsx:47
+route,AuditorPanel,/europrint/auditor,tuple,routes/DirectorRoutes.tsx:48
+route,AccountantView,/europrint/accountant,tuple,routes/DirectorRoutes.tsx:49
+route,StrategicTasksPanel,/europrint/strategic,tuple,routes/DirectorRoutes.tsx:50
+route,StrategicTasksPanel,/strategic-tasks,tuple,routes/DirectorRoutes.tsx:51
+route,EmployeeDailyKPIPanel,/europrint/employee-kpi,tuple,routes/DirectorRoutes.tsx:52
+route,WasteTracking,/europrint/waste-tracking,tuple,routes/DirectorRoutes.tsx:53
+route,ReportsHub,/europrint/reports-hub,tuple,routes/DirectorRoutes.tsx:54
+route,DirectorExtended,/director/ai-summary,tuple,routes/DirectorRoutes.tsx:55
+route,DirectorExtended,/director/problem-points,tuple,routes/DirectorRoutes.tsx:56
+route,DirectorExtended,/director/production,tuple,routes/DirectorRoutes.tsx:57
+route,DirectorExtended,/director/hr-stats,tuple,routes/DirectorRoutes.tsx:58
+route,DirectorExtended,/director/finance,tuple,routes/DirectorRoutes.tsx:59
+route,DirectorExtended,/director/kpis,tuple,routes/DirectorRoutes.tsx:60
+route,IdealRasmPage,/ideal-rasm,tuple,routes/DirectorRoutes.tsx:61
+route,DirectorAiAudit,/director/ai-audit,tuple,routes/DirectorRoutes.tsx:62
+route,FinanceDashboard,/finance-dashboard,tuple,routes/FinanceRoutes.tsx:35
+route,CFODashboard,/cfo/dashboard,tuple,routes/FinanceRoutes.tsx:36
+route,CashFlowManagement,/finance/cashflow,tuple,routes/FinanceRoutes.tsx:37
+route,BudgetManagement,/finance/budgets,tuple,routes/FinanceRoutes.tsx:38
+route,OrderCosting,/finance/order-costing,tuple,routes/FinanceRoutes.tsx:39
+route,FinancialReports,/finance/reports,tuple,routes/FinanceRoutes.tsx:40
+route,ProductProfitability,/finance/profitability,tuple,routes/FinanceRoutes.tsx:41
+route,DailyKPIDashboard,/finance/daily-kpi,tuple,routes/FinanceRoutes.tsx:42
+route,AccountsReceivable,/accounting/ar,tuple,routes/FinanceRoutes.tsx:43
+route,AccountsPayable,/accounting/ap,tuple,routes/FinanceRoutes.tsx:44
+route,PayrollAutomation,/accounting/payroll-automation,tuple,routes/FinanceRoutes.tsx:45
+route,MaterialsAccounting,/accounting/materials,tuple,routes/FinanceRoutes.tsx:46
+route,GLDocuments,/accounting/gl-documents,tuple,routes/FinanceRoutes.tsx:47
+route,ChartOfAccounts,/accounting/chart-of-accounts,tuple,routes/FinanceRoutes.tsx:48
+route,PeriodClosing,/accounting/period-closing,tuple,routes/FinanceRoutes.tsx:49
+route,CashRegister,/accounting/cash-register,tuple,routes/FinanceRoutes.tsx:50
+route,IncomeExpense,/accounting/income-expense,tuple,routes/FinanceRoutes.tsx:51
+route,InventoryValuation,/accounting/inventory-valuation,tuple,routes/FinanceRoutes.tsx:52
+route,AssetManagement,/accounting/asset-management,tuple,routes/FinanceRoutes.tsx:53
+route,FinanceExtended,/fi/cost-centers,tuple,routes/FinanceRoutes.tsx:54
+route,FinanceExtended,/fi/transfer-pricing,tuple,routes/FinanceRoutes.tsx:55
+route,FinanceExtended,/fi/tax-management,tuple,routes/FinanceRoutes.tsx:56
+route,FinanceExtended,/fi/tax-calendar,tuple,routes/FinanceRoutes.tsx:57
+route,FinanceExtended,/fi/audit-log,tuple,routes/FinanceRoutes.tsx:58
+route,FinanceExtended,/fi/risk-ai,tuple,routes/FinanceRoutes.tsx:59
+route,CfoConfigSettings,/cfo/config,tuple,routes/FinanceRoutes.tsx:60
+route,FinanceVariance,/finance/variance,tuple,routes/FinanceRoutes.tsx:61
+route,FinanceBreakEven,/finance/break-even,tuple,routes/FinanceRoutes.tsx:62
+route,PricingTiers,/finance/pricing-tiers,tuple,routes/FinanceRoutes.tsx:63
+route,AIFinancePage,/ai/finance,tuple,routes/FinanceRoutes.tsx:64
+route,Employees,/employees,tuple,routes/HRRoutes.tsx:54
+route,EmployeeProfile,/employees/:id,tuple,routes/HRRoutes.tsx:55
+route,HRMap,/hr-map,tuple,routes/HRRoutes.tsx:56
+route,RecruitingKanban,/hr/recruiting,tuple,routes/HRRoutes.tsx:57
+route,SkillsMatrix,/skills-matrix,tuple,routes/HRRoutes.tsx:58
+route,Mentorship,/mentorship,tuple,routes/HRRoutes.tsx:59
+route,EventsCalendar,/events-calendar,tuple,routes/HRRoutes.tsx:60
+route,Applications,/applications,tuple,routes/HRRoutes.tsx:61
+route,ShiftSchedule,/shift-schedule,tuple,routes/HRRoutes.tsx:62
+route,HRDashboard,/hr-dashboard,tuple,routes/HRRoutes.tsx:63
+route,HRCapitalTests,/hr-capital/tests,tuple,routes/HRRoutes.tsx:64
+route,OrgStructureHierarchy,/org-structure/hierarchy,tuple,routes/HRRoutes.tsx:65
+route,OrgNodeDetail,/org-structure/hierarchy/node/:id,tuple,routes/HRRoutes.tsx:66
+route,HROnboarding,/hr/onboarding,tuple,routes/HRRoutes.tsx:67
+route,HRVacationSick,/hr/vacation-sick,tuple,routes/HRRoutes.tsx:68
+route,HRSuccessionPlanning,/hr/succession,tuple,routes/HRRoutes.tsx:69
+route,HROffboarding,/hr/offboarding,tuple,routes/HRRoutes.tsx:70
+route,HRHealthMonitoring,/hr/health-monitoring,tuple,routes/HRRoutes.tsx:71
+route,HRCareerPath,/hr/career-path,tuple,routes/HRRoutes.tsx:72
+route,HRSafety,/hr/safety,tuple,routes/HRRoutes.tsx:73
+route,RecruiterKPIPage,/hr/recruiter-kpi,tuple,routes/HRRoutes.tsx:74
+route,ReceptionPage,/hr/reception,tuple,routes/HRRoutes.tsx:75
+route,DailyReportPage,/hr/daily-reports,tuple,routes/HRRoutes.tsx:76
+route,HRAssetManagement,/hr/assets,tuple,routes/HRRoutes.tsx:77
+route,ReferralPage,/hr/referrals,tuple,routes/HRRoutes.tsx:78
+route,CandidateReport,/hr/candidate-report/:id,tuple,routes/HRRoutes.tsx:79
+route,HRBrandPage,/hr/brand,tuple,routes/HRRoutes.tsx:80
+route,WeeklyPlanPage,/weekly-plan,tuple,routes/HRRoutes.tsx:81
+route,InspectionPage,/hr/inspection,tuple,routes/HRRoutes.tsx:82
+route,HRPip,/hr/pip,tuple,routes/HRRoutes.tsx:84
+route,HRGamification,/hr/gamification,tuple,routes/HRRoutes.tsx:85
+route,HRBirthdays,/hr/birthdays,tuple,routes/HRRoutes.tsx:86
+route,Discipline,/discipline,tuple,routes/HRRoutes.tsx:87
+route,HRConflict,/hr/conflict,tuple,routes/HRRoutes.tsx:88
+route,HRAlumni,/hr/alumni,tuple,routes/HRRoutes.tsx:89
+route,HREnps,/hr/enps,tuple,routes/HRRoutes.tsx:90
+route,Questionnaire,/questionnaire,tuple,routes/HRRoutes.tsx:91
+route,QuestionnaireTemplates,/questionnaire-templates,tuple,routes/HRRoutes.tsx:92
+route,SevenFunctions,/seven-functions,tuple,routes/HRRoutes.tsx:93
+route,RaciMatrix,/raci-matrix,tuple,routes/HRRoutes.tsx:94
+route,HRMilestones,/hr/milestones,tuple,routes/HRRoutes.tsx:95
+route,HRAIDashboard,/ai-hr/dashboard,tuple,routes/HRRoutes.tsx:99
+route,AIInterviewPage,/ai-hr/interviews,tuple,routes/HRRoutes.tsx:100
+route,InternalJobBoard,/hr/internal-jobs,tuple,routes/HRRoutes.tsx:104
+route,ERPProduction,/erp-production,tuple,routes/ProductionRoutes.tsx:80
+route,ProductionReport,/production/orders,tuple,routes/ProductionRoutes.tsx:81
+route,ProductionOrder360,/production/orders/:id,tuple,routes/ProductionRoutes.tsx:82
+route,PlanningBoard,/planning,tuple,routes/ProductionRoutes.tsx:83
+route,AIProductionPlanning,/ai-production-planning,tuple,routes/ProductionRoutes.tsx:84
+route,AIReservation,/pp/ai-reservation,tuple,routes/ProductionRoutes.tsx:85
+route,PapkaOrders,/papka-orders,tuple,routes/ProductionRoutes.tsx:86
+route,OrderCreationWizard,/order-create,tuple,routes/ProductionRoutes.tsx:87
+route,OrderApprovalWorkflow,/order-approval,tuple,routes/ProductionRoutes.tsx:88
+route,PPDashboard,/pp/dashboard,tuple,routes/ProductionRoutes.tsx:89
+route,BOMManagement,/erp/pp/bom,tuple,routes/ProductionRoutes.tsx:90
+route,RoutingConfiguration,/erp/pp/routing,tuple,routes/ProductionRoutes.tsx:91
+route,CapacityPlanning,/erp/pp/capacity,tuple,routes/ProductionRoutes.tsx:92
+route,Technology,/technology,tuple,routes/ProductionRoutes.tsx:93
+route,TechDashboard,/tech/dashboard-home,tuple,routes/ProductionRoutes.tsx:94
+route,TechApproval,/tech-approval,tuple,routes/ProductionRoutes.tsx:95
+route,TechCards,/tech-cards,tuple,routes/ProductionRoutes.tsx:96
+route,TechCards,/tech/cards,tuple,routes/ProductionRoutes.tsx:97
+route,TechPPExtended,/tech/material-alternatives,tuple,routes/ProductionRoutes.tsx:98
+route,TechPPExtended,/tech/machine-selection,tuple,routes/ProductionRoutes.tsx:99
+route,TechPPExtended,/tech/time-cost,tuple,routes/ProductionRoutes.tsx:100
+route,TechPPExtended,/tech/cost-optimization,tuple,routes/ProductionRoutes.tsx:101
+route,TechPPExtended,/tech/client-requirements,tuple,routes/ProductionRoutes.tsx:102
+route,TechPPExtended,/tech/change-history,tuple,routes/ProductionRoutes.tsx:103
+route,TechPPExtended,/tech/parallel-orders,tuple,routes/ProductionRoutes.tsx:104
+route,AIShiftManagementPage,/pp/shift-management,tuple,routes/ProductionRoutes.tsx:105
+route,TechPPExtended,/pp/parallel-processes,tuple,routes/ProductionRoutes.tsx:106
+route,RushOrderPage,/pp/rush-orders,tuple,routes/ProductionRoutes.tsx:107
+route,BottleneckAnalysisPage,/pp/bottleneck,tuple,routes/ProductionRoutes.tsx:108
+route,MrpMatrix,/pp/mrp,tuple,routes/ProductionRoutes.tsx:109
+route,CrpPage,/pp/crp,tuple,routes/ProductionRoutes.tsx:110
+route,DemandForecastingPage,/pp/demand-forecast,tuple,routes/ProductionRoutes.tsx:111
+route,TechPPExtended,/pp/what-if,tuple,routes/ProductionRoutes.tsx:112
+route,TechPPExtended,/pp/delivery-calculator,tuple,routes/ProductionRoutes.tsx:113
+route,TechPPExtended,/pp/energy-optimization,tuple,routes/ProductionRoutes.tsx:114
+route,OEELiveMonitorPage,/pp/oee-monitor,tuple,routes/ProductionRoutes.tsx:115
+route,TechPPExtended,/pp/kpi-deviation,tuple,routes/ProductionRoutes.tsx:116
+route,TechPPExtended,/pp/realtime-progress,tuple,routes/ProductionRoutes.tsx:117
+route,FinanceApproval,/finance/approval,tuple,routes/ProductionRoutes.tsx:118
+route,DesignApproval,/design/approval,tuple,routes/ProductionRoutes.tsx:119
+route,MESHomeDashboard,/mes/dashboard-home,tuple,routes/ProductionRoutes.tsx:123
+route,MESWorkCenters,/mes/work-centers,tuple,routes/ProductionRoutes.tsx:124
+route,MESProducts,/mes/products,tuple,routes/ProductionRoutes.tsx:125
+route,MESDowntimes,/mes/downtimes,tuple,routes/ProductionRoutes.tsx:126
+route,MESWorkerAssignments,/mes/workers,tuple,routes/ProductionRoutes.tsx:127
+route,MESExtended,/mes/oee-monitor,tuple,routes/ProductionRoutes.tsx:128
+route,MESExtended,/mes/reason-log,tuple,routes/ProductionRoutes.tsx:129
+route,MESExtended,/mes/zone-management,tuple,routes/ProductionRoutes.tsx:130
+route,MESExtended,/mes/maintenance-request,tuple,routes/ProductionRoutes.tsx:131
+route,MESExtended,/mes/gamification,tuple,routes/ProductionRoutes.tsx:132
+route,MESExtended,/mes/machine-norms,tuple,routes/ProductionRoutes.tsx:133
+route,MESExtended,/mes/smena-handover,tuple,routes/ProductionRoutes.tsx:134
+route,QCDashboard,/qc/dashboard-home,tuple,routes/ProductionRoutes.tsx:138
+route,QCModule,/qc-module,tuple,routes/ProductionRoutes.tsx:139
+route,InkCoverageCalculator,/print/ink-coverage,tuple,routes/ProductionRoutes.tsx:140
+route,ImpositionCalculator,/print/imposition,tuple,routes/ProductionRoutes.tsx:141
+route,QCApproval,/qc/approval,tuple,routes/ProductionRoutes.tsx:142
+route,QCFinalInspection,/qc/final,tuple,routes/ProductionRoutes.tsx:143
+route,QCExtended,/qc/lab,tuple,routes/ProductionRoutes.tsx:144
+route,PaperParametersPage,/qc/paper-parameters,tuple,routes/ProductionRoutes.tsx:145
+route,SupplierQualityPage,/qc/vendor-quality,tuple,routes/ProductionRoutes.tsx:146
+route,DefectManagementPage,/qc/defect-management,tuple,routes/ProductionRoutes.tsx:147
+route,ReclamationsPage,/qc/complaints,tuple,routes/ProductionRoutes.tsx:148
+route,QualityCertificatesPage,/qc/certificates,tuple,routes/ProductionRoutes.tsx:149
+route,QCExtended,/qc/iso,tuple,routes/ProductionRoutes.tsx:150
+route,QualityTrendPage,/qc/trends,tuple,routes/ProductionRoutes.tsx:151
+route,QCExtended,/qc/ai-analysis,tuple,routes/ProductionRoutes.tsx:152
+route,QCExtended,/qc/reports,tuple,routes/ProductionRoutes.tsx:153
+route,QCExtended,/qc/settings,tuple,routes/ProductionRoutes.tsx:154
+route,DesignDashboard,/design/dashboard,tuple,routes/ProductionRoutes.tsx:158
+route,DesignOrders,/design/orders,tuple,routes/ProductionRoutes.tsx:159
+route,DesignOrderDetail,/design-orders/:id,tuple,routes/ProductionRoutes.tsx:160
+route,AIDesignGenerator,/design/generator,tuple,routes/ProductionRoutes.tsx:161
+route,DesignExtended,/design/ai-review,tuple,routes/ProductionRoutes.tsx:162
+route,DesignExtended,/design/3d-mockup,tuple,routes/ProductionRoutes.tsx:163
+route,DesignExtended,/design/brand-guidelines,tuple,routes/ProductionRoutes.tsx:164
+route,DesignExtended,/design/comparison,tuple,routes/ProductionRoutes.tsx:165
+route,DesignExtended,/design/templates,tuple,routes/ProductionRoutes.tsx:166
+route,DesignExtended,/design/tools,tuple,routes/ProductionRoutes.tsx:167
+route,DesignExtended,/design/costing,tuple,routes/ProductionRoutes.tsx:168
+route,DesignExtended,/design/library,tuple,routes/ProductionRoutes.tsx:169
+route,MRODashboard,/mro/dashboard,tuple,routes/ProductionRoutes.tsx:173
+route,PreventiveMaintenancePage,/mro/preventive,tuple,routes/ProductionRoutes.tsx:174
+route,SparePartsPage,/mro/spare-parts,tuple,routes/ProductionRoutes.tsx:175
+route,UtilityReadingsPage,/mro/utilities,tuple,routes/ProductionRoutes.tsx:176
+route,MROExtended,/mro/expense-control,tuple,routes/ProductionRoutes.tsx:177
+route,CanteenManagementPage,/mro/kitchen,tuple,routes/ProductionRoutes.tsx:178
+route,MROExtended,/mro/uniforms,tuple,routes/ProductionRoutes.tsx:179
+route,FacilityInventoryPage,/mro/office-inventory,tuple,routes/ProductionRoutes.tsx:180
+route,CleaningSchedulePage,/mro/cleaning,tuple,routes/ProductionRoutes.tsx:181
+route,MROExtended,/mro/sanitation,tuple,routes/ProductionRoutes.tsx:182
+route,FacilityInventoryPage,/mro/building-inventory,tuple,routes/ProductionRoutes.tsx:183
+route,IoTExtended,/iot/sensor-monitoring,tuple,routes/ProductionRoutes.tsx:187
+route,IoTExtended,/iot/predictive-maintenance,tuple,routes/ProductionRoutes.tsx:188
+route,IoTExtended,/iot/oee-live,tuple,routes/ProductionRoutes.tsx:189
+route,IoTExtended,/iot/digital-twin,tuple,routes/ProductionRoutes.tsx:190
+route,IoTExtended,/iot/alerts,tuple,routes/ProductionRoutes.tsx:191
+route,IoTTablet,/iot/tablet,tuple,routes/ProductionRoutes.tsx:192
+route,IoTDashboard,/iot/dashboard,tuple,routes/ProductionRoutes.tsx:193
+route,WarehouseMaterialKits,/iot/material-kits,tuple,routes/ProductionRoutes.tsx:194
+route,WarehouseDailyView,/iot/daily-view,tuple,routes/ProductionRoutes.tsx:195
+route,Customer360Page,/360,tuple,routes/StubRoutes.tsx:65
+route,AgentsHubPage,/ai,tuple,routes/StubRoutes.tsx:66
+route,CameraAIAnalyticsPage,/ai-camera,tuple,routes/StubRoutes.tsx:67
+route,AIExamsPage,/ai-exam,tuple,routes/StubRoutes.tsx:68
+route,HRAIDashboardPage,/ai/hr,tuple,routes/StubRoutes.tsx:69
+route,AiCrmPageComponent,/ai/marketing,tuple,routes/StubRoutes.tsx:70
+route,AIProductionPlanningPage,/ai-planning,tuple,routes/StubRoutes.tsx:71
+route,Stub,/ai/wms,tuple,routes/StubRoutes.tsx:72
+route,MESWorkerAssignmentsPage,/assignments,tuple,routes/StubRoutes.tsx:73
+route,AnalyticsPage,/insights,tuple,routes/StubRoutes.tsx:74
+route,IntegrationMgmtPage,/integration/requests,tuple,routes/StubRoutes.tsx:75
+route,IoTExtendedPage,/iot-enhanced,tuple,routes/StubRoutes.tsx:76
+route,LessonPlayerPage,/video-progress,tuple,routes/StubRoutes.tsx:77
+route,Stub,/export,tuple,routes/StubRoutes.tsx:80
+route,Stub,/micro-modules,tuple,routes/StubRoutes.tsx:81
+route,Stub,/modules,tuple,routes/StubRoutes.tsx:82
+route,Stub,/pos/printer-config,tuple,routes/StubRoutes.tsx:83
+route,Stub,/sap,tuple,routes/StubRoutes.tsx:84
+route,ThreeWayMatchPage,/3way-match,tuple,routes/StubRoutes.tsx:87
+route,AchievementsPage,/achievements,tuple,routes/StubRoutes.tsx:88
+route,AiAutomationPage,/ai/automation,tuple,routes/StubRoutes.tsx:89
+route,ApplicationResponsesPage,/application-responses,tuple,routes/StubRoutes.tsx:90
+route,ApprovalWorkflowPage,/approval-workflow,tuple,routes/StubRoutes.tsx:91
+route,AttemptsPage,/attempts,tuple,routes/StubRoutes.tsx:92
+route,CalendarEventsPage,/calendar-events,tuple,routes/StubRoutes.tsx:93
+route,CandidatesPage,/candidates,tuple,routes/StubRoutes.tsx:94
+route,CompanyStatePage,/company-state,tuple,routes/StubRoutes.tsx:95
+route,AttendancePage,/daily-attendance,tuple,routes/StubRoutes.tsx:96
+route,EmployeeFilesPage,/employee-files,tuple,routes/StubRoutes.tsx:97
+route,EmployeeProductivityPage,/employee-productivity,tuple,routes/StubRoutes.tsx:98
+route,EmployeeZoneHistoryPage,/employee-zone-history,tuple,routes/StubRoutes.tsx:99
+route,EquipmentPage,/equipment,tuple,routes/StubRoutes.tsx:100
+route,EuroprintControlPage,/europrint-control,tuple,routes/StubRoutes.tsx:101
+route,GLDocumentsPage,/gl,tuple,routes/StubRoutes.tsx:102
+route,HRZnoPage,/hr/zno,tuple,routes/StubRoutes.tsx:103
+route,HRZvsPage,/hr/zvs,tuple,routes/StubRoutes.tsx:104
+route,IotSensorsPage,/iot-sensors,tuple,routes/StubRoutes.tsx:105
+route,MachineStatusPage,/machine-status-current,tuple,routes/StubRoutes.tsx:106
+route,MachineStatusPage,/machine-status-logs,tuple,routes/StubRoutes.tsx:107
+route,MaterialCardsPage,/material-cards,tuple,routes/StubRoutes.tsx:108
+route,MentorsPage,/mentors,tuple,routes/StubRoutes.tsx:109
+route,MentorshipsPage,/mentorships,tuple,routes/StubRoutes.tsx:110
+route,OkrPage,/okr,tuple,routes/StubRoutes.tsx:111
+route,OrderStatusPage,/order-status,tuple,routes/StubRoutes.tsx:112
+route,OrgDepartmentsPage,/org-departments,tuple,routes/StubRoutes.tsx:113
+route,ProductionFactsPage,/production-facts,tuple,routes/StubRoutes.tsx:114
+route,ShiftReportsPage,/production/shift-reports,tuple,routes/StubRoutes.tsx:115
+route,QualityDefectsCameraPage,/quality-defects-camera,tuple,routes/StubRoutes.tsx:116
+route,QuestionsPage,/questions,tuple,routes/StubRoutes.tsx:117
+route,RaciCrisisPage,/raci-crisis,tuple,routes/StubRoutes.tsx:118
+route,RawMaterialsPage,/raw-materials,tuple,routes/StubRoutes.tsx:119
+route,SafetyViolationsPage,/safety-violations,tuple,routes/StubRoutes.tsx:120
+route,UsersPage,/users,tuple,routes/StubRoutes.tsx:121
+route,WastePage,/waste,tuple,routes/StubRoutes.tsx:122
+route,WeeklyPlansPage,/weekly-plans,tuple,routes/StubRoutes.tsx:123
+route,WarehouseDashboardPage,/wms/overview,tuple,routes/WarehouseRoutes.tsx:45
+route,ProcurementPage,/wms/procurement,tuple,routes/WarehouseRoutes.tsx:46
+route,WarehousesPage,/wms/warehouses,tuple,routes/WarehouseRoutes.tsx:47
+route,WarehouseStockPage,/wms/warehouse-stock/:id,tuple,routes/WarehouseRoutes.tsx:48
+route,WarehouseTypePage,/wms/warehouses/:type,tuple,routes/WarehouseRoutes.tsx:49
+route,PosMonitorPage,/wms/pos-monitor,tuple,routes/WarehouseRoutes.tsx:50
+route,InventoryCount,/warehouse/inventory-count,tuple,routes/WarehouseRoutes.tsx:52
+route,GoodsReceiving,/warehouse/goods-receiving,tuple,routes/WarehouseRoutes.tsx:53
+route,StockReservation,/warehouse/reservations,tuple,routes/WarehouseRoutes.tsx:54
+route,WarehouseReports,/warehouse/reports,tuple,routes/WarehouseRoutes.tsx:55
+route,BarcodeSystem,/warehouse/barcodes,tuple,routes/WarehouseRoutes.tsx:56
+route,GoodsReceiving,/wms/grn,tuple,routes/WarehouseRoutes.tsx:57
+route,StockReservation,/wms/reservation,tuple,routes/WarehouseRoutes.tsx:58
+route,InventoryCount,/wms/inventory,tuple,routes/WarehouseRoutes.tsx:59
+route,WarehouseRental,/wms/rental,tuple,routes/WarehouseRoutes.tsx:60
+route,WMSDashboard,/wms/dashboard,tuple,routes/WarehouseRoutes.tsx:61
+route,WarehouseKpiHub,/wms/kpi-hub,tuple,routes/WarehouseRoutes.tsx:62
+route,WarehouseReportsAll,/wms/reports,tuple,routes/WarehouseRoutes.tsx:63
+route,WarehouseReportsAll,/wms/reports-all,tuple,routes/WarehouseRoutes.tsx:64
+route,WarehouseMaterial360,/wms/material/360/:id,tuple,routes/WarehouseRoutes.tsx:65
+route,WarehouseQuarantine,/wms/quarantine,tuple,routes/WarehouseRoutes.tsx:66
+route,WarehouseBarcodeQueue,/wms/barcodes-queue,tuple,routes/WarehouseRoutes.tsx:67
+route,WarehouseInventoryPassport,/wms/passports,tuple,routes/WarehouseRoutes.tsx:68
+route,WarehouseQCReview,/wms/qc-review,tuple,routes/WarehouseRoutes.tsx:69
+route,EmployeeInventory,/wms/employee-inventory,tuple,routes/WarehouseRoutes.tsx:70
+route,WarehouseKirimWizard,/wms/kirim-new,tuple,routes/WarehouseRoutes.tsx:71
+route,NotificationCenter,/wms/notifications,tuple,routes/WarehouseRoutes.tsx:72
+route,WarehouseAuditLog,/wms/audit-log,tuple,routes/WarehouseRoutes.tsx:73
+route,MaterialBalance,/wms/material-balance,tuple,routes/WarehouseRoutes.tsx:74
+route,BarcodeScanner,/wms/scanner,tuple,routes/WarehouseRoutes.tsx:75
+route,WMSMaterials,/inventory/materials,tuple,routes/WarehouseRoutes.tsx:76
+route,WMSMaterials,/inventory/materials/:id,tuple,routes/WarehouseRoutes.tsx:77
+route,MMVendors,/mm/vendors,tuple,routes/WarehouseRoutes.tsx:79
+route,MMPurchaseOrders,/mm/purchase-orders,tuple,routes/WarehouseRoutes.tsx:80
+route,MMDashboard,/mm/dashboard,tuple,routes/WarehouseRoutes.tsx:81
+route,MMExtended,/mm/check-bot,tuple,routes/WarehouseRoutes.tsx:82
+route,MMExtended,/mm/creditor-debts,tuple,routes/WarehouseRoutes.tsx:83
+route,MMExtended,/mm/supplier-portal,tuple,routes/WarehouseRoutes.tsx:84
+route,LogisticsDashboard,/logistics,tuple,routes/WarehouseRoutes.tsx:86
+route,LogisticsDashboard,/logistics/transport,tuple,routes/WarehouseRoutes.tsx:87
+route,LogisticsDashboard,/logistics/route-planning,tuple,routes/WarehouseRoutes.tsx:88
+route,LogisticsDashboard,/logistics/gps,tuple,routes/WarehouseRoutes.tsx:89
+route,LogisticsDashboard,/logistics/fuel,tuple,routes/WarehouseRoutes.tsx:90
+route,LogisticsDashboard,/logistics/drivers,tuple,routes/WarehouseRoutes.tsx:91
+route,LogisticsDashboard,/logistics/vehicle-schedule,tuple,routes/WarehouseRoutes.tsx:92

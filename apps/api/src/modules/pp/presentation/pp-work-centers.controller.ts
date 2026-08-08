@@ -6,6 +6,7 @@
 import { assertRequired } from '@common/assertions';
 import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -14,6 +15,8 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CreateWorkCenterCommand } from '../application/commands/create-work-center.command';
 import { UpdateWorkCenterCommand } from '../application/commands/update-work-center.command';
+import { UpdateWorkCenterNormsCommand } from '../application/commands/update-work-center-norms.command';
+import { LinkWorkCenterCardCommand } from '../application/commands/link-work-center-card.command';
 import { GetWorkCentersQuery } from '../application/queries/get-work-centers.query';
 import { GetWorkCentersStatsQuery } from '../application/queries/get-work-centers-stats.query';
 import {
@@ -21,6 +24,10 @@ import {
   CreateWorkCenterDtoSchema,
   UpdateWorkCenterDto,
   UpdateWorkCenterDtoSchema,
+  UpdateWorkCenterNormsDto,
+  UpdateWorkCenterNormsDtoSchema,
+  LinkWorkCenterCardDto,
+  LinkWorkCenterCardDtoSchema,
   GetWorkCentersDto,
   GetWorkCentersDtoSchema,
 } from './dto/work-center.dto';
@@ -41,14 +48,16 @@ export class PpWorkCentersController {
   constructor(
     private commandBus: CommandBus,
     private queryBus: QueryBus,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get all' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
-  async getAll(@Body() dto?: GetWorkCentersDto) {
-    const validatedDto = GetWorkCentersDtoSchema.parse(dto || {});
+  async getAll(@Body() dto?: GetWorkCentersDto, @Query('department_kind') departmentKind?: string) {
+    // Wave 1: GET /pp/work-centers?department_kind=FLEKSO|OFSET (sex taxonomy filter).
+    const validatedDto = GetWorkCentersDtoSchema.parse({ ...(dto || {}), ...(departmentKind ? { departmentKind } : {}) });
     this.logger.log('Getting work centers');
     return unwrapOrThrow(await this.queryBus.execute(new GetWorkCentersQuery(validatedDto)));
   }
@@ -71,8 +80,8 @@ export class PpWorkCentersController {
     this.logger.log('Getting work center by ID');
     const result = await this.queryBus.execute(new GetWorkCentersQuery({}));
     assertOk(result);
-    const workCenter = result.data?.find((wc: Record<string, unknown>) => wc.id === id);
-    assertRequired(workCenter, 'Work center topilmadi');
+    const workCenter = result.data?.find((wc: Record<string, unknown>) => String(wc.id) === id);
+    assertRequired(workCenter, await this.i18n.t('errors.workCenterNotFoundWithId', { args: { id } }));
     return workCenter;
   }
 
@@ -118,6 +127,42 @@ export class PpWorkCentersController {
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 
+  @ApiOperation({ summary: 'Update work-center norms (norma/brak/crew config)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put(':id/norms')
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async updateNorms(@Param('id') id: string, @Body() dto: UpdateWorkCenterNormsDto) {
+    // Wave 4: per-sex norma/brak/crew config. Qiymatlar egasi tomonidan kiritiladi (struktura, Q-40).
+    const v = UpdateWorkCenterNormsDtoSchema.parse(dto);
+    this.logger.log('Updating work center norms');
+    const command = new UpdateWorkCenterNormsCommand(id, {
+      normaM2PerShift: v.normaM2PerShift,
+      normaKgPerShift: v.normaKgPerShift,
+      brakLimitPct: v.brakLimitPct,
+      minCrewSize: v.minCrewSize,
+      maxCrewSize: v.maxCrewSize,
+      unitPreference: v.unitPreference,
+    });
+    return unwrapOrThrow(await this.commandBus.execute(command));
+  }
+
+  @ApiOperation({ summary: 'Link work-center to org-tuzilma KARTA (org_department_id)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put(':id/card')
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async linkCard(@Param('id') id: string, @Body() dto: LinkWorkCenterCardDto) {
+    // T12-04: ish markazini org-tuzilma KARTA-siga bog'lash yozuv-yo'li. Qiymat (qaysi KARTA)
+    // egasi tomonidan kiritiladi (struktura, Q-40). null = bog'lanishni bekor.
+    const v = LinkWorkCenterCardDtoSchema.parse(dto);
+    this.logger.log('Linking work center to KARTA');
+    const command = new LinkWorkCenterCardCommand(id, v.orgDepartmentId);
+    return unwrapOrThrow(await this.commandBus.execute(command));
+  }
+
   @ApiOperation({ summary: 'Toggle active' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -128,9 +173,19 @@ export class PpWorkCentersController {
     this.logger.log('Toggling work center active status');
     const result = await this.queryBus.execute(new GetWorkCentersQuery({}));
     assertOk(result);
-    const existing = result.data?.find((wc: Record<string, unknown>) => wc.id === id);
-    assertRequired(existing, 'Work center topilmadi');
-    const command = new UpdateWorkCenterCommand(id);
+    const existing = result.data?.find((wc: Record<string, unknown>) => String(wc.id) === id);
+    assertRequired(existing, await this.i18n.t('errors.workCenterNotFoundWithId', { args: { id } }));
+    const command = new UpdateWorkCenterCommand(
+      id,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      dto.isActive,
+    );
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 }

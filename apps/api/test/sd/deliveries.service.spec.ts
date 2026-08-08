@@ -6,6 +6,8 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventBus } from '@nestjs/cqrs';
+import { I18nService } from 'nestjs-i18n';
 import {
   ISdDeliveriesRepository,
   SD_DELIVERIES_REPO,
@@ -23,6 +25,16 @@ function makeRepo(): jest.Mocked<ISdDeliveriesRepository> {
   } as jest.Mocked<ISdDeliveriesRepository>;
 }
 
+function makeI18n(): { t: jest.Mock } {
+  return { t: jest.fn().mockResolvedValue('Yetkazib berish topilmadi') };
+}
+
+// V-3340 #51: DeliveriesService now publishes DeliveryGoodsIssuedEvent on
+// goods-issue status transitions, so it injects EventBus — provide a mock.
+function makeBus(): { publish: jest.Mock } {
+  return { publish: jest.fn() };
+}
+
 describe('DeliveriesService', () => {
   let svc: DeliveriesService;
   let repo: jest.Mocked<ISdDeliveriesRepository>;
@@ -33,6 +45,8 @@ describe('DeliveriesService', () => {
       providers: [
         DeliveriesService,
         { provide: SD_DELIVERIES_REPO, useValue: repo },
+        { provide: I18nService, useValue: makeI18n() },
+        { provide: EventBus, useValue: makeBus() },
       ],
     }).compile();
     svc = module.get(DeliveriesService);

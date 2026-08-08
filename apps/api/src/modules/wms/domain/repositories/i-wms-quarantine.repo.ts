@@ -1,0 +1,65 @@
+/**
+ * @module i-wms-quarantine.repo
+ * @description Karantin darvozasi uchun domen repository interfeysi.
+ *   Mavjud `mm_goods_receipts` jadvalini qayta ishlatadi (yangi jadval YO'Q).
+ *   Konkret implementatsiya:
+ *   `infrastructure/repositories/wms-quarantine.repository.ts`.
+ * @layer Domain (WMS)
+ */
+
+import type { Result } from '@common/result';
+
+/** Karantin darvozasi uchun zarur bo'lgan minimal qabul yozuvi. */
+export interface ReceiptStatusRow {
+  id: number;
+  status: string | null;
+}
+
+/** Atomik o'tish natijasi — domen darvozasi qaytaradigan maqsad holat + audit. */
+export interface QuarantineTransition {
+  /** Yoziladigan yangi holat. */
+  target: string;
+  audit?: { userId?: number | null; completed?: boolean; note?: string | null };
+}
+
+export interface IWmsQuarantineRepo {
+  /** Qabulning joriy holatini (status) o'qiydi. */
+  findReceiptStatus(receiptId: number): Promise<Result<ReceiptStatusRow | null>>;
+
+  /**
+   * Qabul holatini yangilaydi (holat-mashinasi tasdiqlangandan keyin).
+   * Ixtiyoriy audit maydonlari (qcBy, completedBy) ham yoziladi.
+   *
+   * TOCTOU himoyasi (VISION-3340 #41): `audit.expectedStatus` berilsa UPDATE
+   * `AND status = <expectedStatus>` sharti bilan bajariladi (optimistik guard).
+   * O'qish ↔ yozish orasida holat parallel o'zgargan bo'lsa 0 qator qaytadi
+   * va Err('CONFLICT') beriladi — muvaffaqiyat deb hisoblanMAYdi.
+   */
+  updateReceiptStatus(
+    receiptId: number,
+    status: string,
+    audit?: {
+      userId?: number | null;
+      completed?: boolean;
+      note?: string | null;
+      /** O'qilgan (kutilgan) joriy XOM holat — optimistik guard; undefined = guard yo'q. */
+      expectedStatus?: string | null;
+    },
+  ): Promise<Result<ReceiptStatusRow>>;
+
+  /**
+   * Atomik holat o'tishi — VISION-3340 QC#1 (pessimistik qulf).
+   * Bitta SERIALIZABLE tranzaksiya ichida qatorni `SELECT ... FOR UPDATE` bilan
+   * bloklaydi, joriy (bloklangan) holatni `computeTarget` domen darvozasiga beradi,
+   * darvoza ruxsat bersa (Ok) yangi holatni yozadi. O'qish→tekshiruv→yozish bir
+   * tranzaksiyada bo'lgani uchun parallel tranzaksiya oraliqda holatni o'zgartira
+   * olmaydi — optimistik `expectedStatus` guard'dan kuchliroq (TOCTOU oynasi yopiladi).
+   * `computeTarget` Err qaytarsa hech narsa yozilmaydi (faqat qulf bo'shatiladi).
+   */
+  transitionReceiptStatusAtomic(
+    receiptId: number,
+    computeTarget: (currentStatus: string | null) => Result<QuarantineTransition>,
+  ): Promise<Result<ReceiptStatusRow>>;
+}
+
+export const WMS_QUARANTINE_REPO = Symbol('WMS_QUARANTINE_REPO');

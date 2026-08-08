@@ -11,7 +11,7 @@
  */
 
 import {
-  Body, Controller, ForbiddenException, Get, NotFoundException, Param, Post, UseGuards, UseInterceptors,
+  Body, Controller, ForbiddenException, Get, NotFoundException, Param, Post, Query, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -56,25 +56,36 @@ export class CcBasketsController {
     return this.stats.getKpi(user.id, user.role ?? 'employee');
   }
 
+  // CC #19: 100+ hujjatli savat sahifalanadi. page (1-based) + limit (default 50,
+  // maks 100) → offset. Noto'g'ri/bo'sh qiymatlar xavfsiz standartga tushadi.
+  private _page(page?: string, limit?: string): { limit: number; offset: number } {
+    const p = Math.max(1, Number.isFinite(Number(page)) ? Math.trunc(Number(page)) : 1);
+    const l = Math.min(100, Math.max(1, Number.isFinite(Number(limit)) ? Math.trunc(Number(limit)) : 50));
+    return { limit: l, offset: (p - 1) * l };
+  }
+
   @ApiOperation({ summary: 'Inbox' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('inbox')
-  inbox(@CurrentUser() user: { id: number }) {
-    return this.svc.listBasket(user.id, 'inbox');
+  inbox(@CurrentUser() user: { id: number }, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const { limit: l, offset } = this._page(page, limit);
+    return this.svc.listBasket(user.id, 'inbox', l, offset);
   }
 
   @ApiOperation({ summary: 'Pending' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('pending')
-  pending(@CurrentUser() user: { id: number }) {
-    return this.svc.listBasket(user.id, 'pending');
+  pending(@CurrentUser() user: { id: number }, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const { limit: l, offset } = this._page(page, limit);
+    return this.svc.listBasket(user.id, 'pending', l, offset);
   }
 
   @ApiOperation({ summary: 'Outbox' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('outbox')
-  outbox(@CurrentUser() user: { id: number }) {
-    return this.svc.listBasket(user.id, 'outbox');
+  outbox(@CurrentUser() user: { id: number }, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const { limit: l, offset } = this._page(page, limit);
+    return this.svc.listBasket(user.id, 'outbox', l, offset);
   }
 
   @ApiOperation({ summary: 'Summary' })

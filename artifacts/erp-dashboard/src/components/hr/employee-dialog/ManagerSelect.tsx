@@ -73,17 +73,20 @@ export function ManagerSelect({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const { data: employeesData, isLoading } = useQuery<{ data?: ManagerOption[] } | ManagerOption[]>({
+  const { data: employeesData, isLoading } = useQuery<{ items?: ManagerOption[]; data?: ManagerOption[] } | ManagerOption[]>({
     queryKey: ["/api/hr/employees", { managerPicker: true }],
     // Slight cache window — the manager list rarely changes mid-edit
     staleTime: 60_000,
   });
 
   const employees: ManagerOption[] = useMemo(() => {
-    const raw = Array.isArray(employeesData)
-      ? employeesData
-      : (employeesData && "data" in employeesData ? employeesData.data : []) ?? [];
-    if (!Array.isArray(raw)) return [];
+    // Real API envelope is {items:[...],total,page,limit} (GetEmployeesQuery) — this used to
+    // only check for a `.data` key, which never matched, so the picker always showed empty
+    // ("Topilmadi") no matter how many real employees existed.
+    let raw: ManagerOption[] = [];
+    if (Array.isArray(employeesData)) raw = employeesData;
+    else if (employeesData && Array.isArray(employeesData.items)) raw = employeesData.items;
+    else if (employeesData && Array.isArray(employeesData.data)) raw = employeesData.data;
     return excludeEmployeeId
       ? raw.filter((e) => String(e.id) !== excludeEmployeeId)
       : raw;

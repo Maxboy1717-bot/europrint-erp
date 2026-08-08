@@ -12,6 +12,7 @@ import {
   Param, Patch, Post, Query, UseGuards,
   UseInterceptors, InternalServerErrorException, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -24,7 +25,8 @@ import {
   UpdateActivityDtoSchema, UpdateActivityDto,
 } from './dto/crm-activities.dto';
 
-const CRM_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manager', 'SALES'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_ROLES = ['sales_manager', 'manager', 'super_admin', 'director', 'crm_manager', 'SALES'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -35,7 +37,7 @@ const CRM_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manager', 'S
 export class CrmActivitiesController {
   private readonly logger = new Logger(CrmActivitiesController.name);
 
-  constructor(private readonly svc: CrmActivitiesService) {}
+  constructor(private readonly svc: CrmActivitiesService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -70,7 +72,7 @@ export class CrmActivitiesController {
     const _rGetById = await this.svc.getById(safeInt(id, 0));
     assertOk(_rGetById);
     const r = _rGetById.data as Record<string, unknown>;
-    assertFound(r, 'Activity not found');
+    assertFound(r, await this.i18n.t('errors.activityNotFound'));
     return r;
   }
 
@@ -82,9 +84,9 @@ export class CrmActivitiesController {
   @Roles(...CRM_ROLES)
   @UsePipes(new ZodValidationPipe(CreateActivityDtoSchema))
   async create(@Body() body: CreateActivityDto) {
-    assertRequired(body.type, 'type and subject required');
-    assertRequired(body.subject, 'type and subject required');
-    return unwrapOrThrow(await this.svc.create(body.type, body.subject, body.lead_id, body.deal_id, body.assigned_to, body.due_date, body.notes, body.status));
+    assertRequired(body.type, await this.i18n.t('validation.typeAndSubjectRequired'));
+    assertRequired(body.subject, await this.i18n.t('validation.typeAndSubjectRequired'));
+    return unwrapOrThrow(await this.svc.create(body.type, body.subject, body.lead_id, body.deal_id, body.assigned_to, body.due_date, body.notes, body.status, body.communication_data, body.scheduled_at));
   }
 
   @ApiOperation({ summary: 'Complete' })
@@ -99,7 +101,7 @@ export class CrmActivitiesController {
     const _rComplete = await this.svc.complete(safeInt(id, 0), body.outcome);
     assertOk(_rComplete);
     const r = _rComplete.data as Record<string, unknown>;
-    assertFound(r, 'Activity not found');
+    assertFound(r, await this.i18n.t('errors.activityNotFound'));
     return r;
   }
 
@@ -115,7 +117,7 @@ export class CrmActivitiesController {
     const _rUpdate = await this.svc.update(safeInt(id, 0), body);
     assertOk(_rUpdate);
     const r = _rUpdate.data as Record<string, unknown>;
-    assertFound(r, 'Activity not found');
+    assertFound(r, await this.i18n.t('errors.activityNotFound'));
     return r;
   }
 

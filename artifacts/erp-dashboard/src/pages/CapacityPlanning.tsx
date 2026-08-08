@@ -75,7 +75,18 @@ export default function CapacityPlanning() {
 
   // Queries
   const { data: workCenters = [], isError, error: workCentersError, refetch: refetchWorkCenters } =
-    useQuery<WorkCenter[]>({ queryKey: ["/api/erp/work-centers"], enabled: !!isAuthenticated });
+    useQuery<WorkCenter[]>({
+      queryKey: ["/api/pp/work-centers"],
+      enabled: !!isAuthenticated,
+      select: (raw: unknown): WorkCenter[] => {
+        const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+        return items.map((item) => ({
+          id: String(item.id ?? ""),
+          code: String(item.code ?? ""),
+          name: String(item.name ?? ""),
+        }));
+      },
+    });
 
   const { data: capacityList = [] } = useQuery<CapacityListItem[]>({
     queryKey: ["/api/erp/work-center-capacity"],
@@ -103,7 +114,10 @@ export default function CapacityPlanning() {
       apiRequest("POST", "/api/erp/work-center-capacity", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/erp/work-center-capacity"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/capacity"] });
+      // NOTE: the load-analysis query key is ["/api/erp/capacity/load-analysis", dateFrom, dateTo]
+      // — invalidating the bare "/api/erp/capacity" prefix never matched it (different string,
+      // not a parent key), so Yuklama Tahlili silently kept its stale cache after every create.
+      queryClient.invalidateQueries({ queryKey: ["/api/erp/capacity/load-analysis"] });
       setShowCapacityDialog(false);
       capacityForm.reset();
       toast({ title: t("capacityAdded") });

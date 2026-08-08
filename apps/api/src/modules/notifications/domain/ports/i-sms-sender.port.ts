@@ -19,8 +19,9 @@ export interface ISmsSender {
   /**
    * Send a plain-text SMS to a single recipient. The phone number should be
    * supplied in any format accepted by the adapter (it normalizes internally).
-   * When the adapter is unconfigured (missing token) it logs and returns Ok —
-   * the absence of credentials is treated as a no-op, not an error.
+   * When the adapter is unconfigured (missing token) it logs and returns
+   * `Err(EXTERNAL_SERVICE)` — missing required config is a delivery failure,
+   * not a silent no-op (Q-40 fake-success ban).
    *
    * Two-argument legacy form `send(phone, text)` is also accepted by the
    * concrete adapter for backward compatibility with out-of-scope callers
