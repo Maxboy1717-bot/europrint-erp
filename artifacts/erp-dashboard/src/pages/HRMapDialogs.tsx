@@ -9,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  Bus, Clock, Navigation, Sparkles, RefreshCw,
+  Bus, Sparkles, RefreshCw,
   ChevronDown, ChevronRight, Home,
 } from "lucide-react";
 import type { TransportResult, MapStats } from "./HRMapTypes";
+import { GROUP_COLORS } from "./HRMapTypes";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -95,7 +96,9 @@ export function LeftPanel({
               <Separator />
               <p className="text-xs text-muted-foreground">{transportData.summary}</p>
               <div className="space-y-2">
-                {(Array.isArray(transportData.groups) ? transportData.groups : []).map((group) => (
+                {(Array.isArray(transportData.groups) ? transportData.groups : []).map((group, gi) => {
+                  const color = GROUP_COLORS[gi % GROUP_COLORS.length];
+                  return (
                   <div key={group.id}>
                     <button
                       className="w-full flex items-center justify-between text-sm py-1 hover-elevate rounded-md px-2"
@@ -103,7 +106,7 @@ export function LeftPanel({
                       data-testid={`button-group-${group.id}`}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ background: group.color }} />
+                        <div className="w-3 h-3 rounded-full" style={{ background: color }} />
                         <span className="font-medium">{group.name}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -115,31 +118,21 @@ export function LeftPanel({
                       </div>
                     </button>
                     {expandedGroup === group.id && (
-                      <div className="mt-1 pl-3 space-y-1.5 border-l-2" style={{ borderColor: group.color }}>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <span>Chiqish: {group.departureTime}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Navigation className="h-3 w-3" />
-                          <span>{group.totalMinutes} daqiqa</span>
-                        </div>
-                        {group.driverNote && (
-                          <p className="text-xs text-muted-foreground italic">{group.driverNote}</p>
-                        )}
+                      <div className="mt-1 pl-3 space-y-1.5 border-l-2" style={{ borderColor: color }}>
                         {(Array.isArray(group.employees) ? group.employees : []).map(emp => (
                           <div key={emp.id} className="text-xs flex items-center gap-1.5">
                             <Home className="h-3 w-3 text-muted-foreground shrink-0" />
                             <div>
                               <div className="font-medium">{emp.fullName}</div>
-                              <div className="text-muted-foreground">{emp.distanceKm} km • {emp.travelMinutes} min</div>
+                              <div className="text-muted-foreground">{emp.distanceKm} km (zavoddan)</div>
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}

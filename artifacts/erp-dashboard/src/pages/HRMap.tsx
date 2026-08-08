@@ -54,12 +54,15 @@ export default function HRMap() {
     useMutation<TransportResult>({
       mutationFn: () => apiRequest("GET", "/api/hr-map/transport-groups"),
       onSuccess: () => {
-        toast({ title: "AI marshrutlar tayyor!", description: "Guruhlar va vaqtlar hisoblandi" });
+        // Audit 2026-08-08: avval "vaqtlar hisoblandi" deb da'vo qilardi — hech qanday
+        // vaqt hech qachon hisoblanmagan (Q-40). Haqiqiy natija: bo'lim bo'yicha
+        // guruhlash + zavoddan haqiqiy masofa (haversine).
+        toast({ title: "Guruhlar tayyor", description: "Xodimlar bo'lim bo'yicha guruhlandi, masofa zavoddan hisoblandi" });
       },
       onError: () => {
         toast({
           title: "Xatolik",
-          description: "Marshrutlarni hisoblashda xatolik yuz berdi",
+          description: "Guruhlarni hisoblashda xatolik yuz berdi",
           variant: "destructive",
         });
       },

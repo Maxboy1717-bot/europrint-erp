@@ -12,6 +12,7 @@ import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
 
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
+import { HR_MAP_FACTORY_LAT, HR_MAP_FACTORY_LNG, EARTH_RADIUS_KM } from '@common/constants/business.constants';
 const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
@@ -70,27 +71,77 @@ export class HrMapCompatService {
       `),
     ]);
     const statsRow = dbRows(r1)[0] ?? {};
+    // Audit 2026-08-08 (docs/audit/HR-MODUL-PRODUCTION-TAYYORLIK-2026-08-08.md): bu avval
+    // flat {totalEmployees,...} qaytarardi, FE (HRMapTypes.ts MapStats) esa `total.employees`
+    // shaklini kutadi — "Jami xodimlar" KPI kartasi doim 0 ko'rsatardi. Endi FE tipiga mos.
+    // byShift/byDistrict FE'da hech qayerda render qilinmaydi (tekshirildi) — bu so'rov
+    // ularni hisoblamaydi, shuning uchun qo'shilmadi (Q-40, soxta bo'sh massiv emas).
     return {
-      totalEmployees: statsRow['total_employees'] ?? 0,
-      activeEmployees: statsRow['active_employees'] ?? 0,
-      totalDepartments: statsRow['total_departments'] ?? 0,
-      byDepartment: dbRows(r2),
+      total: {
+        employees: Number(statsRow['total_employees'] ?? 0),
+      },
+      activeEmployees: Number(statsRow['active_employees'] ?? 0),
+      totalDepartments: Number(statsRow['total_departments'] ?? 0),
+      byDepartment: dbRows(r2).map((row) => ({
+        orgDepartmentName: row['org_department_name'],
+        count: Number(row['employee_count'] ?? 0),
+      })),
     };
 
     });}
 
+  /**
+   * Audit 2026-08-08: "AI marshrutlar" tugmasi avval STRUCTURALLY buzuq edi — controller
+   * `{items, total}` qaytarardi, FE esa javobning o'zini `TransportResult{groups,...}` deb
+   * o'qirdi (`groups` maydoni hech qachon mavjud emas edi), ustiga `employees` ustuni
+   * `STRING_AGG` bilan vergul-qo'shilgan MATN edi, FE strukturali massiv kutadi — ikki
+   * qavatli nomuvofiqlik, natijada butun "marshrut" ko'rinishi hech qachon render bo'lmagan.
+   * Haqiqiy tuzatish: (1) FE kutgan shaklda qaytariladi, (2) har xodim uchun zavoddan
+   * masofa (`distance_km`) haversine formulasi bilan HAQIQIY `lat`/`lng` ustunlaridan
+   * hisoblanadi (bu geometriya, fabrikatsiya emas). `departureTime`/`route`/`driverNote`/
+   * `travelMinutes` KIRITILMAYDI — bular haqiqiy transport-jadval/marshrut biznes-qoidasini
+   * talab qiladi (nechta avtobus, sig'im, jo'nash vaqti — egasi qarori, Q-34), soxta raqam
+   * ko'rsatish Q-40 buzilishi bo'lardi.
+   */
   async getTransportGroups(){
     return safeCall(async () => {
     const r = await rawSql(sql`
-      SELECT od.id::text AS id, od.name AS org_department_name, COUNT(DISTINCT e.id) AS employee_count,
-             STRING_AGG(e.first_name || ' ' || e.last_name, ', ' ORDER BY e.first_name) AS employees
+      SELECT od.id::text AS id, od.name AS group_name,
+             json_agg(
+               json_build_object(
+                 'id', e.id::text,
+                 'fullName', e.first_name || ' ' || e.last_name,
+                 'lat', e.lat, 'lng', e.lng, 'address', COALESCE(e.address_actual, e.address_registered),
+                 'distanceKm', ROUND(
+                   (${EARTH_RADIUS_KM} * acos(LEAST(1, GREATEST(-1,
+                     cos(radians(${HR_MAP_FACTORY_LAT})) * cos(radians(e.lat)) *
+                     cos(radians(e.lng) - radians(${HR_MAP_FACTORY_LNG})) +
+                     sin(radians(${HR_MAP_FACTORY_LAT})) * sin(radians(e.lat))
+                   ))))::numeric, 1
+                 )
+               ) ORDER BY e.first_name
+             ) FILTER (WHERE e.id IS NOT NULL AND e.lat IS NOT NULL AND e.lng IS NOT NULL) AS employees
       FROM org_departments od
       LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
       LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL
-      LEFT JOIN employees e ON e.id = u.employee_id AND e.status = 'active'
-      GROUP BY od.id, od.name ORDER BY od.name LIMIT 50
+      LEFT JOIN employees e ON e.id = u.employee_id AND e.status = 'active' AND e.geo_consent = true
+      GROUP BY od.id, od.name
+      HAVING COUNT(e.id) > 0
+      ORDER BY od.name LIMIT 50
     `);
-    return dbRows(r);
+    const rows = dbRows(r);
+    const groups = rows.map((row) => ({
+      id: String(row['id']),
+      name: String(row['group_name']),
+      employees: (Array.isArray(row['employees']) ? row['employees'] : []) as unknown[],
+    }));
+    return {
+      groups,
+      summary: `${groups.length} ta bo'lim guruhi, zavoddan masofa bo'yicha`,
+      factoryLat: HR_MAP_FACTORY_LAT,
+      factoryLng: HR_MAP_FACTORY_LNG,
+      generatedAt: new Date().toISOString(),
+    };
 
     });}
 

@@ -4513,7 +4513,7 @@
   "koordinatalarYoq": "Koordinatalar нет",
   "xodimlarUyManzillariKiritilmagan": "Сотрудники uy manzillari kiritilmagan",
   "transportMarshrutlar": "Транспорт Marshrutlar",
-  "aiXodimlarniYonalishBoyichaGuruhlaydi": "AI сотрудников yo'nalish bo'yicha guruhlaydi и uyga ketish vaqtini belgilaydi.",
+  "aiXodimlarniYonalishBoyichaGuruhlaydi": "Группирует сотрудников по отделам и рассчитывает расстояние каждого от завода.",
   "aiMarshrutlar": "AI Маршруты",
   "markerlar": "Маркеры",
   "zichlik": "Плотность",

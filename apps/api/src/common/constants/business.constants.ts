@@ -692,3 +692,14 @@ export const CAPACITY_BOTTLENECK_THRESHOLD_PCT = 90;
 
 /** loadPercentage shu chegaradan oshsa work-center "overloaded" (ortiqcha yuklangan) holatga o'tadi. */
 export const CAPACITY_OVERLOAD_THRESHOLD_PCT = 100;
+
+// ---------------------------------------------------------------------------
+// HR — Xarita / Transport (HRMap)
+// ---------------------------------------------------------------------------
+
+/** EuroPrint zavodi koordinatalari (Qo'qon) — FE HRMapTypes.ts FACTORY_LAT/FACTORY_LNG bilan bir xil. */
+export const HR_MAP_FACTORY_LAT = 40.555645;
+export const HR_MAP_FACTORY_LNG = 70.927983;
+
+/** Yer radiusi (km) — haversine masofa formulasi uchun. */
+export const EARTH_RADIUS_KM = 6371;

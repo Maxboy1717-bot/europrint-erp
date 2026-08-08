@@ -57,16 +57,20 @@ export class HrMapCompatController {
 
   @Get('transport-groups')
   async getTransportGroups() {
-    const r = await this.svc.getTransportGroups();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows, total: rows.length };
+    // Audit 2026-08-08: was `{ items, total }` — FE (TransportResult) reads the response
+    // itself as `{groups, summary, factoryLat, factoryLng, generatedAt}`, so `groups` was
+    // always undefined regardless of what the service computed. Return service data as-is.
+    return unwrapOrDefault(
+      await this.svc.getTransportGroups(),
+      { groups: [], summary: '', factoryLat: 0, factoryLng: 0, generatedAt: new Date().toISOString() },
+    );
   }
 
   @Get('stats')
   async getMapStats() {
     return unwrapOrDefault(
       await this.svc.getMapStats(),
-      { totalEmployees: 0, activeEmployees: 0, totalDepartments: 0, byDepartment: [] },
+      { total: { employees: 0 }, activeEmployees: 0, totalDepartments: 0, byDepartment: [] },
     );
   }
 
