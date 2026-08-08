@@ -67,7 +67,7 @@ export class AiCrmController {
     @Body() body: AiCrmEmailTemplateDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return unwrapOrInternal(await this.crmAi.generateEmailTemplate(body.purpose, body.contactName, body.context, user.id));
+    return unwrapOrInternal(await this.crmAi.generateEmailTemplate(body.purpose, body.contactName ?? 'Hurmatli mijoz', body.context, user.id));
   }
 
   @Post('next-best-action/:dealId')

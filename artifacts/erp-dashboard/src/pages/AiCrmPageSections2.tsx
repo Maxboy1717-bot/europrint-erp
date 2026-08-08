@@ -20,8 +20,8 @@ interface EmailTabContentProps {
   deals: Deal[];
   emailContext: string;
   onEmailContextChange: (v: string) => void;
-  emailTone: string;
-  onEmailToneChange: (v: string) => void;
+  emailPurpose: string;
+  onEmailPurposeChange: (v: string) => void;
   onSelectDeal: (deal: Deal | null) => void;
   onGenerate: () => void;
   isPending: boolean;
@@ -29,7 +29,7 @@ interface EmailTabContentProps {
 }
 
 export function EmailTabContent({
-  deals, emailContext, onEmailContextChange, emailTone, onEmailToneChange,
+  deals, emailContext, onEmailContextChange, emailPurpose, onEmailPurposeChange,
   onSelectDeal, onGenerate, isPending, emailResult,
 }: EmailTabContentProps) {
   const { t } = useTranslation("common");
@@ -54,14 +54,14 @@ export function EmailTabContent({
             </Select>
           </div>
           <div className="space-y-1">
-          <Label>{t("ton")}</Label>
-            <Select value={emailTone} onValueChange={onEmailToneChange}>
+          <Label>{t("maqsad")}</Label>
+            <Select value={emailPurpose} onValueChange={onEmailPurposeChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="professional">{t("professional")}</SelectItem>
-                <SelectItem value="friendly">{t("dostona")}</SelectItem>
-                <SelectItem value="formal">{t("rasmiy")}</SelectItem>
-                <SelectItem value="persuasive">{t("ishontiruvchi")}</SelectItem>
+                <SelectItem value="FOLLOW_UP">{t("kuzatuvXati")}</SelectItem>
+                <SelectItem value="PROPOSAL">{t("taklifXati")}</SelectItem>
+                <SelectItem value="RE_ENGAGE">{t("qaytaAloqaXati")}</SelectItem>
+                <SelectItem value="THANK_YOU">{t("minnatdorlikXati")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

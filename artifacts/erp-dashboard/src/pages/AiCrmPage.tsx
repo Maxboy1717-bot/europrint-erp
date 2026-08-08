@@ -35,7 +35,11 @@ export default function AiCrmPage() {
   const [activeTab, setActiveTab] = useState("scoring");
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [emailContext, setEmailContext] = useState("");
-  const [emailTone, setEmailTone] = useState("professional");
+  // Audit 2026-08-08: was "tone" (professional/friendly/...) — BE generateEmailTemplate()
+  // has no tone parameter at all, this selector never influenced the generated email.
+  // Replaced with "purpose" (FOLLOW_UP/PROPOSAL/RE_ENGAGE/THANK_YOU) — BE's real,
+  // required enum, used directly in the AI prompt (crm-ai.service.ts purposeMap).
+  const [emailPurpose, setEmailPurpose] = useState("FOLLOW_UP");
   const [aiResults, setAiResults] = useState<Record<string, AiScore>>({});
 
   const { data: deals = [], isLoading: dealsLoading } = useQuery<Deal[]>({
@@ -190,13 +194,14 @@ export default function AiCrmPage() {
             deals={deals}
             emailContext={emailContext}
             onEmailContextChange={setEmailContext}
-            emailTone={emailTone}
-            onEmailToneChange={setEmailTone}
+            emailPurpose={emailPurpose}
+            onEmailPurposeChange={setEmailPurpose}
             onSelectDeal={setSelectedDeal}
             onGenerate={() => emailMutation.mutate({
-              dealId: selectedDeal?.id,
-              dealTitle: selectedDeal?.title,
-              tone: emailTone,
+              purpose: emailPurpose,
+              // Deal (AiCrmPageTypes.ts) has no linked-contact field yet — deal title
+              // is the best-effort stand-in BE accepts (contactName is optional there).
+              contactName: selectedDeal?.title,
               context: emailContext,
             })}
             isPending={emailMutation.isPending}
